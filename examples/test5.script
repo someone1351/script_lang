@@ -1,0 +1,6 @@
+var a {array 0 11 22 {array 30 31 32 33} 44}
+
+var i 2;
+set a.3.{i} 43
+
+println a

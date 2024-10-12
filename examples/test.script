@@ -1,0 +1,20 @@
+
+
+
+(for (i 0 5)
+    (println "hello script {i}")
+)
+
+(var a 5)
+
+(if 
+    [(< a 4) (println "less than 4")]
+    [(> a 4) (println "greater than 4")]
+    [else (println "equal to 4")]
+)
+
+(fn test () (println "g is {}" self))
+
+(test)
+
+;(var self)

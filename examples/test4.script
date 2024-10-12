@@ -1,0 +1,32 @@
+#var h 5;
+#var self;
+
+#println "self {}" self #{self}
+
+#for j 0 4 { }
+
+#for j 0 4 { }
+
+#fn abc { self }
+#fn abc { println "self is {self}" }
+#call abc
+
+
+#var self
+
+
+#selfa
+
+#fn myfunc a b {+ $a $b}
+#var a $b;
+
+#var self;
+#set self 44343;
+
+#fn xx self
+#call xx
+
+set self 444
+
+#println self
+#+ self
