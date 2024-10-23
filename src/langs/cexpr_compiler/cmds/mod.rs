@@ -181,7 +181,7 @@ pub fn get_func_params2<'a>(block : BlockContainer<'a>) -> Result<(Vec<&'a str>,
         return Err(BuilderError::new(loc, BuilderErrorType::ExpectSymbol));
     }
 
-    if let Some(loc)=block.params().find_map(|x|(x.fields_num()!=0).then_some(x.field(0).unwrap().start_loc())) {
+    if let Some(loc)=block.params().find_map(|x|(x.fields_num()!=0).then(||x.field(0).unwrap().start_loc())) {
         return Err(BuilderError::new(loc, BuilderErrorType::NoFieldsAllowed));
     }
 

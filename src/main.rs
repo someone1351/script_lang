@@ -232,4 +232,5 @@ fn main() {
     // test_script("examples/test2.script");
     // test_script2("examples/test6.script");
     test_script3("examples/test5.script");
+    //test_script3("examples/test7.script");
 }

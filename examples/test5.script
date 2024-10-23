@@ -4,3 +4,8 @@ var i 2;
 set a.3.{i} 43
 
 println a
+
+
+var d {dict :a 1 :b {array 55 66 77}}
+
+println {d."b".2}

@@ -27,6 +27,12 @@
 // str => ["] ([^"])* ["]
 //===========================
 
+/*
+TODO
+* add field for strings eg thing."name"
+* look at start/end loc for strings eg loc of start/end quotes and also of string value
+* * how is it done for blocks?
+*/
 
 mod input;
 mod error;
@@ -125,6 +131,8 @@ pub fn parse<'a>(src:&'a str,
                 } else if let Some((text_ind,start_loc,end_loc))=parse_symbol(&mut input,&mut text_map) {
                     let primitive_type=TempPrimitiveType::String(text_ind);
                     let primitive=TempPrimitive { primitive_type, start_loc, end_loc };
+                    cur_work_param.fields.push(TempField{ primitive, start_loc: field_start_loc });
+                } else if let Some(primitive)=parse_string(&mut input,&mut text_map)? {
                     cur_work_param.fields.push(TempField{ primitive, start_loc: field_start_loc });
                 } else if parse_block_begin(&mut input) {
                     temp_works_stk.push(TempWork::Block { 
