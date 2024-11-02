@@ -31,6 +31,9 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,'c,&mut X> {
     pub fn get_core_mut(&mut self) -> &mut X {
         self.machine.get_core_mut()
     }
+    pub fn get_core_ref(&self) -> &X {
+        self.machine.get_core_ref()
+    }
 }
 
 impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b

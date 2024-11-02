@@ -35,6 +35,9 @@ impl Value {
     pub fn int<T: TryInto<IntT>+Sized>(x:T) -> Self {
         Self::Int(x.try_into().ok().unwrap_or(0))
     }
+    pub fn bool<T: TryInto<bool>+Sized>(x:T) -> Self {
+        Self::Bool(x.try_into().ok().unwrap_or(false))
+    }
     pub fn string<S: Into<String>>(x:S) -> Self {
         Self::String(StringT::new(x.into()))
     }

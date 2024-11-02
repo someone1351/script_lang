@@ -71,6 +71,9 @@ impl<'a,'c,X:Copy> Machine<'a,'c,X> {
 impl<'a,'c,X> Machine<'a,'c,&mut X> {
     pub fn get_core_mut(&mut self) -> &mut X {
         self.core_val
+    }    
+    pub fn get_core_ref(&self) -> &X {
+        self.core_val
     }
 }
 
