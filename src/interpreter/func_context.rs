@@ -15,6 +15,7 @@ use super::custom::*;
 //todo error funcs for specific params, so can report errors returned from methods at correct place
 // what about get/set fields? done in cmds in sexpr_compiler?
 
+
 pub struct FuncContext<'q,'a,'c,X> { //,'b
     machine:&'q mut Machine<'a,'c, X>, //,'b
     params_start : usize,
@@ -27,10 +28,25 @@ impl<'q,'a,'c,X:Copy> FuncContext<'q,'a,'c,X> {
         self.machine.get_core()
     }
 }
+// impl<'q:'a,'a,'c:'a,X> FuncContext<'q,'a,'c,&'a mut X> { 
+//     // pub fn get_core_mut(&'a mut self) -> &'a mut X {
+//     //     self.machine.get_core_mut()
+//     // }
+//     pub fn get_core_ref(&'a self) -> &'a X {
+//         self.machine.get_core_ref()
+//     }
+// }
+
 impl<'q,'a,'c,X> FuncContext<'q,'a,'c,&mut X> { 
     pub fn get_core_mut(&mut self) -> &mut X {
         self.machine.get_core_mut()
     }
+    pub fn get_core_ref(&self) -> &X {
+        self.machine.get_core_ref()
+    }
+}
+
+impl<'q,'a,'c,X> FuncContext<'q,'a,'c,&X> { 
     pub fn get_core_ref(&self) -> &X {
         self.machine.get_core_ref()
     }
