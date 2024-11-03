@@ -114,6 +114,10 @@ GOTO:
     push a {fn {} b} #each one pushed should have a different b captured
     goto x
 }
+
+TODO:
+* make separate decl_local and decl_global
+* have flag to allow use of undeclared variables be capturable globals
 */
 
 use std::{collections::{HashMap,  HashSet},  path::Path};

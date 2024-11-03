@@ -109,11 +109,11 @@ impl Custom {
         
     }
 
-    pub fn new_managed_non_mut<T:GcTraversable+Send+Sync>(data : T,gc_scope : &mut GcScope) -> Self {
+    pub fn new_managed<T:GcTraversable+Send+Sync>(data : T,gc_scope : &mut GcScope) -> Self {
         Self::new::<T>(CustomInner::Managed(GcValue::new_non_mut(data,gc_scope)))
     }
 
-    pub fn new_unmanaged_non_mut<T:Any+Send+Sync>(data : T) -> Self {
+    pub fn new_unmanaged<T:Any+Send+Sync>(data : T) -> Self {
         Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::NonMut(Arc::new(data))))        
     }
 

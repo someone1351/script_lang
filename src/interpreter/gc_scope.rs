@@ -3,6 +3,10 @@ TODO
 * for mark_and_sweep amount
 - need to make sure variables that need to be cleaned up don't increase faster than they are cleaned up
 - when clearing marked, make it so it can do up to a limit, and continue on from next time after reaching limit
+
+TODO 2
+* make failed locks etc not panic and crash the program, return an error instead
+
 */
 use std::{sync::{Arc, Weak}, any::Any, };
 

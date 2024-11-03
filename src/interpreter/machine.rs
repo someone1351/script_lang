@@ -374,10 +374,10 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
                     if captures_num==0 {
                         // self.result_val=Value::custom_unmanaged(closure);
-                        self.set_result_val(Value::custom_unmanaged_non_mut(closure));
+                        self.set_result_val(Value::custom_unmanaged(closure));
                     } else {
                         // self.result_val=Value::custom_managed(closure, self.gc_scope);
-                        let v=Value::custom_managed_non_mut(closure, self.gc_scope);
+                        let v=Value::custom_managed(closure, self.gc_scope);
                         self.set_result_val(v);
                         
                     }

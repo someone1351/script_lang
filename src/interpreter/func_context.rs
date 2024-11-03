@@ -206,13 +206,13 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b
     //     Custom::new_unmanaged(data)
     // }
 
-    pub fn custom_managed<T:GcTraversable+Send+Sync>(&mut self, data : T,is_mut:bool) -> Value {
-        Value::custom_managed(data, is_mut, self.machine.gc_scope())
-    }
+    // pub fn custom_managed<T:GcTraversable+Send+Sync>(&mut self, data : T,is_mut:bool) -> Value {
+    //     Value::custom_managed(data, is_mut, self.machine.gc_scope())
+    // }
 
-    pub fn custom_unmanaged<T:Any+Send+Sync>(&self, data : T,is_mut:bool) -> Value {
-        Value::custom_unmanaged(data, is_mut)
-    }
+    // pub fn custom_unmanaged<T:Any+Send+Sync>(&self, data : T,is_mut:bool) -> Value {
+    //     Value::custom_unmanaged(data, is_mut)
+    // }
     
     //
     
@@ -225,12 +225,12 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b
     }
 
 
-    pub fn custom_managed_non_mut<T:GcTraversable+Send+Sync>(&mut self, data:T, ) -> Value {
-        Value::Custom(Custom::new_managed_non_mut(data,self.machine.gc_scope()))
+    pub fn custom_managed<T:GcTraversable+Send+Sync>(&mut self, data:T, ) -> Value {
+        Value::Custom(Custom::new_managed(data,self.machine.gc_scope()))
     }
     
-    pub fn custom_unmanaged_non_mut<T:Any+Send+Sync>(&self, data:T, ) -> Value {
-        Value::Custom(Custom::new_unmanaged_non_mut(data))
+    pub fn custom_unmanaged<T:Any+Send+Sync>(&self, data:T, ) -> Value {
+        Value::Custom(Custom::new_unmanaged(data))
     }
 
     // pub fn new_custom_managed<T:GcTraversable>(&mut self, data:T, ) -> Custom {
