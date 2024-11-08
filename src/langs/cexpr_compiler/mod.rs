@@ -30,31 +30,14 @@ so can tell dif between calling a method and returning a val
 so can tell if a global (and not a method) without needing to declare them
 
 var a {func {} 1}
-
 call $a 5
-
-
-fn myfunc {a b c} {
-    + a b c
-}
-
+fn myfunc {a b c} { + $a $b $c }
 call $myfunc $a $b $c
-call myfunc $a $b $c
-
-fn abc {} {
-    $g
-}
-
+call {call $mygetfunc} $a $b $c
+fn abc {} { $g }
 var a $b;
-
-
-fn abc {} {
-    call $g
-}
-
+fn abc {g} { call $g }
 call $myfunc $a $b $c
-
-
 
 */
 

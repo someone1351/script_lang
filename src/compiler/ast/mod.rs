@@ -118,6 +118,14 @@ GOTO:
 TODO:
 * make separate decl_local and decl_global
 * have flag to allow use of undeclared variables be capturable globals
+
+TODO
+* have closures captured by nearest scope first? eg:
+    for scope in cur_scope .. global_scope
+        check scope.above else check scope.below
+
+* have option to make undeclared globals accessable and capturable
+
 */
 
 use std::{collections::{HashMap,  HashSet},  path::Path};
