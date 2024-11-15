@@ -2,7 +2,7 @@ use super::super::builder::*;
 use super::super::super::cexpr_parser::*;
 use super::super::BuilderErrorType;
 
-use super::get_symbol;
+use super::get_idn;
 
 pub fn var_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> {
     //var x 123
@@ -12,7 +12,7 @@ pub fn var_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
         return Err(BuilderError::new(record.last_param().unwrap().start_loc(), BuilderErrorType::IncorrectParamsNum));
     }
 
-    let idn = get_symbol(record.param(1).unwrap())?;
+    let idn = get_idn(record.param(1).unwrap())?;
 
     let is_init_nil=record.params_num()==2;
 

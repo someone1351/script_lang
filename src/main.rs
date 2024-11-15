@@ -186,7 +186,55 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
     let path = path.as_ref();
     let src = std::fs::read_to_string(path).unwrap();
 
-    let compiler=script_lang::langs::cexpr_compiler::Compiler::new();
+    let compiler=script_lang::langs::cexpr_compiler::Compiler::new(false);
+    
+    let build = compiler.compile(src.as_str(), 0, None, true,
+        // false
+    );
+
+    let mut mynum=123;
+
+    if let Err(e)=&build {
+        eprintln!("{}",e.msg());
+    } else {
+
+        let mut var_scope=script_lang::VarScope::new();
+        var_scope.decl("self", Some(script_lang::Value::int(4))).unwrap();
+    
+        let lib_scope=script_lang::LibScope::new_full();
+        let mut machine = script_lang::Machine::new(&mut gc_scope,&mut var_scope, &lib_scope,  &mut mynum);
+        // machine.set_debug_print(true);
+
+        // build.clone().unwrap().print();
+        
+        let res=machine.run_build(&build.unwrap());
+        println!("the result is {res:?}");
+
+        if let Err(e)=&res {
+            e.eprint(None);
+            machine.debug_print_stack_trace(true);
+            machine.debug_print_stack();
+            // machine.print_state();
+        }
+        // machine.debug_print_stack();
+    }
+
+    //gc_scope.mark_and_sweep();
+    gc_scope.test();
+    
+
+}
+
+
+pub fn test_script4<P:AsRef<Path>>(path:P) {
+
+    println!("===");
+    let mut gc_scope= script_lang::GcScope::new();
+    
+    let path = path.as_ref();
+    let src = std::fs::read_to_string(path).unwrap();
+
+    let compiler=script_lang::langs::cexpr_compiler::Compiler::new(true);
     
     let build = compiler.compile(src.as_str(), 0, None, true,
         // false
@@ -231,6 +279,7 @@ fn main() {
     println!("Hello, world!");
     // test_script("examples/test2.script");
     // test_script2("examples/test6.script");
-    test_script3("examples/test5.script");
-    //test_script3("examples/test7.script");
+    //test_script3("examples/test5.script");
+    test_script3("examples/test7.script");
+    test_script4("examples/test8.script");
 }

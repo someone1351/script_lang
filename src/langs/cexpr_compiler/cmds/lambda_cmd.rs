@@ -3,7 +3,7 @@ use super::super::builder::*;
 use super::super::super::cexpr_parser::*;
 use super::super::BuilderErrorType;
 
-use super::get_func_params2;
+use super::get_func_params;
 
 pub fn lambda_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> {
     //(fn (a b c) (something a) (+ b c))
@@ -63,7 +63,7 @@ pub fn lambda_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
     };
 
     // let (params,variadic)=get_func_typed_params(sexpr.get(2).unwrap(), builder)?;
-    let (params,variadic)=get_func_params2(params_block)?;
+    let (params,variadic)=get_func_params(params_block)?;
 
     //
     let body=record.last_param().unwrap().primitive();

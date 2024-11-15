@@ -125,11 +125,12 @@ pub fn parse<'a>(src:&'a str,
             if let Some(field_start_loc)=parse_field_sep(&mut input) {
                 let loc=input.loc();
 
-                //parse symbol,int or block
+                //parse symbol,string,int or block
                 if let Some(primitive)=parse_number(&mut input,false) {
                     cur_work_param.fields.push(TempField{ primitive, start_loc: field_start_loc });
                 } else if let Some((text_ind,start_loc,end_loc))=parse_symbol(&mut input,&mut text_map) {
-                    let primitive_type=TempPrimitiveType::String(text_ind);
+                    // let primitive_type=TempPrimitiveType::String(text_ind); 
+                    let primitive_type=TempPrimitiveType::Symbol(text_ind); //fixed
                     let primitive=TempPrimitive { primitive_type, start_loc, end_loc };
                     cur_work_param.fields.push(TempField{ primitive, start_loc: field_start_loc });
                 } else if let Some(primitive)=parse_string(&mut input,&mut text_map)? {
@@ -496,6 +497,7 @@ fn generate_parsed(temp_root_block:&TempBlock,last_loc:Loc,text_map:HashMap<Stri
                                 },
                                 TempPrimitiveType::Int(x)=>PrimitiveType::Int(*x),
                                 TempPrimitiveType::String(x)=>PrimitiveType::String(*x),
+                                TempPrimitiveType::Symbol(x)=>PrimitiveType::Symbol(*x), //fixed
                                 _ => {panic!("")},
                             };
     
@@ -737,7 +739,7 @@ fn parse_number(input:&mut Input, float_aswell:bool) -> Option<TempPrimitive> {
     }
     
     while let Some(c)=input.get(i, 1) {
-        if ("0".."9").contains(&c) {
+        if ("0"..="9").contains(&c) {
             i+=1;
             ok=true;
         } else {
@@ -752,7 +754,7 @@ fn parse_number(input:&mut Input, float_aswell:bool) -> Option<TempPrimitive> {
         }
     
         while let Some(c)=input.get(i, 1) {
-            if ("0".."9").contains(&c) {
+            if ("0"..="9").contains(&c) {
                 i+=1;
                 ok=true;
             } else {

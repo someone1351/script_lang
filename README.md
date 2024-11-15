@@ -2,6 +2,8 @@
 
 Scripting language that is a cross between tcl, lisp and javascript.
 
+Also taking inspiration from assembly languages.
+
 ## Features
 
 ### Methods

@@ -1,0 +1,15 @@
+var a 5;
+
+println a
+
+var b {array 1 2 3}
+
+for i 0 {len b} {
+    println b.$i
+}
+
+
+fn my_add {a b} {
+    $a
+}
+println {call $my_add 15 9}

@@ -2,7 +2,7 @@ use super::super::builder::*;
 use super::super::super::cexpr_parser::*;
 use super::super::BuilderErrorType;
 
-use super::get_symbol;
+use super::get_idn;
 
 pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> {
     //for {i 0 n} {}
@@ -12,7 +12,7 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
     }
 
     //
-    let idn = get_symbol(record.param(1).unwrap())?;
+    let idn = get_idn(record.param(1).unwrap())?;
     let from = record.param(2).unwrap().primitive();
     let to = record.param(3).unwrap().primitive();
     let body = record.param(4).unwrap().primitive();

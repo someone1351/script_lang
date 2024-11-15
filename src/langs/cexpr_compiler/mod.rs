@@ -25,9 +25,10 @@ set z[0].y[5] 7
  }
 
 ====
-have var return use $ ?
-so can tell dif between calling a method and returning a val
-so can tell if a global (and not a method) without needing to declare them
+* have var return/eval use $ ?
+* so can tell dif between calling a method and returning a val
+* so can tell if a global (and not a method) without needing to declare them
+* set v 5; shouldn't use the $ prefix ??
 
 var a {func {} 1}
 call $a 5
@@ -38,6 +39,10 @@ fn abc {} { $g }
 var a $b;
 fn abc {g} { call $g }
 call $myfunc $a $b $c
+set a 5
+
+abc.$i
+abc.{$i}
 
 */
 
@@ -66,6 +71,7 @@ use super::super::builder::*;
 #[derive(Debug,Clone)]
 pub enum BuilderErrorType {
     ExpectSymbol,
+    NoSymbolPrefixAllowed,
     // ExpectList,
     ExpectString,
     IncorrectParamsNum,
@@ -89,8 +95,10 @@ pub enum BuilderErrorType {
     NoBlocksAllowed,
     NoFieldsAllowed,
     InvalidStringSymbol,
+    InvalidSymbol,
     // NoCmdFound,
     // NoArgsAllowed,
+    NotAMethod,
 }
 
 
@@ -138,18 +146,21 @@ pub type Cmd = for<'a> fn(RecordContainer<'a>, &mut Builder<'a,PrimitiveContaine
 
 pub struct Compiler {
     cmds : HashMap<String,Vec<Cmd>>,
+    // denote_get_var:bool,
+    get_var_prefix : Option<&'static str>,
     // next_anon_id:usize,
 }
 
 impl Compiler {
-    pub fn new_empty() -> Self {
+    pub fn new_empty(denote_get_var:bool,) -> Self {
         Self{
             cmds:Default::default(),
+            get_var_prefix : denote_get_var.then_some("$"),
             // next_anon_id:1,
         }
     }
-    pub fn new() -> Self {
-        let mut cmd_scope = Self::new_empty();
+    pub fn new(denote_get_var:bool,) -> Self {
+        let mut cmd_scope = Self::new_empty(denote_get_var);
         cmd_scope.add_cmd("while", while_cmd);
         cmd_scope.add_cmd("for", for_cmd);
         cmd_scope.add_cmd("continue", continue_cmd);
@@ -277,7 +288,17 @@ impl Compiler {
                                         return Err(errors.last().unwrap().clone());
                                     }
                                 } else if record.params_num()==1 { //no args, no fields
-                                    builder.get_var_or_call_method(symbol);
+                                    if let Some(get_var_prefix)=self.get_var_prefix {
+                                        if let Some(symbol)=symbol.strip_prefix(get_var_prefix) {                                            
+                                            builder.get_var(symbol);
+                                        } else {
+                                            builder.call_method(symbol,0);
+                                        }
+                                    } else {
+                                        builder.get_var_or_call_method(symbol);
+                                    }
+                                } else if self.get_var_prefix.is_some() && symbol.starts_with(self.get_var_prefix.unwrap()) {
+                                    return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NotAMethod });
                                 } else { //has args, no fields
                                     for i in (1 .. record.params_num()).rev() {
                                         let x=record.param(i).unwrap();
@@ -306,7 +327,7 @@ impl Compiler {
 
                 
                 if !hasnt_fields {
-                    Self::get_fields(builder,top_primitive);
+                    Self::get_fields(builder,top_primitive,self.get_var_prefix)?;
                 }
             }
             PrimitiveTypeContainer::Float(f) => {
@@ -350,23 +371,36 @@ impl Compiler {
                         }
                     }
                     _=>{
-                        if symbol.starts_with(":") { //what is with the s + and_then ?
+                        if let Some(symbol)=symbol.strip_prefix(":") {
                             if hasnt_fields {
-                                let s=&symbol[":".len()..];
-
-                                if !s.is_empty() {
-                                    builder.result_string(s);
-                                } else {
+                                if symbol.is_empty() {
                                     return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::InvalidStringSymbol });
                                 }
+
+                                builder.result_string(symbol);
                             } else {
                                 return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
                             }
                         } else {
+                            let symbol=if let Some(get_var_prefix)=self.get_var_prefix {   
+                                if let Some(symbol)=symbol.strip_prefix(get_var_prefix) {
+                                    if symbol.is_empty() {
+                                        return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
+                                    }
+
+                                    symbol
+                                } else { //by returning symbol can make var prefix optional for everything except returns
+                                    symbol
+                                    // return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
+                                }
+                            } else {
+                                symbol
+                            };
+
                             builder.get_var(symbol);
 
                             if !hasnt_fields {
-                                Self::get_fields(builder,top_primitive);
+                                Self::get_fields(builder,top_primitive,self.get_var_prefix)?;
                             }
                         }
                     }
@@ -382,7 +416,8 @@ impl Compiler {
         builder:&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>,
         top_primitive:PrimitiveContainer<'a>,
         // fields:FieldIter<'a>,
-    ) {
+        get_var_prefix : Option<&'static str>,
+    ) -> Result<(),BuilderError<BuilderErrorType>> {
         
         let mut last_start_loc=top_primitive.start_loc();
         let mut last_end_loc=top_primitive.end_loc();
@@ -395,7 +430,19 @@ impl Compiler {
 
             // let field=symbol.field(field_ind).unwrap();
 
-            builder.eval(field.primitive());
+            if let Some(symbol)=field.primitive().symbol() {
+                if let Some(get_var_prefix)=get_var_prefix {
+                    if symbol.starts_with(get_var_prefix) {
+                        builder.eval(field.primitive());
+                    } else { //is string
+                        builder.result_string(symbol);            
+                    }
+                } else { //is string
+                    builder.result_string(symbol);   
+                }
+            } else { //not a symbol
+                builder.eval(field.primitive());
+            }
 
             
             builder
@@ -412,9 +459,11 @@ impl Compiler {
             last_start_loc=field.start_loc();
             last_end_loc=field.end_loc();
         }
+
+        Ok(())
     }
 
-    pub fn compile(&self,src : &str, version:usize, path : Option<&Path>, keep_src : bool) -> Result<BuildT,CompileError> {
+    pub fn compile(&self,src : &str, version:usize, path : Option<&Path>, keep_src : bool, ) -> Result<BuildT,CompileError> {
         let mut next_anon_id=1;
 
         let src= StringT::new(src);

@@ -2,7 +2,7 @@ use super::super::builder::*;
 use super::super::super::cexpr_parser::*;
 use super::super::BuilderErrorType;
 
-use super::get_symbol;
+use super::get_idn;
 
 pub fn set_var_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> {
     //set x 123
@@ -30,7 +30,7 @@ pub fn set_var_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pr
 
     if var_param.fields_num()==0 {
 
-        let idn = get_symbol(var_param)?;
+        let idn = get_idn(var_param)?;
         let idn_loc=record.param(1).unwrap().start_loc();
     
         //val

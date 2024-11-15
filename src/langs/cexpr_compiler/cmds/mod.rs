@@ -56,10 +56,15 @@ use super::{super::cexpr_parser::*, BuilderErrorType};
 
 
 
-pub fn get_symbol<'a>(param : ParamContainer<'a>) -> Result<&'a str,BuilderError<BuilderErrorType>> {
+pub fn get_idn<'a>(param : ParamContainer<'a>) -> Result<&'a str,BuilderError<BuilderErrorType>> {
     if let Some(symbol)=param.primitive().symbol() {
         if param.fields_num()==0 {
-            Ok(symbol)
+            
+            if symbol.starts_with(&['!', '@', '%', '^', '&', '~', ';', ':', '?', ',', '.', '|']) {
+                Err(BuilderError::new(param.start_loc(), BuilderErrorType::NoSymbolPrefixAllowed))
+            } else {
+                Ok(symbol)
+            }
         } else {
             Err(BuilderError::new(param.field(0).unwrap().start_loc(), BuilderErrorType::NoFieldsAllowed))
         }
@@ -128,39 +133,39 @@ instead of
 // }
 
 
-pub fn get_func_params<'a>(record : RecordContainer<'a>, params_start:usize, params_end:usize) -> Result<(Vec<&'a str>,bool),BuilderError<BuilderErrorType>> {
-    //(a b c)
-    //(a b c ...)
+// pub fn get_func_params<'a>(record : RecordContainer<'a>, params_start:usize, params_end:usize) -> Result<(Vec<&'a str>,bool),BuilderError<BuilderErrorType>> {
+//     //(a b c)
+//     //(a b c ...)
 
-    // if !record.is_list() {
-    //     return Err(BuilderError::new(record.start_loc(), BuilderErrorType::IncorrectParamsNum));
-    // }
+//     // if !record.is_list() {
+//     //     return Err(BuilderError::new(record.start_loc(), BuilderErrorType::IncorrectParamsNum));
+//     // }
 
-    let mut params=Vec::<&str>::new();
-    let mut variadic=false;
+//     let mut params=Vec::<&str>::new();
+//     let mut variadic=false;
 
-    for i in params_start .. params_end {
-        let x=record.param(i).unwrap();
-        // (i,param_sexpr) record.list_iter().enumerate()   
-        // println!("i {i}, len {}",params_sexpr.len()); 
-        let idn = get_symbol(x)?;
+//     for i in params_start .. params_end {
+//         let x=record.param(i).unwrap();
+//         // (i,param_sexpr) record.list_iter().enumerate()   
+//         // println!("i {i}, len {}",params_sexpr.len()); 
+//         let idn = get_symbol(x)?;
 
-        if idn=="..." { //variadic
-            if i!=record.params_num()-1 {
-                return Err(BuilderError::new(x.start_loc(), BuilderErrorType::VariadicMustBeAtEnd));
-            }
+//         if idn=="..." { //variadic
+//             if i!=record.params_num()-1 {
+//                 return Err(BuilderError::new(x.start_loc(), BuilderErrorType::VariadicMustBeAtEnd));
+//             }
             
-            variadic=true;
-        } else { //param  
-            params.push(idn);           
-        }
-    }
+//             variadic=true;
+//         } else { //param  
+//             params.push(idn);           
+//         }
+//     }
 
-    Ok((params,variadic))
-}
+//     Ok((params,variadic))
+// }
 
 
-pub fn get_func_params2<'a>(block : BlockContainer<'a>) -> Result<(Vec<&'a str>,bool),BuilderError<BuilderErrorType>> {
+pub fn get_func_params<'a>(block : BlockContainer<'a>) -> Result<(Vec<&'a str>,bool),BuilderError<BuilderErrorType>> {
     // if block.has_semi_colon_ends() {
 
     // }
@@ -191,7 +196,7 @@ pub fn get_func_params2<'a>(block : BlockContainer<'a>) -> Result<(Vec<&'a str>,
 
     for (param_ind,param) in block.params().enumerate() {
 
-        let idn = get_symbol(param)?;
+        let idn = get_idn(param)?;
 
         if idn=="..." { //variadic
             if param_ind!=block.params_num()-1 {

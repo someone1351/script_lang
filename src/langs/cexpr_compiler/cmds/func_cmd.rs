@@ -2,8 +2,8 @@ use super::super::builder::*;
 use super::super::super::cexpr_parser::*;
 use super::super::BuilderErrorType;
 
-use super::get_func_params2;
-use super::get_symbol;
+use super::get_func_params;
+use super::get_idn;
 
 
 pub fn func_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> {
@@ -54,7 +54,7 @@ pub fn func_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primi
     // }
 
     //idn
-    let idn = get_symbol(record.param(1).unwrap())?;
+    let idn = get_idn(record.param(1).unwrap())?;
     // let idn_loc=record.primitive(1).unwrap().start_loc();
 
     //
@@ -68,7 +68,7 @@ pub fn func_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primi
     };
 
     // let (params,variadic)=get_func_typed_params(sexpr.get(2).unwrap(), builder)?;
-    let (params,variadic)=get_func_params2(params_block)?;
+    let (params,variadic)=get_func_params(params_block)?;
 
     //initialise var decl, so it can be captured and used for recursion if necessary
     // builder.result_nil();
