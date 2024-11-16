@@ -146,25 +146,17 @@ pub type Cmd = for<'a> fn(RecordContainer<'a>, &mut Builder<'a,PrimitiveContaine
 
 pub struct Compiler {
     cmds : HashMap<String,Vec<Cmd>>,
-    // denote_get_var:bool,
     get_var_prefix : Option<&'static str>,
-    // get_var_prefix : &'static str,
-    // use_get_var_prefix : bool,
     optional_get_var_prefix : bool,
-    // next_anon_id:usize,
 }
 
 impl Compiler {
-    pub fn new_empty() -> Self { //denote_get_var:bool,
+    pub fn new_empty() -> Self {
         Self{
             cmds:Default::default(),
-            // get_var_prefix : denote_get_var.then_some("$"),
-            // get_var_prefix : "$",
             get_var_prefix : Some("$"),
             // get_var_prefix : None,
-            // use_get_var_prefix:true,
             optional_get_var_prefix:true,
-            // next_anon_id:1,
         }
     }
     pub fn new() -> Self { //denote_get_var:bool,
@@ -296,9 +288,7 @@ impl Compiler {
                                         return Err(errors.last().unwrap().clone());
                                     }
                                 } else if record.params_num()==1 { //no args, no fields
-                                    if let Some(get_var_prefix)=self.get_var_prefix 
-                                    // if self.use_get_var_prefix
-                                    {
+                                    if let Some(get_var_prefix)=self.get_var_prefix {
                                         if let Some(symbol)=symbol.strip_prefix(get_var_prefix) {                                            
                                             builder.get_var(symbol);
                                         } else {
@@ -308,9 +298,7 @@ impl Compiler {
                                         builder.get_var_or_call_method(symbol);
                                     }
                                 } 
-                                else if self.get_var_prefix.is_some() && symbol.starts_with(self.get_var_prefix.unwrap()) 
-                                // else if self.use_get_var_prefix && symbol.starts_with(self.get_var_prefix)                                 
-                                {
+                                else if self.get_var_prefix.is_some() && symbol.starts_with(self.get_var_prefix.unwrap()) {
                                     return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NotAMethod });
                                 } else { //has args, no fields
                                     for i in (1 .. record.params_num()).rev() {
@@ -395,9 +383,7 @@ impl Compiler {
                                 return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
                             }
                         } else {
-                            let symbol=if let Some(get_var_prefix)=self.get_var_prefix 
-                                // if self.use_get_var_prefix 
-                            {   
+                            let symbol=if let Some(get_var_prefix)=self.get_var_prefix {   
                                 if let Some(symbol)=symbol.strip_prefix(get_var_prefix) {
                                     if symbol.is_empty() {
                                         return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
@@ -431,10 +417,6 @@ impl Compiler {
     fn get_fields<'a>(&self,
         builder:&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>,
         top_primitive:PrimitiveContainer<'a>,
-        // fields:FieldIter<'a>,
-        // get_var_prefix : Option<&'static str>,
-        // get_var_prefix : &'static str,
-        // use_get_var_prefix : bool,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
         
         let mut last_start_loc=top_primitive.start_loc();
@@ -449,10 +431,7 @@ impl Compiler {
             // let field=symbol.field(field_ind).unwrap();
 
             if let Some(symbol)=field.primitive().symbol() {
-                if let Some(get_var_prefix)=self.get_var_prefix 
-                // if self.use_get_var_prefix
-                
-                {
+                if let Some(get_var_prefix)=self.get_var_prefix {
                     if symbol.starts_with(get_var_prefix) {
                         builder.eval(field.primitive());
                     } else { //is string
