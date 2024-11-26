@@ -1,4 +1,27 @@
 
+fn myfunc {a b} {
+	* a b
+}
+
+for i 0 10 {
+	if {= 0 {mod i 2}} { # mod is a method (function from rust), so doesn't need to use the "call" command to run it
+		println "hello {i}";
+	} elif {= 0 {mod i 3}} {	
+		println "other3 {} {}" i {call myfunc i 5};
+	} else {
+		println "other {} {}" i {call myfunc i 5};
+	}
+}
+
+fn thing {a} {
+	#when returning variable, need dollar prefix, everywhere else the prefix is optional
+	$a
+	#return a
+}
+
+call thing 44
+
+
 var v {array 1 {fn {} 123} {fn {a} {+ a 1}}}
 
 v.2 11
