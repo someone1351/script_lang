@@ -115,7 +115,12 @@ pub fn set_var_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pr
             // if let Some(s)=get_special_symbol(field) {
             //     builder.result_string(s);
             // } else {
-                builder.eval(field_primitive);
+
+                if let Some(x)=field_primitive.symbol() {
+                    builder.result_string(x);
+                } else {
+                    builder.eval(field_primitive);
+                }
             // }
 
             //push field, swap

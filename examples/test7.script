@@ -8,3 +8,10 @@ fn abc(a b) {
 }
 
 abc 11 22
+
+var d (dict)
+
+set d.func {fn {x} {println "hello {x}"}}
+
+
+d.func "joe"

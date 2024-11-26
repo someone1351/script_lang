@@ -469,7 +469,6 @@ impl Compiler {
                 builder.eval(field.primitive());
             }
 
-            
             builder
                 .param_loc(field.start_loc(),field.end_loc())
                 .param_push()
