@@ -11,6 +11,9 @@ pub enum  ParserErrorType {
     ClosingBlockExpected,
     UnmatchedClosingBlock,
     ExpectedField,
+    ExpectingClosingCurlyBracket,
+    ExpectingClosingSquareBracket,
+    ExpectingClosingParentheses,
 }
 
 

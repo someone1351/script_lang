@@ -3,8 +3,8 @@ var v {array 1 {fn {} 123} {fn {a} {+ a 1}}}
 
 v.2 11
 
-fn abc {a} {
-	+ a 12
+fn abc(a b) {
+	+ a b 12
 }
 
-abc 11
+abc 11 22

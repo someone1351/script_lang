@@ -94,17 +94,22 @@ pub struct TempBlock {
     // pub end_loc : Loc, // from closing brace
 }
 
+#[derive(Clone, Copy, PartialEq,Eq)]
+pub enum BlockBracket {
+    Curly,Parentheses,Square,
+}
 pub fn parse<'a>(src:&'a str,
     // path:Option<&'a Path>
 ) -> Result<Parsed,ParseError> {
 
     pub enum TempWork {
-        Block{block : TempBlock, block_start_loc : Loc, field_start_loc : Option<Loc>,},
+        Block{block : TempBlock, block_start_loc : Loc, field_start_loc : Option<Loc>,bracket:Option<BlockBracket>},
         Param{param:TempParam, 
             // start_loc : Loc,
         }
         
     }
+
 
     //
     let mut input = Input::new(src);
@@ -114,8 +119,10 @@ pub fn parse<'a>(src:&'a str,
         block:TempBlock{records:Vec::new(),},
         block_start_loc:Loc::one(),
         field_start_loc : None,
+        bracket:None,
     }]; // end_loc: Loc::zero() 
 
+    // let mut bracket_stk=Vec::new();
     //
     loop {
 
@@ -135,11 +142,12 @@ pub fn parse<'a>(src:&'a str,
                     cur_work_param.fields.push(TempField{ primitive, start_loc: field_start_loc });
                 } else if let Some(primitive)=parse_string(&mut input,&mut text_map)? {
                     cur_work_param.fields.push(TempField{ primitive, start_loc: field_start_loc });
-                } else if parse_block_begin(&mut input) {
+                } else if let Some(bracket)=parse_block_begin(&mut input) {
                     temp_works_stk.push(TempWork::Block { 
                         block: TempBlock { records: Vec::new(),}, 
                         block_start_loc:loc,
-                        field_start_loc: Some(field_start_loc),  
+                        field_start_loc: Some(field_start_loc),
+                        bracket:Some(bracket)
                     }); // end_loc: Loc::zero(), 
                 } else {
                     return Err(ParseError{
@@ -228,17 +236,18 @@ pub fn parse<'a>(src:&'a str,
         }
         
         //on non root block begin
-        if parse_block_begin(&mut input) {
+        if let Some(bracket)=parse_block_begin(&mut input) {
             temp_works_stk.push(TempWork::Block { 
                 block: TempBlock { records: Vec::new(),}, 
                 block_start_loc:loc,
                 field_start_loc:None,
+                bracket:Some(bracket),
             }); //, end_loc:Loc::zero()
             continue;
         }
 
         //on block end
-        if parse_block_end(&mut input) {
+        if let Some(close_bracket)=parse_block_end(&mut input) {
             //error
             if temp_works_stk.len()==1 {
                 return Err(ParseError{
@@ -253,9 +262,26 @@ pub fn parse<'a>(src:&'a str,
             //
             // let popped_block=temp_elements_stk.pop().unwrap();
             // let cur_element=temp_elements_stk.last_mut().unwrap();
-            let TempWork::Block { block:popped_work_block, block_start_loc:popped_work_block_start_loc,field_start_loc } = temp_works_stk.pop().unwrap() else {
+            let TempWork::Block { 
+                block:popped_work_block, 
+                block_start_loc:popped_work_block_start_loc,
+                field_start_loc, 
+                bracket, 
+            } = temp_works_stk.pop().unwrap() else {
                 panic!("");
             };
+
+            if bracket.unwrap()!=close_bracket {
+                return Err(ParseError{
+                    // path:path.map(|p|p.to_path_buf()),
+                    loc:input.loc(),
+                    error_type:match bracket.unwrap() {
+                        BlockBracket::Curly => ParserErrorType::ExpectingClosingCurlyBracket,
+                        BlockBracket::Square => ParserErrorType::ExpectingClosingSquareBracket,
+                        BlockBracket::Parentheses => ParserErrorType::ExpectingClosingParentheses,
+                    },
+                });
+            }
 
             // popped_work_block.end_loc=input.loc();
 
@@ -530,22 +556,48 @@ fn generate_parsed(temp_root_block:&TempBlock,last_loc:Loc,text_map:HashMap<Stri
     parsed
 }
 
-pub fn parse_block_begin(input:&mut Input) -> bool {
-    if Some("{")==input.get(0, 1) {
-        input.next(1);
-        true
-    } else {
-        false
+pub fn parse_block_begin(input:&mut Input) -> Option<BlockBracket> {
+    let x=input.has(0, ["{","[","("]);
+
+    if x.is_some() {
+        input.next(x.unwrap().len());
     }
+
+    match x.unwrap_or_default() {
+        "{" => Some(BlockBracket::Curly),
+        "[" => Some(BlockBracket::Square),
+        "(" => Some(BlockBracket::Parentheses),
+        _ => None,
+    }
+
+//     if Some("{")==input.get(0, 1) {
+//         input.next(1);
+//         true
+//     } else {
+//         false
+//     }
 }
 
-pub fn parse_block_end(input:&mut Input) -> bool {
-    if Some("}")==input.get(0, 1) {
-        input.next(1);
-        true
-    } else {
-        false
+pub fn parse_block_end(input:&mut Input) -> Option<BlockBracket> {
+    let x=input.has(0, ["}","]",")"]);
+
+    if x.is_some() {
+        input.next(x.unwrap().len());
     }
+
+    match x.unwrap_or_default() {
+        "}" => Some(BlockBracket::Curly),
+        "]" => Some(BlockBracket::Square),
+        ")" => Some(BlockBracket::Parentheses),
+        _ => None,
+    }
+
+    // if Some("}")==input.get(0, 1) {
+    //     input.next(1);
+    //     true
+    // } else {
+    //     false
+    // }
 }
 
 pub fn parse_cmnt(input:&mut Input) -> bool {
@@ -692,7 +744,7 @@ fn parse_symbol(
 
     let mut i=0;
 
-    while input.hasnt(i, ["\\"," ","\t","\r","\n","\"","'",",",";","{","}","."]) {
+    while input.hasnt(i, ["\\"," ","\t","\r","\n","\"","'",",",";","{","}",".","[","]","(",")"]) {
         i+=1;
     }
 
