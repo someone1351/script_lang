@@ -98,7 +98,7 @@ pub enum BuilderErrorType {
     InvalidSymbol,
     // NoCmdFound,
     // NoArgsAllowed,
-    NotAMethod,
+    CannotCallGetVar,
 }
 
 
@@ -146,8 +146,9 @@ pub type Cmd = for<'a> fn(RecordContainer<'a>, &mut Builder<'a,PrimitiveContaine
 
 pub struct Compiler {
     cmds : HashMap<String,Vec<Cmd>>,
-    get_var_prefix : Option<&'static str>,
-    optional_get_var_prefix : bool,
+    get_var_prefix : Option<&'static str>, //prefix for getting vars
+    optional_get_var_prefix : bool, //if using get var prefix, make it optional when using vars as a params eg func $a $b => func a b
+    funcs_without_call:bool, //allow calling funcs the same way methods are called eg mymethod 123 and myfunc 123 instead of: call myfunc 123
 }
 
 impl Compiler {
@@ -157,6 +158,7 @@ impl Compiler {
             get_var_prefix : Some("$"),
             // get_var_prefix : None,
             optional_get_var_prefix:true,
+            funcs_without_call:true, //
         }
     }
     pub fn new() -> Self { //denote_get_var:bool,
@@ -297,9 +299,8 @@ impl Compiler {
                                     } else {
                                         builder.get_var_or_call_method(symbol);
                                     }
-                                } 
-                                else if self.get_var_prefix.is_some() && symbol.starts_with(self.get_var_prefix.unwrap()) {
-                                    return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NotAMethod });
+                                } else if self.get_var_prefix.is_some() && symbol.starts_with(self.get_var_prefix.unwrap()) { //has args, no fields, using var prefix, has prefix
+                                    return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
                                 } else { //has args, no fields
                                     for i in (1 .. record.params_num()).rev() {
                                         let x=record.param(i).unwrap();
@@ -310,10 +311,34 @@ impl Compiler {
                                     
                                     builder.commit_param_locs();
                                     builder.loc(first_param.start_loc());
-                                    builder.call_method(symbol, record.params_num()-1);
+
+                                    //
+                                    if self.funcs_without_call {
+                                        builder.call(symbol, record.params_num()-1);
+                                    } else {
+                                        builder.call_method(symbol, record.params_num()-1);
+                                    }
                                 }
+                            } else if self.funcs_without_call && (self.get_var_prefix.is_none() || !symbol.starts_with(self.get_var_prefix.unwrap())) { //no prefix, has fields
+                                for i in (1 .. record.params_num()).rev() {
+                                    let x=record.param(i).unwrap();
+                                    builder.param_loc(x.start_loc(),x.end_loc());
+                                    builder.eval(x.primitive());
+                                    builder.param_push();
+                                }
+                                
+                                builder.commit_param_locs();
+                                builder.loc(first_param.start_loc());
+                                
+                                builder.eval(first_param.primitive());
+                                builder.call_result(record.params_num()-1);
                             } else if record.params_num()==1 { //has fields, no args
-                                builder.eval(first_param.primitive()); 
+                                if self.get_var_prefix.is_none() || symbol.starts_with(self.get_var_prefix.unwrap()) || self.optional_get_var_prefix {
+                                    builder.eval(first_param.primitive());
+                                } else {
+                                    return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::CannotCallGetVar });
+                                }
+                                // println!("dffsd {:?}",first_param.primitive());
                             } else { //args and fields
                                 return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
                             }
