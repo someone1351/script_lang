@@ -280,24 +280,24 @@ pub fn set_field_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
     //fields
     for field_ind in 0 .. fields_num {
         let param_ind=2+field_ind;
-        let prev_sexpr = sexpr.get(param_ind-1).unwrap();
+        // let prev_sexpr = sexpr.get(param_ind-1).unwrap();
 
         //push last result
 
         if fields_num>1 {
             builder
-                .param_loc(prev_sexpr.start_loc(),prev_sexpr.end_loc())
+                // .param_loc(prev_sexpr.start_loc(),prev_sexpr.end_loc())
                 .param_push();
         }
         
         builder
-            .param_loc(prev_sexpr.start_loc(),prev_sexpr.end_loc())
+            // .param_loc(prev_sexpr.start_loc(),prev_sexpr.end_loc())
             .param_push();
 
         //push last result
         if field_ind!=0 && field_ind!=fields_num-1 { //not first or last field
             builder            
-                .param_loc(prev_sexpr.start_loc(),prev_sexpr.end_loc())
+                // .param_loc(prev_sexpr.start_loc(),prev_sexpr.end_loc())
                 .param_push();
         }
 
@@ -308,7 +308,7 @@ pub fn set_field_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
             //push to_val
             builder
                 .eval(to_val_sexpr)
-                .param_loc(to_val_sexpr.start_loc(),to_val_sexpr.end_loc())
+                // .param_loc(to_val_sexpr.start_loc(),to_val_sexpr.end_loc())
                 .param_push()
                 .swap()
                 ;
@@ -326,7 +326,7 @@ pub fn set_field_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
 
         //push field, swap
         builder
-            .param_loc(field.start_loc(),field.end_loc())
+            // .param_loc(field.start_loc(),field.end_loc())
             .param_push()
             .swap();
 
@@ -334,7 +334,7 @@ pub fn set_field_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
         if field_ind!=fields_num-1 {
             //push field, swap
             builder 
-                .param_loc(field.start_loc(),field.end_loc())
+                // .param_loc(field.start_loc(),field.end_loc())
                 .param_push()
                 .swap();
 
@@ -389,10 +389,10 @@ pub fn get_field_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
     
     //fields
     for i in 2 .. sexpr.len() {
-        let prev_sexpr = sexpr.get(i-1).unwrap();
+        // let prev_sexpr = sexpr.get(i-1).unwrap();
 
         builder
-            .param_loc(prev_sexpr.start_loc(),prev_sexpr.end_loc())
+            // .param_loc(prev_sexpr.start_loc(),prev_sexpr.end_loc())
             .param_push(); //last result
 
         //stk=(last_val/idn)
@@ -420,7 +420,7 @@ pub fn get_field_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
         let field_loc = field.start_loc();
         
         builder
-            .param_loc(field.start_loc(),field.end_loc())
+            // .param_loc(field.start_loc(),field.end_loc())
             .param_push()
             .swap()
             ;

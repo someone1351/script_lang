@@ -141,7 +141,9 @@ impl std::error::Error for CompileError {
 
 
 
-pub type Cmd = for<'a> fn(RecordContainer<'a>, &mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>>;
+// pub type Cmd = for<'a> fn(RecordContainer<'a>, &mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>>;
+pub type Cmd = Box<dyn for<'a> Fn(RecordContainer<'a>, &mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>>>;
+// pub type Cmd = Box<dyn Fn(RecordContainer, &mut Builder<PrimitiveContainer,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>>>;
 
 
 pub struct Compiler {
@@ -163,13 +165,15 @@ impl Compiler {
     }
     pub fn new() -> Self { //denote_get_var:bool,
         let mut cmd_scope = Self::new_empty(); //denote_get_var
+        let get_var_prefix=cmd_scope.get_var_prefix;
+
         cmd_scope.add_cmd("while", while_cmd);
         cmd_scope.add_cmd("for", for_cmd);
         cmd_scope.add_cmd("continue", continue_cmd);
         cmd_scope.add_cmd("break", break_cmd);
         cmd_scope.add_cmd("return", return_cmd);
         cmd_scope.add_cmd("var", var_cmd);
-        cmd_scope.add_cmd("set", set_var_cmd);
+        cmd_scope.add_cmd("set", move|r,b|set_var_cmd(r,b,get_var_prefix));
         // cmd_scope.add_cmd("set", set_field_cmd);
         // cmd_scope.add_cmd("get", get_field_cmd);
         cmd_scope.add_cmd("if", if_cmd);
@@ -183,7 +187,7 @@ impl Compiler {
         cmd_scope.add_cmd("format", format_cmd);
         cmd_scope.add_cmd("print", print_cmd);
         cmd_scope.add_cmd("println", println_cmd);
-        cmd_scope.add_cmd("fn", func_cmd);
+        cmd_scope.add_cmd("fn", move|r,b|func_cmd(r,b,get_var_prefix));
         cmd_scope.add_cmd("fn", lambda_cmd);
         cmd_scope.add_cmd("call", call_func_cmd);
         cmd_scope.add_cmd("?", ternary_cmd);
@@ -192,8 +196,12 @@ impl Compiler {
         cmd_scope
     }
 
-    pub fn add_cmd(&mut self,k:&str,cmd : Cmd) {
-        self.cmds.entry(k.to_string()).or_insert_with(Default::default).push(cmd);
+    pub fn add_cmd<F>(&mut self,k:&str,cmd : F) 
+    where
+        // F : Fn(RecordContainer, &mut Builder<PrimitiveContainer,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> + 'static,
+        F : for<'a> Fn(RecordContainer<'a>, &mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> + 'static,
+    {
+        self.cmds.entry(k.to_string()).or_insert_with(Default::default).push(Box::new(cmd));
     }
 
     fn get(&self,k:&str) -> Option<std::slice::Iter<Cmd>> {
@@ -304,12 +312,12 @@ impl Compiler {
                                 } else { //has args, no fields
                                     for i in (1 .. record.params_num()).rev() {
                                         let x=record.param(i).unwrap();
-                                        builder.param_loc(x.start_loc(),x.end_loc());
+                                        // builder.param_loc(x.start_loc(),x.end_loc());
                                         builder.eval(x.primitive());
                                         builder.param_push();
                                     }
                                     
-                                    builder.commit_param_locs();
+                                    // builder.commit_param_locs();
                                     builder.loc(first_param.start_loc());
 
                                     //
@@ -322,12 +330,12 @@ impl Compiler {
                             } else if self.funcs_without_call && (self.get_var_prefix.is_none() || !symbol.starts_with(self.get_var_prefix.unwrap())) { //no prefix, has fields
                                 for i in (1 .. record.params_num()).rev() {
                                     let x=record.param(i).unwrap();
-                                    builder.param_loc(x.start_loc(),x.end_loc());
+                                    // builder.param_loc(x.start_loc(),x.end_loc());
                                     builder.eval(x.primitive());
                                     builder.param_push();
                                 }
                                 
-                                builder.commit_param_locs();
+                                // builder.commit_param_locs();
                                 builder.loc(first_param.start_loc());
                                 
                                 builder.eval(first_param.primitive());
@@ -444,45 +452,57 @@ impl Compiler {
         top_primitive:PrimitiveContainer<'a>,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
         
-        let mut last_start_loc=top_primitive.start_loc();
-        let mut last_end_loc=top_primitive.end_loc();
 
-        //fields
-        for field in top_primitive.param().unwrap().fields() {
-            builder
-                .param_loc(last_start_loc,last_end_loc)
-                .param_push(); //last result
+        builder.get_fields(top_primitive.param().unwrap().fields().map(|field|{
+            let s=field.primitive().symbol();
+            let f=if s.is_none()||self.get_var_prefix.map(|x|s.unwrap().starts_with(x)).unwrap_or_default(){
+                field.primitive()
+            } else {
+                field.string_primitive()
+            };
 
-            // let field=symbol.field(field_ind).unwrap();
+            (f,field.start_loc())
+        }));
 
-            if let Some(symbol)=field.primitive().symbol() {
-                if let Some(get_var_prefix)=self.get_var_prefix {
-                    if symbol.starts_with(get_var_prefix) {
-                        builder.eval(field.primitive());
-                    } else { //is string
-                        builder.result_string(symbol);            
-                    }
-                } else { //is string
-                    builder.result_string(symbol);   
-                }
-            } else { //not a symbol
-                builder.eval(field.primitive());
-            }
+        // // let mut last_start_loc=top_primitive.start_loc();
+        // // let mut last_end_loc=top_primitive.end_loc();
 
-            builder
-                .param_loc(field.start_loc(),field.end_loc())
-                .param_push()
-                .swap()
-                ;
+        // //fields
+        // for field in top_primitive.param().unwrap().fields() {
+        //     builder
+        //         // .param_loc(last_start_loc,last_end_loc)
+        //         .param_push(); //last result
 
-            builder.loc(field.start_loc());
+        //     // let field=symbol.field(field_ind).unwrap();
 
-            //
-            builder.call_method("get_field", 2);
+        //     if let Some(symbol)=field.primitive().symbol() {
+        //         if let Some(get_var_prefix)=self.get_var_prefix {
+        //             if symbol.starts_with(get_var_prefix) {
+        //                 builder.eval(field.primitive());
+        //             } else { //is string
+        //                 builder.result_string(symbol);            
+        //             }
+        //         } else { //is string
+        //             builder.result_string(symbol);   
+        //         }
+        //     } else { //not a symbol
+        //         builder.eval(field.primitive());
+        //     }
+
+        //     builder
+        //         // .param_loc(field.start_loc(),field.end_loc())
+        //         .param_push()
+        //         .swap()
+        //         ;
+
+        //     builder.loc(field.start_loc());
+
+        //     //
+        //     builder.call_method("get_field", 2);
             
-            last_start_loc=field.start_loc();
-            last_end_loc=field.end_loc();
-        }
+        //     // last_start_loc=field.start_loc();
+        //     // last_end_loc=field.end_loc();
+        // }
 
         Ok(())
     }

@@ -144,9 +144,9 @@ impl CmdScope {
                 
                         // .eval_push_sexprs(sexpr.list_iter_from(1))
                         
-                        for x in sexpr.list_iter_from(1).rev() {
-                            builder.param_loc(x.start_loc(),x.end_loc());
-                        }
+                        // for x in sexpr.list_iter_from(1).rev() {
+                        //     // builder.param_loc(x.start_loc(),x.end_loc());
+                        // }
 
                         builder.loc(v0.start_loc());
                         builder.call(symbol,sexpr.len()-1);
@@ -163,11 +163,11 @@ impl CmdScope {
                         
                     
                 
-                    for x in sexpr.list_iter_from(1).rev() {
-                        builder.param_loc(x.start_loc(),x.end_loc());
-                    }
+                    // for x in sexpr.list_iter_from(1).rev() {
+                    //     // builder.param_loc(x.start_loc(),x.end_loc());
+                    // }
 
-                    builder.commit_param_locs();
+                    // builder.commit_param_locs();
 
                     builder.loc(v0.start_loc());
                     // builder.add_node(BuildersNodeType::CallResult(sexpr.len()-1));

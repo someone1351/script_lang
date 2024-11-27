@@ -49,8 +49,8 @@ pub use parsed::*;
 
 pub enum TempPrimitiveType {
     Block(TempBlock),
-    Float(f64),
-    Int(i64),
+    Float(f64,usize), //num,text_ind
+    Int(i64,usize),//num,text_ind
     String(usize),
     Symbol(usize),
 }
@@ -114,6 +114,8 @@ pub fn parse<'a>(src:&'a str,
     //
     let mut input = Input::new(src);
     let mut text_map = HashMap::<String,usize>::new();
+    text_map.insert("".to_string(), 0); //used in primitive container, when converting box primitive to string primitive
+
     // let mut temp_elements_stk=vec![TempElement{block:TempBlock{records:Vec::new()},start_loc:Loc::one()}];
     let mut temp_works_stk=vec![TempWork::Block{
         block:TempBlock{records:Vec::new(),},
@@ -133,7 +135,7 @@ pub fn parse<'a>(src:&'a str,
                 let loc=input.loc();
 
                 //parse symbol,string,int or block
-                if let Some(primitive)=parse_number(&mut input,false) {
+                if let Some(primitive)=parse_number(&mut input,false,&mut text_map) {
                     cur_work_param.fields.push(TempField{ primitive, start_loc: field_start_loc });
                 } else if let Some((text_ind,start_loc,end_loc))=parse_symbol(&mut input,&mut text_map) {
                     // let primitive_type=TempPrimitiveType::String(text_ind); 
@@ -352,7 +354,7 @@ pub fn parse<'a>(src:&'a str,
             // src,
             // path
         )?
-            .or_else(||parse_number(&mut input,true))
+            .or_else(||parse_number(&mut input,true,&mut text_map))
             // .or_else(||parse_symbol(&mut input,&mut text_map))
         {
             // let cur_element=temp_elements_stk.last_mut().unwrap();
@@ -493,10 +495,10 @@ fn generate_parsed(temp_root_block:&TempBlock,last_loc:Loc,text_map:HashMap<Stri
                                     work_stk.push(ParsedWork { cur_temp_block: temp_block, cur_block_ind: new_block_ind });
                                     PrimitiveType::Block(new_block_ind)
                                 },
-                                TempPrimitiveType::Float(x)=>PrimitiveType::Float(*x),
-                                TempPrimitiveType::Int(x)=>PrimitiveType::Int(*x),
-                                TempPrimitiveType::String(x)=>PrimitiveType::String(*x),
-                                TempPrimitiveType::Symbol(x)=>PrimitiveType::Symbol(*x),
+                                TempPrimitiveType::Float(x,s)=>PrimitiveType::Float(*x,*s),
+                                TempPrimitiveType::Int(x,s)=>PrimitiveType::Int(*x,*s),
+                                TempPrimitiveType::String(s)=>PrimitiveType::String(*s),
+                                TempPrimitiveType::Symbol(s)=>PrimitiveType::Symbol(*s),
                             };
     
                             parsed.primitives.push(Primitive { 
@@ -521,9 +523,9 @@ fn generate_parsed(temp_root_block:&TempBlock,last_loc:Loc,text_map:HashMap<Stri
                                     work_stk.push(ParsedWork { cur_temp_block: temp_block, cur_block_ind: new_block_ind });
                                     PrimitiveType::Block(new_block_ind)
                                 },
-                                TempPrimitiveType::Int(x)=>PrimitiveType::Int(*x),
-                                TempPrimitiveType::String(x)=>PrimitiveType::String(*x),
-                                TempPrimitiveType::Symbol(x)=>PrimitiveType::Symbol(*x), //fixed
+                                TempPrimitiveType::Int(x,s)=>PrimitiveType::Int(*x,*s),
+                                TempPrimitiveType::String(s)=>PrimitiveType::String(*s),
+                                TempPrimitiveType::Symbol(s)=>PrimitiveType::Symbol(*s), //fixed
                                 _ => {panic!("")},
                             };
     
@@ -779,7 +781,11 @@ fn parse_field_sep(
         None
     }
 }
-fn parse_number(input:&mut Input, float_aswell:bool) -> Option<TempPrimitive> {
+fn parse_number(
+    input:&mut Input, 
+    float_aswell:bool,
+    text_map:&mut HashMap<String,usize>,
+) -> Option<TempPrimitive> {
     let mut i=0;
     let mut is_float=false;
     let mut ok=false;
@@ -822,10 +828,13 @@ fn parse_number(input:&mut Input, float_aswell:bool) -> Option<TempPrimitive> {
     let start_loc=input.loc();
     let token=input.get(0, i).unwrap();
     
+    let text_map_size=text_map.len();
+    let text_ind=*text_map.entry(token.to_string()).or_insert(text_map_size);
+
     let primitive_type=if is_float {
-        TempPrimitiveType::Float(token.parse().unwrap())
+        TempPrimitiveType::Float(token.parse().unwrap(),text_ind)
     } else {
-        TempPrimitiveType::Int(token.parse().unwrap())
+        TempPrimitiveType::Int(token.parse().unwrap(),text_ind)
     };
 
     input.next(i);

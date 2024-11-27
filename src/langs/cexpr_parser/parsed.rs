@@ -9,13 +9,13 @@ use super::PrimitiveContainer;
 #[derive(Debug,Clone)]
 pub enum PrimitiveType {
     Block(usize),
-    Float(f64),
-    Int(i64),
+    Float(f64,usize), //num,text_ind
+    Int(i64,usize),//num,text_ind
     // Bool(bool),
     // Nil,
     // Void,
-    String(usize),
-    Symbol(usize), 
+    String(usize),//text_ind
+    Symbol(usize), //text_ind
     // Param(usize),
 }
 
@@ -85,7 +85,7 @@ impl Parsed {
         BlockContainer { parsed: self, block_ind: 0 }
     }
     pub fn root_block_primitive(&self) -> PrimitiveContainer {
-        PrimitiveContainer { parsed: self, primitive_ind: 0 }
+        PrimitiveContainer { parsed: self, primitive_ind: 0, to_string:false, }
     }
     // pub fn src(&self)->&'a str {
     //     self.src

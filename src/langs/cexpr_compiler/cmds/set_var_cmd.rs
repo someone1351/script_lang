@@ -4,7 +4,11 @@ use super::super::BuilderErrorType;
 
 use super::get_idn;
 
-pub fn set_var_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> {
+pub fn set_var_cmd<'a>(
+    record : RecordContainer<'a>, 
+    builder :&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>,
+    get_var_prefix : Option<&'static str>,
+) -> Result<(),BuilderError<BuilderErrorType>> {
     //set x 123
 
     if record.params_num() != 3 {        
@@ -47,11 +51,13 @@ pub fn set_var_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pr
             .set_var(idn)
             ;
     } else {
+        builder.loc(var_param.start_loc());
+
         if let Some(idn)=var_param.primitive().symbol() {
-            let idn_loc=record.param(1).unwrap().start_loc();
+            // let idn_loc=var_param.start_loc();
         
             builder
-                .loc(idn_loc)
+                // .loc(var_param.start_loc())
                 .get_var(idn);
         } else { //a block, otherwise would be an err, due to nothing else has fields
             builder.eval(var_param.primitive());
@@ -61,115 +67,21 @@ pub fn set_var_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pr
         // builder.eval(var_param.primitive());
 
         
-        let to_val=record.param(2).unwrap().primitive();
+        let to_val=record.param(2).unwrap();
 
         //
-        let fields_num = var_param.fields_num();
+        let x=var_param.fields().map(|field|{
+            let s=field.primitive().symbol();
+            let f=if s.is_none()||get_var_prefix.map(|x|s.unwrap().starts_with(x)).unwrap_or_default(){
+                field.primitive()
+            } else {
+                field.string_primitive()
+            };
 
-        //
-        
-        let mut last_start_loc=var_param.start_loc();
-        let mut last_end_loc=var_param.end_loc();
+            (f,field.start_loc())
+        });
 
-
-        //fields
-        for field_ind in 0 .. fields_num {
-            // let param_ind=2+field_ind;
-            // let prev_sexpr = var_param.field(field_ind); //record.param(param_ind-1).unwrap();
-
-            //push last result
-
-            if fields_num>1 {
-                builder
-                    .param_loc(last_start_loc,last_end_loc)
-                    .param_push();
-            }
-            
-            builder
-                .param_loc(last_start_loc,last_end_loc)
-                .param_push();
-
-            //push last result
-            if field_ind!=0 && field_ind!=fields_num-1 { //not first or last field
-                builder            
-                    .param_loc(last_start_loc,last_end_loc)
-                    .param_push();
-            }
-
-            //on last field : push to
-            if field_ind==fields_num-1 {
-                //push to_val
-                builder
-                    .eval(to_val)
-                    .param_loc(to_val.start_loc(),to_val.end_loc())
-                    .param_push()
-                    .swap()
-                    ;
-            }
-
-            //
-            // let field_primitive=record.param(param_ind).unwrap().primitive();
-            let field=var_param.field(field_ind).unwrap();
-            let field_primitive=field.primitive();
-            //eval field
-            // if let Some(s)=get_special_symbol(field) {
-            //     builder.result_string(s);
-            // } else {
-
-                if let Some(x)=field_primitive.symbol() {
-                    builder.result_string(x);
-                } else {
-                    builder.eval(field_primitive);
-                }
-            // }
-
-            //push field, swap
-            builder
-                .param_loc(field_primitive.start_loc(),field_primitive.end_loc())
-                .param_push()
-                .swap();
-
-            //on not last field
-            if field_ind!=fields_num-1 {
-                //push field, swap
-                builder 
-                    .param_loc(field_primitive.start_loc(),field_primitive.end_loc())
-                    .param_push()
-                    .swap();
-
-                //get_field
-                builder
-                    .loc(field_primitive.start_loc())
-                    .call_method("get_field", 2)
-                    ;
-            }
-
-            
-            last_start_loc=field.start_loc();
-            last_end_loc=field.end_loc();
-        }
-
-        //
-        let loc = record.param(1).unwrap().start_loc();
-
-        //
-        builder
-            .loc(loc)
-            .call_method("set_field", 3);
-
-        //sometimes is unecessary to call, for things like arrays and dicts, since they hold "pointer" like values,
-        //  and not copies, but for get_field's that return a copy and not a "pointer", then
-        //  it must be modified and then copied back to its original owner
-        // println!("fields num is {fields_num}");
-        for _ in 0 .. fields_num-1 {
-            builder
-                .rot()
-                .rot()
-                .swap()
-                .call_method("set_field", 3)
-                ;
-        }
-
+        builder.set_fields(x, (to_val.primitive(),to_val.start_loc()));
     }
 
 

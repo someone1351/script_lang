@@ -31,7 +31,12 @@ use super::super::ast::*;
 
 
 //todo: allow return of both builderrs and asterrs, so that mistakes in cmds don't panic/crash the program
-
+/* 
+todo
+* instead of setting param loc, set optional loc for results, which the param loc is then gotten by
+* * for params, if eval a code block, need to reset loc to the start of that block? no? eg b.loc(x).eval(y).push_param() the loc x will be used by push_param?
+* is start/end loc really needed for params? would be simpler just to have the start loc
+*/
 
 
 // #[derive(Debug,Clone)]
@@ -98,8 +103,187 @@ pub struct Builder<'a,T:Clone+Debug+'a,E:Clone+Debug> {
     temp_stk_last_len : usize,
 }
 
+// pub enum BuilderField<'a,T> {
+//     String(&'a str),
+//     // Symbol(&'a str),
+//     // Int(i64),
+//     Eval(T),
+// }
 
 impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
+    pub fn get_fields<F>(&mut self, fields : F) -> &mut Self 
+    where 
+        // F : IntoIterator<Item = (BuilderField<'a,T>,Loc)>,
+        F : IntoIterator<Item = (T,Loc)>,
+    {
+            
+        //fields
+        for field in fields.into_iter() {
+            self.param_push(); //last result
+
+            // match field.0 {
+            //     BuilderField::Eval(x) => { self.eval(x); }
+            //     BuilderField::String(x) => { self.result_string(x); }
+            // }
+            
+            self.eval(field.0.clone());
+            self
+                .loc(field.1)
+                .param_push()
+                .swap()
+                .call_method("get_field", 2);
+        }
+
+        self
+    }
+    pub fn set_fields<F>(&mut self, fields : F, to_val:(T,Loc)) -> &mut Self 
+    where 
+        F : IntoIterator<Item = (T,Loc)>,
+    {
+
+        // if let Some(idn)=var_param.primitive().symbol() {
+        //     let idn_loc=record.param(1).unwrap().start_loc();
+        
+        //     builder
+        //         .loc(idn_loc)
+        //         .get_var(idn);
+        // } else { //a block, otherwise would be an err, due to nothing else has fields
+        //     builder.eval(var_param.primitive());
+        // }
+
+        //
+        // builder.eval(var_param.primitive());
+
+        
+        // let to_val=record.param(2).unwrap().primitive();
+
+        let fields=fields.into_iter().collect::<Vec<_>>();
+
+        //
+        let fields_num = fields.len();
+
+        //
+        
+        // let mut last_start_loc=var_param.start_loc();
+        // let mut last_end_loc=var_param.end_loc();
+
+
+        //fields
+        for field_ind in 0 .. fields_num {
+            // let param_ind=2+field_ind;
+            // let prev_sexpr = var_param.field(field_ind); //record.param(param_ind-1).unwrap();
+
+            //push last result
+
+            if fields_num>1 {
+                self
+                    // .param_loc(last_start_loc,last_end_loc)
+                    .param_push();
+            }
+            
+            self
+                // .param_loc(last_start_loc,last_end_loc)
+                .param_push();
+
+            //push last result
+            if field_ind!=0 && field_ind!=fields_num-1 { //not first or last field
+                self            
+                    // .param_loc(last_start_loc,last_end_loc)
+                    .param_push();
+            }
+
+            //on last field : push to
+            if field_ind==fields_num-1 {
+                //push to_val
+                self
+                    .eval(to_val.0.clone())
+                    // .param_loc(to_val.start_loc(),to_val.end_loc())
+                    .param_push()
+                    .swap()
+                    ;
+            }
+
+            //
+            // let field_primitive=record.param(param_ind).unwrap().primitive();
+            // let field=var_param.field(field_ind).unwrap();
+            let field=fields.get(field_ind).unwrap();
+            // let field_primitive=field.primitive();
+            //eval field
+            // if let Some(s)=get_special_symbol(field) {
+            //     builder.result_string(s);
+            // } else {
+
+            // match &field.0 {
+            //     BuilderField::Eval(x) => { self.eval(x.clone()); }
+            //     BuilderField::String(x) => { self.result_string(x); }
+            // }
+            self.eval(field.0.clone());
+            self.loc(field.1);
+            //     if let Some(symbol)=field_primitive.symbol() {
+            //         if let Some(get_var_prefix)=get_var_prefix {
+            //             if symbol.starts_with(get_var_prefix) {
+            //                 self.eval(field.primitive());
+            //             } else { //is string
+            //                 builder.result_string(symbol);            
+            //             }
+            //         } else { //is string
+            //             builder.result_string(symbol);
+            //         }
+            //     } else {
+            //         builder.eval(field_primitive);
+            //     }
+            // }
+
+            //push field, swap
+            self
+                // .param_loc(field_primitive.start_loc(),field_primitive.end_loc())
+                .param_push()
+                .swap();
+
+            //on not last field
+            if field_ind!=fields_num-1 {
+                //push field, swap
+                self 
+                    // .param_loc(field_primitive.start_loc(),field_primitive.end_loc())
+                    .param_push()
+                    .swap();
+
+                //get_field
+                self
+                    // .loc(field_primitive.start_loc())
+                    .call_method("get_field", 2)
+                    ;
+            }
+
+            
+            // last_start_loc=field.start_loc();
+            // last_end_loc=field.end_loc();
+        }
+
+        //
+        // let loc = to_val.1;//record.param(1).unwrap().start_loc();
+
+        //
+        self
+            .loc(to_val.1)
+            .call_method("set_field", 3);
+
+        //sometimes is unecessary to call, for things like arrays and dicts, since they hold "pointer" like values,
+        //  and not copies, but for get_field's that return a copy and not a "pointer", then
+        //  it must be modified and then copied back to its original owner
+        // println!("fields num is {fields_num}");
+        for _ in 0 .. fields_num-1 {
+            self
+                .rot()
+                .rot()
+                .swap()
+                .call_method("set_field", 3)
+                ;
+        }
+
+        self
+    }
+
     pub fn temp_mark(&mut self) {
         self.temp_last_loc=self.cur_loc;
         self.temp_stk_last_len = self.temp_stk.len();
@@ -138,22 +322,22 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         self.cur_loc=None;
         self
     }
-    pub fn param_loc(&mut self, _start_loc:Loc, _end_loc:Loc) -> &mut Self {
-        //todo
-        self
-    }
-    pub fn param_loc_swap(&mut self) -> &mut Self {
-        //todo
-        self
-    }
-    pub fn param_loc_rot(&mut self) -> &mut Self {
-        //todo
-        self
-    }
+    // pub fn param_loc(&mut self, _start_loc:Loc, _end_loc:Loc) -> &mut Self {
+    //     //todo
+    //     self
+    // }
+    // pub fn param_loc_swap(&mut self) -> &mut Self {
+    //     //todo
+    //     self
+    // }
+    // pub fn param_loc_rot(&mut self) -> &mut Self {
+    //     //todo
+    //     self
+    // }
     
-    pub fn commit_param_locs(&mut self) {
-        //todo
-    }
+    // pub fn commit_param_locs(&mut self) {
+    //     //todo
+    // }
     
 
     // pub fn result_value(&mut self,v:&Value) -> &mut Self {
@@ -236,7 +420,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     }
 
     pub fn swap(&mut self) -> &mut Self {
-        self.param_loc_swap();
+        // self.param_loc_swap();
         // self.add_node(BuilderNodeType::StackSwap)
 
         self.add_node(|ast|{
@@ -246,7 +430,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     }
 
     pub fn rot(&mut self) -> &mut Self {
-        self.param_loc_rot();
+        // self.param_loc_rot();
         // self.add_node(BuilderNodeType::StackRot)
 
         self.add_node(|ast|{
@@ -256,7 +440,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     }
 
     pub fn dup(&mut self) -> &mut Self {
-        self.param_loc_rot();
+        // self.param_loc_dup();
         // self.add_node(BuilderNodeType::StackDup)
 
         self.add_node(|ast|{
@@ -267,7 +451,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
 
     // not necessary? (can renable if needed)
     pub fn pop(&mut self) -> &mut Self {
-        self.param_loc_rot();
+        // self.param_loc_rot();
         // self.add_node(BuilderNodeType::StackPop)
 
         self.add_node(|ast|{
@@ -354,7 +538,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     pub fn call_anon(&mut self,name:&'a str,params_num:usize) -> &mut Self {
         // let anon_id=if self.in_cmd{Some(self.next_cmd_anon_id)}else{Some(0)};
         let anon_id=Some(self.cur_anon_id);
-        self.commit_param_locs();
+        // self.commit_param_locs();
         // self.add_node(BuilderNodeType::Call{name:n,params_num,anon_id})
 
         
@@ -368,7 +552,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
 
 
     pub fn call_method(&mut self,name:&'a str,params_num:usize) -> &mut Self {
-        self.commit_param_locs();
+        // self.commit_param_locs();
         // self.add_node(BuilderNodeType::CallMethod(n,params_num))
 
         self.add_node(move|ast|{
@@ -383,7 +567,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     // }
 
     pub fn call(&mut self,name:&'a str,params_num:usize) -> &mut Self {
-        self.commit_param_locs();
+        // self.commit_param_locs();
         // self.add_node(BuilderNodeType::Call{name:n,params_num,anon_id:None})
 
         self.add_node(move|ast|{
@@ -393,7 +577,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     }
 
     pub fn call_result(&mut self,params_num:usize) -> &mut Self {
-        self.commit_param_locs();
+        // self.commit_param_locs();
         // self.add_node(BuilderNodeType::CallResult(params_num))
         
         self.add_node(move|ast|{
@@ -403,7 +587,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     }
 
     pub fn get_var_or_call_method(&mut self,name:&'a str) -> &mut Self {
-        self.commit_param_locs();
+        // self.commit_param_locs();
         // self.add_node(BuilderNodeType::CallMethodOrGetVar{name},)
 
         self.add_node(|ast|{           

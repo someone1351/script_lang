@@ -33,7 +33,7 @@ impl<'a> BlockContainer<'a> {
         }
     }
     pub fn primitive(&self) -> PrimitiveContainer<'a> {
-        PrimitiveContainer { parsed: self.parsed, primitive_ind:self.block().primitive }
+        PrimitiveContainer { parsed: self.parsed, primitive_ind:self.block().primitive, to_string:false, }
     }
 
     pub fn start_loc(&self) -> Loc {
@@ -162,6 +162,7 @@ impl<'a> std::fmt::Debug for RecordContainer<'a> {
 pub struct PrimitiveContainer<'a> {
     pub parsed:&'a Parsed,
     pub primitive_ind:usize,
+    pub to_string : bool,
 }
 
 impl<'a> PrimitiveContainer<'a> {
@@ -170,13 +171,23 @@ impl<'a> PrimitiveContainer<'a> {
     }
     pub fn primitive_type(&self) -> PrimitiveTypeContainer<'a> {
         let primitive=self.primitive();
+        if self.to_string {
+            let s=match primitive.primitive_type.clone() {
+                PrimitiveType::Block(_) => 0, //0 is an empty string
+                PrimitiveType::Float(_,s)|PrimitiveType::Int(_,s)|PrimitiveType::String(s)|PrimitiveType::Symbol(s) => s,
+            };
 
-        match primitive.primitive_type.clone() {
-            PrimitiveType::Block(block_ind) => PrimitiveTypeContainer::Block(BlockContainer {parsed:self.parsed,block_ind}),
-            PrimitiveType::Float(f) => PrimitiveTypeContainer::Float(f),
-            PrimitiveType::Int(i) => PrimitiveTypeContainer::Int(i),
-            PrimitiveType::String(s) => PrimitiveTypeContainer::String(self.parsed.texts.get(s).unwrap().as_str()),
-            PrimitiveType::Symbol(s) => PrimitiveTypeContainer::Symbol(self.parsed.texts.get(s).unwrap().as_str()),
+            PrimitiveTypeContainer::String(self.parsed.texts.get(s).unwrap().as_str())
+        } else {
+
+            match primitive.primitive_type.clone() {
+                // x if self.to_string => 
+                PrimitiveType::Block(block_ind) => PrimitiveTypeContainer::Block(BlockContainer {parsed:self.parsed,block_ind}),
+                PrimitiveType::Float(f,_s) => PrimitiveTypeContainer::Float(f),
+                PrimitiveType::Int(i,_s) => PrimitiveTypeContainer::Int(i),
+                PrimitiveType::String(s) => PrimitiveTypeContainer::String(self.parsed.texts.get(s).unwrap().as_str()),
+                PrimitiveType::Symbol(s) =>PrimitiveTypeContainer::Symbol(self.parsed.texts.get(s).unwrap().as_str()),
+            }
         }
     }
     pub fn float(&self) -> Option<f64> {
@@ -196,10 +207,30 @@ impl<'a> PrimitiveContainer<'a> {
     pub fn string(&self) -> Option<&'a str> {
         if let PrimitiveTypeContainer::String(s)=self.primitive_type() {
             Some(s)
+        // } else if self.to_string {
+        //     if let PrimitiveTypeContainer::Symbol(s)=self.primitive_type() {
+        //         Some(s)
+        //     } else {
+        //         None
+        //     }
         } else {
             None
         }
     }
+    // pub fn make_string(&self) -> Option<Self> {
+    //     if let PrimitiveTypeContainer::Symbol(_)=self.primitive_type() {
+    //         let mut x = self.clone();
+    //         x.to_string=true;
+    //         Some(x)
+    //     } else {
+    //         None
+    //     }
+    // }
+    // pub fn make_string(&self) -> Self {
+    //     let mut x = self.clone();
+    //     x.to_string=true;
+    //     x
+    // }
     pub fn symbol(&self) -> Option<&'a str> {
         if let PrimitiveTypeContainer::Symbol(s)=self.primitive_type() {
             Some(s)
@@ -283,7 +314,11 @@ impl<'a> ParamContainer<'a> {
     }
     pub fn primitive(&self)->PrimitiveContainer<'a> {
         let param=self.param();
-        PrimitiveContainer{ parsed: self.parsed, primitive_ind:param.primitive }
+        PrimitiveContainer{ parsed: self.parsed, primitive_ind:param.primitive, to_string:false, }
+    }
+    pub fn string_primitive(&self)->PrimitiveContainer<'a> {
+        let param=self.param();
+        PrimitiveContainer{ parsed: self.parsed, primitive_ind:param.primitive, to_string:true, }
     }
     pub fn fields_num(&self) -> usize {
         self.param().fields.len()
@@ -331,7 +366,10 @@ impl<'a> FieldContainer<'a> {
       self.parsed.fields.get(self.field_ind).unwrap()
     }
     pub fn primitive(&self)->PrimitiveContainer<'a> {
-        PrimitiveContainer{ parsed: self.parsed, primitive_ind:self.field().primitive }
+        PrimitiveContainer{ parsed: self.parsed, primitive_ind:self.field().primitive, to_string:false, }
+    }
+    pub fn string_primitive(&self)->PrimitiveContainer<'a> {
+        PrimitiveContainer{ parsed: self.parsed, primitive_ind:self.field().primitive, to_string:true, }
     }
     pub fn start_loc(&self) -> Loc {
         self.field().start_loc
