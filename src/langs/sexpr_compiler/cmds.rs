@@ -277,95 +277,24 @@ pub fn set_field_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
     //
     let fields_num = sexpr.len()-3;
 
-    //fields
-    for field_ind in 0 .. fields_num {
+    //
+    builder.set_fields_begin((0 .. fields_num).map(|field_ind|{
         let param_ind=2+field_ind;
-        // let prev_sexpr = sexpr.get(param_ind-1).unwrap();
-
-        //push last result
-
-        if fields_num>1 {
-            builder
-                // .param_loc(prev_sexpr.start_loc(),prev_sexpr.end_loc())
-                .param_push();
-        }
-        
-        builder
-            // .param_loc(prev_sexpr.start_loc(),prev_sexpr.end_loc())
-            .param_push();
-
-        //push last result
-        if field_ind!=0 && field_ind!=fields_num-1 { //not first or last field
-            builder            
-                // .param_loc(prev_sexpr.start_loc(),prev_sexpr.end_loc())
-                .param_push();
-        }
-
-        //on last field : push to
-        if field_ind==fields_num-1 {
-            let to_val_sexpr = sexpr.get(sexpr.len()-1).unwrap();
-
-            //push to_val
-            builder
-                .eval(to_val_sexpr)
-                // .param_loc(to_val_sexpr.start_loc(),to_val_sexpr.end_loc())
-                .param_push()
-                .swap()
-                ;
-        }
-
-        //
         let field=sexpr.get(param_ind).unwrap();
-
-        //eval field
-        // if let Some(s)=get_special_symbol(field) {
-        //     builder.result_string(s);
-        // } else {
-            builder.eval(field);
-        // }
-
-        //push field, swap
-        builder
-            // .param_loc(field.start_loc(),field.end_loc())
-            .param_push()
-            .swap();
-
-        //on not last field
-        if field_ind!=fields_num-1 {
-            //push field, swap
-            builder 
-                // .param_loc(field.start_loc(),field.end_loc())
-                .param_push()
-                .swap();
-
-            //get_field
-            builder
-                .loc(field.start_loc())
-                .call_method("get_field", 2)
-                ;
-        }
-    }
+        (field,field.start_loc())
+    }));
 
     //
-    let loc = sexpr.get(1).unwrap().start_loc();
+    let to_val_sexpr = sexpr.get(sexpr.len()-1).unwrap();
 
-    //
+    //push to_val
     builder
-        .loc(loc)
-        .call_method("set_field", 3);
+        .loc(to_val_sexpr.start_loc())
+        .eval(to_val_sexpr)
+        ;
 
-    //sometimes is unecessary to call, for things like arrays and dicts, since they hold "pointer" like values,
-    //  and not copies, but for get_field's that return a copy and not a "pointer", then
-    //  it must be modified and then copied back to its original owner
-
-    for _ in 0 .. fields_num-1 {
-        builder
-            .rot()
-            .rot()
-            .swap()
-            .call_method("set_field", 3)
-            ;
-    }
+    //
+    builder.set_fields_end(fields_num);
 
     //
     Ok(())
@@ -381,69 +310,14 @@ pub fn get_field_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
     }
     
     //
-    // let idn = get_symbol(sexpr.get(1).unwrap())?;
-    // // // builder.get_var_ref(idn);
-    // builder.get_var(idn);
-
     builder.eval(sexpr.get(1).unwrap());
     
-    //fields
-    for i in 2 .. sexpr.len() {
-        // let prev_sexpr = sexpr.get(i-1).unwrap();
-
-        builder
-            // .param_loc(prev_sexpr.start_loc(),prev_sexpr.end_loc())
-            .param_push(); //last result
-
-        //stk=(last_val/idn)
-
-        //is_end
-        // let is_end= i==sexpr.len()-1;
-
-        // // builder    
-        // //     .result_bool(is_end)
-        // //     .param_push()
-        // //     .swap();
-
-        
-        //stk=(is_end, last_val/idn)
-
-        let field=sexpr.get(i).unwrap();
-
-        //
-        // if let Some(s)=get_special_symbol(field) {
-        //     builder.result_string(s);
-        // } else {
-            builder.eval(field);
-        // }
-
-        let field_loc = field.start_loc();
-        
-        builder
-            // .param_loc(field.start_loc(),field.end_loc())
-            .param_push()
-            .swap()
-            ;
-
-
-        //stk=(is_end, field, last_val/idn)
-         
-        // // builder.call_method("get_field", 3,loc); //have extra param, that is true for last, false for not
-
-        builder.loc(field_loc);
-
-        // builder.call_method(if is_end{"get_field"}else{"ret_field"}, 2); //,loc
-        
-        //
-        builder.call_method("get_field", 2);
-    }
-
-
-    // // builder.result_deref();
+    builder.get_fields((2 .. sexpr.len()).map(|field_ind|{
+        let field=sexpr.get(field_ind).unwrap();
+        (field,field.start_loc())
+    }));
 
     //
-    // // builder.get_var(idn,sexpr.len()-2);
-
     Ok(())
 }
 

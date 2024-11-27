@@ -17,4 +17,7 @@
 
 (test)
 
-;(var self)
+
+(var v (array 1 2 (array 3 (array 4 5 6) 7) 8))
+(set v 2 1 0 444)
+(println "from v is {}" (get v 2 1 0))
