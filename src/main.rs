@@ -34,8 +34,8 @@ pub fn test_script<P:AsRef<Path>>(path:P) {
     let path = path.as_ref();
     let src = std::fs::read_to_string(path).unwrap();
 
-    
-    let build = script_lang::langs::sexpr_compiler::sexpr_compile(src.as_str(), 0, None, true,
+    let compiler = script_lang::langs::sexpr_compiler::Compiler::new_core();
+    let build = compiler.compile(src.as_str(), 0, None, true,
         false
     );
 
