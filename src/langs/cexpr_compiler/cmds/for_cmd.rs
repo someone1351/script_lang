@@ -27,12 +27,15 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
         .block_start(None)
             .decl_var_start(idn, false)
 
+                //why do these inside idn decl?
                 .eval(to)
                 .decl_anon_var("n", false)
                 .set_anon_var("n")
+
                 .decl_anon_var("i", false)
-                .result_void()
+                .result_void() //why set to void?? oh "i" is the value of the body's return
                 .set_anon_var("i")
+
             .decl_var_end()
 
             .eval(from)
@@ -42,7 +45,7 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
                 .block_start(None)
                     .get_anon_var("n")
                     .param_push()
-                    .get_var(idn)
+                    .get_var(idn) //shouldn't this be anon var i?
                     .param_push()
                     .call_method("<", 2)
                     // .to_block_end_label(Some(false),"loop", None)
@@ -50,7 +53,7 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
 
                     .result_void()
                     .eval(body)
-                    .set_anon_var("i")
+                    .set_anon_var("i") //
                 .block_end()
 
                 .result_int(1)
