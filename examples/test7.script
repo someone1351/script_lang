@@ -45,6 +45,8 @@ println a2.1.1.0
 
 
 var d [dict]
-set d.func {fn {x} {println "hello {x}"}}
+#set d.func {fn {x} {println "hello {x}"}}
+fn d.func {x} {println "hello {x}"}
+
 d.func "joe"
 

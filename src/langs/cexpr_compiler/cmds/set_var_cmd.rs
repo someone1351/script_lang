@@ -30,11 +30,11 @@ pub fn set_var_cmd<'a>(
     // }
     
     //idn
-    let var_param=record.param(1).unwrap();
+    let name_param=record.param(1).unwrap();
 
-    if var_param.fields_num()==0 {
+    if name_param.fields_num()==0 {
 
-        let idn = get_idn(var_param)?;
+        let idn = get_idn(name_param)?;
         let idn_loc=record.param(1).unwrap().start_loc();
     
         //val
@@ -51,16 +51,16 @@ pub fn set_var_cmd<'a>(
             .set_var(idn)
             ;
     } else {
-        builder.loc(var_param.start_loc());
+        builder.loc(name_param.start_loc());
 
-        if let Some(idn)=var_param.primitive().symbol() {
+        if let Some(idn)=name_param.primitive().symbol() {
             // let idn_loc=var_param.start_loc();
         
             builder
                 // .loc(var_param.start_loc())
                 .get_var(idn);
         } else { //a block, otherwise would be an err, due to nothing else has fields
-            builder.eval(var_param.primitive());
+            builder.eval(name_param.primitive());
         }
 
         //
@@ -70,7 +70,7 @@ pub fn set_var_cmd<'a>(
         let to_val=record.param(2).unwrap();
 
         //
-        let x=var_param.fields().map(|field|{
+        builder.set_fields_begin(name_param.fields().map(|field|{
             let s=field.primitive().symbol();
             let f=if s.is_none()||get_var_prefix.map(|x|s.unwrap().starts_with(x)).unwrap_or_default(){
                 field.primitive()
@@ -79,9 +79,15 @@ pub fn set_var_cmd<'a>(
             };
 
             (f,field.start_loc())
-        });
+        }));
 
-        builder.set_fields(x, (to_val.primitive(),to_val.start_loc()));
+        //
+        builder
+            .loc(to_val.start_loc())
+            .eval(to_val.primitive());
+
+        //
+        builder.set_fields_end(name_param.fields_num());
     }
 
 

@@ -125,7 +125,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
             //     BuilderField::Eval(x) => { self.eval(x); }
             //     BuilderField::String(x) => { self.result_string(x); }
             // }
-            
+
             self.eval(field.0.clone());
             self
                 .loc(field.1)
@@ -136,143 +136,87 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
 
         self
     }
-    pub fn set_fields<F>(&mut self, fields : F, to_val:(T,Loc)) -> &mut Self 
+
+    pub fn set_fields_begin<F>(&mut self, fields : F) -> &mut Self 
     where 
         F : IntoIterator<Item = (T,Loc)>,
     {
 
-        // if let Some(idn)=var_param.primitive().symbol() {
-        //     let idn_loc=record.param(1).unwrap().start_loc();
-        
-        //     builder
-        //         .loc(idn_loc)
-        //         .get_var(idn);
-        // } else { //a block, otherwise would be an err, due to nothing else has fields
-        //     builder.eval(var_param.primitive());
-        // }
-
-        //
-        // builder.eval(var_param.primitive());
-
-        
-        // let to_val=record.param(2).unwrap().primitive();
-
         let fields=fields.into_iter().collect::<Vec<_>>();
 
-        //
-        let fields_num = fields.len();
-
-        //
-        
-        // let mut last_start_loc=var_param.start_loc();
-        // let mut last_end_loc=var_param.end_loc();
-
-
         //fields
-        for field_ind in 0 .. fields_num {
-            // let param_ind=2+field_ind;
-            // let prev_sexpr = var_param.field(field_ind); //record.param(param_ind-1).unwrap();
-
+        for field_ind in 0 .. fields.len() {
             //push last result
-
-            if fields_num>1 {
-                self
-                    // .param_loc(last_start_loc,last_end_loc)
-                    .param_push();
+            if fields.len()>1 {
+                self.param_push();
             }
             
-            self
-                // .param_loc(last_start_loc,last_end_loc)
-                .param_push();
+            //push last result
+            self.param_push();
 
             //push last result
-            if field_ind!=0 && field_ind!=fields_num-1 { //not first or last field
-                self            
-                    // .param_loc(last_start_loc,last_end_loc)
-                    .param_push();
+            if field_ind!=0 && field_ind!=fields.len()-1 { //not first or last field
+                self.param_push();
             }
 
-            //on last field : push to
-            if field_ind==fields_num-1 {
-                //push to_val
-                self
-                    .eval(to_val.0.clone())
-                    // .param_loc(to_val.start_loc(),to_val.end_loc())
-                    .param_push()
-                    .swap()
-                    ;
-            }
+            // //on last field : push to
+            // if field_ind==fields.len()-1 {
+            //     //push to_val
+            //     self
+            //         .eval(to_val.0.clone())
+            //         .param_push()
+            //         .swap()
+            //         ;
+            // }
+
+            //result toval => toval result
+            //toval result field => toval field result
+            //----
+            //result
+            //result field => field result
 
             //
-            // let field_primitive=record.param(param_ind).unwrap().primitive();
-            // let field=var_param.field(field_ind).unwrap();
             let field=fields.get(field_ind).unwrap();
-            // let field_primitive=field.primitive();
-            //eval field
-            // if let Some(s)=get_special_symbol(field) {
-            //     builder.result_string(s);
-            // } else {
 
-            // match &field.0 {
-            //     BuilderField::Eval(x) => { self.eval(x.clone()); }
-            //     BuilderField::String(x) => { self.result_string(x); }
-            // }
             self.eval(field.0.clone());
             self.loc(field.1);
-            //     if let Some(symbol)=field_primitive.symbol() {
-            //         if let Some(get_var_prefix)=get_var_prefix {
-            //             if symbol.starts_with(get_var_prefix) {
-            //                 self.eval(field.primitive());
-            //             } else { //is string
-            //                 builder.result_string(symbol);            
-            //             }
-            //         } else { //is string
-            //             builder.result_string(symbol);
-            //         }
-            //     } else {
-            //         builder.eval(field_primitive);
-            //     }
-            // }
+
 
             //push field, swap
             self
-                // .param_loc(field_primitive.start_loc(),field_primitive.end_loc())
                 .param_push()
                 .swap();
 
             //on not last field
-            if field_ind!=fields_num-1 {
+            if field_ind!=fields.len()-1 {
                 //push field, swap
                 self 
-                    // .param_loc(field_primitive.start_loc(),field_primitive.end_loc())
                     .param_push()
                     .swap();
 
                 //get_field
-                self
-                    // .loc(field_primitive.start_loc())
-                    .call_method("get_field", 2)
-                    ;
+                self.call_method("get_field", 2);
             }
-
-            
-            // last_start_loc=field.start_loc();
-            // last_end_loc=field.end_loc();
         }
 
         //
-        // let loc = to_val.1;//record.param(1).unwrap().start_loc();
+        self
+    }
+    pub fn set_fields_end(&mut self, fields_len:usize) -> &mut Self {
+        //push to_val
+        self //=> field result
+            .param_push() //=> field result to_val
+            .rot() //=> result to_val field
+            .rot(); //=> to_val field result
 
         //
-        self
-            .loc(to_val.1)
-            .call_method("set_field", 3);
+        self.call_method("set_field", 3);
 
         //sometimes is unecessary to call, for things like arrays and dicts, since they hold "pointer" like values,
         //  and not copies, but for get_field's that return a copy and not a "pointer", then
         //  it must be modified and then copied back to its original owner
         // println!("fields num is {fields_num}");
-        for _ in 0 .. fields_num-1 {
+        for _ in 0 .. fields_len-1 {
             self
                 .rot()
                 .rot()
@@ -283,7 +227,6 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
 
         self
     }
-
     pub fn temp_mark(&mut self) {
         self.temp_last_loc=self.cur_loc;
         self.temp_stk_last_len = self.temp_stk.len();

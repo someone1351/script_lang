@@ -60,6 +60,11 @@ pub fn func_cmd<'a>(
 
     //idn
     let name_param=record.param(1).unwrap();
+
+    if name_param.primitive().symbol().is_none() {
+        return Err(BuilderError::new(name_param.start_loc(), BuilderErrorType::ExpectSymbol));
+    }
+
     let idn = if name_param.fields_num()==0 {Some(get_idn(name_param)?)}else{None};
     // let idn_loc=record.primitive(1).unwrap().start_loc();
 
@@ -93,52 +98,12 @@ pub fn func_cmd<'a>(
         builder
             .decl_var_start(idn,false)
             .decl_var_end();
-    }
-
-    builder.func_start(params,variadic);
-
-        // .result_void()
-    // if record.len() > 3 {
-    //     let body_sexprs = record.list_iter_from(3);
-
-        builder
-            .block_start(Some("func"))
-            .eval(body)
-            .block_end();
-    // }
-    
-    builder
-        .func_end();
-        // .decl_global_var(idn)
-        // // .decl_local_var(idn) //should make this a global... since inner_globals no longer used
-        // .set_var(idn, idn_loc)
-        // .decl_global_var(idn, true)
-        
-    if let Some(idn)=idn {
-        builder.set_var(idn);
-    } else {
-        // builder.call_method(name, params_num)
-
+    } else { //fields
         builder.loc(name_param.start_loc());
-
-        if let Some(idn)=name_param.primitive().symbol() {
-            // let idn_loc=var_param.start_loc();
-        
-            builder
-                // .loc(var_param.start_loc())
-                .get_var(idn);
-        } else { //a block, otherwise would be an err, due to nothing else has fields
-            builder.eval(name_param.primitive());
-        }
-
+        builder.get_var(name_param.primitive().symbol().unwrap());
+    
         //
-        // builder.eval(var_param.primitive());
-
-        
-        let to_val=record.param(2).unwrap();
-
-        //
-        let x=var_param.fields().map(|field|{
+        builder.set_fields_begin(name_param.fields().map(|field|{
             let s=field.primitive().symbol();
             let f=if s.is_none()||get_var_prefix.map(|x|s.unwrap().starts_with(x)).unwrap_or_default(){
                 field.primitive()
@@ -147,9 +112,27 @@ pub fn func_cmd<'a>(
             };
 
             (f,field.start_loc())
-        });
+        }));
+    }
 
-        builder.set_fields(x, (to_val.primitive(),to_val.start_loc()));
+    //
+    builder
+        .func_start(params,variadic)
+        .block_start(Some("func"))
+        .eval(body)
+        .block_end()
+        .func_end();
+        
+    if let Some(idn)=idn {
+        builder.set_var(idn);
+    } else { //fields
+        //
+        builder.loc(name_param.start_loc());
+
+        //
+        builder.set_fields_end(name_param.fields_num());
+
+
     }
 
     //
