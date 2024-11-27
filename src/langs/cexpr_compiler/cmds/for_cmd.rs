@@ -56,6 +56,7 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
                     .set_anon_var("i") //
                 .block_end()
 
+                //incr index
                 .result_int(1)
                 .param_push()
                 .get_var(idn)
@@ -64,6 +65,7 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
 
                 .set_var(idn)
 
+                //
                 .to_block_start(None,0)
             .block_end()
             .get_anon_var("i")

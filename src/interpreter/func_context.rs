@@ -15,6 +15,14 @@ use super::custom::*;
 //todo error funcs for specific params, so can report errors returned from methods at correct place
 // what about get/set fields? done in cmds in sexpr_compiler?
 
+/*
+todo:
+* need to be able to pause execution, but can't if rust method has called a script func
+* * disallow calling script funcs from rust methods?
+* * * only need to call script functions directly from the machine?
+* * * what about calling other methods? necessary?
+* * * needed for array's for_each and map methods
+*/
 
 pub struct FuncContext<'q,'a,'c,X> { //,'b
     machine:&'q mut Machine<'a,'c, X>, //,'b
@@ -179,9 +187,9 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b
         self.machine.call_value(value, params)
     }
 
-    // pub fn call_global(&mut self,name:&str,params : Vec<Value>)->Result<Value,MachineError> {
-    //     self.machine.call_global(name, params)
-    // }
+    // // pub fn call_global(&mut self,name:&str,params : Vec<Value>)->Result<Value,MachineError> {
+    // //     self.machine.call_global(name, params)
+    // // }
 
     pub fn call_method<I:IntoIterator<Item=Value>>(&mut self,name:&str,params : I)->Result<Value,MachineError> {
         // println!("===========x");
@@ -192,9 +200,10 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b
         self.machine.try_call_method(name, params)
     }
 
-    pub fn run_build(&mut self, build:&BuildT) -> Result<Value,MachineError> {
-        self.machine.run_build(build)
-    }
+    //what is this for?
+    // pub fn run_build(&mut self, build:&BuildT) -> Result<Value,MachineError> {
+    //     self.machine.run_build(build)
+    // }
     
 
     //traverser:  Option<for<'z> fn(&'z T)->Box<dyn Iterator<Item=& Value>+'z>>
