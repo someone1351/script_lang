@@ -22,6 +22,11 @@ todo:
 * * * only need to call script functions directly from the machine?
 * * * what about calling other methods? necessary?
 * * * needed for array's for_each and map methods
+
+* * have method_ext(method), that takes dif func signature ()->Continuable
+* * * Continuable {Return(Value),Call(Value)}
+* * * need way to store information from last call, either store in return or use context eg context.store_continue<T>(name,val)
+* * * * 
 */
 
 pub struct FuncContext<'q,'a,'c,X> { //,'b
