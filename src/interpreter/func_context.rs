@@ -20,13 +20,15 @@ todo:
 * need to be able to pause execution, but can't if rust method has called a script func
 * * disallow calling script funcs from rust methods?
 * * * only need to call script functions directly from the machine?
-* * * what about calling other methods? necessary?
+* * * what about calling other methods? necessary? what if the method called then calls a script func?
 * * * needed for array's for_each and map methods
 
 * * have method_ext(method), that takes dif func signature ()->Continuable
 * * * Continuable {Return(Value),Call(Value)}
 * * * need way to store information from last call, either store in return or use context eg context.store_continue<T>(name,val)
 * * * * 
+
+* * could allow inserting instructions or manipulating (or adding to) the stack?
 */
 
 pub struct FuncContext<'q,'a,'c,X> { //,'b
