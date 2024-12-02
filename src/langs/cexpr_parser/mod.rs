@@ -29,9 +29,15 @@
 
 /*
 TODO
-* add field for strings eg thing."name"
 * look at start/end loc for strings eg loc of start/end quotes and also of string value
 * * how is it done for blocks?
+
+* add option for commas in records, similar to semicolons
+* * two empty commas eg ",," equals 3 empty params
+* * have comma_loc func on param (like record has semicolon_loc), so can check in compiler to give error
+
+* for block, add get_bracket_type -> Bracket{Curly,Parentheses,Square,}, so can use for error checking if want to force one type
+
 */
 
 mod input;
