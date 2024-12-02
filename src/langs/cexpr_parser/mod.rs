@@ -35,6 +35,7 @@ TODO
 * add option for commas in records, similar to semicolons
 * * two empty commas eg ",," equals 3 empty params
 * * have comma_loc func on param (like record has semicolon_loc), so can check in compiler to give error
+* * if a comma at the end of the line, then any thing before any semi colon, is accepted as a param?
 
 * for block, add get_bracket_type -> Bracket{Curly,Parentheses,Square,}, so can use for error checking if want to force one type
 
