@@ -46,12 +46,13 @@ abc
 * allow fields to have spaces? eg: abc .def .ghi
 
 * could treat symbols as separate params eg abc+def => "abc", "+", "def"
-* * for ~!@%^&*-+=<>?/|
+* * for !%^&*-+=<>?/|
+* * maybe not @ ~
 * * maybe :`
 * * not ,.[]{}()#$_\;"'
 * * how to handle: expr 1 +2
-* * * the expr command would want to know the number had a prefix, store as part of float/int primitive its prefix?
-* * * or don't have prefix for numbers, but in compiler check if prev param is +/- ??
+* * * the expr command would want to know the number had a prefix, store as part of float/int primitive has prefix?
+* * * or don't have prefix for numbers, but in compiler check if prev param in front is +/- ? no hassle
 * * * also currently in 1 +2, the + is taken by the char_symbol, before it gets to number,
 * * * * have to do number first? if so then this: +5+6 => 5 6
 
