@@ -37,6 +37,12 @@ TODO
 * * have comma_loc func on param (like record has semicolon_loc), so can check in compiler to give error
 * * if a comma at the end of the line, then any thing before any semi colon, is accepted as a param?
 
+* could treat symbols as separate params eg abc+def => "abc", "+", "def"
+* * for ~!@%^&*-+=<>?/|
+* * maybe :`
+* * not ,.[]{}()#$_\;
+* * 
+
 * for block, add get_bracket_type -> Bracket{Curly,Parentheses,Square,}, so can use for error checking if want to force one type
 
 */
