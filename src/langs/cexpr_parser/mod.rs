@@ -28,20 +28,32 @@
 //===========================
 
 /*
-TODO
+TODO1
 * look at start/end loc for strings eg loc of start/end quotes and also of string value
 * * how is it done for blocks?
 
+TODO2
 * add option for commas in records, similar to semicolons
 * * two empty commas eg ",," equals 3 empty params
 * * have comma_loc func on param (like record has semicolon_loc), so can check in compiler to give error
 * * if a comma at the end of the line, then any thing before any semi colon, is accepted as a param?
 
+* allow fields to come after new line? eg:
+abc
+    .def
+    .ghi
+
+* allow fields to have spaces? eg: abc .def .ghi
+
 * could treat symbols as separate params eg abc+def => "abc", "+", "def"
 * * for ~!@%^&*-+=<>?/|
 * * maybe :`
-* * not ,.[]{}()#$_\;
-* * 
+* * not ,.[]{}()#$_\;"'
+* * how to handle: expr 1 +2
+* * * the expr command would want to know the number had a prefix, store as part of float/int primitive its prefix?
+* * * or don't have prefix for numbers, but in compiler check if prev param is +/- ??
+* * * also currently in 1 +2, the + is taken by the char_symbol, before it gets to number,
+* * * * have to do number first? if so then this: +5+6 => 5 6
 
 * for block, add get_bracket_type -> Bracket{Curly,Parentheses,Square,}, so can use for error checking if want to force one type
 
@@ -62,8 +74,8 @@ pub use parsed::*;
 
 pub enum TempPrimitiveType {
     Block(TempBlock),
-    Float(f64,usize), //num,text_ind
-    Int(i64,usize),//num,text_ind
+    Float(f64,usize,bool), //num,text_ind,has_prefix
+    Int(i64,usize,bool),//num,text_ind,has_prefix
     String(usize),
     Symbol(usize),
 }
@@ -150,7 +162,7 @@ pub fn parse<'a>(src:&'a str,
                 //parse symbol,string,int or block
                 if let Some(primitive)=parse_number(&mut input,false,&mut text_map) {
                     cur_work_param.fields.push(TempField{ primitive, start_loc: field_start_loc });
-                } else if let Some((text_ind,start_loc,end_loc))=parse_symbol(&mut input,&mut text_map) {
+                } else if let Some((text_ind,start_loc,end_loc))=parse_ident_symbol(&mut input,&mut text_map) {
                     // let primitive_type=TempPrimitiveType::String(text_ind); 
                     let primitive_type=TempPrimitiveType::Symbol(text_ind); //fixed
                     let primitive=TempPrimitive { primitive_type, start_loc, end_loc };
@@ -346,19 +358,49 @@ pub fn parse<'a>(src:&'a str,
             continue;
         }
 
+        //
+        //parse num
+        if let Some(primitive)=parse_number(&mut input,true,&mut text_map) {
+            let TempWork::Block { block:cur_block, .. } = temp_works_stk.last_mut().unwrap() else {panic!("");};
+
+            if cur_block.records.last().map(|r|r.ended).unwrap_or(true) {
+                cur_block.records.push(TempRecord { params: Vec::new(), ended: false, semi_colon_end_loc:None, });
+            }
+            
+            let cur_record=cur_block.records.last_mut().unwrap();
+            
+            //no fields allowed for string, float or int, so pushed directly on record
+            cur_record.params.push(TempParam { primitive, fields: Vec::new() });
+
+            continue;
+        }
+        
+        // println!("{:?}, {}",input.getc(0),input.loc());
+        let mut had_char_symbol = false;
+
+        //char symbols don't need spaces between them and other params (also don't have fields like ident symbols)
+        if let Some((text_ind,start_loc,end_loc))=parse_char_symbol(&mut input,&mut text_map)  {
+            let primitive=TempPrimitive{primitive_type: TempPrimitiveType::Symbol(text_ind), start_loc, end_loc};
+
+            let TempWork::Block { block:cur_block, .. } = temp_works_stk.last_mut().unwrap() else {panic!("");};
+
+            if cur_block.records.last().map(|r|r.ended).unwrap_or(true) {
+                cur_block.records.push(TempRecord { params: Vec::new(), ended: false, semi_colon_end_loc:None, });
+            }
+
+            let cur_record=cur_block.records.last_mut().unwrap();
+            cur_record.params.push(TempParam { primitive, fields: Vec::new() });
+            had_char_symbol=true;
+            // continue;
+        }
+        
         //make sure there are spaces between primitives
-        if !input.is_end() && !spc {
+        else if !input.is_end() && !spc { 
             // let cur_element=temp_elements_stk.last().unwrap();
-            let TempWork::Block { block:cur_block, .. } = temp_works_stk.last_mut().unwrap() else {
-                panic!("");
-            };
+            let TempWork::Block { block:cur_block, .. } = temp_works_stk.last_mut().unwrap() else {panic!("");};
 
             if !cur_block.records.last().map(|r|r.ended).unwrap_or(true) {
-                return Err(ParseError{
-                    // path:path.map(|p|p.to_path_buf()),
-                    loc:input.loc(),
-                    error_type:ParserErrorType::UnexpectedChar,
-                });
+                return Err(ParseError{loc:input.loc(),error_type:ParserErrorType::UnexpectedChar,});
             }
         }
 
@@ -367,28 +409,26 @@ pub fn parse<'a>(src:&'a str,
             // src,
             // path
         )?
-            .or_else(||parse_number(&mut input,true,&mut text_map))
-            // .or_else(||parse_symbol(&mut input,&mut text_map))
+            // .or_else(||parse_number(&mut input,true,&mut text_map))
+            // // .or_else(||parse_symbol(&mut input,&mut text_map))
         {
             // let cur_element=temp_elements_stk.last_mut().unwrap();
-            let TempWork::Block { block:cur_block, .. } = temp_works_stk.last_mut().unwrap() else {
-                panic!("");
-            };
+            let TempWork::Block { block:cur_block, .. } = temp_works_stk.last_mut().unwrap() else {panic!("");};
+
             if cur_block.records.last().map(|r|r.ended).unwrap_or(true) {
                 cur_block.records.push(TempRecord { params: Vec::new(), ended: false, semi_colon_end_loc:None, });
             }
             
             let cur_record=cur_block.records.last_mut().unwrap();
             
-            //no fields allowed for string, float or int
-            //so pushed directly on record
+            //no fields allowed for string, float or int, so pushed directly on record
             cur_record.params.push(TempParam { primitive, fields: Vec::new() });
 
             continue;
         }
 
         //parse symbol
-        if let Some((text_ind,start_loc,end_loc))=parse_symbol(&mut input,&mut text_map) {
+        if let Some((text_ind,start_loc,end_loc))=parse_ident_symbol(&mut input,&mut text_map)  {
             // let cur_element=temp_elements_stk.last_mut().unwrap();
             // let TempElement::Block { block:cur_block, .. } = temp_elements_stk.last_mut().unwrap() else {
             //     panic!("");
@@ -414,7 +454,9 @@ pub fn parse<'a>(src:&'a str,
         }
 
         //
-        break;
+        if !had_char_symbol {
+            break;
+        }
     }
 
     //errors
@@ -508,8 +550,8 @@ fn generate_parsed(temp_root_block:&TempBlock,last_loc:Loc,text_map:HashMap<Stri
                                     work_stk.push(ParsedWork { cur_temp_block: temp_block, cur_block_ind: new_block_ind });
                                     PrimitiveType::Block(new_block_ind)
                                 },
-                                TempPrimitiveType::Float(x,s)=>PrimitiveType::Float(*x,*s),
-                                TempPrimitiveType::Int(x,s)=>PrimitiveType::Int(*x,*s),
+                                TempPrimitiveType::Float(x,s,p)=>PrimitiveType::Float(*x,*s,*p),
+                                TempPrimitiveType::Int(x,s,p)=>PrimitiveType::Int(*x,*s,*p),
                                 TempPrimitiveType::String(s)=>PrimitiveType::String(*s),
                                 TempPrimitiveType::Symbol(s)=>PrimitiveType::Symbol(*s),
                             };
@@ -536,7 +578,7 @@ fn generate_parsed(temp_root_block:&TempBlock,last_loc:Loc,text_map:HashMap<Stri
                                     work_stk.push(ParsedWork { cur_temp_block: temp_block, cur_block_ind: new_block_ind });
                                     PrimitiveType::Block(new_block_ind)
                                 },
-                                TempPrimitiveType::Int(x,s)=>PrimitiveType::Int(*x,*s),
+                                TempPrimitiveType::Int(x,s,p)=>PrimitiveType::Int(*x,*s,*p),
                                 TempPrimitiveType::String(s)=>PrimitiveType::String(*s),
                                 TempPrimitiveType::Symbol(s)=>PrimitiveType::Symbol(*s), //fixed
                                 _ => {panic!("")},
@@ -747,7 +789,27 @@ pub fn parse_string<'a>(
     Ok(None)
 }
 
-fn parse_symbol(
+fn parse_char_symbol(
+    input:&mut Input,
+    // texts:&mut Vec<String>, 
+    text_map:&mut HashMap<String,usize>,
+) -> Option<(usize,Loc,Loc)> {
+    if let Some(x)=input.has(0, ["~","!","@","%","^","&","*","-","+","=","<",">","?","/","|",]) {
+        let start_loc=input.loc();
+        
+        let text_map_size=text_map.len();
+        let text_ind=*text_map.entry(x.to_string()).or_insert(text_map_size);
+
+        input.next(x.len());
+        let end_loc=input.loc();
+        // println!("got {x:?}, {start_loc}:{end_loc}");
+        Some((text_ind,start_loc,end_loc))
+    } else {
+        None
+    }
+}
+
+fn parse_ident_symbol(
     input:&mut Input,
     // texts:&mut Vec<String>, 
     text_map:&mut HashMap<String,usize>,
@@ -757,9 +819,21 @@ fn parse_symbol(
     //symbol_str=[^ \t\r\n"',;{}]+   
     //symbol=symbol_str ([.](symbol_str|block))*
 
+/*
+* * for ~!@%^&*-+=<>?/|
+* * maybe :`
+* * not ,.[]{}()#$_\; "'
+*/
     let mut i=0;
 
-    while input.hasnt(i, ["\\"," ","\t","\r","\n","\"","'",",",";","{","}",".","[","]","(",")"]) {
+    while input.hasnt(i, [
+        "\\"," ","\t","\r","\n",
+        "\"","'",
+        ".",",",";",
+        "{","}","[","]","(",")",
+        ":","`",
+        "~","!","@","%","^","&","*","-","+","=","<",">","?","/","|",
+    ]) {
         i+=1;
     }
 
@@ -803,8 +877,11 @@ fn parse_number(
     let mut is_float=false;
     let mut ok=false;
     
+    let mut has_prefix=false;
+
     if let Some(c)=input.get(i, 1) {
         if "+-".contains(c) {
+            has_prefix=true;
             i+=1;
         }
     }
@@ -845,9 +922,9 @@ fn parse_number(
     let text_ind=*text_map.entry(token.to_string()).or_insert(text_map_size);
 
     let primitive_type=if is_float {
-        TempPrimitiveType::Float(token.parse().unwrap(),text_ind)
+        TempPrimitiveType::Float(token.parse().unwrap(),text_ind,has_prefix)
     } else {
-        TempPrimitiveType::Int(token.parse().unwrap(),text_ind)
+        TempPrimitiveType::Int(token.parse().unwrap(),text_ind,has_prefix)
     };
 
     input.next(i);

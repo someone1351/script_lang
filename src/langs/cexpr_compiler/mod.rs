@@ -364,10 +364,10 @@ impl Compiler {
                     self.get_fields(builder,top_primitive)?;
                 }
             }
-            PrimitiveTypeContainer::Float(f) => {
+            PrimitiveTypeContainer::Float(f,_) => {
                 builder.result_float(f as FloatT);
             }
-            PrimitiveTypeContainer::Int(i) => {
+            PrimitiveTypeContainer::Int(i,_) => {
                 builder.result_int(i as IntT);
             }
             PrimitiveTypeContainer::String(s) => {

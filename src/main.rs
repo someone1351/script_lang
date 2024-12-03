@@ -40,7 +40,7 @@ pub fn test_script<P:AsRef<Path>>(path:P) {
     );
 
     if let Err(e)=&build {
-        eprintln!("{}",e.msg());
+        eprintln!("In {path:?}, {}",e.msg());
     } else {
 
         let mut var_scope=script_lang::VarScope::new();
@@ -99,7 +99,7 @@ pub fn test_script2<P:AsRef<Path>>(path:P) {
             let mut stk=vec![Traverse{depth:0,traverse_type:TraverseType::Block(parsed.root_block())}];
     
             while let Some(traverse)=stk.pop() {
-                let indent="  ".repeat(traverse.depth);
+                let indent="    ".repeat(traverse.depth);
     
                 match traverse.traverse_type {
                     TraverseType::Block(b)=>{
@@ -157,7 +157,7 @@ pub fn test_script2<P:AsRef<Path>>(path:P) {
             }
         }
         Err(e) => {
-            println!("{}",error_msg(e.error_type, e.loc, Some(src.as_str()), Some(path)));
+            println!("In {path:?}, {}",error_msg(e.error_type, e.loc, Some(src.as_str()), Some(path)));
         }
     }
 
@@ -195,7 +195,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
     let mut mynum=123;
 
     if let Err(e)=&build {
-        eprintln!("{}",e.msg());
+        eprintln!("In {path:?}, {}",e.msg());
     } else {
 
         let mut var_scope=script_lang::VarScope::new();
@@ -228,11 +228,12 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
 
 
 fn main() {
-
     println!("Hello, world!");
-    test_script("examples/test.script");
-    // test_script2("examples/test6.script");
-    //test_script3("examples/test5.script");
-    test_script3("examples/test7.script");
+
+    // test_script("examples/test.script");
+    // test_script3("examples/test5.script");
     // test_script4("examples/test8.script");
+    
+    test_script2("examples/test6.script");
+    test_script3("examples/test7.script");
 }

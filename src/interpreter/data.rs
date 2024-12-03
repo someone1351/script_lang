@@ -17,7 +17,7 @@ pub struct GlobalAccessRef{
 }
 
 impl GcTraversable for GlobalAccessRef {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&Value>+'a> {
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
         Box::new([&self.var].into_iter())
     }
 }
@@ -32,13 +32,13 @@ pub struct Closure {
 }
 
 impl GcTraversable for Closure {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&Value>+'a> {
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
         Box::new(self.captures.iter())
     }
 }
 
 impl GcTraversable for Value {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&Value>+'a> {
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
         Box::new([self].into_iter())
     }
 }
@@ -47,7 +47,7 @@ impl GcTraversable for Value {
 pub struct Array(pub Vec<Value>);
 
 impl GcTraversable for Array {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&Value>+'a> {
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
         Box::new(self.0.iter())
     }
 }
@@ -56,7 +56,7 @@ impl GcTraversable for Array {
 pub struct Dict(pub BTreeMap<String,Value>);
 
 impl GcTraversable for Dict {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&Value>+'a> {
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
         Box::new(self.0.values())
     }
 }

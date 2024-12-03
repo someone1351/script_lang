@@ -9,8 +9,8 @@ use super::PrimitiveContainer;
 #[derive(Debug,Clone)]
 pub enum PrimitiveType {
     Block(usize),
-    Float(f64,usize), //num,text_ind
-    Int(i64,usize),//num,text_ind
+    Float(f64,usize,bool), //num,text_ind,has_prefix
+    Int(i64,usize,bool),//num,text_ind,has_prefix
     // Bool(bool),
     // Nil,
     // Void,

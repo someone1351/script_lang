@@ -19,7 +19,7 @@ pub struct Input<'a> {
 }
 
 impl<'a> Input<'a> {
-    pub fn new(chrs :std::str::Chars<'a>) -> Input {
+    pub fn new(chrs :std::str::Chars<'a>) -> Input<'a> {
         Self {
             stk : vec![InputItem{
                 chrs : chrs.clone(), 

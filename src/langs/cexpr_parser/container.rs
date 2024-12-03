@@ -174,7 +174,7 @@ impl<'a> PrimitiveContainer<'a> {
         if self.to_string {
             let s=match primitive.primitive_type.clone() {
                 PrimitiveType::Block(_) => 0, //0 is an empty string
-                PrimitiveType::Float(_,s)|PrimitiveType::Int(_,s)|PrimitiveType::String(s)|PrimitiveType::Symbol(s) => s,
+                PrimitiveType::Float(_,s,_)|PrimitiveType::Int(_,s,_)|PrimitiveType::String(s)|PrimitiveType::Symbol(s) => s,
             };
 
             PrimitiveTypeContainer::String(self.parsed.texts.get(s).unwrap().as_str())
@@ -183,22 +183,22 @@ impl<'a> PrimitiveContainer<'a> {
             match primitive.primitive_type.clone() {
                 // x if self.to_string => 
                 PrimitiveType::Block(block_ind) => PrimitiveTypeContainer::Block(BlockContainer {parsed:self.parsed,block_ind}),
-                PrimitiveType::Float(f,_s) => PrimitiveTypeContainer::Float(f),
-                PrimitiveType::Int(i,_s) => PrimitiveTypeContainer::Int(i),
+                PrimitiveType::Float(f,_s,p) => PrimitiveTypeContainer::Float(f,p),
+                PrimitiveType::Int(i,_s,p) => PrimitiveTypeContainer::Int(i,p),
                 PrimitiveType::String(s) => PrimitiveTypeContainer::String(self.parsed.texts.get(s).unwrap().as_str()),
                 PrimitiveType::Symbol(s) =>PrimitiveTypeContainer::Symbol(self.parsed.texts.get(s).unwrap().as_str()),
             }
         }
     }
     pub fn float(&self) -> Option<f64> {
-        if let PrimitiveTypeContainer::Float(x)=self.primitive_type() {
+        if let PrimitiveTypeContainer::Float(x,_)=self.primitive_type() {
             Some(x)
         } else {
             None
         }
     }
     pub fn int(&self) -> Option<i64> {
-        if let PrimitiveTypeContainer::Int(x)=self.primitive_type() {
+        if let PrimitiveTypeContainer::Int(x,_)=self.primitive_type() {
             Some(x)
         } else {
             None
@@ -268,8 +268,8 @@ impl<'a> std::fmt::Debug for PrimitiveContainer<'a> {
 #[derive(Copy,Clone)]
 pub enum PrimitiveTypeContainer<'a> {
     Block(BlockContainer<'a>),
-    Float(f64),
-    Int(i64),
+    Float(f64,bool),
+    Int(i64,bool),
     String(&'a str),
     Symbol(&'a str),
 }
@@ -279,8 +279,8 @@ impl<'a> std::fmt::Debug for PrimitiveTypeContainer<'a> {
         match self {
             // PrimitiveTypeContainer::Block(b) => write!(f, "Block([{:?}])",b.block_ind),
             PrimitiveTypeContainer::Block(b) => write!(f, "Block({b:?})"),
-            PrimitiveTypeContainer::Float(x) => write!(f, "Float({x})"),
-            PrimitiveTypeContainer::Int(x) => write!(f, "Int({x})"),
+            PrimitiveTypeContainer::Float(x,_) => write!(f, "Float({x})"),
+            PrimitiveTypeContainer::Int(x,_) => write!(f, "Int({x})"),
             PrimitiveTypeContainer::String(x) => write!(f, "String({x:?})"),
             PrimitiveTypeContainer::Symbol(x) => write!(f, "Symbol({x})"),
         }

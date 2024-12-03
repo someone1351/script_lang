@@ -63,7 +63,7 @@ impl TypeInfo {
 }
 
 pub trait GcTraversable : Any + Send {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&Value>+'a>;
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a>;
 }
 // pub trait GcTraversableExt : GcTraversable + ToString {}
 

@@ -12,7 +12,7 @@ pub struct Input<'a> {
 }
 
 impl<'a> Input<'a> {
-    pub fn new(src:&'a str) -> Input {
+    pub fn new(src:&'a str) -> Input<'a> {
         Self {
             chrs:src.chars(),
             buf : String::new(),
