@@ -34,9 +34,9 @@ TODO1
 
 TODO2
 * add option for commas in records, similar to semicolons
-* * two empty commas eg ",," equals 3 empty params
+* * two empty commas eg ",," equals 3 empty params? no just two params
 * * have comma_loc func on param (like record has semicolon_loc), so can check in compiler to give error
-* * if a comma at the end of the line, then any thing before any semi colon, is accepted as a param?
+* * if a comma at the end of the line, then any thing before any semi colon, is accepted as a param? no
 
 * allow fields to come after new line? eg:
 abc

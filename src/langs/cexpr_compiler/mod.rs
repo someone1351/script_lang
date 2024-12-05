@@ -47,7 +47,7 @@ abc.{$i}
 */
 /*
 TODO
-* make anything in parenthesis an expression? eg (1+2 * 5 -9) => {- {+ 1 {* 2 555}} 9}
+* make anything in parenthesis an expression? eg (1+2 * 5 -9) => (1 +2 * 5 -9) => {- {+ 1 {* 2 555}} 9}
 */
 // pub mod cexpr_parser;
 // pub mod cmd_scope;
