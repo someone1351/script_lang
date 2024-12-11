@@ -217,7 +217,9 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         //  it must be modified and then copied back to its original owner
         
         //if a set_field method doesn't exist, want to abandon the set_field chain?
-        
+        //could try to call a special set_field_end (and also a get_field_end), 
+        //  might be useful for special fields like thing.0.color vs thing.0.color.on_press 
+        //  but problem is: set thing.0.color.r 0.5 vs: set thing.0.color.on_press .r 0.5
         // println!("fields num is {fields_num}");
 
         for _ in 0 .. fields_len-1 {
