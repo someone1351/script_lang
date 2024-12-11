@@ -126,6 +126,11 @@ TODO
 
 * have option to make undeclared globals accessable and capturable
 
+
+TODO
+* have way to try method calls, and handle if failed
+* check if pushed params but not used in call are popped when leaving a block, have a feeling it is set panic.
+
 */
 
 use std::{collections::{HashMap,  HashSet},  path::Path};
