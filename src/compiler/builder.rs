@@ -215,7 +215,11 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         //sometimes is unecessary to call, for things like arrays and dicts, since they hold "pointer" like values,
         //  and not copies, but for get_field's that return a copy and not a "pointer", then
         //  it must be modified and then copied back to its original owner
+        
+        //if a set_field method doesn't exist, want to abandon the set_field chain?
+        
         // println!("fields num is {fields_num}");
+
         for _ in 0 .. fields_len-1 {
             self
                 .rot()
