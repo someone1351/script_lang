@@ -38,10 +38,10 @@ set a.$i 99
 println a
 
 
-var a2 [array 0 [array 1 [array 22]]]
+var a2 [array 0 [array 1 [array 22]] ]
 set a2.1.1.0 1112
 
-println a2.1.1.0
+println "a2 is {}" a2.1.1.0
 
 
 var d [dict]
