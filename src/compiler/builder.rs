@@ -221,8 +221,8 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
                 .rot()
                 .rot()
                 .swap()
-                .try_call_method("set_field", 3) //allowed to fail if no set_field method
-                // .call_method("set_field", 3)
+                // .try_call_method("set_field", 3) //allowed to fail if no set_field method
+                .call_method("set_field", 3)
                 ;
         }
 

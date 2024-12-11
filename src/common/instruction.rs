@@ -54,6 +54,7 @@ pub enum Instruction {
 
     CallMethod(usize,usize), //symbol_ind, params_num
     TryCallMethod(usize,usize), //symbol_ind, params_num
+    // HasMethod(usize), //symbol_ind,
     CallResult(usize), //params_num
 
     GetGlobalOrConstOrCallMethod(usize,bool) //symbol_ind, get_global

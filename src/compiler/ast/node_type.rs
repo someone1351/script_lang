@@ -46,6 +46,7 @@ pub enum AstNodeType<'a> {
     //
     CallMethod{name:&'a str,params_num:usize},
     TryCallMethod{name:&'a str,params_num:usize},
+    // HasMethod{name:&'a str,},
     CallResult{params_num:usize}, 
 
     //

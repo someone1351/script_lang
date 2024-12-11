@@ -642,6 +642,14 @@ impl<'a> Ast<'a> {
 
         Ok(())
     }
+    // pub fn has_method(&mut self,name:&'a str) -> Result<(),AstError> { 
+    //     //checks if method exists, store bool in result?
+
+    //     self.add_next(AstNodeType::HasMethod{name,});
+
+
+    //     Ok(())
+    // }
     pub fn call_result(&mut self,params_num:usize) -> Result<(),AstError> { 
         //uses and pops off params_num amount off stack
 
