@@ -10,6 +10,14 @@ use super::super::error::*;
 use super::super::lib_scope::*;
 use super::super::data::*;
 
+// #[derive(Hash,PartialEq, Eq)]
+// enum DictKey {
+//     String(StringT),
+//     Int(IntT),
+//     Bool(bool),
+//     Nil,
+// }
+
 fn custom_dict_new<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
     // let dict=context.new_custom_managed(Dict::new(),);
     // let dict_data=dict.data();

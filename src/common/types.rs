@@ -5,7 +5,7 @@ use super::{Build, Instruction};
 pub type FloatT = f64;
 pub type IntT = i64;
 
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug,Hash,PartialEq, Eq)]
 pub struct StringT(Arc<String>);
 
 impl StringT {
