@@ -5,6 +5,10 @@ use super::super::BuilderErrorType;
 use super::get_func_params;
 use super::get_idn;
 
+/*
+TODO
+* allow elipsis to be passed to func call for vararg param input? eg fn{a ...} {call {fn {b ...}{} a ...}}
+*/
 
 pub fn func_cmd<'a>(
     record : RecordContainer<'a>, 
