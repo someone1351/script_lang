@@ -1,6 +1,12 @@
 
 // use std::ops::Range;
 
+/*
+TODO
+* make new record out of existing one by specifying param range eg param_start,param_end (make sure can accumulate eg record=>new_record1=>new_record2)
+* take single record from existing block, and return in its own block
+*/
+
 use super::super::super::common::Loc;
 use super::{ Block, Field, Param, Parsed, Primitive, PrimitiveType, Record };
 
