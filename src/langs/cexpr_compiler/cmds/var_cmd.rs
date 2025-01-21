@@ -12,6 +12,18 @@ pub fn var_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
         return Err(BuilderError::new(record.last_param().unwrap().start_loc(), BuilderErrorType::IncorrectParamsNum));
     }
 
+    // let mut i=1;
+
+    // while i<record.params_num() {
+    //     let idn = get_idn(record.param(i).unwrap())?;
+
+    //     if Some(",")==record.param(i+1).and_then(|x|x.primitive().string()) {
+
+    //     }
+
+
+    // }
+
     let idn = get_idn(record.param(1).unwrap())?;
 
     let is_init_nil=record.params_num()==2;

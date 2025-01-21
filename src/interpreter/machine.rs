@@ -14,7 +14,6 @@ use super::var_scope::*;
 use super::func_context::*;
 use super::debug::*;
 
-
 #[derive(Debug,Clone)]
 pub struct StackFrame { 
     pub ret_build : Option<BuildT>,
@@ -61,6 +60,105 @@ pub struct Machine<'a,'c,X> { //,'b
     //
     // gc_check_remove_recursive : bool,
     core_val :   X, //&'a mut 
+}
+
+
+pub trait MachineTrait<'a,'c> {
+
+    fn stack(&self) -> &Vec<Value>;
+    
+    fn stack_frames(&self) -> &Vec<StackFrame>;
+    fn get_stack_val(&self,stack_ind:usize) -> Result<Value,MachineError>;
+    
+    fn result_val(&self) -> &Value;
+    fn try_call_method(&mut self,name:&str,params : &Vec<Value>) -> Result<Option<Value>,MachineError>;
+
+    fn call_value(&mut self,v:&Value,params : &Vec<Value>) -> Result<Value,MachineError>;
+    
+    fn call_method(&mut self,name:&str,params : &Vec<Value>) -> Result<Value,MachineError>;
+
+    fn gc_scope(&mut self)->&mut GcScope;
+    
+    fn global_decl(&mut self,name:&str,to_value:Option<Value>) -> Result<(),MachineError>;    
+    fn global_set(&mut self,name:&str,fields:&Vec<Value>,to_value:Value) -> Result<(),MachineError>;
+    fn global_get(&mut self,name:&str,fields:&Vec<Value>) -> Result<Value,MachineError>;
+    
+    fn value_set(&mut self,value:Value,fields:&Vec<Value>,to_value:Value) -> Result<(),MachineError>;
+    fn value_get(&mut self,value:Value,fields:&Vec<Value>) -> Result<Value,MachineError>;
+    
+    fn constant_get(&self,n:&str) -> Option<Value>;
+    fn error(&self, msg:&str) -> MachineError ;
+
+}
+
+impl<'a,'c,X> MachineTrait<'a,'c> for Machine<'a,'c,X> {
+
+    fn stack(&self) -> &Vec<Value> {
+        &self.stack
+    }
+   
+    
+    fn stack_frames(&self) -> &Vec<StackFrame> {
+        &self.stack_frames
+    }
+    fn get_stack_val(&self,stack_ind:usize) -> Result<Value,MachineError> {
+        let stack_len = self.stack.len();
+
+        if stack_ind >= stack_len {
+            return Err(MachineError::from_machine(self, MachineErrorType::InvalidStackAccess(stack_ind-stack_len) ));
+        }
+
+        Ok(self.stack.get(stack_ind).unwrap().clone())
+    }
+    
+    fn result_val(&self) -> &Value {
+        &self.result_val
+    }
+    fn try_call_method(&mut self,name:&str,params : &Vec<Value>) -> Result<Option<Value>,MachineError> {
+        self.try_call_method(name, params)
+    }
+    fn call_value(&mut self,v:&Value,params : &Vec<Value>) -> Result<Value,MachineError> {
+        // Machine::call_value(&mut self, v, params)
+        self.call_value(v, params)
+        // Ok(Value::Nil)
+    }
+
+    
+    fn call_method(&mut self,name:&str,params : &Vec<Value>) -> Result<Value,MachineError> {
+        self.call_method(name, params)
+    }
+    fn gc_scope(&mut self)->&mut GcScope {
+        self.gc_scope
+    }
+    
+    fn global_decl(&mut self,name:&str,to_value:Option<Value>) -> Result<(),MachineError> {
+        self.global_decl(name, to_value)
+    }
+    fn global_set(&mut self,name:&str,fields:&Vec<Value>,to_value:Value) -> Result<(),MachineError> {
+        self.global_set(name, fields, to_value)
+    }
+ 
+    fn global_get(&mut self,name:&str,fields:&Vec<Value>) -> Result<Value,MachineError> {
+        self.global_get(name, fields)
+    }
+    fn value_set(&mut self,value:Value,fields:&Vec<Value>,to_value:Value) -> Result<(),MachineError> {
+        self.value_set(value, fields, to_value)
+    }
+    fn value_get(&mut self,value:Value,fields:&Vec<Value>) -> Result<Value,MachineError> {
+        self.value_get(value, fields)
+    }
+    
+    fn constant_get(&self,n:&str) -> Option<Value> {
+        self.constant_get(n)
+    }
+    fn error(&self, msg:&str) -> MachineError {
+        let msg=msg.into();
+        // if let Some((method_name,method_params))=self.machine.debugger().last_method_call_info() {
+
+        // }
+
+        MachineError::from_machine(self, MachineErrorType::MethodRunError(msg))
+    }
 }
 
 impl<'a,'c,X:Copy> Machine<'a,'c,X> {
@@ -1050,9 +1148,20 @@ impl<'a,'c,X> Machine<'a,'c,X>
         //
         let v=match bound_func.method_type {
             MethodType::Static(x)=>{
-                x(FuncContext::new(self,params_num))
+                x(FuncContext2::new(self,params_num))
             }
             MethodType::Temp(x) => {
+                if let Some(mut x)=x.try_lock() {
+                    x(FuncContext2::new(self,params_num))
+                } else {
+                    Err(MachineError::from_machine(self, MachineErrorType::FuncBorrowMutError))
+                }
+            }
+
+            MethodType::StaticExt(x)=>{
+                x(FuncContext::new(self,params_num))
+            }
+            MethodType::TempExt(x) => {
                 if let Some(mut x)=x.try_lock() {
                     x(FuncContext::new(self,params_num))
                 } else {
@@ -1165,8 +1274,9 @@ impl<'a,'c,X> Machine<'a,'c,X>
     //     self.lib_scope.get_method(method_name,params,self.var_scope)
     // }
     
-    fn stack_push_params<I:IntoIterator<Item=Value>>(&mut self,params : I) -> Result<usize,MachineError> {
-        let params=params.into_iter().collect::<Vec<_>>();
+    fn stack_push_params<I:AsRef<[Value]>>(&mut self,params : I) -> Result<usize,MachineError> {
+        // let params=params.into_iter().collect::<Vec<_>>();
+        let params=params.as_ref().to_vec();
         let params_num=params.len();
         self.stack.extend(params.into_iter().rev());
         self.debugger.stack_extend_none(params_num);
@@ -1256,8 +1366,8 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
         Ok(result_val)
     }
-
-    pub fn call_method<I:IntoIterator<Item=Value>>(&mut self,name:&str,params : I) -> Result<Value,MachineError> {
+    
+    pub fn call_method<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Value,MachineError> {
         if self.error_state {
             self.clear();
         }
@@ -1277,7 +1387,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
         }
     }
 
-    pub fn try_call_method<I:IntoIterator<Item=Value>>(&mut self,name:&str,params : I) -> Result<Option<Value>,MachineError> {
+    pub fn try_call_method<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Option<Value>,MachineError> {
         if self.error_state {
             self.clear();
         }
@@ -1300,7 +1410,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
             Ok(None)
         }
     }
-    pub fn call_value<I:IntoIterator<Item=Value>>(&mut self,v:&Value,params : I) -> Result<Value,MachineError> {
+    pub fn call_value<I:AsRef<[Value]>>(&mut self,v:&Value,params : I) -> Result<Value,MachineError> {
         if self.error_state {
             self.clear();
         }
@@ -1316,7 +1426,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
         Ok(self.result_val.clone())
     }
-    pub fn try_call_global<I:IntoIterator<Item=Value>>(&mut self,name:&str,params : I) -> Result<Option<Value>,MachineError> {
+    pub fn try_call_global<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Option<Value>,MachineError> {
         if self.error_state {
             self.clear();
         }
@@ -1346,8 +1456,9 @@ impl<'a,'c,X> Machine<'a,'c,X>
         Ok(Some(self.result_val.clone()))
     }
 
-    pub fn call_global<I:IntoIterator<Item=Value>>(&mut self,name:&str,params : I) -> Result<Value,MachineError> {
-        let params=params.into_iter().collect::<Vec<_>>();
+    pub fn call_global<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Value,MachineError> {
+        // let params=params.into_iter().collect::<Vec<_>>();
+        let params=params.as_ref().to_vec();
         let params_num=params.len();
 
         if let Some(r)=self.try_call_global(name, params)? {

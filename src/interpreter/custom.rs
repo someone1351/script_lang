@@ -8,7 +8,7 @@ use super::gc_scope::*;
 // use super::value::*;
 use super::error::*;
 
-
+type Callable<X> = fn(super::FuncContext<X>)->Result<super::Value,MachineError>;
 
 #[derive(Clone)]
 pub enum StrongValueInner {

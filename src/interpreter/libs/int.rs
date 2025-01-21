@@ -10,30 +10,30 @@ use super::super::lib_scope::*;
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
     
 	//
-    lib_scope.method("is_int", |_|{
+    lib_scope.method_ext("is_int", |_|{
         Ok(Value::Bool(true))
     }).int().end();
 
-    lib_scope.method("is_int", |_|{ Ok(Value::Bool(false)) }).any().end();
+    lib_scope.method_ext("is_int", |_|{ Ok(Value::Bool(false)) }).any().end();
 
-    lib_scope.method("-", |context|{
+    lib_scope.method_ext("-", |context|{
         Ok(Value::Int(-context.param(0).as_int()))
     }).int().end();
 
-    lib_scope.method("+",|context|{
+    lib_scope.method_ext("+",|context|{
         Ok(Value::Int(context.param(0).as_int()+context.param(1).as_int()))
     }).int().int().end();
 
-    lib_scope.method("-",|context|{
+    lib_scope.method_ext("-",|context|{
         Ok(Value::Int(context.param(0).as_int()-context.param(1).as_int()))
     }).int().int().end();
 
-    lib_scope.method("*",|context|{
+    lib_scope.method_ext("*",|context|{
         Ok(Value::Int(context.param(0).as_int()*context.param(1).as_int()))
     }).int().int().end();
 
 
-    lib_scope.method("/",|context|{
+    lib_scope.method_ext("/",|context|{
         context.param(0).as_int().checked_div(context.param(1).as_int())
             .and_then(|x|Some(Value::Int(x)))
             .ok_or(context.error("Divide by zero".to_string()))
@@ -41,36 +41,36 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
 
     //
-    lib_scope.method(">",|context|{
+    lib_scope.method_ext(">",|context|{
         Ok(Value::Bool(context.param(0).as_int()>context.param(1).as_int()))
     }).int().int().end();
     
-    lib_scope.method("<",|context|{
+    lib_scope.method_ext("<",|context|{
         Ok(Value::Bool(context.param(0).as_int()<context.param(1).as_int()))
     }).int().int().end();
     
-    lib_scope.method(">=",|context|{
+    lib_scope.method_ext(">=",|context|{
         Ok(Value::Bool(context.param(0).as_int()>=context.param(1).as_int()))
     }).int().int().end();
     
-    lib_scope.method("<=",|context|{
+    lib_scope.method_ext("<=",|context|{
         Ok(Value::Bool(context.param(0).as_int()<=context.param(1).as_int()))
     }).int().int().end();
     
-    lib_scope.method("=",|context|{
+    lib_scope.method_ext("=",|context|{
         Ok(Value::Bool(context.param(0).as_int()==context.param(1).as_int()))
     }).int().int().end();
 
     //
-    lib_scope.method("min", |context|{
+    lib_scope.method_ext("min", |context|{
         Ok(Value::Int(context.param(0).as_int().min(context.param(1).as_int())))
     }).int().int().end();
 
-    lib_scope.method("max", |context|{
+    lib_scope.method_ext("max", |context|{
         Ok(Value::Int(context.param(0).as_int().max(context.param(1).as_int())))
     }).int().int().end();
 
-    lib_scope.method("clamp", |context|{
+    lib_scope.method_ext("clamp", |context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
         let c=context.param(2).as_int();
@@ -83,12 +83,12 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     }).int().int().int().end();
 
     //
-    lib_scope.method("abs", |context|{
+    lib_scope.method_ext("abs", |context|{
         Ok(Value::Int(context.param(0).as_int().abs()))
     }).int().end();
     
     //
-    lib_scope.method("sign", |context|{
+    lib_scope.method_ext("sign", |context|{
         let a=context.param(0).as_int();
 
         let b= if a > 0 {
@@ -103,7 +103,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     }).int().end();
 
 	//
-    lib_scope.method("pow", |context|{
+    lib_scope.method_ext("pow", |context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
 
@@ -115,7 +115,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     }).int().int().end();
 
 	//
-    lib_scope.method("mod", |context|{
+    lib_scope.method_ext("mod", |context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
 

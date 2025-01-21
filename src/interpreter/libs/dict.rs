@@ -209,44 +209,44 @@ fn custom_dict_contains<X>(context:FuncContext<X>) -> Result<Value,MachineError>
 }
 
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
-    lib_scope.method("dict",custom_dict_new)
+    lib_scope.method_ext("dict",custom_dict_new)
         .optional()
         .any()
         .variadic_end()
         // .end()
         ;
         
-    lib_scope.method("insert", custom_dict_insert)
+    lib_scope.method_ext("insert", custom_dict_insert)
         .custom::<Dict>()
         .any()
         .any()
         .end();
 
-    lib_scope.method("remove", custom_dict_remove)
+    lib_scope.method_ext("remove", custom_dict_remove)
         .custom::<Dict>()
         .any()
         .end();
 
-    lib_scope.method("len", custom_dict_len)
+    lib_scope.method_ext("len", custom_dict_len)
         .custom::<Dict>()
         .end();
 
-    lib_scope.method("get_field", custom_dict_get_field)
+    lib_scope.method_ext("get_field", custom_dict_get_field)
         .custom::<Dict>()
+        .any()
+        .end();
+
+    lib_scope.method_ext("set_field", custom_dict_set_field)
+        .custom::<Dict>()
+        .any()
         .any()
         .end();
 
-    lib_scope.method("set_field", custom_dict_set_field)
-        .custom::<Dict>()
-        .any()
-        .any()
-        .end();
-
-    lib_scope.method("string", custom_dict_to_string)
+    lib_scope.method_ext("string", custom_dict_to_string)
         .custom::<Dict>()
         .end();
 
-    lib_scope.method("clone", custom_dict_clone)
+    lib_scope.method_ext("clone", custom_dict_clone)
         .custom::<Dict>()
         .end();
     
@@ -254,24 +254,24 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //     .custom::<Dict>()
     //     .end();
 
-    lib_scope.method("clear", custom_dict_clear)
+    lib_scope.method_ext("clear", custom_dict_clear)
         .custom::<Dict>()
         .end();
     
-    lib_scope.method("extend", custom_dict_extend)
+    lib_scope.method_ext("extend", custom_dict_extend)
         .custom::<Dict>()
         .custom::<Dict>()
         .end();
 
-    lib_scope.method("keys", custom_dict_keys)
+    lib_scope.method_ext("keys", custom_dict_keys)
         .custom::<Dict>()
         .end();
 
-    lib_scope.method("pairs", custom_dict_pairs)
+    lib_scope.method_ext("pairs", custom_dict_pairs)
         .custom::<Dict>()
         .end();
     
-    lib_scope.method("contains", custom_dict_contains)
+    lib_scope.method_ext("contains", custom_dict_contains)
         .custom::<Dict>()
         .str()
         .end();

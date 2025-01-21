@@ -32,20 +32,20 @@ pub fn nil_len<X>(_ : FuncContext<X>) -> Result<Value,MachineError> {
 }
 
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
-    lib_scope.method("stdout", print_func)
+    lib_scope.method_ext("stdout", print_func)
         .str()
         .end();
 
-    lib_scope.method("string",default_to_string)
+    lib_scope.method_ext("string",default_to_string)
         .any()
         .end();
     
-    lib_scope.method("error", error_func)
+    lib_scope.method_ext("error", error_func)
         .optional()
         .any()
         .end();
 
-    lib_scope.method("len", nil_len)
+    lib_scope.method_ext("len", nil_len)
         .nil()
         .end();
 }

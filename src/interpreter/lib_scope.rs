@@ -280,11 +280,17 @@ impl<'m,'a,X> MethodInput<'m,'a,X> {
 }
 
 // pub type StaticFuncType = fn(FuncContext)->Result<Value,MachineError>; //add for<'a> here?
-pub type StaticFuncType2<'a,X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
-
 // pub type TempFuncType2<'a> = Rc<RefCell<dyn FnMut(FuncContext)->Result<Value,MachineError> + 'a>>;
-pub type TempFuncType2<'a,X> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
 
+// pub type StaticFuncType1<'a> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
+// pub type TempFuncType1<'a> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
+
+pub type StaticFuncType<'a,X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
+pub type TempFuncType<'a,X> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
+
+
+pub type StaticFuncType2<'a> = Arc<dyn Fn(FuncContext2)->Result<Value,MachineError>+'a +Send+Sync> ; 
+pub type TempFuncType2<'a> = Arc<Mutex<dyn FnMut(FuncContext2)->Result<Value,MachineError> + 'a + Send + Sync>>;
 
 
 // impl<'a,X> Clone for TempFuncType2<'a,X> {
@@ -318,8 +324,13 @@ impl<'a,X> std::fmt::Debug for ArgNode<'a,X> {
 
 // #[derive(Clone)]
 pub enum MethodType<'a,X> {
-    Temp(TempFuncType2<'a,X>),
-    Static(StaticFuncType2<'a,X>),
+    Temp(TempFuncType2<'a>),
+    Static(StaticFuncType2<'a>),
+    
+    // TempExt(TempFuncType2<'a,X>),
+    // StaticExt(StaticFuncType2<'a,X>),
+    TempExt(TempFuncType<'a,X>),
+    StaticExt(StaticFuncType<'a,X>),
 }
 
 impl<'a,X> Clone for MethodType<'a,X> {
@@ -327,6 +338,11 @@ impl<'a,X> Clone for MethodType<'a,X> {
         match  self {
             Self::Temp(x) => Self::Temp(x.clone()),
             Self::Static(x) => Self::Static(x.clone()),
+
+            Self::TempExt(x) => Self::TempExt(x.clone()),
+            Self::StaticExt(x) => Self::StaticExt(x.clone()),
+            // Self::TempExt(x) => Self::TempExt(x.clone()),
+            // Self::StaticExt(x) => Self::StaticExt(x.clone()),
         }
     }
 }
@@ -587,7 +603,7 @@ impl<'a,X> LibScope<'a,X> {
     where
         T:AsRef<[Arg]>
     {
-        self.inner_insert_method(n,param_types,optional_start,variadic,MethodType::Static(Arc::new(func)));
+        self.inner_insert_method(n,param_types,optional_start,variadic,MethodType::StaticExt(Arc::new(func)));
     }
 
     // pub fn insert_temp_method<T>(&mut self,n:&str,param_types : T,optional_start : Option<usize>,variadic:bool,slot:usize) 
@@ -608,7 +624,7 @@ impl<'a,X> LibScope<'a,X> {
 
    
     pub fn method<'m>(&'m mut self,name : &'m str, 
-        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'a+Send+Sync  
+        func: impl Fn(FuncContext2)->Result<Value,MachineError>+'a+Send+Sync  
     ) -> MethodInput<'m,'a,X> {
         MethodInput { 
             lib_scope: self, 
@@ -621,12 +637,37 @@ impl<'a,X> LibScope<'a,X> {
     }
     pub fn method_mut<'m>(&'m mut self,name : &'m str, 
         // slot:usize
-        func:impl FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync
+        func:impl FnMut(FuncContext2)->Result<Value,MachineError> + 'a + Send + Sync
     ) -> MethodInput<'m,'a,X> {
         MethodInput { 
             lib_scope: self, 
             name, 
             method_type:MethodType::Temp(Arc::new(Mutex::new(func))),
+            args: Vec::new(), 
+            optional_start: None, 
+            // variadic: false,
+        }
+    }
+    pub fn method_ext<'m>(&'m mut self,name : &'m str, 
+        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'a+Send+Sync  
+    ) -> MethodInput<'m,'a,X> {
+        MethodInput { 
+            lib_scope: self, 
+            name, 
+            method_type:MethodType::StaticExt(Arc::new(func)),
+            args: Vec::new(), 
+            optional_start: None, 
+            // variadic: false,
+        }
+    }
+    pub fn method_ext_mut<'m>(&'m mut self,name : &'m str, 
+        // slot:usize
+        func:impl FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync
+    ) -> MethodInput<'m,'a,X> {
+        MethodInput { 
+            lib_scope: self, 
+            name, 
+            method_type:MethodType::TempExt(Arc::new(Mutex::new(func))),
             args: Vec::new(), 
             optional_start: None, 
             // variadic: false,
@@ -641,10 +682,15 @@ impl<'b,'a:'b,X> LibScope<'a,X> {
 
         for node in self.nodes.iter() {
             let func=match &node.func {
+                
                 Some(MethodType::Static(x)) => Some(MethodType::Static(x.clone())),
                 Some(MethodType::Temp(x)) => Some(MethodType::Temp(x.clone())),
+
+                Some(MethodType::StaticExt(x)) => Some(MethodType::StaticExt(x.clone())),
+                Some(MethodType::TempExt(x)) => Some(MethodType::TempExt(x.clone())),
                 None => None
             };
+            // let func=node.func.clone();
 
             nodes.push(ArgNode { variadic: node.variadic, children: node.children.clone(), func });
         }

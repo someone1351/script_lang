@@ -132,33 +132,33 @@ fn string_repeat<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
 
 
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
-    lib_scope.method("len", string_len)
+    lib_scope.method_ext("len", string_len)
         .str().end();
     
-    lib_scope.method("contains", string_contains)
+    lib_scope.method_ext("contains", string_contains)
         .str().str().end();
 
     // lib_scope.method("insert", string_insert)
     //     .str().int().str().end();
 
-    lib_scope.method("remove", string_remove)
+    lib_scope.method_ext("remove", string_remove)
         .str().int().optional().int().end();
 
-    lib_scope.method("is_string", |_|{
+    lib_scope.method_ext("is_string", |_|{
         Ok(Value::Bool(true))
     }).str().end();
 
-    lib_scope.method("is_string", |_|{
+    lib_scope.method_ext("is_string", |_|{
         Ok(Value::Bool(false))
     }).any().end();
 
-    lib_scope.method("+",string_append).str().or_any().str().end();
-    lib_scope.method("+",string_append).str().str().or_any().end();
+    lib_scope.method_ext("+",string_append).str().or_any().str().end();
+    lib_scope.method_ext("+",string_append).str().str().or_any().end();
     
-    lib_scope.method("=",string_eq).str().or_any().str().end();
-    lib_scope.method("=",string_eq).str().str().or_any().end();
-    lib_scope.method("string",string_to_string).str().end();
+    lib_scope.method_ext("=",string_eq).str().or_any().str().end();
+    lib_scope.method_ext("=",string_eq).str().str().or_any().end();
+    lib_scope.method_ext("string",string_to_string).str().end();
 
-    lib_scope.method("repeat",string_repeat).str().int().end();
+    lib_scope.method_ext("repeat",string_repeat).str().int().end();
     
 }

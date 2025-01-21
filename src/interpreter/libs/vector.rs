@@ -345,70 +345,70 @@ fn vec_to_string<X,const N: usize>(context:FuncContext<X>) -> Result<Value,Machi
 
 pub fn register<X>(func_scope : &mut LibScope<X>) {
     //contructor()
-    func_scope.method("vec2",|_|{
+    func_scope.method_ext("vec2",|_|{
         Ok(Value::custom_unmanaged_mut(MathVec::<2>::default()))
     }).end();
 
-    func_scope.method("vec3",|_|{
+    func_scope.method_ext("vec3",|_|{
         Ok(Value::custom_unmanaged_mut(MathVec::<3>::default()))
     }).end();
 
-    func_scope.method("vec4",|_|{
+    func_scope.method_ext("vec4",|_|{
         Ok(Value::custom_unmanaged_mut(MathVec::<4>::default()))
     }).end();
 
     //constructor(float)
-    func_scope.method("vec2",|context|{
+    func_scope.method_ext("vec2",|context|{
         let a=context.param(0).as_float();
         Ok(Value::custom_unmanaged_mut(MathVec::<2>::new([a;2])))
     }).float().end();
 
-    func_scope.method("vec3",|context|{
+    func_scope.method_ext("vec3",|context|{
         let a=context.param(0).as_float();
         Ok(Value::custom_unmanaged_mut(MathVec::<3>::new([a;3])))
     }).float().end();
 
-    func_scope.method("vec4",|context|{
+    func_scope.method_ext("vec4",|context|{
         let a=context.param(0).as_float();
         Ok(Value::custom_unmanaged_mut(MathVec::<4>::new([a;4])))
     }).float().end();
 
     //constructor(float ...)
-    func_scope.method("vec2",|context|{
+    func_scope.method_ext("vec2",|context|{
         Ok(Value::custom_unmanaged_mut(MathVec::<2>::new((0 .. 2).map(|i|context.param(i).as_float()))))
     }).float().float().end();
     
-    func_scope.method("vec3",|context|{
+    func_scope.method_ext("vec3",|context|{
         Ok(Value::custom_unmanaged_mut(MathVec::<3>::new((0 .. 3).map(|i|context.param(i).as_float()))))
     }).float().float().float().end();
     
-    func_scope.method("vec4",|context|{
+    func_scope.method_ext("vec4",|context|{
         Ok(Value::custom_unmanaged_mut(MathVec::<4>::new((0 .. 4).map(|i|context.param(i).as_float()))))
     }).float().float().float().float().end();
 
     //vec3(vec2,float)
-    func_scope.method("vec3",|context|{
+    func_scope.method_ext("vec3",|context|{
         let a=context.param(0).as_custom().data_clone::<MathVec<2>>()?;
         let b=context.param(1).as_float();
         Ok(Value::custom_unmanaged_mut(MathVec::<3>::new([a.0[0],a.0[1],b])))
     }).custom::<MathVec<2>>().float().end();
     
     //vec3(float,vec2)
-    func_scope.method("vec3",|context|{
+    func_scope.method_ext("vec3",|context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_custom().data_clone::<MathVec<2>>()?;
         Ok(Value::custom_unmanaged_mut(MathVec::<3>::new([a,b.0[0],b.0[1]])))
     }).float().custom::<MathVec<2>>().end();
 
     //vec4(vec2,vec2)
-    func_scope.method("vec4",|context|{
+    func_scope.method_ext("vec4",|context|{
         let a=context.param(0).as_custom().data_clone::<MathVec<2>>()?;
         let b=context.param(1).as_custom().data_clone::<MathVec<2>>()?;
         Ok(Value::custom_unmanaged_mut(MathVec::<4>::new([a.0[0],a.0[1],b.0[0],b.0[1]])))
     }).custom::<MathVec<2>>().custom::<MathVec<2>>().end();
 
     //vec4(vec2,float,float)
-    func_scope.method("vec4",|context|{
+    func_scope.method_ext("vec4",|context|{
         let a=context.param(0).as_custom().data_clone::<MathVec<2>>()?;
         let b=context.param(1).as_float();
         let c=context.param(2).as_float();
@@ -416,7 +416,7 @@ pub fn register<X>(func_scope : &mut LibScope<X>) {
     }).custom::<MathVec<2>>().float().float().end();
 
     //vec4(float,float,vec2)
-    func_scope.method("vec4",|context|{
+    func_scope.method_ext("vec4",|context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_float();
         let c=context.param(2).as_custom().data_clone::<MathVec<2>>()?;
@@ -424,7 +424,7 @@ pub fn register<X>(func_scope : &mut LibScope<X>) {
     }).float().float().custom::<MathVec<2>>().end();
 
     //vec4(float,vec2,float)
-    func_scope.method("vec4",|context|{
+    func_scope.method_ext("vec4",|context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_custom().data_clone::<MathVec<2>>()?;
         let c=context.param(1).as_float();
@@ -432,77 +432,77 @@ pub fn register<X>(func_scope : &mut LibScope<X>) {
     }).float().custom::<MathVec<2>>().float().end();
 
     //vec4(vec3,float)
-    func_scope.method("vec4",|context|{
+    func_scope.method_ext("vec4",|context|{
         let a=context.param(0).as_custom().data_clone::<MathVec<3>>()?;
         let b=context.param(1).as_float();
         Ok(Value::custom_unmanaged_mut(MathVec::<4>::new([a.0[0],a.0[1],a.0[2],b])))
     }).custom::<MathVec<3>>().float().end();
 
     //vec4(float,vec3)
-    func_scope.method("vec4",|context|{
+    func_scope.method_ext("vec4",|context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_custom().data_clone::<MathVec<3>>()?;
         Ok(Value::custom_unmanaged_mut(MathVec::<4>::new([a,b.0[0],b.0[1],b.0[2]])))
     }).float().custom::<MathVec<3>>().end();
 
     //string
-    func_scope.method("string",vec_to_string::<X,2>).custom::<MathVec<2>>().end();
-    func_scope.method("string",vec_to_string::<X,3>).custom::<MathVec<3>>().end();
-    func_scope.method("string",vec_to_string::<X,4>).custom::<MathVec<4>>().end();
+    func_scope.method_ext("string",vec_to_string::<X,2>).custom::<MathVec<2>>().end();
+    func_scope.method_ext("string",vec_to_string::<X,3>).custom::<MathVec<3>>().end();
+    func_scope.method_ext("string",vec_to_string::<X,4>).custom::<MathVec<4>>().end();
     
     //get_field
-    func_scope.method("get_field",vec_get_field::<X,2>)
+    func_scope.method_ext("get_field",vec_get_field::<X,2>)
         .custom::<MathVec<2>>()
         .str().or_int()
         .end();
 
-    func_scope.method("get_field",vec_get_field::<X,3>)
+    func_scope.method_ext("get_field",vec_get_field::<X,3>)
         .custom::<MathVec<3>>()
         .str().or_int()
         .end();
 
-    func_scope.method("get_field",vec_get_field::<X,4>)
+    func_scope.method_ext("get_field",vec_get_field::<X,4>)
         .custom::<MathVec<4>>()
         .str().or_int()
         .end();
 
     //set_field
-    func_scope.method("set_field",vec_set_field::<X,2>)
+    func_scope.method_ext("set_field",vec_set_field::<X,2>)
         .custom::<MathVec<2>>()
         .str().or_int()
         .float().or_custom::<MathVec<2>>().or_custom::<MathVec<3>>().or_custom::<MathVec<4>>()
         .end();
 
-    func_scope.method("set_field",vec_set_field::<X,3>)
+    func_scope.method_ext("set_field",vec_set_field::<X,3>)
         .custom::<MathVec<3>>()
         .str().or_int()
         .float().or_custom::<MathVec<2>>().or_custom::<MathVec<3>>().or_custom::<MathVec<4>>()
         .end();
 
-    func_scope.method("set_field",vec_set_field::<X,4>)
+    func_scope.method_ext("set_field",vec_set_field::<X,4>)
         .custom::<MathVec<4>>()
         .str().or_int()
         .float().or_custom::<MathVec<2>>().or_custom::<MathVec<3>>().or_custom::<MathVec<4>>()
         .end();
 
     //dot
-    func_scope.method("dot",vec_dot::<X,2>)
+    func_scope.method_ext("dot",vec_dot::<X,2>)
         .custom::<MathVec<2>>()
         .custom::<MathVec<2>>()
         .end();
 
-    func_scope.method("dot",vec_dot::<X,3>)
+    func_scope.method_ext("dot",vec_dot::<X,3>)
         .custom::<MathVec<3>>()
         .custom::<MathVec<3>>()
         .end();
 
-    func_scope.method("dot",vec_dot::<X,4>)
+    func_scope.method_ext("dot",vec_dot::<X,4>)
         .custom::<MathVec<4>>()
         .custom::<MathVec<4>>()
         .end();
 
     //cross
-    func_scope.method("cross",|context|{
+    func_scope.method_ext("cross",|context|{
         let a = context.param(0).as_custom().data_clone::<MathVec<3>>()?.0;
         let b = context.param(1).as_custom().data_clone::<MathVec<3>>()?.0;
         Ok(Value::custom_unmanaged_mut(MathVec::<3>::new([a[1]*b[2]-b[1]*a[2], a[2]*b[0]-b[2]*a[0], a[0]*b[1]-b[0]*a[1]])))
@@ -512,176 +512,176 @@ pub fn register<X>(func_scope : &mut LibScope<X>) {
         .end();
     
     //len
-    func_scope.method("len",vec_len::<X,2>)
+    func_scope.method_ext("len",vec_len::<X,2>)
         .custom::<MathVec<2>>()
         .end();
 
-    func_scope.method("len",vec_len::<X,3>)
+    func_scope.method_ext("len",vec_len::<X,3>)
         .custom::<MathVec<3>>()
         .end();
 
-    func_scope.method("len",vec_len::<X,4>)
+    func_scope.method_ext("len",vec_len::<X,4>)
         .custom::<MathVec<4>>()
         .end();
 
     //dist
-    func_scope.method("dist",vec_dist::<X,2>)
+    func_scope.method_ext("dist",vec_dist::<X,2>)
         .custom::<MathVec<2>>()
         .custom::<MathVec<2>>()
         .end();
 
-    func_scope.method("dist",vec_dist::<X,3>)
+    func_scope.method_ext("dist",vec_dist::<X,3>)
         .custom::<MathVec<3>>()
         .custom::<MathVec<3>>()
         .end();
     
-    func_scope.method("dist",vec_dist::<X,4>)
+    func_scope.method_ext("dist",vec_dist::<X,4>)
         .custom::<MathVec<4>>()
         .custom::<MathVec<4>>()
         .end();
 
     //norm
-    func_scope.method("norm",vec_norm::<X,2>)
+    func_scope.method_ext("norm",vec_norm::<X,2>)
         .custom::<MathVec<2>>()
         .end();
     
-    func_scope.method("norm",vec_norm::<X,3>)
+    func_scope.method_ext("norm",vec_norm::<X,3>)
         .custom::<MathVec<3>>()
         .end();
     
-    func_scope.method("norm",vec_norm::<X,4>)
+    func_scope.method_ext("norm",vec_norm::<X,4>)
         .custom::<MathVec<4>>()
         .end();
 
     //eq
-    func_scope.method("=",vec_eq::<X,2>)
+    func_scope.method_ext("=",vec_eq::<X,2>)
         .custom::<MathVec<2>>()
         .custom::<MathVec<2>>()
         .end();
 
-    func_scope.method("=",vec_eq::<X,3>)
+    func_scope.method_ext("=",vec_eq::<X,3>)
         .custom::<MathVec<3>>()
         .custom::<MathVec<3>>()
         .end();
 
-    func_scope.method("=",vec_eq::<X,4>)
+    func_scope.method_ext("=",vec_eq::<X,4>)
         .custom::<MathVec<4>>()
         .custom::<MathVec<4>>()
         .end();
 
     //min    
-    func_scope.method("min",vec_min::<X,2>)
+    func_scope.method_ext("min",vec_min::<X,2>)
         .custom::<MathVec<2>>()
         .custom::<MathVec<2>>()
         .end();
 
-    func_scope.method("min",vec_min::<X,3>)
+    func_scope.method_ext("min",vec_min::<X,3>)
         .custom::<MathVec<3>>()
         .custom::<MathVec<3>>()
         .end();
 
-    func_scope.method("min",vec_min::<X,4>)
+    func_scope.method_ext("min",vec_min::<X,4>)
         .custom::<MathVec<4>>()
         .custom::<MathVec<4>>()
         .end();
 
 
     //max    
-    func_scope.method("max",vec_max::<X,2>)
+    func_scope.method_ext("max",vec_max::<X,2>)
         .custom::<MathVec<2>>()
         .custom::<MathVec<2>>()
         .end();
 
-    func_scope.method("max",vec_max::<X,3>)
+    func_scope.method_ext("max",vec_max::<X,3>)
         .custom::<MathVec<3>>()
         .custom::<MathVec<3>>()
         .end();
 
-    func_scope.method("max",vec_max::<X,4>)
+    func_scope.method_ext("max",vec_max::<X,4>)
         .custom::<MathVec<4>>()
         .custom::<MathVec<4>>()
         .end();
 
     //clamp
-    func_scope.method("clamp",vec_clamp_scalar::<X,2>)
+    func_scope.method_ext("clamp",vec_clamp_scalar::<X,2>)
         .custom::<MathVec<2>>()
         .float()
         .float()
         .end();
 
-    func_scope.method("clamp",vec_clamp_scalar::<X,3>)
+    func_scope.method_ext("clamp",vec_clamp_scalar::<X,3>)
         .custom::<MathVec<3>>()
         .float()
         .float()
         .end();
 
-    func_scope.method("clamp",vec_clamp_scalar::<X,4>)
+    func_scope.method_ext("clamp",vec_clamp_scalar::<X,4>)
         .custom::<MathVec<4>>()
         .float()
         .float()
         .end();
 
-    func_scope.method("clamp",vec_clamp::<X,2>)
+    func_scope.method_ext("clamp",vec_clamp::<X,2>)
         .custom::<MathVec<2>>()
         .custom::<MathVec<2>>()
         .end();
 
-    func_scope.method("clamp",vec_clamp::<X,3>)
+    func_scope.method_ext("clamp",vec_clamp::<X,3>)
         .custom::<MathVec<3>>()
         .custom::<MathVec<3>>()
         .end();
 
-    func_scope.method("clamp",vec_clamp::<X,4>)
+    func_scope.method_ext("clamp",vec_clamp::<X,4>)
         .custom::<MathVec<4>>()
         .custom::<MathVec<4>>()
         .end();
 
     //neg
-    func_scope.method("-",vec_neg::<X,2>)
+    func_scope.method_ext("-",vec_neg::<X,2>)
         .custom::<MathVec<2>>()
         .end();
 
-    func_scope.method("-",vec_neg::<X,3>)
+    func_scope.method_ext("-",vec_neg::<X,3>)
         .custom::<MathVec<3>>()
         .end();
 
-    func_scope.method("-",vec_neg::<X,4>)
+    func_scope.method_ext("-",vec_neg::<X,4>)
         .custom::<MathVec<4>>()
         .end();
 
     //
-    func_scope.method("+",vec_add::<X,2>).custom::<MathVec<2>>().custom::<MathVec<2>>().end();
-    func_scope.method("+",vec_add::<X,3>).custom::<MathVec<3>>().custom::<MathVec<3>>().end();
-    func_scope.method("+",vec_add::<X,4>).custom::<MathVec<4>>().custom::<MathVec<4>>().end();
+    func_scope.method_ext("+",vec_add::<X,2>).custom::<MathVec<2>>().custom::<MathVec<2>>().end();
+    func_scope.method_ext("+",vec_add::<X,3>).custom::<MathVec<3>>().custom::<MathVec<3>>().end();
+    func_scope.method_ext("+",vec_add::<X,4>).custom::<MathVec<4>>().custom::<MathVec<4>>().end();
     
-    func_scope.method("-",vec_sub::<X,2>).custom::<MathVec<2>>().custom::<MathVec<2>>().end();
-    func_scope.method("-",vec_sub::<X,3>).custom::<MathVec<3>>().custom::<MathVec<3>>().end();
-    func_scope.method("-",vec_sub::<X,4>).custom::<MathVec<4>>().custom::<MathVec<4>>().end();
+    func_scope.method_ext("-",vec_sub::<X,2>).custom::<MathVec<2>>().custom::<MathVec<2>>().end();
+    func_scope.method_ext("-",vec_sub::<X,3>).custom::<MathVec<3>>().custom::<MathVec<3>>().end();
+    func_scope.method_ext("-",vec_sub::<X,4>).custom::<MathVec<4>>().custom::<MathVec<4>>().end();
         
-    func_scope.method("*",vec_mul::<X,2>).custom::<MathVec<2>>().custom::<MathVec<2>>().end();
-    func_scope.method("*",vec_mul::<X,3>).custom::<MathVec<3>>().custom::<MathVec<3>>().end();
-    func_scope.method("*",vec_mul::<X,4>).custom::<MathVec<4>>().custom::<MathVec<4>>().end();
+    func_scope.method_ext("*",vec_mul::<X,2>).custom::<MathVec<2>>().custom::<MathVec<2>>().end();
+    func_scope.method_ext("*",vec_mul::<X,3>).custom::<MathVec<3>>().custom::<MathVec<3>>().end();
+    func_scope.method_ext("*",vec_mul::<X,4>).custom::<MathVec<4>>().custom::<MathVec<4>>().end();
     
-    func_scope.method("/",vec_div::<X,2>).custom::<MathVec<2>>().custom::<MathVec<2>>().end();
-    func_scope.method("/",vec_div::<X,3>).custom::<MathVec<3>>().custom::<MathVec<3>>().end();
-    func_scope.method("/",vec_div::<X,4>).custom::<MathVec<4>>().custom::<MathVec<4>>().end();
+    func_scope.method_ext("/",vec_div::<X,2>).custom::<MathVec<2>>().custom::<MathVec<2>>().end();
+    func_scope.method_ext("/",vec_div::<X,3>).custom::<MathVec<3>>().custom::<MathVec<3>>().end();
+    func_scope.method_ext("/",vec_div::<X,4>).custom::<MathVec<4>>().custom::<MathVec<4>>().end();
 
     //
-    func_scope.method("+",vec_add_scalar::<X,2>).custom::<MathVec<2>>().float().end();
-    func_scope.method("+",vec_add_scalar::<X,3>).custom::<MathVec<3>>().float().end();
-    func_scope.method("+",vec_add_scalar::<X,4>).custom::<MathVec<4>>().float().end();
+    func_scope.method_ext("+",vec_add_scalar::<X,2>).custom::<MathVec<2>>().float().end();
+    func_scope.method_ext("+",vec_add_scalar::<X,3>).custom::<MathVec<3>>().float().end();
+    func_scope.method_ext("+",vec_add_scalar::<X,4>).custom::<MathVec<4>>().float().end();
 
-    func_scope.method("-",vec_sub_scalar::<X,2>).custom::<MathVec<2>>().float().end();
-    func_scope.method("-",vec_sub_scalar::<X,3>).custom::<MathVec<3>>().float().end();
-    func_scope.method("-",vec_sub_scalar::<X,4>).custom::<MathVec<4>>().float().end();
+    func_scope.method_ext("-",vec_sub_scalar::<X,2>).custom::<MathVec<2>>().float().end();
+    func_scope.method_ext("-",vec_sub_scalar::<X,3>).custom::<MathVec<3>>().float().end();
+    func_scope.method_ext("-",vec_sub_scalar::<X,4>).custom::<MathVec<4>>().float().end();
 
-    func_scope.method("*",vec_mul_scalar::<X,2>).custom::<MathVec<2>>().float().end();
-    func_scope.method("*",vec_mul_scalar::<X,3>).custom::<MathVec<3>>().float().end();
-    func_scope.method("*",vec_mul_scalar::<X,4>).custom::<MathVec<4>>().float().end();
+    func_scope.method_ext("*",vec_mul_scalar::<X,2>).custom::<MathVec<2>>().float().end();
+    func_scope.method_ext("*",vec_mul_scalar::<X,3>).custom::<MathVec<3>>().float().end();
+    func_scope.method_ext("*",vec_mul_scalar::<X,4>).custom::<MathVec<4>>().float().end();
     
-    func_scope.method("/",vec_div_scalar::<X,2>).custom::<MathVec<2>>().float().end();
-    func_scope.method("/",vec_div_scalar::<X,3>).custom::<MathVec<3>>().float().end();
-    func_scope.method("/",vec_div_scalar::<X,4>).custom::<MathVec<4>>().float().end();
+    func_scope.method_ext("/",vec_div_scalar::<X,2>).custom::<MathVec<2>>().float().end();
+    func_scope.method_ext("/",vec_div_scalar::<X,3>).custom::<MathVec<3>>().float().end();
+    func_scope.method_ext("/",vec_div_scalar::<X,4>).custom::<MathVec<4>>().float().end();
 
     //
 
