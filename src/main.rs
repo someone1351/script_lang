@@ -192,7 +192,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         // false
     );
 
-    let mut mynum=123;
+    let mut my_num:i32=123;
 
     if let Err(e)=&build {
         eprintln!("In {path:?}, {}",e.msg());
@@ -201,8 +201,15 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         let mut var_scope=script_lang::VarScope::new();
         var_scope.decl("self", Some(script_lang::Value::int(4))).unwrap();
     
-        let lib_scope=script_lang::LibScope::new_full();
-        let mut machine = script_lang::Machine::new(&mut gc_scope,&mut var_scope, &lib_scope,  &mut mynum);
+        let mut lib_scope=script_lang::LibScope::<&mut i32>::new_full();
+        lib_scope.method_ext("get_test", |context|{
+            Ok(script_lang::Value::Int(*context.get_core_ref() as script_lang::IntT))
+        }).end();
+        lib_scope.method_ext("set_test", |mut context|{
+            *context.get_core_mut()=context.param(0).as_int() as i32;
+            Ok(script_lang::Value::Void)
+        }).int().end();
+        let mut machine = script_lang::Machine::new(&mut gc_scope,&mut var_scope, &lib_scope,  &mut my_num);
         // machine.set_debug_print(true);
 
         // build.clone().unwrap().print();
@@ -235,5 +242,6 @@ fn main() {
     // test_script4("examples/test8.script");
     
     // test_script2("examples/test6.script");
-    test_script3("examples/test7.script");
+    // test_script3("examples/test7.script");
+    test_script3("examples/test9.script");
 }
