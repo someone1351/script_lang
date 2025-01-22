@@ -289,14 +289,14 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b
     
 }
 
-fn ordinal(i:usize)->String {
-    match i.to_string().chars().last().unwrap() {
-        '1' => format!("{i}st"),
-        '2' => format!("{i}nd"),
-        '3' => format!("{i}rd"),
-        _ => format!("{i}th"),
-    }.to_string()
-}
+// fn ordinal(i:usize)->String {
+//     match i.to_string().chars().last().unwrap() {
+//         '1' => format!("{i}st"),
+//         '2' => format!("{i}nd"),
+//         '3' => format!("{i}rd"),
+//         _ => format!("{i}th"),
+//     }.to_string()
+// }
 
 
 /////////////
@@ -329,7 +329,7 @@ impl<'q,'a,'c> FuncContext2<'q,'a,'c> { //,'b //,'b
     pub fn stack_val(&self,stack_ind:usize) -> Result<Value,MachineError> {
         self.machine.get_stack_val(stack_ind)
     }
-    pub fn result_val(&self) -> &Value {
+    pub fn result_val(&self) -> Value {
         self.machine.result_val()
     }
 
@@ -343,7 +343,7 @@ impl<'q,'a,'c> FuncContext2<'q,'a,'c> { //,'b //,'b
         Ok(s)
     }
 
-    pub fn params_len(&self) -> usize {
+    pub fn params_num(&self) -> usize {
         self.params_num
     }
     pub fn param(&self,ind:usize) -> Value {
@@ -384,7 +384,11 @@ impl<'q,'a,'c> FuncContext2<'q,'a,'c> { //,'b //,'b
         self.machine.constant_get(name)
     }
     pub fn error<S: Into<String>>(&self, msg:S) -> MachineError {
-        self.machine.error(&msg.into())
+        MachineError{
+            build : self.machine.cur_build(),
+            loc : self.machine.cur_build().and_then(|cur_build|cur_build.instr_locs.get(&self.machine.instr_pos()).cloned()),
+            error_type:MachineErrorType::MethodRunError(msg.into()),
+        }
     }
 
     

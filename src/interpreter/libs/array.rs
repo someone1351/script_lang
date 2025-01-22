@@ -10,7 +10,7 @@ use super::super::lib_scope::*;
 use super::utils::*;
 
 fn custom_array_new(mut context:FuncContext2) -> Result<Value,MachineError> {
-    let data=(0..context.params_len())
+    let data=(0..context.params_num())
         .map(|i|context.param(i))
         .collect::<Vec<_>>();
 

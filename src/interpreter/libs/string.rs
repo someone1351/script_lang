@@ -55,7 +55,7 @@ fn string_remove(context:FuncContext2) -> Result<Value,MachineError> {
     let len = string.chars().count();
     let from = calc_ind(context.param(1).as_int(),len);
 
-    let to=if context.params_len()==3 {
+    let to=if context.params_num()==3 {
         calc_ind(context.param(2).as_int(),len)
     } else {
         from.map(|x|x+1)

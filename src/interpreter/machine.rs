@@ -70,7 +70,12 @@ pub trait MachineTrait<'a,'c> {
     fn stack_frames(&self) -> &Vec<StackFrame>;
     fn get_stack_val(&self,stack_ind:usize) -> Result<Value,MachineError>;
     
-    fn result_val(&self) -> &Value;
+    fn result_val(&self) -> Value;
+    fn instr_pos(&self) -> usize;
+
+    
+    fn cur_build(&self) -> Option<BuildT>;
+
     fn try_call_method(&mut self,name:&str,params : &Vec<Value>) -> Result<Option<Value>,MachineError>;
 
     fn call_value(&mut self,v:&Value,params : &Vec<Value>) -> Result<Value,MachineError>;
@@ -87,7 +92,7 @@ pub trait MachineTrait<'a,'c> {
     fn value_get(&mut self,value:Value,fields:&Vec<Value>) -> Result<Value,MachineError>;
     
     fn constant_get(&self,n:&str) -> Option<Value>;
-    fn error(&self, msg:&str) -> MachineError ;
+    // fn method_error(&self, msg:&str) -> MachineError ;
 
 }
 
@@ -111,8 +116,14 @@ impl<'a,'c,X> MachineTrait<'a,'c> for Machine<'a,'c,X> {
         Ok(self.stack.get(stack_ind).unwrap().clone())
     }
     
-    fn result_val(&self) -> &Value {
-        &self.result_val
+    fn result_val(&self) -> Value {
+        self.result_val.clone()
+    }
+    fn instr_pos(&self) -> usize {
+        self.instr_pos
+    }
+    fn cur_build(&self) -> Option<BuildT> {
+        self.cur_build.clone()
     }
     fn try_call_method(&mut self,name:&str,params : &Vec<Value>) -> Result<Option<Value>,MachineError> {
         self.try_call_method(name, params)
@@ -151,14 +162,9 @@ impl<'a,'c,X> MachineTrait<'a,'c> for Machine<'a,'c,X> {
     fn constant_get(&self,n:&str) -> Option<Value> {
         self.constant_get(n)
     }
-    fn error(&self, msg:&str) -> MachineError {
-        let msg=msg.into();
-        // if let Some((method_name,method_params))=self.machine.debugger().last_method_call_info() {
-
-        // }
-
-        MachineError::from_machine(self, MachineErrorType::MethodRunError(msg))
-    }
+    // fn method_error(&self, msg:&str) -> MachineError {
+    //     MachineError::from_machine(self, MachineErrorType::MethodRunError(msg.into()))
+    // }
 }
 
 impl<'a,'c,X:Copy> Machine<'a,'c,X> {

@@ -26,7 +26,7 @@ fn custom_dict_new(mut context:FuncContext2) -> Result<Value,MachineError> {
     let mut data=BTreeMap::new();
     let mut i=0;
 
-    while i <context.params_len() {
+    while i <context.params_num() {
         // let k = context.param_to_string(i)?;
         let k = context.value_to_string(&context.param(i))?;
         let v=context.param(i+1).clone();
