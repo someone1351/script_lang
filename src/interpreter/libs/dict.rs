@@ -27,14 +27,17 @@ fn custom_dict_new(mut context:FuncContext2) -> Result<Value,MachineError> {
     let mut i=0;
 
     while i <context.params_len() {
-        let k = context.param_to_string(i)?;
+        // let k = context.param_to_string(i)?;
+        let k = context.value_to_string(&context.param(i))?;
         let v=context.param(i+1).clone();
         data.insert(k, v);
         i+=2;
     }
 
     // Ok(Value::Custom(context.new_custom_managed(Dict(data)))) //.clone_to_root()
-    Ok(context.custom_managed_mut(Dict(data))) 
+    
+    // Ok(context.custom_managed_mut(Dict(data)))
+    Ok(Value::custom_managed_mut(Dict(data), context.gc_scope()))
 }
 
 fn custom_dict_insert(mut context:FuncContext2) -> Result<Value,MachineError> {
@@ -42,7 +45,8 @@ fn custom_dict_insert(mut context:FuncContext2) -> Result<Value,MachineError> {
     let dict_data=dict.data();
     let mut dict_data=dict_data.get_mut::<Dict>()?;
 
-    let key=context.param_to_string(1)?;
+    // let key=context.param_to_string(1)?;
+    let key=context.value_to_string(&context.param(1))?;
     let val=context.param(2).clone();
 
     dict_data.0.insert(key, val.clone());
@@ -54,7 +58,8 @@ fn custom_dict_remove(mut context:FuncContext2) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
 
     dict.with_data_mut(|data:&mut Dict|{
-        let key=context.param_to_string(1)?;
+        // let key=context.param_to_string(1)?;
+        let key=context.value_to_string(&context.param(1))?;
         let v=data.0.remove(&key).unwrap_or(Value::Nil);
         Ok(v)
     })
@@ -75,7 +80,8 @@ fn custom_dict_get_field(mut context:FuncContext2) -> Result<Value,MachineError>
     let dict_data=context.param(0).as_custom().data();
     let dict_data=dict_data.get_mut::<Dict>()?;
 
-    let key = context.param_to_string(1)?;
+    // let key = context.param_to_string(1)?;
+    let key=context.value_to_string(&context.param(1))?;
     let val=dict_data.0.get(&key).and_then(|x|Some(x.clone())).unwrap_or(Value::Nil);
 
     Ok(val)
@@ -88,7 +94,8 @@ fn custom_dict_set_field(mut context:FuncContext2) -> Result<Value,MachineError>
     let dict_data=dict.data();
     let mut dict_data=dict_data.get_mut::<Dict>()?;
 
-    let key = context.param_to_string(1)?;
+    // let key = context.param_to_string(1)?;
+    let key=context.value_to_string(&context.param(1))?;
     let val=context.param(2).clone();
 
     // let Some(element)=dict_data.0.get_mut(&key) else {
@@ -151,7 +158,8 @@ fn custom_dict_clone(mut context:FuncContext2) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
     
     dict.with_data_mut(|data:&mut Dict|{
-        Ok(context.custom_managed_mut(Dict(data.0.clone())))
+        // Ok(context.custom_managed_mut(Dict(data.0.clone())))
+        Ok(Value::custom_managed_mut(Dict(data.0.clone()), context.gc_scope()))
     })
 }
 
@@ -183,7 +191,8 @@ fn custom_dict_keys(mut context:FuncContext2) -> Result<Value,MachineError> {
 
     dict.with_data_mut(|data:&mut Dict|{
         let keys=data.0.keys().map(|k|Value::string(k)).collect::<Vec<_>>();
-        Ok(context.custom_managed_mut(Array(keys)))
+        // Ok(context.custom_managed_mut(Array(keys)))
+        Ok(Value::custom_managed_mut(Array(keys), context.gc_scope()))
     })
 }
 
@@ -192,10 +201,12 @@ fn custom_dict_pairs(mut context:FuncContext2) -> Result<Value,MachineError> {
 
     dict.with_data_mut(|data:&mut Dict|{
         let pairs=data.0.iter().map(|(k,v)|{
-            context.custom_managed_mut(Array(vec![Value::string(k),v.clone()])) 
+            // context.custom_managed_mut(Array(vec![Value::string(k),v.clone()])) 
+            Value::custom_managed_mut(Array(vec![Value::string(k),v.clone()]), context.gc_scope())
         }).collect::<Vec<_>>();
         
-        Ok(context.custom_managed_mut(Array(pairs)))
+        // Ok(context.custom_managed_mut(Array(pairs)))
+        Ok(Value::custom_managed_mut(Array(pairs), context.gc_scope()))
     })
 }
 

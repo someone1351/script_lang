@@ -17,7 +17,7 @@ pub fn print_func(context:FuncContext2) -> Result<Value,MachineError> {
 }
   
 pub fn error_func(context:FuncContext2) -> Result<Value,MachineError> {
-    let msg=if context.param_is_nil(0) {
+    let msg=if context.param(0).is_nil() {
         String::new()
     } else {
         context.param(0).as_string()

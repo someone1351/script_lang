@@ -279,11 +279,14 @@ impl<'m,'a,X> MethodInput<'m,'a,X> {
     }
 }
 
-// pub type StaticFuncType = fn(FuncContext)->Result<Value,MachineError>; //add for<'a> here?
-// pub type TempFuncType2<'a> = Rc<RefCell<dyn FnMut(FuncContext)->Result<Value,MachineError> + 'a>>;
+// // pub type StaticFuncType = fn(FuncContext)->Result<Value,MachineError>; //add for<'a> here?
+// // pub type TempFuncType2<'a> = Rc<RefCell<dyn FnMut(FuncContext)->Result<Value,MachineError> + 'a>>;
 
-// pub type StaticFuncType1<'a> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
-// pub type TempFuncType1<'a> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
+// // pub type StaticFuncType1<'a> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
+// // pub type TempFuncType1<'a> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
+
+// pub type StaticFuncType<'a,X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
+// pub type TempFuncType<'a,X> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
 
 pub type StaticFuncType<'a,X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
 pub type TempFuncType<'a,X> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
@@ -327,10 +330,10 @@ pub enum MethodType<'a,X> {
     Temp(TempFuncType2<'a>),
     Static(StaticFuncType2<'a>),
     
-    // TempExt(TempFuncType2<'a,X>),
-    // StaticExt(StaticFuncType2<'a,X>),
     TempExt(TempFuncType<'a,X>),
     StaticExt(StaticFuncType<'a,X>),
+
+    
 }
 
 impl<'a,X> Clone for MethodType<'a,X> {
