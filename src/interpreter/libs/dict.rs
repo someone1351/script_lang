@@ -18,7 +18,7 @@ use super::super::data::*;
 //     Nil,
 // }
 
-fn custom_dict_new<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_new(mut context:FuncContext2) -> Result<Value,MachineError> {
     // let dict=context.new_custom_managed(Dict::new(),);
     // let dict_data=dict.data();
     // let mut dict_data=dict_data.borrow_mut::<Dict>()?;
@@ -37,7 +37,7 @@ fn custom_dict_new<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> 
     Ok(context.custom_managed_mut(Dict(data))) 
 }
 
-fn custom_dict_insert<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_insert(mut context:FuncContext2) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
     let dict_data=dict.data();
     let mut dict_data=dict_data.get_mut::<Dict>()?;
@@ -50,7 +50,7 @@ fn custom_dict_insert<X>(mut context:FuncContext<X>) -> Result<Value,MachineErro
     Ok(val) //returns new val
 }
 
-fn custom_dict_remove<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_remove(mut context:FuncContext2) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
 
     dict.with_data_mut(|data:&mut Dict|{
@@ -60,7 +60,7 @@ fn custom_dict_remove<X>(mut context:FuncContext<X>) -> Result<Value,MachineErro
     })
 }
 
-fn custom_dict_len<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_len(context:FuncContext2) -> Result<Value,MachineError> {
     // let dict=context.param(0).as_custom();
     let dict_data=context.param(0).as_custom().data();
     let dict_data=dict_data.get_mut::<Dict>()?;
@@ -68,7 +68,7 @@ fn custom_dict_len<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
     Ok(Value::Int(dict_data.0.len() as IntT))
 }
 
-fn custom_dict_get_field<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_get_field(mut context:FuncContext2) -> Result<Value,MachineError> {
     //0 dict, 1 key
 
     // let dict=context.param(0).as_custom();
@@ -81,7 +81,7 @@ fn custom_dict_get_field<X>(mut context:FuncContext<X>) -> Result<Value,MachineE
     Ok(val)
 }
 
-fn custom_dict_set_field<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_set_field(mut context:FuncContext2) -> Result<Value,MachineError> {
     //0 dict, 1 key, 2 val
 
     let dict=context.param(0).as_custom();
@@ -107,7 +107,7 @@ fn custom_dict_set_field<X>(mut context:FuncContext<X>) -> Result<Value,MachineE
     Ok(Value::Void)
 }
 
-// fn custom_dict_last<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
+// fn custom_dict_last(mut context:FuncContext2) -> Result<Value,MachineError> {
 //     //0 dict
 //     context.param(0).as_custom().with_data(|dict:&mut Dict|{
 //         Ok(dict.0.last_key_value()
@@ -117,7 +117,7 @@ fn custom_dict_set_field<X>(mut context:FuncContext<X>) -> Result<Value,MachineE
 //     })
 // }
 
-fn custom_dict_to_string<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_to_string(mut context:FuncContext2) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
     let dict_data=dict.data();
     // let dict_data=dict_data.borrow_mut::<CustomDict>()?;
@@ -147,7 +147,7 @@ fn custom_dict_to_string<X>(mut context:FuncContext<X>) -> Result<Value,MachineE
     // Ok(Value::new_string(format!("Dict({:?})",dict_data)))
 }
 
-fn custom_dict_clone<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_clone(mut context:FuncContext2) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
     
     dict.with_data_mut(|data:&mut Dict|{
@@ -155,7 +155,7 @@ fn custom_dict_clone<X>(mut context:FuncContext<X>) -> Result<Value,MachineError
     })
 }
 
-fn custom_dict_clear<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_clear(context:FuncContext2) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
 
     dict.with_data_mut(|data:&mut Dict|{
@@ -166,7 +166,7 @@ fn custom_dict_clear<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
     Ok(Value::Void)
 }
 
-fn custom_dict_extend<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_extend(context:FuncContext2) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
     let dict2:Dict=context.param(1).as_custom().data_clone()?;
 
@@ -178,7 +178,7 @@ fn custom_dict_extend<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
     Ok(Value::Void)
 }
 
-fn custom_dict_keys<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_keys(mut context:FuncContext2) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
 
     dict.with_data_mut(|data:&mut Dict|{
@@ -187,7 +187,7 @@ fn custom_dict_keys<X>(mut context:FuncContext<X>) -> Result<Value,MachineError>
     })
 }
 
-fn custom_dict_pairs<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_pairs(mut context:FuncContext2) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
 
     dict.with_data_mut(|data:&mut Dict|{
@@ -199,7 +199,7 @@ fn custom_dict_pairs<X>(mut context:FuncContext<X>) -> Result<Value,MachineError
     })
 }
 
-fn custom_dict_contains<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_dict_contains(context:FuncContext2) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
     let key=context.param(1).as_string();
 
@@ -209,44 +209,44 @@ fn custom_dict_contains<X>(context:FuncContext<X>) -> Result<Value,MachineError>
 }
 
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
-    lib_scope.method_ext("dict",custom_dict_new)
+    lib_scope.method("dict",custom_dict_new)
         .optional()
         .any()
         .variadic_end()
         // .end()
         ;
         
-    lib_scope.method_ext("insert", custom_dict_insert)
+    lib_scope.method("insert", custom_dict_insert)
         .custom::<Dict>()
         .any()
         .any()
         .end();
 
-    lib_scope.method_ext("remove", custom_dict_remove)
+    lib_scope.method("remove", custom_dict_remove)
         .custom::<Dict>()
         .any()
         .end();
 
-    lib_scope.method_ext("len", custom_dict_len)
+    lib_scope.method("len", custom_dict_len)
         .custom::<Dict>()
         .end();
 
-    lib_scope.method_ext("get_field", custom_dict_get_field)
+    lib_scope.method("get_field", custom_dict_get_field)
         .custom::<Dict>()
+        .any()
+        .end();
+
+    lib_scope.method("set_field", custom_dict_set_field)
+        .custom::<Dict>()
+        .any()
         .any()
         .end();
 
-    lib_scope.method_ext("set_field", custom_dict_set_field)
-        .custom::<Dict>()
-        .any()
-        .any()
-        .end();
-
-    lib_scope.method_ext("string", custom_dict_to_string)
+    lib_scope.method("string", custom_dict_to_string)
         .custom::<Dict>()
         .end();
 
-    lib_scope.method_ext("clone", custom_dict_clone)
+    lib_scope.method("clone", custom_dict_clone)
         .custom::<Dict>()
         .end();
     
@@ -254,24 +254,24 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //     .custom::<Dict>()
     //     .end();
 
-    lib_scope.method_ext("clear", custom_dict_clear)
+    lib_scope.method("clear", custom_dict_clear)
         .custom::<Dict>()
         .end();
     
-    lib_scope.method_ext("extend", custom_dict_extend)
+    lib_scope.method("extend", custom_dict_extend)
         .custom::<Dict>()
         .custom::<Dict>()
         .end();
 
-    lib_scope.method_ext("keys", custom_dict_keys)
+    lib_scope.method("keys", custom_dict_keys)
         .custom::<Dict>()
         .end();
 
-    lib_scope.method_ext("pairs", custom_dict_pairs)
+    lib_scope.method("pairs", custom_dict_pairs)
         .custom::<Dict>()
         .end();
     
-    lib_scope.method_ext("contains", custom_dict_contains)
+    lib_scope.method("contains", custom_dict_contains)
         .custom::<Dict>()
         .str()
         .end();

@@ -11,7 +11,7 @@ use super::super::data::*;
 // #[derive(Debug,Clone)]
 // struct CustomVararg;
 
-fn vararg_len<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
+fn vararg_len(context:FuncContext2) -> Result<Value,MachineError> {
     let Some(stack_frame) = context.last_stack_frame() else {
         return Ok(Value::Int(0));
     };
@@ -20,7 +20,7 @@ fn vararg_len<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
     Ok(Value::Int(vararg_len as IntT))
 }
 
-fn vararg_get_field<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
+fn vararg_get_field(context:FuncContext2) -> Result<Value,MachineError> {
     //0 vararg, 1 index
 
     //
@@ -44,7 +44,7 @@ fn vararg_get_field<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
     Ok(val.clone())
 }
 
-// fn vararg_set_field<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
+// fn vararg_set_field(mut context:FuncContext2) -> Result<Value,MachineError> {
 //     //0 = vararg, 1 = index, 2 = value
 
 //     //
@@ -67,11 +67,11 @@ fn vararg_get_field<X>(context:FuncContext<X>) -> Result<Value,MachineError> {
 //     Ok(Value::Void)
 // }
 
-fn custom_vararg_to_string<X>(_:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_vararg_to_string(_:FuncContext2) -> Result<Value,MachineError> {
     Ok(Value::string(format!("Vararg")))
 }
 
-fn custom_vararg_copy<X>(mut context:FuncContext<X>) -> Result<Value,MachineError> {
+fn custom_vararg_copy(mut context:FuncContext2) -> Result<Value,MachineError> {
     let Some(stack_frame) = context.last_stack_frame() else {
         return Ok(Value::Nil);
     };
@@ -95,11 +95,11 @@ fn custom_vararg_copy<X>(mut context:FuncContext<X>) -> Result<Value,MachineErro
 }
 
 pub fn register<X>(func_scope : &mut LibScope<X>) {
-    func_scope.method_ext("len", vararg_len)
+    func_scope.method("len", vararg_len)
         .custom_ref::<Vararg>()
         .end();
 
-    func_scope.method_ext("get_field", vararg_get_field)
+    func_scope.method("get_field", vararg_get_field)
         .custom_ref::<Vararg>()
         .int()
         .end();
@@ -110,11 +110,11 @@ pub fn register<X>(func_scope : &mut LibScope<X>) {
     //     .any()
     //     .end();
 
-    func_scope.method_ext("string", custom_vararg_to_string)
+    func_scope.method("string", custom_vararg_to_string)
         .custom_ref::<Vararg>()
         .end();
 
-    func_scope.method_ext("copy", custom_vararg_copy)
+    func_scope.method("copy", custom_vararg_copy)
         .custom_ref::<Vararg>()
         .end();
 }

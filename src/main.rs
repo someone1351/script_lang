@@ -234,6 +234,64 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
 
 
 
+
+pub fn test_script4<P:AsRef<Path>>(path:P) {
+
+    println!("===");
+    let mut gc_scope= script_lang::GcScope::new();
+    
+    let path = path.as_ref();
+    let src = std::fs::read_to_string(path).unwrap();
+
+    let compiler=script_lang::langs::cexpr_compiler::Compiler::new();
+    
+    let build = compiler.compile(src.as_str(), 0, None, true,
+        // false
+    );
+
+    let mut my_num:i32=123;
+    let mut my_num2:i32=456;
+
+    if let Err(e)=&build {
+        eprintln!("In {path:?}, {}",e.msg());
+    } else {
+
+        let mut var_scope=script_lang::VarScope::new();
+        var_scope.decl("self", Some(script_lang::Value::int(4))).unwrap();
+    
+        let mut lib_scope=script_lang::LibScope::<(&mut i32,&mut i32)>::new_full();
+        // lib_scope.method_ext("get_test", |context|{
+        //     Ok(script_lang::Value::Int(*context.get_core_ref().0 as script_lang::IntT))
+        // }).end();
+        // lib_scope.method_ext("set_test", |mut context|{
+        //     context.g().0=context.param(0).as_int() as i32;
+        //     Ok(script_lang::Value::Void)
+        // }).int().end();
+        let mut machine = script_lang::Machine::new(&mut gc_scope,&mut var_scope, &lib_scope,  (&mut my_num,&mut my_num2));
+        // machine.set_debug_print(true);
+
+        // build.clone().unwrap().print();
+        
+        let res=machine.run_build(&build.unwrap());
+        println!("the result is {res:?}");
+
+        if let Err(e)=&res {
+            e.eprint(None);
+            machine.debug_print_stack_trace(true);
+            machine.debug_print_stack();
+            // machine.print_state();
+        }
+        // machine.debug_print_stack();
+    }
+
+    //gc_scope.mark_and_sweep();
+    gc_scope.test();
+    
+
+}
+
+
+
 fn main() {
     println!("Hello, world!");
 
