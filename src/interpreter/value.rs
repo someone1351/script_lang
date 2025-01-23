@@ -240,54 +240,54 @@ impl Value {
     }
 
     //
-    pub fn custom_callable_managed_mut<T:GcTraversable+Send>(data : T, caller:Caller,gc_scope : &mut GcScope) -> Self {
-        Self::Custom(Custom::new_managed_mut(data,Some(caller), gc_scope))
-    }
-    
-    pub fn custom_callable_managed<T:GcTraversable+Send+Sync>(data : T, caller:Caller,gc_scope : &mut GcScope) -> Self {
-        Self::Custom(Custom::new_managed(data,Some(caller), gc_scope))
-    }
-
-    pub fn custom_callable_unmanaged_mut<T:Any+Send>(data : T, caller:Caller) -> Self {
-        Self::Custom(Custom::new_unmanaged_mut(data,Some(caller)))
-    }
-    
-    pub fn custom_callable_unmanaged<T:Any+Send+Sync>(data : T, caller:Caller) -> Self {
-        Self::Custom(Custom::new_unmanaged(data,Some(caller)))
-    }
-
-    // pub fn custom_callable_managed_mut<T:GcTraversable+Send>(data : T, caller:Option<Caller>,gc_scope : &mut GcScope) -> Self {
-    //     Self::Custom(Custom::new_managed_mut(data,caller, gc_scope))
+    // pub fn custom_callable_managed_mut<T:GcTraversable+Send>(data : T, caller:Caller,gc_scope : &mut GcScope) -> Self {
+    //     Self::Custom(Custom::new_managed_mut(data,Some(caller), gc_scope))
     // }
     
-    // pub fn custom_callable_managed<T:GcTraversable+Send+Sync>(data : T, caller:Option<Caller>,gc_scope : &mut GcScope) -> Self {
-    //     Self::Custom(Custom::new_managed(data,caller, gc_scope))
+    // pub fn custom_callable_managed<T:GcTraversable+Send+Sync>(data : T, caller:Caller,gc_scope : &mut GcScope) -> Self {
+    //     Self::Custom(Custom::new_managed(data,Some(caller), gc_scope))
     // }
 
-    // pub fn custom_callable_unmanaged_mut<T:Any+Send>(data : T, caller:Option<Caller>) -> Self {
-    //     Self::Custom(Custom::new_unmanaged_mut(data,caller))
+    // pub fn custom_callable_unmanaged_mut<T:Any+Send>(data : T, caller:Caller) -> Self {
+    //     Self::Custom(Custom::new_unmanaged_mut(data,Some(caller)))
     // }
     
-    // pub fn custom_callable_unmanaged<T:Any+Send+Sync>(data : T, caller:Option<Caller>) -> Self {
-    //     Self::Custom(Custom::new_unmanaged(data,caller))
-    // }
-    //
-
-    // pub fn custom_managed_mut_ext<T:GcTraversableExt+Send>(data : T,gc_scope : &mut GcScope) -> Self {
-    //     Self::Custom(Custom::new_managed_mut_ext(data, gc_scope))
-    // }
-    
-    // pub fn custom_unmanaged_mut_ext<T:Any+ToString+Send>(data : T) -> Self {
-    //     Self::Custom(Custom::new_unmanaged_mut_ext(data))
-    // }
-    
-    // pub fn custom_managed_non_mut_ext<T:GcTraversableExt+Send+Sync>(data : T,gc_scope : &mut GcScope) -> Self {
-    //     Self::Custom(Custom::new_managed_non_mut_ext(data, gc_scope))
+    // pub fn custom_callable_unmanaged<T:Any+Send+Sync>(data : T, caller:Caller) -> Self {
+    //     Self::Custom(Custom::new_unmanaged(data,Some(caller)))
     // }
 
-    // pub fn custom_unmanaged_non_mut_ext<T:Any+ToString+Send+Sync>(data : T) -> Self {
-    //     Self::Custom(Custom::new_unmanaged_non_mut_ext(data))
-    // }
+    // // pub fn custom_callable_managed_mut<T:GcTraversable+Send>(data : T, caller:Option<Caller>,gc_scope : &mut GcScope) -> Self {
+    // //     Self::Custom(Custom::new_managed_mut(data,caller, gc_scope))
+    // // }
+    
+    // // pub fn custom_callable_managed<T:GcTraversable+Send+Sync>(data : T, caller:Option<Caller>,gc_scope : &mut GcScope) -> Self {
+    // //     Self::Custom(Custom::new_managed(data,caller, gc_scope))
+    // // }
+
+    // // pub fn custom_callable_unmanaged_mut<T:Any+Send>(data : T, caller:Option<Caller>) -> Self {
+    // //     Self::Custom(Custom::new_unmanaged_mut(data,caller))
+    // // }
+    
+    // // pub fn custom_callable_unmanaged<T:Any+Send+Sync>(data : T, caller:Option<Caller>) -> Self {
+    // //     Self::Custom(Custom::new_unmanaged(data,caller))
+    // // }
+    // //
+
+    // // pub fn custom_managed_mut_ext<T:GcTraversableExt+Send>(data : T,gc_scope : &mut GcScope) -> Self {
+    // //     Self::Custom(Custom::new_managed_mut_ext(data, gc_scope))
+    // // }
+    
+    // // pub fn custom_unmanaged_mut_ext<T:Any+ToString+Send>(data : T) -> Self {
+    // //     Self::Custom(Custom::new_unmanaged_mut_ext(data))
+    // // }
+    
+    // // pub fn custom_managed_non_mut_ext<T:GcTraversableExt+Send+Sync>(data : T,gc_scope : &mut GcScope) -> Self {
+    // //     Self::Custom(Custom::new_managed_non_mut_ext(data, gc_scope))
+    // // }
+
+    // // pub fn custom_unmanaged_non_mut_ext<T:Any+ToString+Send+Sync>(data : T) -> Self {
+    // //     Self::Custom(Custom::new_unmanaged_non_mut_ext(data))
+    // // }
 
     pub fn clone_root(&self) -> Self {
         if let Value::Custom(x)=self {

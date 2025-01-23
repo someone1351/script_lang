@@ -1,4 +1,4 @@
-use std::any::Any;
+// use std::any::Any;
 // use std::collections::HashMap;
 // use std::fmt::Debug;
  
@@ -10,7 +10,7 @@ use super::value::*;
 use super::error::*;
 use super::machine::*;
 
-use super::custom::*;
+// use super::custom::*;
 
 //todo error funcs for specific params, so can report errors returned from methods at correct place
 // what about get/set fields? done in cmds in sexpr_compiler?

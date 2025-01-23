@@ -15,7 +15,7 @@
 
 use std::path::Path;
 
-use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs, Value};
+use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs, };
 
 // use script_lang::{cmd_lang::{self,parser::{Block, BlockContainer, Primitive, PrimitiveContainer, PrimitiveType, PrimitiveTypeContainer, Record, RecordContainer}}, error_msg};
 
@@ -201,13 +201,13 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         let mut var_scope=script_lang::VarScope::new();
         var_scope.decl("self", Some(script_lang::Value::int(4))).unwrap();
     
-        var_scope.decl("goa", Some(script_lang::Value::custom_callable_unmanaged(45 as i32,|context|{
-            let mut x:i32=context.param(0).as_custom().data_copy()?;
-            for i in 1 .. context.params_num() {
-                x+= context.param(i).as_int() as i32;
-            }
-            Ok(Value::int(x))
-        }))).unwrap();
+        // var_scope.decl("goa", Some(script_lang::Value::custom_callable_unmanaged(45 as i32,|context|{
+        //     let mut x:i32=context.param(0).as_custom().data_copy()?;
+        //     for i in 1 .. context.params_num() {
+        //         x+= context.param(i).as_int() as i32;
+        //     }
+        //     Ok(Value::int(x))
+        // }))).unwrap();
 
         let mut lib_scope=script_lang::LibScope::<&mut i32>::new_full();
         lib_scope.method_ext("get_test", |context|{
@@ -268,7 +268,7 @@ pub fn test_script4<P:AsRef<Path>>(path:P) {
         var_scope.decl("self", Some(script_lang::Value::int(41))).unwrap();
 
 
-        let mut lib_scope=script_lang::LibScope::<(&mut i32,&mut i32)>::new_full();
+        let  lib_scope=script_lang::LibScope::<(&mut i32,&mut i32)>::new_full();
         // lib_scope.method_ext("get_test", |context|{
         //     Ok(script_lang::Value::Int(*context.get_core_ref().0 as script_lang::IntT))
         // }).end();
@@ -309,6 +309,6 @@ fn main() {
     // test_script4("examples/test8.script");
     
     // test_script2("examples/test6.script");
-    //test_script3("examples/test7.script");
-    test_script3("examples/test9.script");
+    test_script3("examples/test7.script");
+    // test_script3("examples/test9.script");
 }

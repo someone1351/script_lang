@@ -1262,50 +1262,46 @@ impl<'a,'c,X> Machine<'a,'c,X>
     fn inner_call_value(&mut self, params_num:usize, v:&Value, finish:bool) -> Result<bool,MachineError> {
         // println!("=====- {} {}",v.type_string(),v.as_float());
         // println!("stk is {:?}", self.stack());
-        if let Some(caller)=v.get_custom().and_then(|custom|custom.get_caller()) {
-            // println!("yea0");
+        // if let Some(caller)=v.get_custom().and_then(|custom|custom.get_caller()) {
+        //     // println!("yea0");
 
-
-            self.debugger.push_frame_bound_func(params_num, &self.stack, &self.result_val); //before params_num+1 ...
+        //     self.debugger.push_frame_bound_func(params_num, &self.stack, &self.result_val); //before params_num+1 ...
         
-            let params_num = params_num+1;
+        //     let params_num = params_num+1;
             
-            //
-
-            {
-                self.push_stack_val(v.clone());
-                self.debugger.set_stack_from_last();
-            }
-
-            
-
-            //
-            let vv= caller(FuncContext::new(self,params_num));
+        //     //
+        //     {
+        //         self.push_stack_val(v.clone());
+        //         self.debugger.set_stack_from_last();
+        //     }
+          
+        //     //
+        //     let vv= caller(FuncContext::new(self,params_num));
     
+        //     match vv {
+        //         Ok(vv)=>{
     
-            match vv {
-                Ok(vv)=>{
-    
-                    self.set_result_val(vv);
-                    //println!("@@@@@ bound func");
+        //             self.set_result_val(vv);
+        //             //println!("@@@@@ bound func");
                     
-                    self.stack_pop_amount(params_num)?;
+        //             self.stack_pop_amount(params_num)?;
                 
-                    self.debugger.pop_frame();
+        //             self.debugger.pop_frame();
             
-                    self.gc_scope.remove_norefs(); //hmm called already with set_result? and possibly on stack_pop_amount(params_num>0)
+        //             self.gc_scope.remove_norefs(); //hmm called already with set_result? and possibly on stack_pop_amount(params_num>0)
     
-                    Ok(false)
-                }
-                Err(e) => {
-                    if e.build.is_none() {
-                        Err(MachineError::from_machine(&self, e.error_type))
-                    } else {
-                        Err(e)
-                    }
-                }
-            }
-        } else if v.is_custom::<Closure>() {
+        //             Ok(false)
+        //         }
+        //         Err(e) => {
+        //             if e.build.is_none() {
+        //                 Err(MachineError::from_machine(&self, e.error_type))
+        //             } else {
+        //                 Err(e)
+        //             }
+        //         }
+        //     }
+        // } else 
+        if v.is_custom::<Closure>() {
             // println!("yea1");
 
             let data=v.as_custom().data_clone::<Closure>()?;
