@@ -15,7 +15,7 @@
 
 use std::path::Path;
 
-use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs, };
+use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs, MachineError, Value };
 
 // use script_lang::{cmd_lang::{self,parser::{Block, BlockContainer, Primitive, PrimitiveContainer, PrimitiveType, PrimitiveTypeContainer, Record, RecordContainer}}, error_msg};
 
@@ -177,6 +177,10 @@ pub fn test_script2<P:AsRef<Path>>(path:P) {
     // println!("{:?}",cmd_lang::parse_string(input))
     // cmd_lang::parse("1");
 }
+
+// fn testttt(context: script_lang::FuncContextExt<_>) -> Result<Value,MachineError>{
+//     Ok(script_lang::Value::int(4))
+// }
 
 pub fn test_script3<P:AsRef<Path>>(path:P) {
 
