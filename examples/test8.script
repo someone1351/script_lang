@@ -3,9 +3,10 @@ var a 5;
 println a
 
 var b {array 1 2 3}
+var bb {clone b}
 
-for i 0 {len b} {
-    println b.$i
+for i 0 {len bb} {
+    println bb.$i
 }
 
 

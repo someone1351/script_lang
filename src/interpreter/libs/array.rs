@@ -1,5 +1,3 @@
-
-
 use super::super::super::common::*;
 
 use super::super::data::*;
@@ -10,11 +8,7 @@ use super::super::lib_scope::*;
 use super::utils::*;
 
 fn custom_array_new(mut context:FuncContext) -> Result<Value,MachineError> {
-    let data=(0..context.params_num())
-        .map(|i|context.param(i))
-        .collect::<Vec<_>>();
-
-    // Ok(context.custom_managed_mut(Array(data)))
+    let data=(0..context.params_num()).map(|i|context.param(i)).collect::<Vec<_>>();
     Ok(Value::custom_managed_mut(Array(data), context.gc_scope()))
 }
 
@@ -43,7 +37,7 @@ fn custom_array_pop(context:FuncContext) -> Result<Value,MachineError> {
     })    
 }
 
-fn custom_arrayend(context:FuncContext) -> Result<Value,MachineError> {
+fn custom_array_extend(context:FuncContext) -> Result<Value,MachineError> {
     let from_array=context.param(1).as_custom().with_data_mut(|x:&mut Array|{
         Ok(x.0.clone())
     })?;
@@ -91,7 +85,6 @@ fn custom_array_set_field(context:FuncContext) -> Result<Value,MachineError> {
 fn custom_array_to_string(mut context:FuncContext) -> Result<Value,MachineError> {
     let res=context.param(0).as_custom().with_data_mut(|data:&mut Array|{
         Ok(data.0.iter().map(|x|context.value_to_string(x).unwrap_or("_".to_string())).collect::<Vec<_>>().join(","))
-        // Ok(data.0.iter().map(|x|context.call_method("string", [x.clone()]).unwrap_or("_".to_string())).collect::<Vec<_>>().join(","))
     });
 
     match res {
@@ -101,20 +94,52 @@ fn custom_array_to_string(mut context:FuncContext) -> Result<Value,MachineError>
     }
 }
 
-fn custom_array_clone(mut context:FuncContext) -> Result<Value,MachineError> {
-    let array=context.param(0).as_custom();
-    let array_data=array.data();
-    let array_data=array_data.get_mut::<Array>()?;
-
-    //
-    // let new_array_data=array_data.iter().map(|x|x.clone_leaf()).collect::<Vec<_>>();
-    // let new_array = context.new_custom_managed(Array(array_data.0.clone()));
-   
-    //
-    // Ok(Value::Custom(context.new_custom_managed(Array(array_data.0.clone()))).clone())
-    // Ok(context.custom_managed_mut(Array(array_data.0.clone())))
-    Ok(Value::custom_managed_mut(Array(array_data.0.clone()), context.gc_scope()))
+fn custom_array_clone(mut context:FuncContext) -> Result<Value,MachineError> {    
+    let data: Array= context.param(0).as_custom().data_clone()?;
+    Ok(Value::custom_managed_mut(data, context.gc_scope()))
 }
+
+fn custom_array_clear(context:FuncContext) -> Result<Value,MachineError> {
+    let array=context.param(0).as_custom();
+
+    array.with_data_mut(|data:&mut Array|{
+        data.0.clear();
+        Ok(())
+    })?;
+    
+    Ok(Value::Void)
+}
+
+fn custom_array_remove(context:FuncContext) -> Result<Value,MachineError> {
+    let array=context.param(0).as_custom();
+    let from = context.param(1).as_int();
+    let to = context.param(2).get_int();
+    
+
+    array.with_data_mut(|data:&mut Array|{
+        if let Some(from)=calc_ind(from, data.0.len()) {
+            let to = to.and_then(|to|calc_ind(to, data.0.len())).unwrap_or(from+1);
+            let to = to.min(data.0.len());
+
+            for _ in from .. to {
+                data.0.remove(from);
+            }
+        }
+
+        Ok(())
+    })?;
+    
+    Ok(Value::Void)
+}
+
+fn custom_is_array_true(_:FuncContext) -> Result<Value,MachineError> {
+    Ok(Value::Bool(true))
+}
+
+fn custom_is_array_false(_:FuncContext) -> Result<Value,MachineError> {
+    Ok(Value::Bool(false))
+}
+
 
 // fn custom_array_each(mut context:FuncContext2) -> Result<Value,MachineError> {
 //     //0 array, 1 func
@@ -156,52 +181,10 @@ fn custom_array_clone(mut context:FuncContext) -> Result<Value,MachineError> {
 //     // Ok(context.custom_managed_mut(Array(outputs)))
 //     Ok(Value::custom_managed_mut(Array(outputs), context.gc_scope()))
 // }
-fn custom_array_clear(context:FuncContext) -> Result<Value,MachineError> {
-    let array=context.param(0).as_custom();
-
-    array.with_data_mut(|data:&mut Array|{
-        data.0.clear();
-        Ok(())
-    })?;
-    
-    Ok(Value::Void)
-}
-
-fn custom_array_remove(context:FuncContext) -> Result<Value,MachineError> {
-    let array=context.param(0).as_custom();
-    let from = context.param(1).as_int();
-    let to = context.param(2).get_int();
-    
-
-    array.with_data_mut(|data:&mut Array|{
-        if let Some(from)=calc_ind(from, data.0.len()) {
-            let to = to.and_then(|to|calc_ind(to, data.0.len())).unwrap_or(from+1);
-            let to = to.min(data.0.len());
-
-            for _ in from .. to {
-                data.0.remove(from);
-            }
-        }
-
-        Ok(())
-    })?;
-    
-    Ok(Value::Void)
-}
-
-
-fn custom_is_array_true(_:FuncContext) -> Result<Value,MachineError> {
-    Ok(Value::Bool(true))
-}
-
-fn custom_is_array_false(_:FuncContext) -> Result<Value,MachineError> {
-    Ok(Value::Bool(false))
-}
 
 // fn custom_array_position(mut context:FuncContext2) -> Result<Value,MachineError> {
 //     let array=context.param(0).as_custom();
-//     let val = context.param(1);
-    
+//     let val = context.param(1);    
 
 //     array.with_data(|data:&mut Array|{
 //         data.0.
@@ -219,38 +202,12 @@ fn custom_is_array_false(_:FuncContext) -> Result<Value,MachineError> {
     
 //     Ok(Value::Void)
 // }
-// fn custom_array_last(mut context:FuncContext2) -> Result<Value,MachineError> {
-//     let array=context.param(0).as_custom();
-
-//     array.with_data(|data:&mut Array|{
-//         Ok(data.0.last().map(|x|x.clone()).unwrap_or(Value::Nil))
-//     })    
-// }
-
-// fn custom_array_first(mut context:FuncContext2) -> Result<Value,MachineError> {
-//     let array=context.param(0).as_custom();
-
-//     array.with_data(|data:&mut Array|{
-//         Ok(data.0.first().map(|x|x.clone()).unwrap_or(Value::Nil))
-//     })    
-// }
-
 
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
     lib_scope.method("array",custom_array_new)
         .optional()
         .any()
         .variadic_end();
-
-    // lib_scope.method("each",custom_array_each)
-    //     .custom::<Array>()
-    //     .func()
-    //     .end();
-
-    // lib_scope.method("map",custom_array_map)
-    //     .custom::<Array>()
-    //     .func()
-    //     .end();
 
     lib_scope.method("push",custom_array_push)
         .custom::<Array>()
@@ -261,13 +218,15 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom::<Array>()
         .end();
 
-    lib_scope.method("extend",custom_arrayend)
+    lib_scope.method("extend",custom_array_extend)
         .custom::<Array>()
         .custom::<Array>()
         .end();
+
     lib_scope.method("len",custom_array_len)
         .custom::<Array>()
         .end();
+
     lib_scope.method("is_empty",custom_array_is_empty)
         .custom::<Array>()
         .end();
@@ -290,7 +249,6 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     lib_scope.method("clone",custom_array_clone)
         .custom::<Array>()
         .end();
-    
 
     lib_scope.method("clear",custom_array_clear)
         .custom::<Array>()
@@ -310,13 +268,15 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     lib_scope.method("is_array",custom_is_array_false)
         .any()
         .end();
-    
-    // lib_scope.method("last",custom_array_last)
+
+    // lib_scope.method("each",custom_array_each)
     //     .custom::<Array>()
+    //     .func()
     //     .end();
 
-    // lib_scope.method("first",custom_array_first)
+    // lib_scope.method("map",custom_array_map)
     //     .custom::<Array>()
+    //     .func()
     //     .end();
 
 }

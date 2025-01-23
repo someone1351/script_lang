@@ -175,19 +175,19 @@ impl<'a,'c,X> MachineTrait<'a,'c> for Machine<'a,'c,X> {
     // }
 }
 
-impl<'a,'c,X:Copy> Machine<'a,'c,X> {
-    pub fn get_core(&mut self) -> X {
-        self.core_val
-    }
-}
-// impl<'a,'c,X> Machine<'a,'c,&'a mut X> {
-//     // pub fn get_core_mut(&'a mut self) -> &'a mut X {
-//     //     self.core_val
-//     // }    
-//     pub fn get_core_ref(&'a self) -> &'a X {
+// impl<'a,'c,X:Copy> Machine<'a,'c,X> {
+//     pub fn get_core(&mut self) -> X {
 //         self.core_val
 //     }
 // }
+// // impl<'a,'c,X> Machine<'a,'c,&'a mut X> {
+// //     // pub fn get_core_mut(&'a mut self) -> &'a mut X {
+// //     //     self.core_val
+// //     // }    
+// //     pub fn get_core_ref(&'a self) -> &'a X {
+// //         self.core_val
+// //     }
+// // }
 impl<'a,'c,X> Machine<'a,'c,& mut X> {
     pub fn get_core_mut(&mut self) -> &mut X {
         self.core_val

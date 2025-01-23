@@ -38,19 +38,19 @@ pub struct FuncContextExt<'q,'a,'c,X> { //,'b
     
 }
 
-impl<'q,'a,'c,X:Copy> FuncContextExt<'q,'a,'c,X> { 
-    pub fn get_core(&mut self) -> X {
-        self.machine.get_core()
-    }
-}
-// impl<'q:'a,'a,'c:'a,X> FuncContext<'q,'a,'c,&'a mut X> { 
-//     // pub fn get_core_mut(&'a mut self) -> &'a mut X {
-//     //     self.machine.get_core_mut()
-//     // }
-//     pub fn get_core_ref(&'a self) -> &'a X {
-//         self.machine.get_core_ref()
+// impl<'q,'a,'c,X:Copy> FuncContextExt<'q,'a,'c,X> { 
+//     pub fn get_core(&mut self) -> X {
+//         self.machine.get_core()
 //     }
 // }
+// // impl<'q:'a,'a,'c:'a,X> FuncContext<'q,'a,'c,&'a mut X> { 
+// //     // pub fn get_core_mut(&'a mut self) -> &'a mut X {
+// //     //     self.machine.get_core_mut()
+// //     // }
+// //     pub fn get_core_ref(&'a self) -> &'a X {
+// //         self.machine.get_core_ref()
+// //     }
+// // }
 
 impl<'q,'a,'c,X> FuncContextExt<'q,'a,'c,&mut X> { 
     pub fn get_core_mut(&mut self) -> &mut X {

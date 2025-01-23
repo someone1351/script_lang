@@ -10,32 +10,31 @@ use super::super::lib_scope::*;
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
     
 	//
-    lib_scope.method("is_int", |_|{
-        Ok(Value::Bool(true))
-    }).int().end();
+    lib_scope.method("is_int", |_|Ok(Value::Bool(true)))
+        .int().end();
 
-    lib_scope.method("is_int", |_|{ Ok(Value::Bool(false)) }).any().end();
+    lib_scope.method("is_int", |_|Ok(Value::Bool(false)))
+        .any().end();
 
     lib_scope.method("-", |context|{
-        Ok(Value::Int(-context.param(0).as_int()))
+        Ok(Value::int(-context.param(0).as_int()))
     }).int().end();
 
     lib_scope.method("+",|context|{
-        Ok(Value::Int(context.param(0).as_int()+context.param(1).as_int()))
+        Ok(Value::int(context.param(0).as_int()+context.param(1).as_int()))
     }).int().int().end();
 
     lib_scope.method("-",|context|{
-        Ok(Value::Int(context.param(0).as_int()-context.param(1).as_int()))
+        Ok(Value::int(context.param(0).as_int()-context.param(1).as_int()))
     }).int().int().end();
 
     lib_scope.method("*",|context|{
-        Ok(Value::Int(context.param(0).as_int()*context.param(1).as_int()))
+        Ok(Value::int(context.param(0).as_int()*context.param(1).as_int()))
     }).int().int().end();
-
 
     lib_scope.method("/",|context|{
         context.param(0).as_int().checked_div(context.param(1).as_int())
-            .and_then(|x|Some(Value::Int(x)))
+            .and_then(|x|Some(Value::int(x)))
             .ok_or(context.error("Divide by zero".to_string()))
     }).int().or_float().int().end();
 
@@ -63,11 +62,11 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
     //
     lib_scope.method("min", |context|{
-        Ok(Value::Int(context.param(0).as_int().min(context.param(1).as_int())))
+        Ok(Value::int(context.param(0).as_int().min(context.param(1).as_int())))
     }).int().int().end();
 
     lib_scope.method("max", |context|{
-        Ok(Value::Int(context.param(0).as_int().max(context.param(1).as_int())))
+        Ok(Value::int(context.param(0).as_int().max(context.param(1).as_int())))
     }).int().int().end();
 
     lib_scope.method("clamp", |context|{
@@ -79,12 +78,12 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             return Err(context.error("value not within min/max".to_string()));
         }
 
-        Ok(Value::Int(a.clamp(b,c)))
+        Ok(Value::int(a.clamp(b,c)))
     }).int().int().int().end();
 
     //
     lib_scope.method("abs", |context|{
-        Ok(Value::Int(context.param(0).as_int().abs()))
+        Ok(Value::int(context.param(0).as_int().abs()))
     }).int().end();
     
     //
@@ -99,7 +98,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             0
         };
 
-        Ok(Value::Int(b))
+        Ok(Value::int(b))
     }).int().end();
 
 	//
@@ -111,14 +110,13 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             return Err(context.error("exp less than 0".to_string()));
         }
 
-        Ok(Value::Int(a.pow(b as u32)))
+        Ok(Value::int(a.pow(b as u32)))
     }).int().int().end();
 
 	//
     lib_scope.method("mod", |context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
-
-        Ok(Value::Int(a%b))
+        Ok(Value::int(a%b))
     }).int().int().end();
 }
