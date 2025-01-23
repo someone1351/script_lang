@@ -1,4 +1,12 @@
+/*
+TODO
+* allow execution to be paused
+* * for methods, if calling build func, how to pause?
+* * * could return pause related data in context.call() return,
+* * * * have a way to store that, and addtional custom user data eg for loop index
+* * * * then when resuming, recall the method, providing the pause and user data
 
+*/
 use std::collections::HashMap;
 use std::path::Path;
 use std::path::PathBuf;
@@ -20,7 +28,7 @@ pub struct StackFrame {
     pub ret_instr_ind : usize,
     pub ret_instr_end : usize,
 
-    pub finish : bool,
+    pub finish : bool, //for when calling machine.call(), ends after that call, otherwise if called from within machine, then don't want it to finish ...
     pub stack_params_start : usize,
 
     pub stack_params_num : usize,
@@ -348,8 +356,8 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
    
 
-    pub fn result_val(&self) -> &Value {
-        &self.result_val
+    pub fn result_val(&self) -> Value {
+        self.result_val.clone()
     }
 
     pub fn stack_frames(&self) -> &Vec<StackFrame> {
@@ -438,7 +446,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
                 self.result_val = Value::String(symbol.clone());
             }
             Instruction::ResultVararg => {
-                self.result_val=Value::Custom(Custom::new_unmanaged_mut(Vararg));
+                self.result_val=Value::Custom(Custom::new_unmanaged_mut(Vararg,None));
                 // self.result_val=Value::Vararg;
                 // self.call_method("vararg", vec![])?;
             }
@@ -570,7 +578,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
             }
             Instruction::MakeStackVarRef(stack_offset_ind) => {
                 let v = self.copy_val(self.get_stack_offset_value(*stack_offset_ind)?.clone())?;
-                let v=Value::Custom(Custom::new_managed_mut(v.clone(), self.gc_scope));
+                let v=Value::Custom(Custom::new_managed_mut(v.clone(),None, self.gc_scope));
                 
                 // *self.stack_value_mut(*stack_offset_ind)?=v;
                 self.set_stack_offset_val(*stack_offset_ind, v)?;
@@ -703,15 +711,20 @@ impl<'a,'c,X> Machine<'a,'c,X>
                     //     //call v
 
                         self.debugger.add_func_name(data.name.as_str());
-                        self.inner_call_value(params_num,&var_data,false)?;
-                        return Ok(()); //continue;
-                    } else if let Some(v)=self.constant_get(&data.name) //self.lib_scope.get_constant(&data.name) 
+
+                        if self.inner_call_value(params_num,&var_data,false)? {
+                            return Ok(()); //continue;
+                        }
+                    } else if let Some(v)=self.constant_get(&data.name)  //not needed for deref? there was the option  for globals (and constants) being captured
+                    //self.lib_scope.get_constant(&data.name) 
                     {
                         //call v
 
                         self.debugger.add_func_name(data.name.as_str());
-                        self.inner_call_value(params_num,&v,false)?;
-                        return Ok(()); //continue;
+
+                        if self.inner_call_value(params_num,&v,false)? {
+                            return Ok(()); //continue;
+                        }
                     } else if let Some(x)=self.get_method(data.name.as_str(), params_num) {
                         self.debugger.add_func_name(data.name.as_str());
                         self.inner_call_bound_func(params_num, x)?; //,symbol.clone()
@@ -735,8 +748,9 @@ impl<'a,'c,X> Machine<'a,'c,X>
                     //let v=self.copy_val(data.clone())?;
                     let v=data;
                     
-                    self.inner_call_value(params_num,&v,false)?;
-                    return Ok(()); //continue;
+                    if self.inner_call_value(params_num,&v,false)? {
+                        return Ok(()); //continue;
+                    }
                     //
                 }
 
@@ -929,8 +943,10 @@ impl<'a,'c,X> Machine<'a,'c,X>
                     .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?
                 {
                     self.debugger.add_func_name(symbol.as_str());
-                    self.inner_call_value(params_num,v,false)?;
-                    return Ok(()); //continue;
+
+                    if self.inner_call_value(params_num,v,false)? {
+                        return Ok(()); //continue;
+                    }
                 } else if let Some(x)=self.get_method(symbol.as_str(), params_num) {
                     self.debugger.add_func_name(symbol.as_str());
                     self.inner_call_bound_func(params_num, x)?; //,symbol.clone()
@@ -945,8 +961,9 @@ impl<'a,'c,X> Machine<'a,'c,X>
                 let params_num=*params_num;
                 let v = self.result_val.clone();
                 // println!("call result");
-                self.inner_call_value(params_num,&v,false)?;
-                return Ok(()); //continue;
+                if self.inner_call_value(params_num,&v,false)? {
+                    return Ok(()); //continue;
+                }
             }
             // Instruction::GetFields(params_num) => {
             //     //stk=[fields_n .. fields_0]
@@ -1154,22 +1171,22 @@ impl<'a,'c,X> Machine<'a,'c,X>
         //
         let v=match bound_func.method_type {
             MethodType::Static(x)=>{
-                x(FuncContext2::new(self,params_num))
+                x(FuncContext::new(self,params_num))
             }
             MethodType::Temp(x) => {
                 if let Some(mut x)=x.try_lock() {
-                    x(FuncContext2::new(self,params_num))
+                    x(FuncContext::new(self,params_num))
                 } else {
                     Err(MachineError::from_machine(self, MachineErrorType::FuncBorrowMutError))
                 }
             }
 
             MethodType::StaticExt(x)=>{
-                x(FuncContext::new(self,params_num))
+                x(FuncContextExt::new(self,params_num))
             }
             MethodType::TempExt(x) => {
                 if let Some(mut x)=x.try_lock() {
-                    x(FuncContext::new(self,params_num))
+                    x(FuncContextExt::new(self,params_num))
                 } else {
                     Err(MachineError::from_machine(self, MachineErrorType::FuncBorrowMutError))
                 }
@@ -1242,9 +1259,55 @@ impl<'a,'c,X> Machine<'a,'c,X>
         Ok(())
     }
 
-    fn inner_call_value(&mut self, params_num:usize, v:&Value, finish:bool) -> Result<(),MachineError> {
-        if v.is_custom::<Closure>() {
+    fn inner_call_value(&mut self, params_num:usize, v:&Value, finish:bool) -> Result<bool,MachineError> {
+        // println!("=====- {} {}",v.type_string(),v.as_float());
+        // println!("stk is {:?}", self.stack());
+        if let Some(caller)=v.get_custom().and_then(|custom|custom.get_caller()) {
+            // println!("yea0");
+
+
+            self.debugger.push_frame_bound_func(params_num, &self.stack, &self.result_val); //before params_num+1 ...
+        
+            let params_num = params_num+1;
             
+            //
+
+            {
+                self.push_stack_val(v.clone());
+                self.debugger.set_stack_from_last();
+            }
+
+            
+
+            //
+            let vv= caller(FuncContext::new(self,params_num));
+    
+    
+            match vv {
+                Ok(vv)=>{
+    
+                    self.set_result_val(vv);
+                    //println!("@@@@@ bound func");
+                    
+                    self.stack_pop_amount(params_num)?;
+                
+                    self.debugger.pop_frame();
+            
+                    self.gc_scope.remove_norefs(); //hmm called already with set_result? and possibly on stack_pop_amount(params_num>0)
+    
+                    Ok(false)
+                }
+                Err(e) => {
+                    if e.build.is_none() {
+                        Err(MachineError::from_machine(&self, e.error_type))
+                    } else {
+                        Err(e)
+                    }
+                }
+            }
+        } else if v.is_custom::<Closure>() {
+            // println!("yea1");
+
             let data=v.as_custom().data_clone::<Closure>()?;
 
             // let data=v.as_custom().data();
@@ -1263,8 +1326,10 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
             self.inner_call_build_func(params_num, func_build, func_ind, finish)?;
 
-            Ok(())
+            Ok(true)
         } else {
+            // println!("yea2");
+
             // println!("v is {v:?}");
             Err(MachineError::from_machine(self,  MachineErrorType::ValueNotAFunc(v.type_string()) ))
         }
@@ -1425,8 +1490,9 @@ impl<'a,'c,X> Machine<'a,'c,X>
         //
         let params_num=self.stack_push_params(params)?;
 
-        self.inner_call_value(params_num, v, true)?;
-        self.run()?;
+        if self.inner_call_value(params_num, v, true)? {
+            self.run()?;
+        }
 
         // self.debugger.pop_frame();
 
@@ -1449,9 +1515,9 @@ impl<'a,'c,X> Machine<'a,'c,X>
             }
 
             self.debugger.add_func_name(name);
-            self.inner_call_value(params_num,v,true)?;
-            self.run()?;
-
+            if self.inner_call_value(params_num,v,true)? {
+                self.run()?;
+            }
         } else if let Some(x)=self.get_method(name, params_num) {
             self.debugger.add_func_name(name);
             self.inner_call_bound_func(params_num, x)?; //,symbol.clone()

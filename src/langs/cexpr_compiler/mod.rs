@@ -304,6 +304,8 @@ impl Compiler {
                                     if let Some(get_var_prefix)=self.get_var_prefix {
                                         if let Some(symbol)=symbol.strip_prefix(get_var_prefix) {                                            
                                             builder.get_var(symbol);
+                                        } else if self.funcs_without_call {
+                                            builder.call(symbol, 0);
                                         } else {
                                             builder.call_method(symbol,0);
                                         }

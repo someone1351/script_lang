@@ -109,7 +109,8 @@ impl VarScope {
 
         //doesn't overwrite
         let var=self.vars.entry(n.to_string()).or_insert_with(||Var { 
-            value:Value::Float(0.5), 
+            //value:Value::Float(0.5),//what?? was a test?
+			value:Value::Nil,
             is_refvar: false,
             init:true,
         });

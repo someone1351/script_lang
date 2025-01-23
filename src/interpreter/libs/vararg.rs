@@ -11,7 +11,7 @@ use super::super::data::*;
 // #[derive(Debug,Clone)]
 // struct CustomVararg;
 
-fn vararg_len(context:FuncContext2) -> Result<Value,MachineError> {
+fn vararg_len(context:FuncContext) -> Result<Value,MachineError> {
     let Some(stack_frame) = context.stack_frame() else {
         return Ok(Value::Int(0));
     };
@@ -20,7 +20,7 @@ fn vararg_len(context:FuncContext2) -> Result<Value,MachineError> {
     Ok(Value::Int(vararg_len as IntT))
 }
 
-fn vararg_get_field(context:FuncContext2) -> Result<Value,MachineError> {
+fn vararg_get_field(context:FuncContext) -> Result<Value,MachineError> {
     //0 vararg, 1 index
 
     //
@@ -67,11 +67,11 @@ fn vararg_get_field(context:FuncContext2) -> Result<Value,MachineError> {
 //     Ok(Value::Void)
 // }
 
-fn custom_vararg_to_string(_:FuncContext2) -> Result<Value,MachineError> {
+fn custom_vararg_to_string(_:FuncContext) -> Result<Value,MachineError> {
     Ok(Value::string(format!("Vararg")))
 }
 
-fn custom_vararg_copy(mut context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_vararg_copy(mut context:FuncContext) -> Result<Value,MachineError> {
     let Some(stack_frame) = context.stack_frame() else {
         return Ok(Value::Nil);
     };

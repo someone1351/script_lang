@@ -18,7 +18,7 @@ use super::super::data::*;
 //     Nil,
 // }
 
-fn custom_dict_new(mut context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_new(mut context:FuncContext) -> Result<Value,MachineError> {
     // let dict=context.new_custom_managed(Dict::new(),);
     // let dict_data=dict.data();
     // let mut dict_data=dict_data.borrow_mut::<Dict>()?;
@@ -40,7 +40,7 @@ fn custom_dict_new(mut context:FuncContext2) -> Result<Value,MachineError> {
     Ok(Value::custom_managed_mut(Dict(data), context.gc_scope()))
 }
 
-fn custom_dict_insert(mut context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_insert(mut context:FuncContext) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
     let dict_data=dict.data();
     let mut dict_data=dict_data.get_mut::<Dict>()?;
@@ -54,7 +54,7 @@ fn custom_dict_insert(mut context:FuncContext2) -> Result<Value,MachineError> {
     Ok(val) //returns new val
 }
 
-fn custom_dict_remove(mut context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_remove(mut context:FuncContext) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
 
     dict.with_data_mut(|data:&mut Dict|{
@@ -65,7 +65,7 @@ fn custom_dict_remove(mut context:FuncContext2) -> Result<Value,MachineError> {
     })
 }
 
-fn custom_dict_len(context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_len(context:FuncContext) -> Result<Value,MachineError> {
     // let dict=context.param(0).as_custom();
     let dict_data=context.param(0).as_custom().data();
     let dict_data=dict_data.get_mut::<Dict>()?;
@@ -73,7 +73,7 @@ fn custom_dict_len(context:FuncContext2) -> Result<Value,MachineError> {
     Ok(Value::Int(dict_data.0.len() as IntT))
 }
 
-fn custom_dict_get_field(mut context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_get_field(mut context:FuncContext) -> Result<Value,MachineError> {
     //0 dict, 1 key
 
     // let dict=context.param(0).as_custom();
@@ -87,7 +87,7 @@ fn custom_dict_get_field(mut context:FuncContext2) -> Result<Value,MachineError>
     Ok(val)
 }
 
-fn custom_dict_set_field(mut context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_set_field(mut context:FuncContext) -> Result<Value,MachineError> {
     //0 dict, 1 key, 2 val
 
     let dict=context.param(0).as_custom();
@@ -124,7 +124,7 @@ fn custom_dict_set_field(mut context:FuncContext2) -> Result<Value,MachineError>
 //     })
 // }
 
-fn custom_dict_to_string(mut context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_to_string(mut context:FuncContext) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
     let dict_data=dict.data();
     // let dict_data=dict_data.borrow_mut::<CustomDict>()?;
@@ -154,7 +154,7 @@ fn custom_dict_to_string(mut context:FuncContext2) -> Result<Value,MachineError>
     // Ok(Value::new_string(format!("Dict({:?})",dict_data)))
 }
 
-fn custom_dict_clone(mut context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_clone(mut context:FuncContext) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
     
     dict.with_data_mut(|data:&mut Dict|{
@@ -163,7 +163,7 @@ fn custom_dict_clone(mut context:FuncContext2) -> Result<Value,MachineError> {
     })
 }
 
-fn custom_dict_clear(context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_clear(context:FuncContext) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
 
     dict.with_data_mut(|data:&mut Dict|{
@@ -174,7 +174,7 @@ fn custom_dict_clear(context:FuncContext2) -> Result<Value,MachineError> {
     Ok(Value::Void)
 }
 
-fn custom_dict_extend(context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_extend(context:FuncContext) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
     let dict2:Dict=context.param(1).as_custom().data_clone()?;
 
@@ -186,7 +186,7 @@ fn custom_dict_extend(context:FuncContext2) -> Result<Value,MachineError> {
     Ok(Value::Void)
 }
 
-fn custom_dict_keys(mut context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_keys(mut context:FuncContext) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
 
     dict.with_data_mut(|data:&mut Dict|{
@@ -196,7 +196,7 @@ fn custom_dict_keys(mut context:FuncContext2) -> Result<Value,MachineError> {
     })
 }
 
-fn custom_dict_pairs(mut context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_pairs(mut context:FuncContext) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
 
     dict.with_data_mut(|data:&mut Dict|{
@@ -210,7 +210,7 @@ fn custom_dict_pairs(mut context:FuncContext2) -> Result<Value,MachineError> {
     })
 }
 
-fn custom_dict_contains(context:FuncContext2) -> Result<Value,MachineError> {
+fn custom_dict_contains(context:FuncContext) -> Result<Value,MachineError> {
     let dict=context.param(0).as_custom();
     let key=context.param(1).as_string();
 

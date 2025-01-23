@@ -7,16 +7,16 @@ use super::super::lib_scope::*;
 
 
 
-fn default_to_string(context:FuncContext2) -> Result<Value,MachineError> {
+fn default_to_string(context:FuncContext) -> Result<Value,MachineError> {
     Ok(Value::string(context.param(0).as_string()))
 }
 
-pub fn print_func(context:FuncContext2) -> Result<Value,MachineError> {
+pub fn print_func(context:FuncContext) -> Result<Value,MachineError> {
     print!("{}",context.param(0).as_string());
     Ok(Value::Void)
 }
   
-pub fn error_func(context:FuncContext2) -> Result<Value,MachineError> {
+pub fn error_func(context:FuncContext) -> Result<Value,MachineError> {
     let msg=if context.param(0).is_nil() {
         String::new()
     } else {
@@ -27,7 +27,7 @@ pub fn error_func(context:FuncContext2) -> Result<Value,MachineError> {
     // Err(MachineError::bound_func_new(msg))
 }
 
-pub fn nil_len(_ : FuncContext2) -> Result<Value,MachineError> {
+pub fn nil_len(_ : FuncContext) -> Result<Value,MachineError> {
     Ok(Value::Int(0))
 }
 

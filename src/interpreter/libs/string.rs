@@ -6,11 +6,11 @@ use super::super::error::*;
 use super::super::lib_scope::*;
 use super::utils::*;
 
-fn string_len(context:FuncContext2) -> Result<Value,MachineError> {
+fn string_len(context:FuncContext) -> Result<Value,MachineError> {
     Ok(Value::int(context.param(0).as_string().chars().count()))
 }
 
-fn string_contains(context:FuncContext2) -> Result<Value,MachineError> {
+fn string_contains(context:FuncContext) -> Result<Value,MachineError> {
     let string=context.param(0).as_string();
     let val=context.param(1).as_string();
     Ok(Value::Bool(string.contains(&val)))
@@ -46,7 +46,7 @@ fn string_contains(context:FuncContext2) -> Result<Value,MachineError> {
 //     Ok(Value::string(string))
 // }
 
-fn string_remove(context:FuncContext2) -> Result<Value,MachineError> {
+fn string_remove(context:FuncContext) -> Result<Value,MachineError> {
     //0 str, 1 from, 2 to,
 
     let string=context.param(0).as_string();
@@ -95,7 +95,7 @@ fn string_remove(context:FuncContext2) -> Result<Value,MachineError> {
     Ok(Value::string(x))
 }
 
-fn string_to_string(context:FuncContext2) -> Result<Value,MachineError> {
+fn string_to_string(context:FuncContext) -> Result<Value,MachineError> {
     Ok(context.param(0).clone())
 }
 
@@ -111,20 +111,20 @@ fn string_to_string(context:FuncContext2) -> Result<Value,MachineError> {
 
 // fn string_pop(mut context:FuncContext) -> Result<Value,MachineError> {
 // }{
-fn string_append(context:FuncContext2) -> Result<Value,MachineError> {
+fn string_append(context:FuncContext) -> Result<Value,MachineError> {
     let s0=context.param(0).as_string();
     let s1=context.param(1).as_string();
     Ok(Value::string(format!("{s0}{s1}")))
 }
 
-fn string_eq(context:FuncContext2) -> Result<Value,MachineError> {
+fn string_eq(context:FuncContext) -> Result<Value,MachineError> {
     let s0=context.param(0).as_string();
     let s1=context.param(1).as_string();
     Ok(Value::Bool(s0.eq(&s1)))
 }
 
 
-fn string_repeat(context:FuncContext2) -> Result<Value,MachineError> {
+fn string_repeat(context:FuncContext) -> Result<Value,MachineError> {
     let s=context.param(0).as_string();
     let r=context.param(1).as_int() as usize;
     Ok(Value::string(s.repeat(r)))

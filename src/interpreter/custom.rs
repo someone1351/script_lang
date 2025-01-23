@@ -8,7 +8,7 @@ use super::gc_scope::*;
 // use super::value::*;
 use super::error::*;
 
-type Callable<X> = fn(super::FuncContext<X>)->Result<super::Value,MachineError>;
+pub type Caller = fn(super::FuncContext)->Result<super::Value,MachineError>;
 
 #[derive(Clone)]
 pub enum StrongValueInner {
@@ -71,6 +71,7 @@ pub struct Custom {
     // type_name : &'static str,
     type_info:TypeInfo,
     inner : CustomInner,
+    caller : Option<Caller>,
 }
 
 
@@ -91,30 +92,31 @@ impl std::fmt::Debug for Custom {
 }
 
 impl Custom {
-    fn new<T:Any>(inner:CustomInner) -> Self {
+    fn new<T:Any>(inner:CustomInner,caller : Option<Caller>) -> Self {
         Self {
             type_info:TypeInfo::new::<T>(), 
             inner,
+            caller,
         }
     }
 
-    pub fn new_managed_mut<T:GcTraversable+Send>(data : T,gc_scope : &mut GcScope) -> Self {
-        Self::new::<T>(CustomInner::Managed(GcValue::new(data,gc_scope)))
+    pub fn new_managed_mut<T:GcTraversable+Send>(data : T, caller:Option<Caller>, gc_scope : &mut GcScope) -> Self {
+        Self::new::<T>(CustomInner::Managed(GcValue::new(data,gc_scope)),caller)
     }
     
-    pub fn new_unmanaged_mut<T:Any+Send>(data : T) -> Self {
+    pub fn new_unmanaged_mut<T:Any+Send>(data : T, caller:Option<Caller>) -> Self {
         // Self::new::<T>(CustomInner::Unmanaged(Arc::new(Mutex::new(data))))
 
-        Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::Mut(Arc::new(Mutex::new(data)))))
+        Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::Mut(Arc::new(Mutex::new(data)))),caller)
         
     }
 
-    pub fn new_managed<T:GcTraversable+Send+Sync>(data : T,gc_scope : &mut GcScope) -> Self {
-        Self::new::<T>(CustomInner::Managed(GcValue::new_non_mut(data,gc_scope)))
+    pub fn new_managed<T:GcTraversable+Send+Sync>(data : T, caller:Option<Caller>,gc_scope : &mut GcScope) -> Self {
+        Self::new::<T>(CustomInner::Managed(GcValue::new_non_mut(data,gc_scope)),caller)
     }
 
-    pub fn new_unmanaged<T:Any+Send+Sync>(data : T) -> Self {
-        Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::NonMut(Arc::new(data))))        
+    pub fn new_unmanaged<T:Any+Send+Sync>(data : T, caller:Option<Caller>) -> Self {
+        Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::NonMut(Arc::new(data))),caller)        
     }
 
 
@@ -135,17 +137,22 @@ impl Custom {
     //     Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::NonMutExt(Arc::new(data))))        
     // }
 
+    pub fn get_caller(&self) -> Option<Caller> {
+        return self.caller
+    }
 
     pub fn clone_root(&self) -> Self {
         Self {
             type_info:self.type_info,
             inner : self.inner.clone_root(),
+            caller:self.caller.clone(),
         }
     }
     pub fn clone_as_is(&self) -> Self {
         Self {
             type_info:self.type_info,
             inner : self.inner.clone_as_is(),
+            caller:self.caller.clone(),
         }
     }
     

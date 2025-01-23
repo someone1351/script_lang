@@ -288,12 +288,12 @@ impl<'m,'a,X> MethodInput<'m,'a,X> {
 // pub type StaticFuncType<'a,X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
 // pub type TempFuncType<'a,X> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
 
-pub type StaticFuncType<'a,X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
-pub type TempFuncType<'a,X> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
+pub type StaticFuncTypeExt<'a,X> = Arc<dyn Fn(FuncContextExt<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
+pub type TempFuncTypeExt<'a,X> = Arc<Mutex<dyn FnMut(FuncContextExt<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
 
 
-pub type StaticFuncType2<'a> = Arc<dyn Fn(FuncContext2)->Result<Value,MachineError>+'a +Send+Sync> ; 
-pub type TempFuncType2<'a> = Arc<Mutex<dyn FnMut(FuncContext2)->Result<Value,MachineError> + 'a + Send + Sync>>;
+pub type StaticFuncType<'a> = Arc<dyn Fn(FuncContext)->Result<Value,MachineError>+'a +Send+Sync> ; 
+pub type TempFuncType<'a> = Arc<Mutex<dyn FnMut(FuncContext)->Result<Value,MachineError> + 'a + Send + Sync>>;
 
 
 // impl<'a,X> Clone for TempFuncType2<'a,X> {
@@ -327,11 +327,11 @@ impl<'a,X> std::fmt::Debug for ArgNode<'a,X> {
 
 // #[derive(Clone)]
 pub enum MethodType<'a,X> {
-    Temp(TempFuncType2<'a>),
-    Static(StaticFuncType2<'a>),
+    Temp(TempFuncType<'a>),
+    Static(StaticFuncType<'a>),
     
-    TempExt(TempFuncType<'a,X>),
-    StaticExt(StaticFuncType<'a,X>),
+    TempExt(TempFuncTypeExt<'a,X>),
+    StaticExt(StaticFuncTypeExt<'a,X>),
 
     
 }
@@ -602,7 +602,7 @@ impl<'a,X> LibScope<'a,X> {
 
     pub fn insert_method<T>(&mut self,n:&str,param_types : T,optional_start : Option<usize>,variadic:bool,
         // func:StaticFuncType
-        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync ) 
+        func: impl Fn(FuncContextExt<X>)->Result<Value,MachineError>+'static+Send+Sync ) 
     where
         T:AsRef<[Arg]>
     {
@@ -627,7 +627,7 @@ impl<'a,X> LibScope<'a,X> {
 
    
     pub fn method<'m>(&'m mut self,name : &'m str, 
-        func: impl Fn(FuncContext2)->Result<Value,MachineError>+'a+Send+Sync  
+        func: impl Fn(FuncContext)->Result<Value,MachineError>+'a+Send+Sync  
     ) -> MethodInput<'m,'a,X> {
         MethodInput { 
             lib_scope: self, 
@@ -640,7 +640,7 @@ impl<'a,X> LibScope<'a,X> {
     }
     pub fn method_mut<'m>(&'m mut self,name : &'m str, 
         // slot:usize
-        func:impl FnMut(FuncContext2)->Result<Value,MachineError> + 'a + Send + Sync
+        func:impl FnMut(FuncContext)->Result<Value,MachineError> + 'a + Send + Sync
     ) -> MethodInput<'m,'a,X> {
         MethodInput { 
             lib_scope: self, 
@@ -652,7 +652,7 @@ impl<'a,X> LibScope<'a,X> {
         }
     }
     pub fn method_ext<'m>(&'m mut self,name : &'m str, 
-        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'a+Send+Sync  
+        func: impl Fn(FuncContextExt<X>)->Result<Value,MachineError>+'a+Send+Sync  
     ) -> MethodInput<'m,'a,X> {
         MethodInput { 
             lib_scope: self, 
@@ -665,7 +665,7 @@ impl<'a,X> LibScope<'a,X> {
     }
     pub fn method_ext_mut<'m>(&'m mut self,name : &'m str, 
         // slot:usize
-        func:impl FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync
+        func:impl FnMut(FuncContextExt<X>)->Result<Value,MachineError> + 'a + Send + Sync
     ) -> MethodInput<'m,'a,X> {
         MethodInput { 
             lib_scope: self, 

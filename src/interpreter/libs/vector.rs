@@ -8,26 +8,26 @@ use super::super::lib_scope::*;
 use super::super::data::*;
 
 
-fn vec_eq<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_eq<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?.0;
     let b = context.param(1).as_custom().data_clone::<MathVec<N>>()?.0;
     let c = (0..N).map(|i|a[i]==b[i]).fold(false,|acc,x|acc&&x);
     Ok(Value::Bool(c))
 }
 
-fn vec_min<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_min<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?.0;
     let b = context.param(1).as_custom().data_clone::<MathVec<N>>()?.0;
     Ok(Value::custom_unmanaged_mut(MathVec::<N>::new((0..N).map(|i|a[i].min(b[i])))))
 }
 
-fn vec_max<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_max<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?.0;
     let b = context.param(1).as_custom().data_clone::<MathVec<N>>()?.0;
     Ok(Value::custom_unmanaged_mut(MathVec::<N>::new((0..N).map(|i|a[i].max(b[i])))))
 }
 
-fn vec_clamp_scalar<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_clamp_scalar<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?.0;
     let b=context.param(1).as_float();
     let c=context.param(2).as_float();
@@ -38,7 +38,7 @@ fn vec_clamp_scalar<const N: usize>(context:FuncContext2) -> Result<Value,Machin
 
     Ok(Value::custom_unmanaged_mut(MathVec::<N>::new((0..N).map(|i|a[i].clamp(b,c)))))
 }
-fn vec_clamp<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_clamp<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?.0;
     let b = context.param(1).as_custom().data_clone::<MathVec<N>>()?.0;
     let c = context.param(2).as_custom().data_clone::<MathVec<N>>()?.0;
@@ -53,20 +53,20 @@ fn vec_clamp<const N: usize>(context:FuncContext2) -> Result<Value,MachineError>
     Ok(Value::custom_unmanaged_mut(MathVec::<N>::new((0..N).map(|i|a[i].clamp(b[i],c[i])))))
 }
 
-fn vec_dot<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_dot<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?.0;
     let b = context.param(1).as_custom().data_clone::<MathVec<N>>()?.0;
     Ok(Value::Float((0 .. N).fold(0.0,|acc,i|acc+a[i]*b[i])))
 }
 
-fn vec_len<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_len<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?.0;
     let d=(0 .. N).fold(0.0,|acc,i|acc+a[i]*a[i]);
     let d=d.sqrt();
     Ok(Value::Float(d))
 }
 
-fn vec_dist<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_dist<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?.0;
     let b = context.param(1).as_custom().data_clone::<MathVec<N>>()?.0;
 
@@ -75,14 +75,14 @@ fn vec_dist<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> 
     Ok(Value::Float(d))
 }
 
-fn vec_norm<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_norm<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?.0;
     let d=(0 .. N).fold(0.0,|acc,i|acc+a[i]*a[i]);
     let d=d.sqrt();
     Ok(Value::custom_unmanaged_mut(MathVec::<N>::new((0 .. N).map(|i|a[i]/d))))
 }
 
-fn vec_neg<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_neg<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?;
     let mut v = MathVec::<N>::default();
 
@@ -93,7 +93,7 @@ fn vec_neg<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
     Ok(Value::custom_unmanaged_mut(v))
 }
 
-fn vec_add<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_add<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?;
     let b = context.param(1).as_custom().data_clone::<MathVec<N>>()?;
     
@@ -106,7 +106,7 @@ fn vec_add<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
     Ok(Value::custom_unmanaged_mut(v))
 }
 
-fn vec_sub<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_sub<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?;
     let b = context.param(1).as_custom().data_clone::<MathVec<N>>()?;
     
@@ -119,7 +119,7 @@ fn vec_sub<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
     Ok(Value::custom_unmanaged_mut(v))
 }
 
-fn vec_mul<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_mul<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?;
     let b = context.param(1).as_custom().data_clone::<MathVec<N>>()?;
     
@@ -132,7 +132,7 @@ fn vec_mul<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
     Ok(Value::custom_unmanaged_mut(v))
 }
 
-fn vec_div<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_div<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?;
     let b = context.param(1).as_custom().data_clone::<MathVec<N>>()?;
     
@@ -145,7 +145,7 @@ fn vec_div<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
     Ok(Value::custom_unmanaged_mut(v))
 }
 
-fn vec_add_scalar<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_add_scalar<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?;
     let b = context.param(1).as_float();
     
@@ -158,7 +158,7 @@ fn vec_add_scalar<const N: usize>(context:FuncContext2) -> Result<Value,MachineE
     Ok(Value::custom_unmanaged_mut(v))
 }
 
-fn vec_sub_scalar<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_sub_scalar<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?;
     let b = context.param(1).as_float();
     
@@ -171,7 +171,7 @@ fn vec_sub_scalar<const N: usize>(context:FuncContext2) -> Result<Value,MachineE
     Ok(Value::custom_unmanaged_mut(v))
 }
 
-fn vec_mul_scalar<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_mul_scalar<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?;
     let b = context.param(1).as_float();
     
@@ -184,7 +184,7 @@ fn vec_mul_scalar<const N: usize>(context:FuncContext2) -> Result<Value,MachineE
     Ok(Value::custom_unmanaged_mut(v))
 }
 
-fn vec_div_scalar<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_div_scalar<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let a = context.param(0).as_custom().data_clone::<MathVec<N>>()?;
     let b = context.param(1).as_float();
     
@@ -207,7 +207,7 @@ fn vec_field_ind(field:char) -> usize {
     }
 }
 
-fn vec_get_field_util<const N: usize>(context:&FuncContext2,this:&[FloatT],field:&String) -> Result<Value,MachineError> {
+fn vec_get_field_util<const N: usize>(context:&FuncContext,this:&[FloatT],field:&String) -> Result<Value,MachineError> {
     let mut v=MathVec::<N>::default();
 
     for i in 0 .. N {
@@ -223,7 +223,7 @@ fn vec_get_field_util<const N: usize>(context:&FuncContext2,this:&[FloatT],field
     return Ok(Value::custom_unmanaged_mut(v));
 }
 
-fn vec_get_field<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_get_field<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let this = context.param(0).as_custom().data_clone::<MathVec<N>>()?;
     let field = context.param(1).as_string();
 
@@ -254,7 +254,7 @@ fn vec_get_field<const N: usize>(context:FuncContext2) -> Result<Value,MachineEr
 }
 
 
-fn vec_set_field<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_set_field<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let this = context.param(0).as_custom().data();
     let mut this = this.get_mut::<MathVec<N>>()?;
 
@@ -337,7 +337,7 @@ fn vec_set_field<const N: usize>(context:FuncContext2) -> Result<Value,MachineEr
 
 }
 
-fn vec_to_string<const N: usize>(context:FuncContext2) -> Result<Value,MachineError> {
+fn vec_to_string<const N: usize>(context:FuncContext) -> Result<Value,MachineError> {
     let this = context.param(0).as_custom().data_clone::<MathVec<N>>()?;
     Ok(Value::string(format!("vec{N}({})",this.0.map(|x|format!("{x:?}")).join(","))))
 }
