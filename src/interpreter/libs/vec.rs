@@ -96,8 +96,43 @@ fn set_field_util<T:Copy,const FROM_N: usize,const TO_N: usize>(fields:&str,from
 }
 
 pub fn register<X>(func_scope : &mut LibScope<X>) {
+    //vec2(ivec2)
+    func_scope.method("vec2",|context|{
+        let v=context.param(0).as_custom().data_clone::<IVec2>()?;
+        Ok(Value::custom_unmanaged_mut(Vec2(v.0.map(|x|x as FloatT))))
+    }).custom_ref::<IVec2>().end();
 
-    //vec2(), vec2(f), vec2(f,f)    
+    //vec3(ivec3)
+    func_scope.method("vec3",|context|{
+        let v=context.param(0).as_custom().data_clone::<IVec3>()?;
+        Ok(Value::custom_unmanaged_mut(Vec3(v.0.map(|x|x as FloatT))))
+    }).custom_ref::<IVec3>().end();
+
+    //vec4(ivec4)
+    func_scope.method("vec4",|context|{
+        let v=context.param(0).as_custom().data_clone::<IVec4>()?;
+        Ok(Value::custom_unmanaged_mut(Vec4(v.0.map(|x|x as FloatT))))
+    }).custom_ref::<IVec4>().end();
+    
+    //ivec2(vec2)
+    func_scope.method("ivec2",|context|{
+        let v=context.param(0).as_custom().data_clone::<Vec2>()?;
+        Ok(Value::custom_unmanaged_mut(IVec2(v.0.map(|x|x as IntT))))
+    }).custom_ref::<Vec2>().end();
+
+    //ivec3(vec3)
+    func_scope.method("ivec3",|context|{
+        let v=context.param(0).as_custom().data_clone::<Vec3>()?;
+        Ok(Value::custom_unmanaged_mut(IVec3(v.0.map(|x|x as IntT))))
+    }).custom_ref::<Vec3>().end();
+
+    //ivec4(vec4)
+    func_scope.method("ivec4",|context|{
+        let v=context.param(0).as_custom().data_clone::<Vec4>()?;
+        Ok(Value::custom_unmanaged_mut(IVec4(v.0.map(|x|x as IntT))))
+    }).custom_ref::<Vec4>().end();
+
+    //vec2(), vec2(f), vec2(f,f)
     func_scope.method("vec2",|context|{
         let x=context.param(0).as_float();
         let y=context.get_param(1).map(|q|q.as_float()).unwrap_or(x);
