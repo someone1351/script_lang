@@ -738,4 +738,34 @@ pub fn register<X>(func_scope : &mut LibScope<X>) {
         for i in 0..a.0.len() {a.0[i]=a.0[i].max(b.0[i]);}
         Ok(Value::custom_unmanaged(a))
     }).custom_ref::<Vec4>().custom_ref::<Vec4>().end();
+
+    //clamp(vec2,f,f)
+    func_scope.method("clamp",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec2>()?;
+        let b=context.param(1).as_float();
+        let c=context.param(2).as_float();
+        if b > c { return Err(context.error("min>max".to_string()));}
+        for i in 0..a.0.len() {a.0[i]=a.0[i].clamp(b,c);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec2>().float().float().end();
+
+    //clamp(vec3,f,f)
+    func_scope.method("clamp",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec3>()?;
+        let b=context.param(1).as_float();
+        let c=context.param(2).as_float();
+        if b > c { return Err(context.error("min>max".to_string()));}
+        for i in 0..a.0.len() {a.0[i]=a.0[i].clamp(b,c);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec3>().float().float().end();
+
+    //clamp(vec4,f,f)
+    func_scope.method("clamp",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec4>()?;
+        let b=context.param(1).as_float();
+        let c=context.param(2).as_float();
+        if b > c { return Err(context.error("min>max".to_string()));}
+        for i in 0..a.0.len() {a.0[i]=a.0[i].clamp(b,c);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec4>().float().float().end();
 }
