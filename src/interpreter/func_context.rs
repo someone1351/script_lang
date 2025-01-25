@@ -85,9 +85,18 @@ impl<'q,'a,'c,X> FuncContextExt<'q,'a,'c,X> { //,'b //,'b
     pub fn param(&self,ind:usize) -> Value {
         if ind < self.params_num {
             let stack_ind=self.params_start+self.params_num-1-ind;
-            self.machine.get_stack_val(stack_ind).ok().clone().unwrap_or(Value::Nil)
+            self.machine.get_stack_val(stack_ind).ok().clone().unwrap_or(Value::Nil) //unwrap nil is for func calls with less params than there is on stack?
         } else {
             Value::Nil
+        }
+    }
+
+    pub fn get_param(&self,ind:usize) -> Option<Value> {
+        if ind < self.params_num {
+            let stack_ind=self.params_start+self.params_num-1-ind;
+            Some(self.machine.get_stack_val(stack_ind).ok().clone().unwrap_or(Value::Nil)) //unwrap nil is for func calls with less params than there is on stack?
+        } else {
+            None
         }
     }
 
@@ -176,12 +185,20 @@ impl<'q,'a,'c> FuncContext<'q,'a,'c> { //,'b //,'b
     pub fn param(&self,ind:usize) -> Value {
         if ind < self.params_num {
             let stack_ind=self.params_start+self.params_num-1-ind;
-            self.machine.get_stack_val(stack_ind).ok().clone().unwrap_or(Value::Nil)
+            self.machine.get_stack_val(stack_ind).ok().clone().unwrap_or(Value::Nil) //unwrap nil is for func calls with less params than there is on stack?
         } else {
             Value::Nil
         }
     }
 
+    pub fn get_param(&self,ind:usize) -> Option<Value> {
+        if ind < self.params_num {
+            let stack_ind=self.params_start+self.params_num-1-ind;
+            Some(self.machine.get_stack_val(stack_ind).ok().clone().unwrap_or(Value::Nil)) //unwrap nil is for func calls with less params than there is on stack?
+        } else {
+            None
+        }
+    }
     pub fn error<S: Into<String>>(&self, msg:S) -> MachineError {
         MachineError{
             build : self.machine.cur_build(),

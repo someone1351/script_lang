@@ -1,3 +1,9 @@
+/*
+if custom is root and is cloned, it will lose its root status, need to use clone_root() to keep it
+might be better for clone to keep the root status, and when passed as param, then convert to not root
+
+in machine will need to replace clone() with clone_not_root()
+*/
 
 use parking_lot::{Mutex,MutexGuard,MappedMutexGuard};
 

@@ -49,4 +49,3 @@ var d [dict]
 fn d.func {x} {println "hello {x}"}
 
 d.func "joe"
-

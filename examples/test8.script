@@ -14,3 +14,9 @@ fn my_add {a b} {
     $a
 }
 println {call $my_add 15 9}
+
+substr "012345" 2 4
+
+var a {vec4 11.0 {vec2 22.0 33.0} 44.0};
+set a.xyzw a.wzyx;
+println a

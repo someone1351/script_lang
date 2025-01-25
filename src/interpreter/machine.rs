@@ -6,6 +6,12 @@ TODO
 * * * * have a way to store that, and addtional custom user data eg for loop index
 * * * * then when resuming, recall the method, providing the pause and user data
 
+* for not enough params provided to build func call, it pushes missing nil param onto stack
+* for method call, with optional params missing ... ?
+
+* have a runtime type resolving for var decls
+* * eg var a {vec3 0.0}; set a {some_method}; #where some_method()->vec3
+* * methods can optionally specify a ret type, err check if ret matches specified type?
 */
 use std::collections::HashMap;
 use std::path::Path;
@@ -188,6 +194,12 @@ impl<'a,'c,X> MachineTrait<'a,'c> for Machine<'a,'c,X> {
 // //         self.core_val
 // //     }
 // // }
+impl<'a,'c,X:Copy> Machine<'a,'c,X> {
+    pub fn get_core(&mut self) -> &X {
+        &self.core_val
+    }
+}
+
 impl<'a,'c,X> Machine<'a,'c,& mut X> {
     pub fn get_core_mut(&mut self) -> &mut X {
         self.core_val
