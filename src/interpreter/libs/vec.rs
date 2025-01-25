@@ -548,4 +548,194 @@ pub fn register<X>(func_scope : &mut LibScope<X>) {
         for i in 0..a.0.len() { a.0[i]/=b.0[i]; }
         Ok(Value::custom_unmanaged(a))
     }).custom_ref::<Vec4>().custom_ref::<Vec4>().end();
+
+    //eq(vec2,vec2)
+    func_scope.method("=",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec2>()?;
+        let b = context.param(1).as_custom().data_clone::<Vec2>()?;
+        Ok(Value::Bool(a.0==b.0))
+    }).custom_ref::<Vec2>().custom_ref::<Vec2>().end();
+
+    //eq(vec3,vec3)
+    func_scope.method("=",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec3>()?;
+        let b = context.param(1).as_custom().data_clone::<Vec3>()?;
+        Ok(Value::Bool(a.0==b.0))
+    }).custom_ref::<Vec3>().custom_ref::<Vec3>().end();
+
+    //eq(vec4,vec4)
+    func_scope.method("=",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec4>()?;
+        let b = context.param(1).as_custom().data_clone::<Vec4>()?;
+        Ok(Value::Bool(a.0==b.0))
+    }).custom_ref::<Vec4>().custom_ref::<Vec4>().end();
+
+    //dot(vec2,vec2)
+    func_scope.method("dot",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec2>()?;
+        let b = context.param(1).as_custom().data_clone::<Vec2>()?;
+        Ok(Value::Float((0 .. a.0.len()).fold(0.0,|acc,i|acc+a.0[i]*b.0[i])))
+    }).custom_ref::<Vec2>().custom_ref::<Vec2>().end();
+
+    //dot(vec3,vec3)
+    func_scope.method("dot",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec3>()?;
+        let b = context.param(1).as_custom().data_clone::<Vec3>()?;
+        Ok(Value::Float((0 .. a.0.len()).fold(0.0,|acc,i|acc+a.0[i]*b.0[i])))
+    }).custom_ref::<Vec3>().custom_ref::<Vec3>().end();
+
+    //dot(vec4,vec4)
+    func_scope.method("dot",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec4>()?;
+        let b = context.param(1).as_custom().data_clone::<Vec4>()?;
+        Ok(Value::Float((0 .. a.0.len()).fold(0.0,|acc,i|acc+a.0[i]*b.0[i])))
+    }).custom_ref::<Vec4>().custom_ref::<Vec4>().end();
+
+    //cross(vec3,vec3)
+    func_scope.method("cross",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec3>()?.0;
+        let b = context.param(1).as_custom().data_clone::<Vec3>()?.0;
+        Ok(Value::custom_unmanaged(Vec3([a[1]*b[2]-b[1]*a[2], a[2]*b[0]-b[2]*a[0], a[0]*b[1]-b[0]*a[1]])))
+    }).custom_ref::<Vec3>().custom_ref::<Vec3>().end();
+    
+    //len(vec2)
+    func_scope.method("len",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec2>()?.0;
+        let d=(0 .. a.len()).fold(0.0,|acc,i|acc+a[i]*a[i]).sqrt();
+        Ok(Value::Float(d))
+    }).custom_ref::<Vec2>().end();
+
+    //len(vec3)
+    func_scope.method("len",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec3>()?.0;
+        let d=(0 .. a.len()).fold(0.0,|acc,i|acc+a[i]*a[i]).sqrt();
+        Ok(Value::Float(d))
+    }).custom_ref::<Vec3>().end();
+
+    //len(vec4)
+    func_scope.method("len",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec4>()?.0;
+        let d=(0 .. a.len()).fold(0.0,|acc,i|acc+a[i]*a[i]).sqrt();
+        Ok(Value::Float(d))
+    }).custom_ref::<Vec4>().end();
+
+    //norm(vec2)
+    func_scope.method("norm",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec2>()?.0;
+        let d=(0 .. a.len()).fold(0.0,|acc,i|acc+a[i]*a[i]).sqrt();
+        if d==0.0 {return Err(context.error("len is zero"));}
+        Ok(Value::custom_unmanaged(Vec2(a.map(|x|x/d))))
+    }).custom_ref::<Vec2>().end();
+
+    //norm(vec3)
+    func_scope.method("norm",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec3>()?.0;
+        let d=(0 .. a.len()).fold(0.0,|acc,i|acc+a[i]*a[i]).sqrt();
+        if d==0.0 {return Err(context.error("len is zero"));}
+        Ok(Value::custom_unmanaged(Vec3(a.map(|x|x/d))))
+    }).custom_ref::<Vec3>().end();
+
+    //norm(vec4)
+    func_scope.method("norm",|context|{
+        let a = context.param(0).as_custom().data_clone::<Vec4>()?.0;
+        let d=(0 .. a.len()).fold(0.0,|acc,i|acc+a[i]*a[i]).sqrt();
+        if d==0.0 {return Err(context.error("len is zero"));}
+        Ok(Value::custom_unmanaged(Vec4(a.map(|x|x/d))))
+    }).custom_ref::<Vec4>().end();
+
+    //min(vec2,f)
+    func_scope.method("min",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec2>()?;
+        let b=context.param(1).as_float();
+        for i in 0..a.0.len() {a.0[i]=a.0[i].min(b);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec2>().float().end();
+
+    //min(vec3,f)
+    func_scope.method("min",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec3>()?;
+        let b=context.param(1).as_float();
+        for i in 0..a.0.len() {a.0[i]=a.0[i].min(b);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec3>().float().end();
+
+    //min(vec4,f)
+    func_scope.method("min",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec4>()?;
+        let b=context.param(1).as_float();
+        for i in 0..a.0.len() {a.0[i]=a.0[i].min(b);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec4>().float().end();
+
+    //min(vec2,vec2)
+    func_scope.method("min",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec2>()?;
+        let b = context.param(1).as_custom().data_clone::<Vec2>()?;
+        for i in 0..a.0.len() {a.0[i]=a.0[i].min(b.0[i]);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec2>().custom_ref::<Vec2>().end();
+
+    //min(vec3,vec3)
+    func_scope.method("min",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec3>()?;
+        let b = context.param(1).as_custom().data_clone::<Vec3>()?;
+        for i in 0..a.0.len() {a.0[i]=a.0[i].min(b.0[i]);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec3>().custom_ref::<Vec3>().end();
+    
+    //min(vec4,vec4)
+    func_scope.method("min",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec4>()?;
+        let b = context.param(1).as_custom().data_clone::<Vec4>()?;
+        for i in 0..a.0.len() {a.0[i]=a.0[i].min(b.0[i]);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec4>().custom_ref::<Vec4>().end();
+
+    //max(vec2,f)
+    func_scope.method("max",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec2>()?;
+        let b=context.param(1).as_float();
+        for i in 0..a.0.len() {a.0[i]=a.0[i].max(b);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec2>().float().end();
+
+    //max(vec3,f)
+    func_scope.method("max",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec3>()?;
+        let b=context.param(1).as_float();
+        for i in 0..a.0.len() {a.0[i]=a.0[i].max(b);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec3>().float().end();
+
+    //max(vec4,f)
+    func_scope.method("max",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec4>()?;
+        let b=context.param(1).as_float();
+        for i in 0..a.0.len() {a.0[i]=a.0[i].max(b);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec4>().float().end();
+
+    //max(vec2,vec2)
+    func_scope.method("max",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec2>()?;
+        let b = context.param(1).as_custom().data_clone::<Vec2>()?;
+        for i in 0..a.0.len() {a.0[i]=a.0[i].max(b.0[i]);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec2>().custom_ref::<Vec2>().end();
+
+    //max(vec3,vec3)
+    func_scope.method("max",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec3>()?;
+        let b = context.param(1).as_custom().data_clone::<Vec3>()?;
+        for i in 0..a.0.len() {a.0[i]=a.0[i].max(b.0[i]);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec3>().custom_ref::<Vec3>().end();
+    
+    //max(vec4,vec4)
+    func_scope.method("max",|context|{
+        let mut a = context.param(0).as_custom().data_clone::<Vec4>()?;
+        let b = context.param(1).as_custom().data_clone::<Vec4>()?;
+        for i in 0..a.0.len() {a.0[i]=a.0[i].max(b.0[i]);}
+        Ok(Value::custom_unmanaged(a))
+    }).custom_ref::<Vec4>().custom_ref::<Vec4>().end();
 }
