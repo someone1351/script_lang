@@ -22,55 +22,5 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .end();
 
     //
-    lib_scope.method("-", |context|{
-        Ok(Value::float(-context.param(0).as_float()))
-    })
-        .float()
-        .end();
-
-    //
-    lib_scope.method("+", |context|{
-        Ok(Value::float(context.param(0).as_float()+context.param(1).as_float()))
-    })
-        .float().or_int().float().end()
-        .float().int().end();
-
-    lib_scope.method("-", |context|{
-        Ok(Value::float(context.param(0).as_float()-context.param(1).as_float()))
-    })
-        .float().or_int().float().end()
-        .float().int().end();
-
-    lib_scope.method("*", |context|{
-        Ok(Value::float(context.param(0).as_float()*context.param(1).as_float()))
-    })
-        .float().or_int().float().end()
-        .float().int().end();
-
-    lib_scope.method("/", |context|{
-        Ok(Value::float(context.param(0).as_float()/context.param(1).as_float()))  
-    })
-        .float().or_int().float().end();
-
-    //
-    lib_scope.method(">", |context|{
-        Ok(Value::Bool(context.param(0).as_float()>context.param(1).as_float()))
-    }).float().float().end();
-    
-    lib_scope.method("<", |context|{
-        Ok(Value::Bool(context.param(0).as_float()<context.param(1).as_float()))
-    }).float().float().end();
-    
-    lib_scope.method(">=", |context|{
-        Ok(Value::Bool(context.param(0).as_float()>=context.param(1).as_float()))
-    }).float().float().end();
-    
-    lib_scope.method("<=", |context|{
-        Ok(Value::Bool(context.param(0).as_float()<=context.param(1).as_float()))
-    }).float().float().end();
-
-    lib_scope.method("=", |context|{
-        Ok(Value::Bool(context.param(0).as_float()==context.param(1).as_float()))
-    }).float().float().end();
 
 }
