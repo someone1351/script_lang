@@ -214,10 +214,10 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         // }))).unwrap();
 
         let mut lib_scope=script_lang::LibScope::<&mut i32>::new_full();
-        lib_scope.method_ext("get_test", |context|{
+        lib_scope.method("get_test", |context|{
             Ok(script_lang::Value::Int(*context.get_core_ref() as script_lang::IntT))
         }).end();
-        lib_scope.method_ext("set_test", |mut context|{
+        lib_scope.method("set_test", |mut context|{
             *context.get_core_mut()=context.param(0).as_int() as i32;
             Ok(script_lang::Value::Void)
         }).int().end();
@@ -313,7 +313,7 @@ fn main() {
     // test_script4("examples/test8.script");
     
     // test_script2("examples/test6.script");
-    // test_script3("examples/test7.script");
+    test_script3("examples/test7.script");
     test_script3("examples/test8.script");
     // test_script3("examples/test9.script");
 }

@@ -12,7 +12,9 @@ TODO
 * have a runtime type resolving for var decls
 * * eg var a {vec3 0.0}; set a {some_method}; #where some_method()->vec3
 * * methods can optionally specify a ret type, err check if ret matches specified type?
+* * not viaable? eg method1(method2()) #cant specify ret for method2, have to be any
 */
+
 use std::collections::HashMap;
 use std::path::Path;
 use std::path::PathBuf;
@@ -1182,16 +1184,16 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
         //
         let v=match bound_func.method_type {
-            MethodType::Static(x)=>{
-                x(FuncContext::new(self,params_num))
-            }
-            MethodType::Temp(x) => {
-                if let Some(mut x)=x.try_lock() {
-                    x(FuncContext::new(self,params_num))
-                } else {
-                    Err(MachineError::from_machine(self, MachineErrorType::FuncBorrowMutError))
-                }
-            }
+            // MethodType::Static(x)=>{
+            //     x(FuncContext::new(self,params_num))
+            // }
+            // MethodType::Temp(x) => {
+            //     if let Some(mut x)=x.try_lock() {
+            //         x(FuncContext::new(self,params_num))
+            //     } else {
+            //         Err(MachineError::from_machine(self, MachineErrorType::FuncBorrowMutError))
+            //     }
+            // }
 
             MethodType::StaticExt(x)=>{
                 x(FuncContextExt::new(self,params_num))

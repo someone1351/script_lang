@@ -7,11 +7,13 @@ use super::super::lib_scope::*;
 // use super::utils::*;
 
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
+    //len(str)
     lib_scope.method("len", |context|{
         Ok(Value::int(context.param(0).as_string().chars().count()))
     })
         .str().end();
     
+    //contains(str,str)
     lib_scope.method("contains", |context|{
         let string=context.param(0).as_string();
         let val=context.param(1).as_string();
@@ -19,17 +21,19 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     })
         .str().str().end();
 
-
+    //is_string(str)
     lib_scope.method("is_string", |_|{
         Ok(Value::Bool(true))
     })
         .str().end();
 
+    //is_string(any)
     lib_scope.method("is_string", |_|{
         Ok(Value::Bool(false))
     })
         .any().end();
 
+    //add(str,str), add(any,str), add(str,any)
     lib_scope.method("+",|context|{
         let s0=context.param(0).as_string();
         let s1=context.param(1).as_string();
@@ -38,6 +42,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .str().or_any().str().end()
         .str().str().or_any().end();
     
+    //eq(str,str), eq(any,str), eq(str,any)
     lib_scope.method("=",|context|{
         let s0=context.param(0).as_string();
         let s1=context.param(1).as_string();
@@ -46,11 +51,13 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .str().or_any().str().end()
         .str().str().or_any().end();
 
+    //string(str)
     lib_scope.method("string",|context|{
         Ok(context.param(0).clone())
     })
         .str().end();
 
+    //repeat(str,int)
     lib_scope.method("repeat",|context|{
         let s=context.param(0).as_string();
         let r=context.param(1).as_int() as usize;
@@ -58,6 +65,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     })
         .str().int().end();
 
+    //substr(str,int,int?)
     lib_scope.method("substr",|context|{
         let string=context.param(0).as_string();
 
