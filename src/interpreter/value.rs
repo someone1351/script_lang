@@ -200,7 +200,7 @@ impl Value {
     pub fn as_custom(&self) -> Custom {
         match self {
             Value::Custom(c)=>c.clone(), //c.clone_root(), 
-            _=>Custom::new_unmanaged_mut((),None),
+            _=>Custom::new_unmanaged((),), //None
         }
     }
     
@@ -224,19 +224,19 @@ impl Value {
     //
 
     pub fn custom_managed_mut<T:GcTraversable+Send>(data : T,gc_scope : &mut GcScope) -> Self {
-        Self::Custom(Custom::new_managed_mut(data,None, gc_scope))
+        Self::Custom(Custom::new_managed_mut(data, gc_scope))
     }
     
     pub fn custom_managed<T:GcTraversable+Send+Sync>(data : T,gc_scope : &mut GcScope) -> Self {
-        Self::Custom(Custom::new_managed(data,None, gc_scope))
+        Self::Custom(Custom::new_managed(data, gc_scope))
     }
 
     pub fn custom_unmanaged_mut<T:Any+Send>(data : T) -> Self {
-        Self::Custom(Custom::new_unmanaged_mut(data,None))
+        Self::Custom(Custom::new_unmanaged_mut(data,))
     }
     
     pub fn custom_unmanaged<T:Any+Send+Sync>(data : T) -> Self {
-        Self::Custom(Custom::new_unmanaged(data,None))
+        Self::Custom(Custom::new_unmanaged(data,))
     }
 
     //

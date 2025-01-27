@@ -20,7 +20,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use super::super::common::*;
-use super::custom::*;
+// use super::custom::*;
 use super::gc_scope::*;
 use super::value::*;
 use super::data::*;
@@ -79,109 +79,6 @@ pub struct Machine<'a,'c,X> { //,'b
 }
 
 
-pub trait MachineTrait<'a,'c> {
-
-    fn stack(&self) -> &Vec<Value>;
-    
-    fn stack_frames(&self) -> &Vec<StackFrame>;
-    fn get_stack_val(&self,stack_ind:usize) -> Result<Value,MachineError>;
-    
-    fn result_val(&self) -> Value;
-    fn instr_pos(&self) -> usize;
-
-    
-    fn cur_build(&self) -> Option<BuildT>;
-
-    fn try_call_method(&mut self,name:&str,params : &Vec<Value>) -> Result<Option<Value>,MachineError>;
-
-    fn call_value(&mut self,v:&Value,params : &Vec<Value>) -> Result<Value,MachineError>;
-    
-    fn call_method(&mut self,name:&str,params : &Vec<Value>) -> Result<Value,MachineError>;
-
-    fn gc_scope(&mut self)->&mut GcScope;
-    
-    fn global_decl(&mut self,name:&str,to_value:Option<Value>) -> Result<(),MachineError>;    
-    fn global_set(&mut self,name:&str,fields:&Vec<Value>,to_value:Value) -> Result<(),MachineError>;
-    fn global_get(&mut self,name:&str,fields:&Vec<Value>) -> Result<Value,MachineError>;
-    
-    fn value_set(&mut self,value:Value,fields:&Vec<Value>,to_value:Value) -> Result<(),MachineError>;
-    fn value_get(&mut self,value:Value,fields:&Vec<Value>) -> Result<Value,MachineError>;
-    
-    fn constant_get(&self,n:&str) -> Option<Value>;
-    // fn method_error(&self, msg:&str) -> MachineError ;
-
-}
-
-impl<'a,'c,X> MachineTrait<'a,'c> for Machine<'a,'c,X> {
-
-    fn stack(&self) -> &Vec<Value> {
-        &self.stack
-    }
-   
-    
-    fn stack_frames(&self) -> &Vec<StackFrame> {
-        &self.stack_frames
-    }
-    fn get_stack_val(&self,stack_ind:usize) -> Result<Value,MachineError> {
-        let stack_len = self.stack.len();
-
-        if stack_ind >= stack_len {
-            return Err(MachineError::from_machine(self, MachineErrorType::InvalidStackAccess(stack_ind-stack_len) ));
-        }
-
-        Ok(self.stack.get(stack_ind).unwrap().clone())
-    }
-    
-    fn result_val(&self) -> Value {
-        self.result_val.clone()
-    }
-    fn instr_pos(&self) -> usize {
-        self.instr_pos
-    }
-    fn cur_build(&self) -> Option<BuildT> {
-        self.cur_build.clone()
-    }
-    fn try_call_method(&mut self,name:&str,params : &Vec<Value>) -> Result<Option<Value>,MachineError> {
-        self.try_call_method(name, params)
-    }
-    fn call_value(&mut self,v:&Value,params : &Vec<Value>) -> Result<Value,MachineError> {
-        // Machine::call_value(&mut self, v, params)
-        self.call_value(v, params)
-        // Ok(Value::Nil)
-    }
-
-    
-    fn call_method(&mut self,name:&str,params : &Vec<Value>) -> Result<Value,MachineError> {
-        self.call_method(name, params)
-    }
-    fn gc_scope(&mut self)->&mut GcScope {
-        self.gc_scope
-    }
-    
-    fn global_decl(&mut self,name:&str,to_value:Option<Value>) -> Result<(),MachineError> {
-        self.global_decl(name, to_value)
-    }
-    fn global_set(&mut self,name:&str,fields:&Vec<Value>,to_value:Value) -> Result<(),MachineError> {
-        self.global_set(name, fields, to_value)
-    }
- 
-    fn global_get(&mut self,name:&str,fields:&Vec<Value>) -> Result<Value,MachineError> {
-        self.global_get(name, fields)
-    }
-    fn value_set(&mut self,value:Value,fields:&Vec<Value>,to_value:Value) -> Result<(),MachineError> {
-        self.value_set(value, fields, to_value)
-    }
-    fn value_get(&mut self,value:Value,fields:&Vec<Value>) -> Result<Value,MachineError> {
-        self.value_get(value, fields)
-    }
-    
-    fn constant_get(&self,n:&str) -> Option<Value> {
-        self.constant_get(n)
-    }
-    // fn method_error(&self, msg:&str) -> MachineError {
-    //     MachineError::from_machine(self, MachineErrorType::MethodRunError(msg.into()))
-    // }
-}
 
 // impl<'a,'c,X:Copy> Machine<'a,'c,X> {
 //     pub fn get_core(&mut self) -> X {
@@ -460,7 +357,8 @@ impl<'a,'c,X> Machine<'a,'c,X>
                 self.result_val = Value::String(symbol.clone());
             }
             Instruction::ResultVararg => {
-                self.result_val=Value::Custom(Custom::new_unmanaged_mut(Vararg,None));
+                // self.result_val=Value::Custom(Custom::new_unmanaged_mut(Vararg,None));
+                self.result_val=Value::custom_unmanaged(Vararg);
                 // self.result_val=Value::Vararg;
                 // self.call_method("vararg", vec![])?;
             }
@@ -592,7 +490,8 @@ impl<'a,'c,X> Machine<'a,'c,X>
             }
             Instruction::MakeStackVarRef(stack_offset_ind) => {
                 let v = self.copy_val(self.get_stack_offset_value(*stack_offset_ind)?.clone())?;
-                let v=Value::Custom(Custom::new_managed_mut(v.clone(),None, self.gc_scope));
+                // let v=Value::Custom(Custom::new_managed_mut(v.clone(),None, self.gc_scope));
+                let v=Value::custom_managed_mut(v.clone(), self.gc_scope);
                 
                 // *self.stack_value_mut(*stack_offset_ind)?=v;
                 self.set_stack_offset_val(*stack_offset_ind, v)?;
