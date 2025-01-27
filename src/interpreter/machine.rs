@@ -1068,10 +1068,10 @@ impl<'a,'c,X> Machine<'a,'c,X>
             //     }
             // }
 
-            MethodType::StaticExt(x)=>{
+            MethodType::NonMut(x)=>{
                 x(FuncContext::new(self,params_num))
             }
-            MethodType::TempExt(x) => {
+            MethodType::Mut(x) => {
                 if let Some(mut x)=x.try_lock() {
                     x(FuncContext::new(self,params_num))
                 } else {

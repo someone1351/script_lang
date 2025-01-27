@@ -20,3 +20,7 @@ substr "012345" 2 4
 var a {vec4 11.0 {vec2 22.0 33.0} 44.0};
 set a.xyzw a.wzyx;
 println a
+
+println "test2 {}" {do_test2}
+println "test2 {}" {do_test2}
+println "test2 {}" {do_test2}
