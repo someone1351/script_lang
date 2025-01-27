@@ -8,9 +8,9 @@ TODO 2
 * make failed locks etc not panic and crash the program, return an error instead
 
 */
-use std::{sync::{Arc, Weak}, any::Any, };
+use std::{any::Any, sync::{Arc, Mutex, Weak} };
 
-use parking_lot::Mutex;
+// use parking_lot::Mutex;
 
 use super::value::*;
 // use super::error::*;
@@ -72,8 +72,8 @@ pub struct GcIndex(Arc<Mutex<usize>>);
 
 impl GcIndex {
     fn new(index:usize) -> Self { Self(Arc::new(Mutex::new(index))) }
-    fn set(&mut self,index:usize) { *self.0.lock()=index; }
-    pub fn get(&self)->usize { *self.0.lock() }
+    fn set(&mut self,index:usize) { *self.0.lock().unwrap()=index; }
+    pub fn get(&self)->usize { *self.0.lock().unwrap() }
 
     pub fn strong_count(&self)->usize { 
         Arc::strong_count(&self.0) 
@@ -114,15 +114,15 @@ pub struct GcRootCount(Arc<Mutex<usize>>);
 impl GcRootCount {
     fn new() -> Self { Self(Arc::new(Mutex::new(0))) }
     pub fn incr(&self) { 
-        *self.0.lock()+=1; 
+        *self.0.lock().unwrap()+=1; 
         // println!("incr!");
     }
     pub fn decr(&self) { 
         // println!("root({}) decr",self.get());
-        *self.0.lock()-=1;
+        *self.0.lock().unwrap()-=1;
         // println!("decr!");
     }
-    fn get(&self)->usize { *self.0.lock() }
+    fn get(&self)->usize { *self.0.lock().unwrap() }
     pub fn strong_count(&self)->usize { Arc::strong_count(&self.0) }
 }
 
@@ -234,7 +234,7 @@ impl GcScope {
     }
 
 
-    pub fn mark_and_sweep(&mut self, amount:usize) {
+    pub fn mark_and_sweep(&mut self, amount:usize) ->Result<(),()> {
         // for managed in self.manageds.iter_mut() {
         //     managed.marked=true;
         // }
@@ -315,7 +315,14 @@ impl GcScope {
 
             match &cur_val.data {
                 GcManagedInner::Mut(x) => {
-                    self.stk.extend(x.lock().traverser().filter_map(|val|val.gc_index()));
+                    if let Ok(x)=
+                        x.lock() 
+                        // x.try_lock() //if already locked, skip ?
+                    {
+                        self.stk.extend(x.traverser().filter_map(|val|val.gc_index()));
+                    } else {
+                        return  Err(());
+                    }
                 }
                 GcManagedInner::NonMut(x) => {
                     self.stk.extend(x.traverser().filter_map(|val|val.gc_index()));
@@ -361,6 +368,7 @@ impl GcScope {
         // println!(":{:?}",self.manageds.iter().map(|x|(x.managed_index.get(),x.marked,x.root_count.get())).collect::<Vec<_>>());
 
         // self.dropper.clear();
+        Ok(())
     }
 
 
@@ -408,13 +416,13 @@ impl GcDropper {
     //     }
     // }
     pub fn add(&mut self,gc_index:GcWeakIndex) {
-        self.droppeds.lock().push(gc_index);
+        self.droppeds.lock().unwrap().push(gc_index);
     }
     pub fn clear(&mut self) {
-        self.droppeds.lock().clear();
+        self.droppeds.lock().unwrap().clear();
     }
     pub fn drain(&mut self) -> Vec<GcWeakIndex> {
-        self.droppeds.lock().drain(0 ..).collect::<Vec<_>>()
+        self.droppeds.lock().unwrap().drain(0 ..).collect::<Vec<_>>()
     }
 }
 

@@ -501,20 +501,30 @@ impl<'a,'c,X> Machine<'a,'c,X>
                     
                     // if !self.var_scope.set(data.name.as_str(),val)? {}
                 } else {
-                    let data=custom.data();
-                    let mut data=data.get_mut::<Value>()?;
-    
-                    // if data.is_type(ValueType::custom::<UninitVar>()) {
-                    //     // let symbol=self.get_symbol( *symbol_ind)?;
-                    //     let symbol="todo";
-                    //     return Err(MachineError::machine_new(self, MachineErrorType::GlobalNotFound(symbol.to_string()) ));
-                    // }
-    
-                    if !init && data.is_undefined() {
-                        return Err(MachineError::from_machine(self, MachineErrorType::SetUndefinedVar ));
-                    }
+                    custom.with_data_mut(|data:&mut Value|{
+                        if !init && data.is_undefined() {
+                            Err(MachineError::from_machine(self, MachineErrorType::SetUndefinedVar ))
+                        } else {
+                            *data=to_val;
+                            Ok(())
+                        }
+                    })?;
+
                     
-                    *data=to_val;
+                    // let data=custom.data();
+                    // let mut data=data.get_mut::<Value>()?;
+    
+                    // // if data.is_type(ValueType::custom::<UninitVar>()) {
+                    // //     // let symbol=self.get_symbol( *symbol_ind)?;
+                    // //     let symbol="todo";
+                    // //     return Err(MachineError::machine_new(self, MachineErrorType::GlobalNotFound(symbol.to_string()) ));
+                    // // }
+    
+                    // if !init && data.is_undefined() {
+                    //     return Err(MachineError::from_machine(self, MachineErrorType::SetUndefinedVar ));
+                    // }
+                    
+                    // *data=to_val;
     
                 }
 
@@ -1072,7 +1082,10 @@ impl<'a,'c,X> Machine<'a,'c,X>
                 x(FuncContext::new(self,params_num))
             }
             MethodType::Mut(x) => {
-                if let Some(mut x)=x.try_lock() {
+                if let Ok(mut x)=
+                    // x.lock() 
+                    x.try_lock() 
+                {
                     x(FuncContext::new(self,params_num))
                 } else {
                     Err(MachineError::from_machine(self, MachineErrorType::FuncBorrowMutError))

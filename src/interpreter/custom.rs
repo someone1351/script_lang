@@ -9,8 +9,9 @@ in machine will need to replace clone() with clone_not_root()
 
 use std::any::Any;
 use std::sync::Arc;
-use std::sync::MappedMutexGuard;
+// use std::sync::MappedMutexGuard;
 use std::sync::Mutex;
+// use std::sync::MutexGuard;
 
 use super::gc_scope::*;
 // use super::value::*;
@@ -217,9 +218,10 @@ impl Custom {
     }
 
     pub fn with_data_mut<T:Any,R>(&self,func:impl FnOnce(&mut T)->Result<R,MachineError>) -> Result<R,MachineError> {
-        let data=self.data();
-        let mut data=data.get_mut::<T>()?;
-        func(&mut data)
+        // let data=self.data();
+        // let mut data=data.get_mut::<T>()?;
+        // func(&mut data)
+        self.data().inner_with_data_mut(func)
     }
 
     pub fn with_data_ref<T:Any,R>(&self,func:impl FnOnce(&T)->Result<R,MachineError>) -> Result<R,MachineError> {
@@ -227,8 +229,10 @@ impl Custom {
         
         match &data.data {
             Some(StrongValueInner::Mut(_))=>{
-                let data2=data.get_mut::<T>()?;
-                func(& data2)
+                // let data2=data.get_mut::<T>()?;
+                // func(& data2)
+                
+                self.data().inner_with_data_mut(|data|func(data))
             }
             Some(StrongValueInner::NonMut(_))=>{
                 let data2=data.get_non_mut()?;
@@ -304,40 +308,53 @@ impl CustomData {
         Ok(data)
     }
 
-    pub fn get_mut<T:std::any::Any>(&self) -> Result<MappedMutexGuard<'_, T>,MachineError> {
-        if self.data.is_none() {
+    fn inner_with_data_mut<T:Any,R>(&self,func:impl FnOnce(&mut T)->Result<R,MachineError>) -> Result<R,MachineError> {
+    
+        let Some(data)=&self.data else {
             return Err(MachineError::new(MachineErrorType::CustomDataEmpty));
-        }
+        };
 
-        let Some(StrongValueInner::Mut(data))=&self.data else {
+        let StrongValueInner::Mut(data)=data else {
             return Err(MachineError::new(MachineErrorType::CustomDataNotMut));
         };
 
-        // let Some(data)=data //&self.data 
-        // else {
-        //     return Err(MachineError::new(MachineErrorType::CustomDataEmpty));
-        // };
+        let Ok(mut b) = data.try_lock() else {
+            return Err(MachineError::new(MachineErrorType::CustomDataBorrowMutError));
+        };
 
-        let b = data.try_lock()
-            .ok_or(MachineError::new(MachineErrorType::CustomDataBorrowMutError))?;
-        
-        // let m=MutexGuard::try_map(b, |x|x.downcast_mut::<T>())
-        //     .or(Err(MachineError::new(MachineErrorType::CustomDataInvalidCast)));
+        let Some(b)=b.downcast_mut::<T>() else {
+            return Err(MachineError::new(MachineErrorType::CustomDataInvalidCast{
+                expecting_type:TypeInfo::new::<T>().short_name(),
+                given_type:self.type_info.short_name(),
+            }));
+        };
 
-        let m=MutexGuard::try_map(b, |x|{
-            let q=x.downcast_mut::<T>();
-            q
-        }).or(Err(MachineError::new(MachineErrorType::CustomDataInvalidCast{
-            // expecting_type:std::any::type_name::<T>(),
-            // actual_type:self.type_name,
-            expecting_type:TypeInfo::new::<T>().short_name(),
-            given_type:self.type_info.short_name(),
-        })));
-        
-        // if m.is_err() {
-        //     panic!("a");
-        // }
-        m        
+        func(b)
     }
+
+    // pub fn get_mut<T:std::any::Any>(&self) -> Result<MappedMutexGuard<'_, T>,MachineError> {
+    //     let Some(data)=&self.data else {
+    //         return Err(MachineError::new(MachineErrorType::CustomDataEmpty));
+    //     };
+
+    //     let StrongValueInner::Mut(data)=data else {
+    //         return Err(MachineError::new(MachineErrorType::CustomDataNotMut));
+    //     };
+
+    //     let Ok(b) = data.try_lock() else {
+    //         return Err(MachineError::new(MachineErrorType::CustomDataBorrowMutError));
+    //     };
+        
+    //     let Ok(m)=MutexGuard::try_map(b, |x|{
+    //         x.downcast_mut::<T>()
+    //     }) else {
+    //         return Err(MachineError::new(MachineErrorType::CustomDataInvalidCast{
+    //             expecting_type:TypeInfo::new::<T>().short_name(),
+    //             given_type:self.type_info.short_name(),
+    //         }));
+    //     };
+        
+    //     Ok(m)
+    // }
 }
 

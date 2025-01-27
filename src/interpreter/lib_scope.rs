@@ -7,8 +7,9 @@ use std::collections::HashMap;
 // use std::marker::PhantomData;
 // use std::rc::Rc;
 use std::sync::Arc;
+use std::sync::Mutex;
 
-use parking_lot::Mutex;
+// use parking_lot::Mutex;
 
 // use super::super::common::*;
 use super::libs;
