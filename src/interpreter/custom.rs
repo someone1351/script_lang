@@ -5,10 +5,12 @@ might be better for clone to keep the root status, and when passed as param, the
 in machine will need to replace clone() with clone_not_root()
 */
 
-use parking_lot::{Mutex,MutexGuard,MappedMutexGuard};
+// use parking_lot::{Mutex,MutexGuard,MappedMutexGuard};
 
 use std::any::Any;
 use std::sync::Arc;
+use std::sync::MappedMutexGuard;
+use std::sync::Mutex;
 
 use super::gc_scope::*;
 // use super::value::*;

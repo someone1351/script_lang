@@ -1,4 +1,4 @@
-
+// #![feature(mapped_lock_guards)]
 // #![allow(unused_mut)]
 // #![allow(dead_code)]
 // #![allow(unused_variables)]
@@ -329,6 +329,7 @@ fn main() {
 }
 /*
 TODO
+* use builtin mutex lib
 * fix gc
 * allow method decl from script?
 * make dict keys accept non strings
