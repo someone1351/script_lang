@@ -304,11 +304,11 @@ impl Value {
             self.clone()
         }
     }
-    pub fn gc_index(&self) -> Option<usize> {
+    pub fn gc_index(&self) -> Result<Option<usize>,()> {
         if let Value::Custom(x)=self {
             x.gc_index()
         } else {
-            None
+            Ok(None)
         }
     }
 }

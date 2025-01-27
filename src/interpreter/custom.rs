@@ -92,10 +92,10 @@ impl std::string::ToString for Custom {
 
 impl std::fmt::Debug for Custom {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        if let Some(gc_index)=self.gc_index() {
-            write!(f, "Managed:{gc_index}({})",self.type_info.short_name())
-        } else {
-            write!(f, "Unmanaged({})",self.type_info.short_name())
+        match self.gc_index() {
+            Ok(Some(gc_index))=> write!(f, "Managed:{gc_index}({})",self.type_info.short_name()),
+            Err(())=> write!(f, "Managed:(?)({})",self.type_info.short_name()),
+            Ok(None) => write!(f, "Unmanaged({})",self.type_info.short_name()),
         }        
     }
 }
@@ -178,10 +178,10 @@ impl Custom {
         }
     }
     
-    pub fn gc_index(&self) -> Option<usize> {
+    pub fn gc_index(&self) -> Result<Option<usize>,()> {
         match &self.inner {
             CustomInner::Managed(x)=>x.gc_index(),
-            CustomInner::Unmanaged(_)=>None,
+            CustomInner::Unmanaged(_)=>Ok(None),
             // CustomInner::UnmanagedStatic(_)=>None,
             // CustomInner::None(_)=>None,
         }
