@@ -215,15 +215,15 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         //     Ok(Value::int(x))
         // }))).unwrap();
 
-        let mut lib_scope=script_lang::LibScope::<&mut i32>::new_full();
+        let mut lib_scope=script_lang::LibScope::<(&mut i32,)>::new_full();
         lib_scope.method("get_test", |context|{
-            Ok(script_lang::Value::Int(*context.get_core_ref() as script_lang::IntT))
+            Ok(script_lang::Value::Int(*context.core().0 as script_lang::IntT))
         }).end();
         lib_scope.method("set_test", |mut context|{
-            *context.get_core_mut()=context.param(0).as_int() as i32;
+            *context.core_mut().0=context.param(0).as_int() as i32;
             Ok(script_lang::Value::Void)
         }).int().end();
-        let mut machine = script_lang::Machine::new(&mut gc_scope,&mut var_scope, &lib_scope,  &mut my_num);
+        let mut machine = script_lang::Machine::new(&mut gc_scope,&mut var_scope, &lib_scope,  (&mut my_num,));
         // machine.set_debug_print(true);
 
         // build.clone().unwrap().print();

@@ -288,8 +288,8 @@ impl<'m,'a,X> MethodInput<'m,'a,X> {
 // pub type StaticFuncType<'a,X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
 // pub type TempFuncType<'a,X> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
 
-pub type StaticFuncTypeExt<'a,X> = Arc<dyn Fn(FuncContextExt<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
-pub type TempFuncTypeExt<'a,X> = Arc<Mutex<dyn FnMut(FuncContextExt<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
+pub type StaticFuncTypeExt<'a,X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
+pub type TempFuncTypeExt<'a,X> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
 
 
 // pub type StaticFuncType<'a> = Arc<dyn Fn(FuncContext)->Result<Value,MachineError>+'a +Send+Sync> ; 
@@ -602,7 +602,7 @@ impl<'a,X> LibScope<'a,X> {
 
     pub fn insert_method<T>(&mut self,n:&str,param_types : T,optional_start : Option<usize>,variadic:bool,
         // func:StaticFuncType
-        func: impl Fn(FuncContextExt<X>)->Result<Value,MachineError>+'static+Send+Sync ) 
+        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync ) 
     where
         T:AsRef<[Arg]>
     {
@@ -652,7 +652,7 @@ impl<'a,X> LibScope<'a,X> {
     //     }
     // }
     pub fn method<'m>(&'m mut self,name : &'m str, 
-        func: impl Fn(FuncContextExt<X>)->Result<Value,MachineError>+'a+Send+Sync  
+        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'a+Send+Sync  
     ) -> MethodInput<'m,'a,X> {
         MethodInput { 
             lib_scope: self, 
@@ -665,7 +665,7 @@ impl<'a,X> LibScope<'a,X> {
     }
     pub fn method_mut<'m>(&'m mut self,name : &'m str, 
         // slot:usize
-        func:impl FnMut(FuncContextExt<X>)->Result<Value,MachineError> + 'a + Send + Sync
+        func:impl FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync
     ) -> MethodInput<'m,'a,X> {
         MethodInput { 
             lib_scope: self, 

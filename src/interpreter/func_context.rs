@@ -31,43 +31,36 @@ todo:
 * * could allow inserting instructions or manipulating (or adding to) the stack?
 */
 
-pub struct FuncContextExt<'q,'a,'c,X> { //,'b
+pub struct FuncContext<'q,'a,'c,X> { //,'b
     machine:&'q mut Machine<'a,'c, X>, //,'b
     params_start : usize,
     params_num : usize,
     
 }
 
-// impl<'q,'a,'c,X:Copy> FuncContextExt<'q,'a,'c,X> { 
-//     pub fn get_core(&mut self) -> X {
-//         self.machine.get_core()
+impl<'q,'a,'c,X> FuncContext<'q,'a,'c,&mut X> { 
+//     pub fn get_core_mut(&mut self) -> &mut X {
+//         self.machine.get_core_mut()
 //     }
-// }
-// // impl<'q:'a,'a,'c:'a,X> FuncContext<'q,'a,'c,&'a mut X> { 
-// //     // pub fn get_core_mut(&'a mut self) -> &'a mut X {
-// //     //     self.machine.get_core_mut()
-// //     // }
-// //     pub fn get_core_ref(&'a self) -> &'a X {
-// //         self.machine.get_core_ref()
-// //     }
-// // }
-
-impl<'q,'a,'c,X> FuncContextExt<'q,'a,'c,&mut X> { 
-    pub fn get_core_mut(&mut self) -> &mut X {
-        self.machine.get_core_mut()
-    }
-    pub fn get_core_ref(&self) -> &X {
-        self.machine.get_core_ref()
-    }
+//     pub fn get_core_ref(&self) -> &X {
+//         self.machine.get_core_ref()
+//     }
 }
 
-impl<'q,'a,'c,X> FuncContextExt<'q,'a,'c,&X> { 
-    pub fn get_core_ref(&self) -> &X {
-        self.machine.get_core_ref()
-    }
+impl<'q,'a,'c,X> FuncContext<'q,'a,'c,&X> { 
+//     pub fn get_core_ref(&self) -> &X {
+//         self.machine.get_core_ref()
+//     }
 }
 
-impl<'q,'a,'c,X> FuncContextExt<'q,'a,'c,X> { //,'b //,'b
+impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b
+
+    pub fn core_mut(&mut self) -> &mut X {
+        self.machine.core_mut()
+    }
+    pub fn core(& self) -> &X {
+        self.machine.core()
+    }
     pub fn new(machine:&'q mut Machine<'a,'c,X>,params_num : usize,) -> Self { //,'b
         let stack_len = machine.stack().len();
 

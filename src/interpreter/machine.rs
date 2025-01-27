@@ -42,16 +42,8 @@ pub struct StackFrame {
     pub stack_params_num : usize,
     pub func_params_num : usize,
 
-    
-    // pub ret_stack_size : usize,
-    
+    // pub ret_stack_size : usize,    
 }
-
-// pub type IncludeResolver = dyn for <'a> FnMut(&'a Path) -> Option<BuildType>;
-// pub type Includer<'a> = dyn FnMut(&Path) -> Option<BuildT> + 'a;
-// pub type GlobalGet<'a> = dyn FnMut(&str) -> Option<&'a mut Value> + 'a;
-// pub type GlobalSet<'a> = dyn FnMut(&str) + 'a;
-
 
 pub struct Machine<'a,'c,X> { //,'b
     cur_build : Option<BuildT>,
@@ -65,62 +57,44 @@ pub struct Machine<'a,'c,X> { //,'b
     gc_scope : &'a mut GcScope,
     var_scope : &'a mut VarScope, 
     lib_scope : &'a LibScope<'c,X>, //<'c> //<'b>
-    // temp_scope  : &'a TempScope<'c>, //<'b>
     includer : Option<Box<dyn FnMut(&Path) -> Option<BuildT> + 'a>>, //can use lifetime a for some reason?
-    // const_scope : Option<Box<dyn Fn(&str)->Option<Value> + 'a>>,
     const_scope:HashMap<&'a str,Value>,
-    // phantom_data:PhantomData<&'b ()>,
-    // global_get : Box<GlobalGet<'a>>,
-    // global_set : Box<GlobalSet<'a>>,
 
-    //
     // gc_check_remove_recursive : bool,
     core_val :   X, //&'a mut 
 }
 
 
-
 // impl<'a,'c,X:Copy> Machine<'a,'c,X> {
-//     pub fn get_core(&mut self) -> X {
+//     pub fn get_core(&mut self) -> &X {
+//         &self.core_val
+//     }
+// }
+
+// impl<'a,'c,X> Machine<'a,'c,& mut X> {
+//     pub fn get_core_mut(&mut self) -> &mut X {
+//         self.core_val
+//     }    
+//     pub fn get_core_ref(& self) -> &X {
 //         self.core_val
 //     }
 // }
-// // impl<'a,'c,X> Machine<'a,'c,&'a mut X> {
-// //     // pub fn get_core_mut(&'a mut self) -> &'a mut X {
-// //     //     self.core_val
-// //     // }    
-// //     pub fn get_core_ref(&'a self) -> &'a X {
-// //         self.core_val
-// //     }
-// // }
-impl<'a,'c,X:Copy> Machine<'a,'c,X> {
-    pub fn get_core(&mut self) -> &X {
-        &self.core_val
-    }
-}
 
-impl<'a,'c,X> Machine<'a,'c,& mut X> {
-    pub fn get_core_mut(&mut self) -> &mut X {
-        self.core_val
-    }    
-    pub fn get_core_ref(& self) -> &X {
-        self.core_val
-    }
-}
-
-impl<'a,'c,X> Machine<'a,'c,&X> {
-    pub fn get_core_ref(&self) -> &X {
-        self.core_val
-    }
-}
+// impl<'a,'c,X> Machine<'a,'c,&X> {
+//     pub fn get_core_ref(&self) -> &X {
+//         self.core_val
+//     }
+// }
 
 impl<'a,'c,X> Machine<'a,'c,X> 
 { //,'b //,'b
 
-    // pub fn core_val(&mut self) -> &mut X {
-    //     &mut self.core_val
-    // }
-
+    pub fn core_mut(&mut self) -> &mut X {
+        &mut self.core_val
+    }
+    pub fn core(& self) -> &X {
+        &self.core_val
+    }
 
     pub fn new (
         gc_scope : &'a mut GcScope,
@@ -1095,11 +1069,11 @@ impl<'a,'c,X> Machine<'a,'c,X>
             // }
 
             MethodType::StaticExt(x)=>{
-                x(FuncContextExt::new(self,params_num))
+                x(FuncContext::new(self,params_num))
             }
             MethodType::TempExt(x) => {
                 if let Some(mut x)=x.try_lock() {
-                    x(FuncContextExt::new(self,params_num))
+                    x(FuncContext::new(self,params_num))
                 } else {
                     Err(MachineError::from_machine(self, MachineErrorType::FuncBorrowMutError))
                 }
