@@ -125,20 +125,20 @@ impl GcRootCount {
     }
 
     pub fn incr(&self) -> Result<(),()> {        
-        let Ok(mut data)=self.0.try_lock() else {return Err(());};
+        let Ok(mut data)=self.0.lock() else {return Err(());};
         *data+=1; 
         // println!("incr!");
         Ok(())
     }
     pub fn decr(&self) -> Result<(),()> { 
-        let Ok(mut data)=self.0.try_lock() else {return Err(());};
+        let Ok(mut data)=self.0.lock() else {return Err(());};
         // println!("root({}) decr",self.get());
         *data-=1;
         // println!("decr!");
         Ok(())
     }
     fn get(&self)->Result<usize,()> { 
-        let Ok(data)=self.0.try_lock() else {return Err(());};
+        let Ok(data)=self.0.lock() else {return Err(());};
         Ok(*data)
     }
     pub fn strong_count(&self)->usize { Arc::strong_count(&self.0) }
@@ -481,7 +481,7 @@ pub struct GcValue {
 impl Drop for GcValue {
     fn drop(&mut self) {
         if self.root {
-            self.root_count.decr();
+            self.root_count.decr().unwrap();
         }
         // // self.root=false;
 
@@ -502,13 +502,16 @@ impl Clone for GcValue {
         // self.clone_to(None)
 
         
-        Self {
-            data:self.data.clone(),
-            gc_index:self.gc_index.clone(),
-            root_count:self.root_count.clone(),
-            root:false,
-            dropper : self.dropper.clone(),
-        }
+        // Self {
+        //     data:self.data.clone(),
+        //     gc_index:self.gc_index.clone(),
+        //     root_count:self.root_count.clone(),
+        //     root:false,
+        //     dropper : self.dropper.clone(),
+        // }
+
+        // self.clone_leaf()
+        self.clone_as_is()
     }
 }
 
@@ -636,7 +639,7 @@ impl GcValue {
     // }
 
     pub fn clone_root(&self) -> Self {
-        self.root_count.incr();
+        self.root_count.incr().unwrap();
 
         Self {
             data:self.data.clone(),
@@ -649,7 +652,7 @@ impl GcValue {
 
     pub fn clone_as_is(&self) -> Self {
         if self.root {
-            self.root_count.incr();
+            self.root_count.incr().unwrap();
         }
 
         Self {
@@ -657,6 +660,15 @@ impl GcValue {
             gc_index:self.gc_index.clone(),
             root_count:self.root_count.clone(),
             root:self.root,
+            dropper:self.dropper.clone(),
+        }
+    }
+    pub fn clone_leaf(&self) -> Self {
+        Self {
+            data:self.data.clone(),
+            gc_index:self.gc_index.clone(),
+            root_count:self.root_count.clone(),
+            root:false,
             dropper:self.dropper.clone(),
         }
     }

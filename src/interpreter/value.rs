@@ -9,6 +9,7 @@ use super::gc_scope::*;
 // use super::FuncContext;
 
 #[derive(Debug,Clone)]
+// #[derive(Debug,)]
 pub enum Value {
     Undefined,
     Nil,
@@ -27,6 +28,12 @@ impl Default for Value {
 //         let x=format!("{:?}",x);
 //         let x = x.rfind(":").map(|i|x[i+1..].to_string()).unwrap_or(x.clone());
 //         write!(f, "Hi: {}", self.id)
+//     }
+// }
+
+// impl Clone for Value {
+//     fn clone(&self) -> Self {
+//         self.clone_as_is()
 //     }
 // }
 impl Value {
@@ -300,6 +307,13 @@ impl Value {
     pub fn clone_as_is(&self) -> Self {
         if let Value::Custom(x)=self {
             Value::Custom(x.clone_as_is())
+        } else {
+            self.clone()
+        }
+    }
+    pub fn clone_leaf(&self) -> Self {
+        if let Value::Custom(x)=self {
+            Value::Custom(x.clone_leaf())
         } else {
             self.clone()
         }

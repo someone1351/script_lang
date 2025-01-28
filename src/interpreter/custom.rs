@@ -71,6 +71,13 @@ impl CustomInner {
             // Self::UnmanagedStatic(x) => Self::UnmanagedStatic(x.clone()),
         }
     }
+    pub fn clone_leaf(&self) -> Self {
+        match self {
+            Self::Managed(x)=>Self::Managed(x.clone_leaf()),
+            Self::Unmanaged(x)=>Self::Unmanaged(x.clone()),
+            // Self::UnmanagedStatic(x) => Self::UnmanagedStatic(x.clone()),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -175,6 +182,12 @@ impl Custom {
             type_info:self.type_info,
             inner : self.inner.clone_as_is(),
             // caller:self.caller.clone(),
+        }
+    }
+    pub fn clone_leaf(&self) -> Self {
+        Self {
+            type_info:self.type_info,
+            inner : self.inner.clone_leaf(),
         }
     }
     

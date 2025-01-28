@@ -108,7 +108,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
         // debugger.set_enabled(false);
 
         Self {
-            // phantom_data:PhantomData::default(),
             instr_pos : 0,
             instr_end_pos : 0, //build.main_instruct_len,
             cur_build: None, //Some(build.clone()),
@@ -122,12 +121,8 @@ impl<'a,'c,X> Machine<'a,'c,X>
             gc_scope,
             var_scope,
             lib_scope,
-            // temp_scope,
-            // global_get : Box::new(global_get),
-            // global_set : Box::new(global_set),
             includer : None, //Box::new(include_resolver),
             const_scope:HashMap::new(),
-            // gc_check_remove_recursive:true,
             core_val,
         }
     }
@@ -142,14 +137,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
     pub fn debugger(&self) -> &Debugger {
         &self.debugger
     }
-
-    // pub fn set_gc_check_remove_recursive(&mut self,b:bool) {
-    //     self.gc_check_remove_recursive=b;
-    // }
-
-    // pub fn set_const_scope<F:Fn(&str)->Option<Value> + 'a>(&mut self,f:F) {
-    //     self.const_scope=Some(Box::new(f));
-    // }
 
     pub fn set_const(&mut self,n:&'a str,v:Value) {
         if v.is_undefined() {
@@ -166,17 +153,11 @@ impl<'a,'c,X> Machine<'a,'c,X>
         self.gc_scope
     }
 
-    // fn propagate_err<'q>(&self) -> impl Fn(MachineError) -> MachineError+'q 
-    // where 'a:'q
-    // {
-    //     move|e|MachineError::machine_new(& self, e.error_type)
-    // }
-
     pub fn clear(&mut self) {
         self.cur_build=None;
         self.instr_pos=0;
         self.instr_end_pos=0;
-        // self.result_val=Value::Nil;
+
         self.set_result_val(Value::Nil);
 
         self.stack.clear();
@@ -205,10 +186,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
     }
 
     pub fn debug_print_stack(&self) {
-        // println!("stack:");
-        // for (i,x) in self.stack.iter().rev().enumerate() {
-        //     println!("\t{i}: {x:?}");
-        // }
         self.debugger.print_stack(&self.stack);
     }
 
@@ -239,10 +216,8 @@ impl<'a,'c,X> Machine<'a,'c,X>
     //     &mut self.stack
     // }
 
-   
-
     pub fn result_val(&self) -> Value {
-        self.result_val.clone()
+        self.result_val.clone_leaf()
     }
 
     pub fn stack_frames(&self) -> &Vec<StackFrame> {
@@ -250,11 +225,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
     }
 
     fn run(&mut self) -> Result<(),MachineError> {
-        // if self.debugger.stack_traces().len()==0 {
-        //     self.debugger.push_main(self.cur_build.clone());
-        // }
-
-        // self.stack_frames.push(Vec::new());
         loop {
 
             //
@@ -331,39 +301,17 @@ impl<'a,'c,X> Machine<'a,'c,X>
                 self.result_val = Value::String(symbol.clone());
             }
             Instruction::ResultVararg => {
-                // self.result_val=Value::Custom(Custom::new_unmanaged_mut(Vararg,None));
-                self.result_val=Value::custom_unmanaged(Vararg);
-                // self.result_val=Value::Vararg;
-                // self.call_method("vararg", vec![])?;
+                self.set_result_val(Value::custom_unmanaged(Vararg));
             }
             &Instruction::ResultFunc(func_ind, captures_num)  => { //todo
-                // let func=Value::BuildFunc(self.cur_build.clone().unwrap(),*func_ind);
-
-                // if *captures_num ==0 {
-                //     self.result_val = func;
-                // } else 
                 {
-                    // let mut params=vec![func];
-                    // params.extend(self.stack_params_iter(*captures_num).map(|capture|capture.clone_root()));
-
-                    // self.stack_pop_amount(*captures_num)?;
-                    // let v=self.call_method("closure", params)?;
-                    // self.result_val = v;
-
                     let captures=self.stack_params_iter(captures_num)
                         .rev()                        
-                        .map(|capture|capture.clone())
+                        .map(|capture|capture.clone_leaf())
                         .collect::<Vec<_>>();
                     
-                    //println!("@@@@@ popping captures");
                     self.stack_pop_amount(captures_num)?;
                     
-                    // self.result_val=Value::Closure(GcValueType::<Closure>::new(Closure { 
-                    //     captures, 
-                    //     build: self.cur_build.clone().unwrap(), 
-                    //     func_ind: *func_ind 
-                    // }, self.gc_scope));
-
                     let closure=Closure{ 
                         captures, 
                         build: self.cur_build.clone().unwrap(), 
@@ -371,49 +319,28 @@ impl<'a,'c,X> Machine<'a,'c,X>
                     };
 
                     if captures_num==0 {
-                        // self.result_val=Value::custom_unmanaged(closure);
                         self.set_result_val(Value::custom_unmanaged(closure));
                     } else {
-                        // self.result_val=Value::custom_managed(closure, self.gc_scope);
                         let v=Value::custom_managed(closure, self.gc_scope);
-                        self.set_result_val(v);
-                        
+                        self.set_result_val(v);                        
                     }
 
                 }
             }
 
             Instruction::StackPush => {
-                // println!("aa=== {} {}",self.stack.len(),self.debugger.stack_val_infos.len());
-                let v=self.result_val.clone();
-                
-                // if v.is_void() {
-                //     return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
-                // }
-
+                let v=self.result_val.clone_root();
+                // if v.is_void() { return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));  }
                 self.push_stack_val(v);
-                // self.stack.push(self.result_val.clone_root());
                 
                 self.debugger.set_stack_from_last();
-                // self.debugger.set_stack_val_some(self.stack.len()-1,self.cur_build.clone().unwrap(),self.instr_pos);
             }
-            // Instruction::StackDup(stack_offset_ind) => {
-            //     let v = self.get_stack_offset_value(*stack_offset_ind)?;             
-            //     self.push_stack_val(v.clone());
-            //     self.debugger.set_stack_from_last(); //what does this do?
-            // }
             Instruction::StackDup => {
                 let v = self.get_stack_offset_value(0)?;             
-                self.push_stack_val(v.clone());
+                self.push_stack_val(v.clone_root());
                 self.debugger.set_stack_from_last(); //what does this do?
             }
             Instruction::StackLocals(amount) => {
-                // let v=self.copy_val(self.result_val.clone())?;
-                // // self.stack.push(v);                
-                // self.push_stack_val(v);
-
-                // self.push_stack_val(Value::Nil);
-
                 for _ in 0..(*amount) {
                     self.push_stack_val(Value::Undefined); //have Value::Undefined ?
                     //
@@ -421,7 +348,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
                 }
             }
             Instruction::StackPop(amount) => {
-                //println!("@@@@@ instr pop");
                 self.stack_pop_amount(*amount)?;
             } 
             Instruction::StackSwap => {
@@ -445,43 +371,31 @@ impl<'a,'c,X> Machine<'a,'c,X>
                 }
             }
             Instruction::SetStackVar(stack_offset_ind) => {
-                let v=self.copy_val(self.result_val.clone())?;
+                let v=self.copy_val(self.result_val.clone_root())?;
 
-                // if v.is_void() {
-                //     return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
-                // }
+                // if v.is_void() { return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr)); }
 
-                // *self.stack_value_mut(*stack_offset_ind)?=v;
                 self.set_stack_offset_val(*stack_offset_ind, v)?;
                 
-                // self.debugger.set_stack_val_offset_some(*stack_offset_ind,self.cur_build.clone().unwrap(),self.instr_pos);
                 self.debugger.set_stack_val_offset_from_last(*stack_offset_ind);
             }
             Instruction::GetStackVar(stack_offset_ind) => {
                 let v = self.get_stack_offset_value(*stack_offset_ind)?;
-                // self.result_val = v.clone_root();
-                self.set_result_val(v.clone());
+                self.set_result_val(v.clone_root());
             }
             Instruction::MakeStackVarRef(stack_offset_ind) => {
-                let v = self.copy_val(self.get_stack_offset_value(*stack_offset_ind)?.clone())?;
-                // let v=Value::Custom(Custom::new_managed_mut(v.clone(),None, self.gc_scope));
-                let v=Value::custom_managed_mut(v.clone(), self.gc_scope);
+                let v = self.copy_val(self.get_stack_offset_value(*stack_offset_ind)?.clone_leaf())?;
+                let v=Value::custom_managed_mut(v.clone_leaf(), self.gc_scope);
                 
-                // *self.stack_value_mut(*stack_offset_ind)?=v;
                 self.set_stack_offset_val(*stack_offset_ind, v)?;
                 
-                // self.debugger.set_stack_val_offset_some(*stack_offset_ind,self.cur_build.clone().unwrap(),self.instr_pos);
                 self.debugger.set_stack_val_offset_from_last(*stack_offset_ind);
             }
             Instruction::SetStackVarDeref(stack_offset_ind, init) => {
-                let to_val=self.copy_val(self.result_val.clone())?;
+                let to_val=self.copy_val(self.result_val.clone_leaf())?;
 
                 
-                // if to_val.is_void() {
-                //     return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
-                // }
-                // let data=self.get_stack_offset_value(*stack_offset_ind)?.as_custom().data();
-                // *data.borrow_mut::<Value>()?=val;
+                // if to_val.is_void() { return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr)); }
 
                 let custom=self.get_stack_offset_value(*stack_offset_ind)?.as_custom();
 
@@ -495,7 +409,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
                         }
 
                         //
-                        *v=to_val.clone();
+                        *v=to_val.clone_leaf();
                         Ok(())
                     }).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
                     
@@ -510,30 +424,11 @@ impl<'a,'c,X> Machine<'a,'c,X>
                         }
                     })?;
 
-                    
-                    // let data=custom.data();
-                    // let mut data=data.get_mut::<Value>()?;
-    
-                    // // if data.is_type(ValueType::custom::<UninitVar>()) {
-                    // //     // let symbol=self.get_symbol( *symbol_ind)?;
-                    // //     let symbol="todo";
-                    // //     return Err(MachineError::machine_new(self, MachineErrorType::GlobalNotFound(symbol.to_string()) ));
-                    // // }
-    
-                    // if !init && data.is_undefined() {
-                    //     return Err(MachineError::from_machine(self, MachineErrorType::SetUndefinedVar ));
-                    // }
-                    
-                    // *data=to_val;
     
                 }
 
             }
             Instruction::GetStackVarDeref(stack_offset_ind) => { //todo
-                // let stack_var = self.get_stack_offset_value(*stack_offset_ind)?;
-                // let data=stack_var.as_custom().data();
-                // let v=self.copy_val(data.borrow_mut::<Value>()?.clone())?;
-
                 let custom=self.get_stack_offset_value(*stack_offset_ind)?.as_custom();
                 
                 if custom.is_type::<GlobalAccessRef>() {
@@ -544,43 +439,18 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
                     if !var_data.is_undefined() {
                         self.set_result_val(var_data);
-                    // if let Some(v)=self.var_scope.get(&data.name)? {
-                    //     self.set_result_val(v);
-                    } else if let Some(v)=self.constant_get(&data.name) //self.lib_scope.get_constant(&data.name) 
-                    {
+                    } else if let Some(v)=self.constant_get(&data.name) {
                         self.set_result_val(v);
                     } else {
                         return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(data.name.to_string()) ));
                     }
-                } else {
-                    //                
-                    // let data=custom.data();
-                    // let data=data.borrow_mut::<Value>()?;
-
-                    // // if data.is_type(ValueType::custom::<UninitVar>()) {
-                    // //     // let symbol=self.get_symbol( *symbol_ind)?;
-                    // //     let symbol="_";
-                    // //     return Err(MachineError::machine_new(self, MachineErrorType::GlobalNotFound(symbol.to_string()) ));
-                    // // }
-
-                    // if data.is_undefined() {
-                    //     return Err(MachineError::from_machine(self, MachineErrorType::GetUndefinedVar ));
-                    // }
-                    
-                    // //
-                    // let v=self.copy_val(data.clone())?;
-
-                    // //
-                    // self.set_result_val(v);
-
-                    //
-                            
+                } else {                            
                     custom.with_data_mut(|data:&mut Value|{
                         if data.is_undefined() {
                             return Err(MachineError::from_machine(self, MachineErrorType::GetUndefinedVar ));
                         }
                         
-                        let v=self.copy_val(data.clone())?;
+                        let v=self.copy_val(data.clone_leaf())?;
     
                         self.set_result_val(v);
                         Ok(())
@@ -593,7 +463,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
             Instruction::CallStackVarDeref(stack_offset_ind,params_num) => {
                 let params_num=*params_num;
 
-                // let stack_var = self.get_stack_offset_value(*stack_offset_ind)?;
                 let custom=self.get_stack_offset_value(*stack_offset_ind)?.as_custom();
                 
                 if custom.is_type::<GlobalAccessRef>() {
@@ -604,16 +473,13 @@ impl<'a,'c,X> Machine<'a,'c,X>
                     
                     if !var_data.is_undefined() {
 
-                    // if let Some(v)=self.var_scope.get(&data.name)? {
-                    //     //call v
-
                         self.debugger.add_func_name(data.name.as_str());
 
                         if self.inner_call_value(params_num,&var_data,false)? {
                             return Ok(()); //continue;
                         }
                     } else if let Some(v)=self.constant_get(&data.name)  //not needed for deref? there was the option  for globals (and constants) being captured
-                    //self.lib_scope.get_constant(&data.name) 
+
                     {
                         //call v
 
@@ -633,9 +499,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
                 } else {
                     let data=custom.data_clone::<Value>()
                         .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
-                    //                
-                    // let data=custom.data();
-                    // let data=data.borrow_mut::<Value>()?;
 
                     if data.is_undefined() {
                         return Err(MachineError::from_machine(self, MachineErrorType::GetUndefinedVar ));
@@ -648,52 +511,33 @@ impl<'a,'c,X> Machine<'a,'c,X>
                     if self.inner_call_value(params_num,&v,false)? {
                         return Ok(()); //continue;
                     }
-                    //
                 }
 
             }
             Instruction::DeclGlobalVar(symbol_ind) => {
                 let symbol=self.get_symbol( *symbol_ind)?;
-                // let v=self.copy_val(self.result_val.clone())?;
-                // self.var_scope.decl(symbol.as_str(),v);
-                self.var_scope.decl(symbol.as_str(),None)
-                    .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
+                self.var_scope.decl(symbol.as_str(),None).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
             }
 
             Instruction::SetGlobalVar(symbol_ind) => {
                 let symbol=self.get_symbol( *symbol_ind)?;
                 // let v=self.result_val.clone_root();
-                let v=self.copy_val(self.result_val.clone())?;
+                let v=self.copy_val(self.result_val.clone_leaf())?;
 
-                // if v.is_void() {
-                //     return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
-                // }
+                // if v.is_void() { return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr)); }
 
                 if !self.var_scope.set(&symbol,v)
                     .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? 
                 {
                     return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol.to_string()) ));
                 }
-
-                // let Some(g)=self.var_scope.get_mut(&symbol) else {
-                //     return Err(MachineError::machine_new(self, MachineErrorType::GlobalNotFound(symbol.to_string()) ));
-                // };
-
-                // *g=v;
             }
             Instruction::GetGlobalVarOrConst(symbol_ind, get_global) => {
                 let symbol=self.get_symbol( *symbol_ind)?;
                 
                 if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
-
-                // if let Some(v)=self.var_scope.get(&symbol)
-                //     .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?   {
-             
-                    // self.result_val=v.clone_root();
                     self.set_result_val(v);
-                } else if let Some(v)=self.constant_get(&symbol) //self.lib_scope.get_constant(&symbol) 
-                {
-                    // self.result_val=v.clone_root();
+                } else if let Some(v)=self.constant_get(&symbol) {
                     self.set_result_val(v);
                 } else {
                     return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol.to_string()) ));
@@ -705,47 +549,19 @@ impl<'a,'c,X> Machine<'a,'c,X>
                 
                 let refvar=self.var_scope.get_ref(&symbol,self.gc_scope);
                 self.set_result_val(refvar);
-
-                // if let Some(refvar)=self.var_scope.get_ref(&symbol,self.gc_scope) {
-                //     self.set_result_val(refvar);
-                // }
-                // // else if !write {
-                // //     if let Some(v)=self.lib_scope.get_constant(&symbol) {
-                // //         let refvar=Value::new_custom_managed(v, self.gc_scope);
-                // //         self.set_result_val(refvar);
-                // //     } else if !read && call { //method
-                // //         let m=Value::new_custom_unmanaged(MethodCall(symbol));
-                // //         // let refvar=Value::new_custom_managed(m, self.gc_scope);
-                // //         let refvar=Value::new_custom_unmanaged(m);
-                // //         self.set_result_val(refvar);
-                // //     } else {
-                // //         // println!("x {symbol:?}, read {read}, write {write}, call {call}");
-                // //         return Err(MachineError::machine_new(self, MachineErrorType::GlobalNotFound(symbol.to_string()) ));
-                // //     }
-                // // } 
-                // else {
-                //     return Err(MachineError::machine_new(self, MachineErrorType::GlobalNotFound(symbol.to_string()) ));
-                // }
-
             }
 
             &Instruction::GetGlobalAccessRef(symbol_ind,  ) => {
                 let symbol=self.get_symbol(symbol_ind)?;
 
-                // if self.var_scope.contains(&symbol) {
-                //     let refvar=self.var_scope.get_ref(&symbol,self.gc_scope);
-                //     println!("!111 {symbol:?}");
-                //     self.set_result_val(refvar);
-                // } else {
-                    let refvar=self.var_scope.get_ref(&symbol,self.gc_scope);
-                    // println!("!222 {symbol:?}");
-                    let val=Value::custom_managed_mut(GlobalAccessRef{
-                        name:symbol,
-                        var: refvar,
-                    },self.gc_scope);
+                let refvar=self.var_scope.get_ref(&symbol,self.gc_scope);
 
-                    self.set_result_val(val);
-                // }
+                let val=Value::custom_managed_mut(GlobalAccessRef{
+                    name:symbol,
+                    var: refvar,
+                },self.gc_scope);
+
+                self.set_result_val(val);
             }
             Instruction::Include(include_ind) => {
                 //todo check circular includes
@@ -783,16 +599,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
             //
             Instruction::GetGlobalOrConstOrCallMethod(symbol_ind,get_global) => {
                 let symbol=self.get_symbol( *symbol_ind)?;
-                // let g=self.var_scope.get(&symbol);
-                // let g=g.or_else(|e|Err(MachineError::from_machine(&self, e.error_type)));
-
-                // let g=if *get_global {
-                //     self.var_scope.get(&symbol).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?
-                // } else {
-                //     None
-                // };
-
-                // if let Some(v)=g 
+              
                 if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
                     self.set_result_val(v);
                 } else if let Some(v)=self.constant_get(&symbol) { //self.lib_scope.get_constant(&symbol) 
@@ -827,7 +634,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
                     self.debugger.add_func_name(&symbol.as_str());
                     self.inner_call_bound_func(params_num, x)?;
                 } else {
-                    //println!("@@@@@ try call method");
                     self.stack_pop_amount(params_num)?;
                 }
             }
@@ -856,20 +662,11 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
             Instruction::CallResult(params_num)  => {
                 let params_num=*params_num;
-                let v = self.result_val.clone();
-                // println!("call result");
+                let v = self.result_val.clone_as_is();
                 if self.inner_call_value(params_num,&v,false)? {
                     return Ok(()); //continue;
                 }
             }
-            // Instruction::GetFields(params_num) => {
-            //     //stk=[fields_n .. fields_0]
-
-            // }
-            // Instruction::SetFields(params_num) => {
-            //     //stk=[tovalm,fields_n .. fields_0]
-                
-            // }
         }
 
         self.instr_pos+=1;
@@ -888,8 +685,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
             self.debugger.move_instr_pos(self.instr_pos);
 
             self.instr_end_pos=stack_frame.ret_instr_end;
-            // println!("===stack_frame popping! {} {}",self.stack.len(),stack_frame.stack_params_num);
-            //println!("@@@@@ stackframe pop");
 
             if stack_frame.stack_params_num>0 { //what is stack_params_num?
                 self.stack_pop_amount(stack_frame.stack_params_num)?; //+captures_num
@@ -906,7 +701,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
             return Ok(v);
         }
 
-        Ok(self.try_call_method("copy", vec![v.clone()])?.unwrap_or(v))
+        Ok(self.try_call_method("copy", vec![v.clone_root()])?.unwrap_or(v))
     }
 
     fn try_copy_val(&mut self, v:Value) -> Result<Option<Value>,MachineError> {
@@ -914,7 +709,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
             return Ok(None);
         }
 
-        Ok(self.try_call_method("copy", vec![v.clone()])?)
+        Ok(self.try_call_method("copy", vec![v.clone_root()])?)
     }
     fn get_symbol(&self,symbol_ind:usize) -> Result<StringT,MachineError> {
         //src,path
@@ -926,15 +721,9 @@ impl<'a,'c,X> Machine<'a,'c,X>
     }
 
     fn set_result_val(&mut self, v:Value) {
-        // let old_gc_ind=v.gc_index();
-
         self.result_val=v.clone_root();
         self.debugger.set_result_val();
         
-        // if let Some(gc_ind) = old_gc_ind {
-        // self.gc_scope.check_remove(gc_ind,self.gc_check_remove_recursive);
-        // }
-
         self.gc_scope.remove_norefs();
 
     }
@@ -945,7 +734,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
             return Err(MachineError::from_machine(self, MachineErrorType::InvalidStackAccess(stack_ind-stack_len) ));
         }
 
-        Ok(self.stack.get(stack_ind).unwrap().clone())
+        Ok(self.stack.get(stack_ind).unwrap().clone_root())
     }
     
 
@@ -987,16 +776,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
         self.debugger.push_stack_val();
     }
 
-    // fn get_stack_value(&self,stack_ind:usize) -> Result<&Value,MachineError> {
-    //     let stack_len = self.stack.len();
-
-    //     if stack_ind < stack_len {
-    //         Ok(self.stack.get(stack_ind).unwrap())
-    //     } else {
-    //         let stack_offset_ind=stack_ind-stack_len;
-    //         Err(MachineError::machine_new(self, MachineErrorType::InvalidStackAccess(stack_offset_ind) ))
-    //     }
-    // }
 
     fn get_stack_offset_value(&self,stack_offset_ind:usize) -> Result<&Value,MachineError> {
         let stack_len = self.stack.len();
@@ -1008,16 +787,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
         }
     }
     
-    // fn stack_value_mut(&mut self,stack_offset_ind:usize) -> Result<&mut Value,MachineError> {
-    //     let stack_len = self.stack.len();
-
-    //     if stack_offset_ind < stack_len {
-    //         Ok(self.stack.get_mut(stack_len - stack_offset_ind - 1).unwrap())
-    //     } else {
-    //         Err(MachineError::machine_new(self,  MachineErrorType::InvalidStackAccess(stack_offset_ind) ))
-    //     }
-    // }
-
     fn stack_pop_amount(&mut self,amount:usize) -> Result<(),MachineError> {
         let stack_len = self.stack.len();
 
@@ -1028,17 +797,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
         } else {
             let n=stack_len-amount;
 
-            // println!("======= stack {:?}",self.stack);
-
-            // let gc_inds=self.stack.drain(n..).filter_map(|x|x.gc_index()).collect::<Vec<_>>();
-
-            // for gc_ind in gc_inds {
-            //     self.gc_scope.check_remove(gc_ind,self.gc_check_remove_recursive);
-            // }
-
-            // for v in self.stack.drain(n..).rev() {
-            //     if let Some(v.gc_index()
-            // }
 
             self.stack.truncate(n);
             
@@ -1049,7 +807,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
     }
 
     fn inner_call_bound_func(&mut self, params_num : usize, bound_func : Method<'c,X>) -> Result<(),MachineError> {
-        // println!("m {} {:?}",self.debugger.last_func_name(),bound_func.args_path);
         
         self.debugger.push_frame_bound_func(params_num, &self.stack, &self.result_val);
         
@@ -1067,17 +824,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
         //
         let v=match bound_func.method_type {
-            // MethodType::Static(x)=>{
-            //     x(FuncContext::new(self,params_num))
-            // }
-            // MethodType::Temp(x) => {
-            //     if let Some(mut x)=x.try_lock() {
-            //         x(FuncContext::new(self,params_num))
-            //     } else {
-            //         Err(MachineError::from_machine(self, MachineErrorType::FuncBorrowMutError))
-            //     }
-            // }
-
             MethodType::NonMut(x)=>{
                 x(FuncContext::new(self,params_num))
             }
@@ -1097,7 +843,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
             Ok(v)=>{
 
                 self.set_result_val(v);
-                //println!("@@@@@ bound func");
                 
                 self.stack_pop_amount(params_num)?;
             
@@ -1129,7 +874,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
         //copy params
         for stack_ind in stack_params_start..stack_params_start+stack_params_num {
-            let v=self.copy_val(self.stack.get(stack_ind).unwrap().clone())?;            
+            let v=self.copy_val(self.stack.get(stack_ind).unwrap().clone_as_is())?;            
             // *self.stack_mut().get_mut(stack_ind).unwrap()=v;
 
             self.set_stack_val(stack_ind, v)?;
@@ -1160,55 +905,9 @@ impl<'a,'c,X> Machine<'a,'c,X>
     }
 
     fn inner_call_value(&mut self, params_num:usize, v:&Value, finish:bool) -> Result<bool,MachineError> {
-        // println!("=====- {} {}",v.type_string(),v.as_float());
-        // println!("stk is {:?}", self.stack());
-        // if let Some(caller)=v.get_custom().and_then(|custom|custom.get_caller()) {
-        //     // println!("yea0");
-
-        //     self.debugger.push_frame_bound_func(params_num, &self.stack, &self.result_val); //before params_num+1 ...
-        
-        //     let params_num = params_num+1;
-            
-        //     //
-        //     {
-        //         self.push_stack_val(v.clone());
-        //         self.debugger.set_stack_from_last();
-        //     }
-          
-        //     //
-        //     let vv= caller(FuncContext::new(self,params_num));
-    
-        //     match vv {
-        //         Ok(vv)=>{
-    
-        //             self.set_result_val(vv);
-        //             //println!("@@@@@ bound func");
-                    
-        //             self.stack_pop_amount(params_num)?;
-                
-        //             self.debugger.pop_frame();
-            
-        //             self.gc_scope.remove_norefs(); //hmm called already with set_result? and possibly on stack_pop_amount(params_num>0)
-    
-        //             Ok(false)
-        //         }
-        //         Err(e) => {
-        //             if e.build.is_none() {
-        //                 Err(MachineError::from_machine(&self, e.error_type))
-        //             } else {
-        //                 Err(e)
-        //             }
-        //         }
-        //     }
-        // } else 
         if v.is_custom::<Closure>() {
-            // println!("yea1");
 
             let data=v.as_custom().data_clone::<Closure>()?;
-
-            // let data=v.as_custom().data();
-            // let data=data.borrow_mut::<Closure>()
-            //     .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
 
             let func_build=data.build.clone();
             let func_ind=data.func_ind;
@@ -1216,7 +915,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
             let params_num = params_num+data.captures.len();     
 
             for x in data.captures.iter() {
-                self.push_stack_val(x.clone());
+                self.push_stack_val(x.clone_as_is());
                 self.debugger.set_stack_from_last();
             }
 
@@ -1224,9 +923,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
             Ok(true)
         } else {
-            // println!("yea2");
-
-            // println!("v is {v:?}");
             Err(MachineError::from_machine(self,  MachineErrorType::ValueNotAFunc(v.type_string()) ))
         }
     }
@@ -1237,9 +933,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
             .collect::<Vec<_>>()
     }
 
-    // fn get_method_with_params<'x,I:IntoIterator<Item=&'x Value>>(&self, method_name : &str, params : I) -> Option<BoundFuncType<'c>> {
-    //     self.lib_scope.get_method(method_name,params,self.var_scope)
-    // }
     
     fn stack_push_params<I:AsRef<[Value]>>(&mut self,params : I) -> Result<usize,MachineError> {
         // let params=params.into_iter().collect::<Vec<_>>();
@@ -1249,16 +942,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
         self.debugger.stack_extend_none(params_num);
         Ok(params_num)
     }
-    // fn stack_push_params(&mut self,params : &Vec<Value>) -> Result<usize,MachineError> {
-    //     let mut params_num=0;
-
-    //     for p in params.into_iter().rev() {
-    //         self.stack.push(p.clone_to_root());
-    //         params_num+=1;
-    //     }
-
-    //     Ok(params_num)
-    // }
 
     fn stack_params_iter(&self, params_num : usize) -> impl DoubleEndedIterator<Item=&Value> {
         let params_start = self.stack.len()-params_num;
@@ -1269,7 +952,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
     fn stack_param_get(&self, params_num : usize, param_ind : usize) -> Value {
         let params_start = self.stack.len()-params_num;
         let stack_ind = params_start + params_num - param_ind - 1;
-        self.stack.get(stack_ind).unwrap().clone()
+        self.stack.get(stack_ind).unwrap().clone_as_is()
     }
     fn stack_param_set(&mut self, params_num : usize, param_ind : usize, value:Value) {
         let params_start = self.stack.len()-params_num;
@@ -1323,7 +1006,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
         //
         self.run()?;
         // let result_val= self.result_val.clone_root();
-        let result_val= self.copy_val(self.result_val.clone())?.clone_root();
+        let result_val= self.copy_val(self.result_val.clone_as_is())?;
 
         //
         // self.debugger.pop();
@@ -1347,35 +1030,38 @@ impl<'a,'c,X> Machine<'a,'c,X>
             // self.debugger.add_func_name("call");
             self.debugger.add_func_name(name);
             self.inner_call_bound_func(params_num, func)?; 
-            Ok(self.result_val.clone())
+            Ok(self.result_val.clone_as_is())
         } else {
             let param_types=self.get_stack_param_types(params_num);
             Err(MachineError::from_machine(self, MachineErrorType::MethodNotFound(name.to_string(),param_types)))
         }
     }
 
+    fn inner_try_call_method<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Option<Value>,MachineError> {
+          //
+          let params_num=self.stack_push_params(params)?;
+
+          // if let Some(x)=self.lib_scope.get_method(name,params.into_iter(),self.var_scope)
+          if let Some(x)=self.get_method(name, params_num)
+          {
+              let symbol = StringT::new(name);
+  
+              self.debugger.add_func_name(&symbol.as_str());
+              self.inner_call_bound_func(params_num, x)?; //,symbol.clone()
+              Ok(Some(self.result_val.clone_root()))
+          } else {
+              self.stack_pop_amount(params_num)?;
+              Ok(None)
+          }
+    }
+
+
     pub fn try_call_method<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Option<Value>,MachineError> {
         if self.error_state {
             self.clear();
         }
 
-        //
-        let params_num=self.stack_push_params(params)?;
-
-        // if let Some(x)=self.lib_scope.get_method(name,params.into_iter(),self.var_scope)
-        if let Some(x)=self.get_method(name, params_num)
-        {
-            // let params_num=self.stack_push_params(params)?;
-            let symbol = StringT::new(name);
-
-            self.debugger.add_func_name(&symbol.as_str());
-            self.inner_call_bound_func(params_num, x)?; //,symbol.clone()
-            Ok(Some(self.result_val.clone()))
-        } else {
-            //println!("@@@@@ trycall method {name:?}");
-            self.stack_pop_amount(params_num)?;
-            Ok(None)
-        }
+        Ok(self.inner_try_call_method(name,params)?.map(|x|x.clone_leaf()))
     }
     pub fn call_value<I:AsRef<[Value]>>(&mut self,v:&Value,params : I) -> Result<Value,MachineError> {
         if self.error_state {
@@ -1392,7 +1078,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
         // self.debugger.pop_frame();
 
-        Ok(self.result_val.clone())
+        Ok(self.result_val.clone_leaf())
     }
     pub fn try_call_global<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Option<Value>,MachineError> {
         if self.error_state {
@@ -1421,7 +1107,7 @@ impl<'a,'c,X> Machine<'a,'c,X>
             return Ok(None);
         }
 
-        Ok(Some(self.result_val.clone()))
+        Ok(Some(self.result_val.clone_leaf()))
     }
 
     pub fn call_global<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Value,MachineError> {
@@ -1457,19 +1143,12 @@ impl<'a,'c,X> Machine<'a,'c,X>
         let fields = fields.as_ref().to_vec();
 
         if fields.len()==0 { //set global to the value  
-            if !self.var_scope.set(name,to_value)
-                .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?
-            {
+            if !self.var_scope.set(name,to_value).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
                 return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(name.to_string()) ));
             }
-            // let Some(global_val) = self.var_scope.get_mut(name) else {
-            //     return Err(MachineError::machine_new(self, MachineErrorType::GlobalNotFound(name.to_string()) ));
-            // };
-
-            // *global_val=to_value.clone_root();            
+                  
         } else {
-            let Some(global_val) = self.var_scope.get(name)
-                .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?
+            let Some(global_val) = self.var_scope.get(name).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?
             else {
                 return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(name.to_string()) ));
             };
@@ -1507,21 +1186,12 @@ impl<'a,'c,X> Machine<'a,'c,X>
             return Ok(()); //no fields provided, do nothing
         }
 
-        // let Some(last_field)=fields.pop() else {
-        //     return Ok(()); //no fields provided, do nothing
-        // };
-
-        // // let value2=self.value_get(value, fields)?;
-        // let value2=self.inner_value_get(value,fields,false)?;
-
-        // self.call_method("set_field", [value2,last_field,to_value])?;
-
         //
-        let mut rets = vec![value.clone()];
+        let mut rets = vec![value.clone_leaf()];
 
         //gets
         for i in 0..fields.len()-1 {
-            let ret=self.call_method("get_field", [rets.last().unwrap().clone(),fields.get(i).unwrap().clone()])?;
+            let ret=self.call_method("get_field", [rets.last().unwrap().clone_as_is(),fields.get(i).unwrap().clone_as_is()])?;
             rets.push(ret);
         }
 
@@ -1531,9 +1201,9 @@ impl<'a,'c,X> Machine<'a,'c,X>
         //sets
         for i in (0..rets.len()-1).rev() {
             self.call_method("set_field", [
-                rets.get(i).unwrap().clone(),
-                fields.get(i).unwrap().clone(),
-                rets.get(i+1).unwrap().clone(),
+                rets.get(i).unwrap().clone_as_is(),
+                fields.get(i).unwrap().clone_as_is(),
+                rets.get(i+1).unwrap().clone_as_is(),
             ])?;
         }
 
@@ -1550,33 +1220,23 @@ impl<'a,'c,X> Machine<'a,'c,X>
         self.inner_value_get::<T>(value,fields) //,true
     }
 
-    fn inner_value_get<T:AsRef<[Value]>>(&mut self,value:Value,fields:T
-        // ,b:bool
-    ) -> Result<Value,MachineError> {
+    fn inner_value_get<T:AsRef<[Value]>>(&mut self,value:Value,fields:T) -> Result<Value,MachineError> {
         let mut fields = fields.as_ref().to_vec();
         fields.reverse();
         
         let mut cur_value=value;
 
         while let Some(field)=fields.pop() {
-            // let is_end= fields.len()==0;
-            // let m=if b&&is_end{"get_field"}else{"ret_field"};
-            cur_value = self.call_method("get_field", [cur_value.clone(),field])?;
+            cur_value = self.call_method("get_field", [cur_value.clone_as_is(),field])?;
         }
 
         Ok(cur_value)
     }
 
     pub fn constant_get(&self,n:&str) -> Option<Value> {
-        // self.const_scope.as_ref()
-        //     .and_then(|c|c(n))
-        //     .or_else(||self.lib_scope.get_constant(n))
-
-        // self.lib_scope.get_constant(n)
-
-        self.const_scope.get(n).cloned().or_else(||self.lib_scope.get_constant(n))
+        self.const_scope.get(n).map(|x|x.clone_leaf()).or_else(||self.lib_scope.get_constant(n))
     }
-    pub fn inner_global_get(&self,n:&str,enabled:bool) -> Result<Option<Value>,MachineError> {
+    fn inner_global_get(&self,n:&str,enabled:bool) -> Result<Option<Value>,MachineError> {
         if !enabled {
             return Ok(None);
         }
@@ -1584,9 +1244,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
         self.var_scope.get(&n).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))
     }
-    // pub fn custom_managed_value<T:GcTraversable>(&mut self,data : T) -> Value {
-    //     Value::new_custom_managed(data, self.gc_scope)
-    // }
 }
 
 

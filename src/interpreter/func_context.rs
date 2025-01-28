@@ -78,7 +78,7 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b
     pub fn param(&self,ind:usize) -> Value {
         if ind < self.params_num {
             let stack_ind=self.params_start+self.params_num-1-ind;
-            self.machine.get_stack_val(stack_ind).ok().clone().unwrap_or(Value::Nil) //unwrap nil is for func calls with less params than there is on stack?
+            self.machine.get_stack_val(stack_ind).ok().map(|x|x.clone_leaf()).unwrap_or(Value::Nil) //unwrap nil is for func calls with less params than there is on stack?
         } else {
             Value::Nil
         }
@@ -87,7 +87,7 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b
     pub fn get_param(&self,ind:usize) -> Option<Value> {
         if ind < self.params_num {
             let stack_ind=self.params_start+self.params_num-1-ind;
-            Some(self.machine.get_stack_val(stack_ind).ok().clone().unwrap_or(Value::Nil)) //unwrap nil is for func calls with less params than there is on stack?
+            Some(self.machine.get_stack_val(stack_ind).ok().map(|x|x.clone_leaf()).unwrap_or(Value::Nil)) //unwrap nil is for func calls with less params than there is on stack?
         } else {
             None
         }
@@ -115,7 +115,7 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b
     }
 
     pub fn value_to_string(&mut self,value: &Value) -> Result<String,MachineError> {
-        Ok(self.machine.try_call_method("string", &vec![value.clone()])?
+        Ok(self.machine.try_call_method("string", &vec![value.clone_root()])?
             .and_then(|x|Some(x.as_string()))
             .unwrap_or_else(||value.as_string())
         )

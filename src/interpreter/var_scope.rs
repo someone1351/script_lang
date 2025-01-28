@@ -62,7 +62,7 @@ impl VarScope {
             return Ok(Some(var.value.as_custom().data_clone::<Value>()?));
         }
 
-        Ok(Some(var.value.clone()))
+        Ok(Some(var.value.clone_leaf()))
     }
 
     pub fn get_ref(&mut self,n : &str,gc_scope:&mut GcScope) -> Value { //Option<Value>
@@ -78,12 +78,12 @@ impl VarScope {
         });
 
         if !var.is_refvar {                
-            let refvar=Value::custom_managed_mut(var.value.clone(), gc_scope);                
-            var.value=refvar.clone_root();
+            let refvar=Value::custom_managed_mut(var.value.clone_leaf(), gc_scope);                
+            var.value=refvar.clone_root(); //as stored as global
             var.is_refvar=true;
         }
         
-        var.value.clone()
+        var.value.clone_leaf()
     }
 
     pub fn contains(&mut self,n : &str) -> bool {
@@ -150,7 +150,7 @@ impl VarScope {
             // *data=value.clone();
 
             var.value.as_custom().with_data_mut(|x:&mut Value|{
-                *x=value.clone();
+                *x=value.clone_leaf();
                 Ok(())
             })?;
         } else {

@@ -331,6 +331,11 @@ fn main() {
 TODO
 * use builtin mutex lib
 * fix gc
+* make value clone = clone_as_is
+* replace value clone in machine with value.clone_leaf()
+** make values returned from func_context, var_scope, lib_scope, machine be leaves
+** make all values used in working roots?
+
 * allow method decl from script?
 * make dict keys accept non strings
 ** make value's hashable? 
@@ -338,4 +343,6 @@ TODO
 * add matrices to lib
 * remove unnecessary debug code
 * add c like syntax
+
+* if custom dropped, and weak count==0, can remove it without mark and sweep
 */
