@@ -566,6 +566,9 @@ impl<'a,'c,X> Machine<'a,'c,X> {
             //
             Instruction::GetGlobalOrConstOrCallMethod(symbol_ind,get_global) => {
                 let symbol=self.get_symbol( *symbol_ind)?;
+
+                // self.var_scope.get(&n).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))
+                
               
                 if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
                     self.set_result_val(v);

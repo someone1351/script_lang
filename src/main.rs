@@ -343,6 +343,7 @@ TODO
 * add matrices to lib
 * remove unnecessary debug code
 * add c like syntax
+*clean up debugger
 
 * if custom dropped, and weak count==0, can remove it without mark and sweep
 */
