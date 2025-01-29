@@ -1,4 +1,59 @@
 
+    JmpUp{cond:Option<bool>,instr_offset:usize},
+    JmpDown{cond:Option<bool>,instr_offset:usize}, 
+
+//
+	let Instruction::JmpDown { instr_offset , ..} = instructions.get_mut(to_end_instr_ind).unwrap() else {
+		panic!("scriptlang,builder,ast, expected JmpDown instr");
+	};
+
+	//end_instr_offset
+	*instr_offset=cur_instr_ind-to_end_instr_ind-1;
+
+//
+
+	instructions.push(Instruction::JmpDown { cond: not_cond, instr_offset: 2 });
+	
+//
+
+	let cur_instr_ind = instructions.len();
+	let jmp_instr_ind = block_start_instr_inds.get(&block_node_ind).unwrap();
+	let jmp_instr_offset = cur_instr_ind-*jmp_instr_ind-1+1;
+	instructions.push(Instruction::JmpUp{cond,instr_offset:jmp_instr_offset}); //(cond,jmp_instr_offset)
+
+//
+	instructions.push(Instruction::JmpDown{cond:not_cond,instr_offset:2}); //(not_cond,2)
+
+//
+	instructions.push(Instruction::JmpDown { cond, instr_offset: 0 }); //(cond,0)
+	
+//
+            Instruction::JmpUp{cond,instr_offset} => { //more like relative instr up ind
+                if cond.and_then(|x|Some(x==self.result_val.as_bool())).unwrap_or(true) {
+                    if self.instr_pos > *instr_offset {
+                        self.instr_pos-=*instr_offset+1;
+                        
+                        self.debugger.move_instr_pos(self.instr_pos);
+
+                        return Ok(()); //continue;
+                    } else {
+                        return Err(MachineError::from_machine(self, MachineErrorType::JmpUpErr(*instr_offset)));
+                    }
+                }
+            }
+            Instruction::JmpDown{cond,instr_offset} => {
+                if cond.and_then(|x|Some(x==self.result_val.as_bool())).unwrap_or(true) {
+                    if self.instr_pos + *instr_offset + 1 <= self.instr_end_pos //build.instructions.len() 
+                    {
+                        self.instr_pos+=*instr_offset+1;
+                        self.debugger.move_instr_pos(self.instr_pos);
+                        return Ok(()); //continue;
+                    } else {
+                        return Err(MachineError::from_machine(self, MachineErrorType::JmpDownErr(*instr_offset) ));
+                    }
+                }
+            }
+//
 #[derive(Debug,Clone)]
 pub struct StackFrame { 
     pub ret_build : Option<BuildT>,

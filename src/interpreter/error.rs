@@ -7,6 +7,7 @@ use super::machine::*;
 
 #[derive(Debug,Eq,PartialEq)]
 pub enum MachineErrorType{
+    JmpErr(usize), //instr_pos,
     JmpUpErr(usize), //instr_offset_ind,
     JmpDownErr(usize), //instr_offset_ind,
     InvalidStackAccess(usize), //stack_offset

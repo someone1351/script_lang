@@ -1275,12 +1275,21 @@ impl<'a> Ast<'a> {
                         let cur_instr_ind = instructions.len();
 
                         for &to_end_instr_ind in to_end_instr_inds.iter() {
-                            let Instruction::JmpDown { instr_offset , ..} = instructions.get_mut(to_end_instr_ind).unwrap() else {
-                                panic!("scriptlang,builder,ast, expected JmpDown instr");
+
+
+                            let _instr_offset_down: usize=cur_instr_ind-to_end_instr_ind;
+
+                            let Instruction::Jmp { 
+                                instr_pos , 
+                                debug, 
+                                ..
+                            } = instructions.get_mut(to_end_instr_ind).unwrap() else {
+                                panic!("scriptlang,builder,ast, expected Jmp instr");
                             };
 
-                            //end_instr_offset
-                            *instr_offset=cur_instr_ind-to_end_instr_ind-1;
+                            *instr_pos=cur_instr_ind; //ok2
+
+                            *debug=(4,_instr_offset_down as i64);
                         }
                     }
                     
@@ -1390,7 +1399,12 @@ impl<'a> Ast<'a> {
                     if dif_stack_size>0 {
                         if cond.is_some() { //(not_cond,2)
                             let not_cond=cond.and_then(|b|Some(!b));
-                            instructions.push(Instruction::JmpDown { cond: not_cond, instr_offset: 2 });
+                            let _instr_offset_down:usize = 3;
+
+                            instructions.push(Instruction::Jmp { cond: not_cond, 
+                                instr_pos: instructions.len()+3, //ok2
+                                debug:(0,_instr_offset_down as i64),
+                            });
                         }
 
                         instructions.push(Instruction::StackPop(dif_stack_size));
@@ -1398,10 +1412,13 @@ impl<'a> Ast<'a> {
 
                     //
                     let jmp_instr_ind = block_start_instr_inds.get(&block_node_ind).unwrap();
-                    let cur_instr_ind = instructions.len();
-                    let jmp_instr_offset = cur_instr_ind-jmp_instr_ind-1;
+                 
+                    let _instr_offset_up: usize = instructions.len()- *jmp_instr_ind;
 
-                    instructions.push(Instruction::JmpUp{cond,instr_offset:jmp_instr_offset}); //(cond,jmp_instr_offset)
+                    instructions.push(Instruction::Jmp{cond,
+                        instr_pos:*jmp_instr_ind , //ok2
+                        debug:(1,-(_instr_offset_up as i64)),
+                        }); //(cond,jmp_instr_offset)
                 }
                 AstNodeType::ToBlockEnd{cond,block_node_ind} => {
                     let to_node=self.get_node(block_node_ind);
@@ -1412,7 +1429,13 @@ impl<'a> Ast<'a> {
                     if dif_stack_size>0 {
                         if cond.is_some() {
                             let not_cond=cond.and_then(|b|Some(!b));
-                            instructions.push(Instruction::JmpDown{cond:not_cond,instr_offset:2}); //(not_cond,2)
+
+                            let _instr_offset_down:usize = 3;
+                            
+                            instructions.push(Instruction::Jmp{cond:not_cond,
+                                instr_pos:instructions.len()+3, //ok2
+                                debug:(2,_instr_offset_down as i64),
+                                }); //(not_cond,2)
                         }
 
                         instructions.push(Instruction::StackPop(dif_stack_size));
@@ -1421,7 +1444,11 @@ impl<'a> Ast<'a> {
                     //
                     block_to_ends.entry(block_node_ind).or_default().push(instructions.len());
 
-                    instructions.push(Instruction::JmpDown { cond, instr_offset: 0 }); //(cond,0)
+                    instructions.push(Instruction::Jmp { 
+                        cond, 
+                        instr_pos: 0, 
+                        debug:(3,0),
+                    }); //(cond,0)
                 }
                 AstNodeType::StackSwap => {
                     instructions.push(Instruction::StackSwap);

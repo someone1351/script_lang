@@ -59,36 +59,10 @@ pub struct Machine<'a,'c,X> { //,'b
     lib_scope : &'a LibScope<'c,X>, //<'c> //<'b>
     includer : Option<Box<dyn FnMut(&Path) -> Option<BuildT> + 'a>>, //can use lifetime a for some reason?
     const_scope:HashMap<&'a str,Value>,
-
-    // gc_check_remove_recursive : bool,
     core_val :   X, //&'a mut 
 }
 
-
-// impl<'a,'c,X:Copy> Machine<'a,'c,X> {
-//     pub fn get_core(&mut self) -> &X {
-//         &self.core_val
-//     }
-// }
-
-// impl<'a,'c,X> Machine<'a,'c,& mut X> {
-//     pub fn get_core_mut(&mut self) -> &mut X {
-//         self.core_val
-//     }    
-//     pub fn get_core_ref(& self) -> &X {
-//         self.core_val
-//     }
-// }
-
-// impl<'a,'c,X> Machine<'a,'c,&X> {
-//     pub fn get_core_ref(&self) -> &X {
-//         self.core_val
-//     }
-// }
-
-impl<'a,'c,X> Machine<'a,'c,X> 
-{ //,'b //,'b
-
+impl<'a,'c,X> Machine<'a,'c,X> {
     pub fn core_mut(&mut self) -> &mut X {
         &mut self.core_val
     }
@@ -255,31 +229,24 @@ impl<'a,'c,X> Machine<'a,'c,X>
         let instr=cur_build.instructions.get(self.instr_pos).unwrap();
 
         match instr {
-            Instruction::JmpUp{cond,instr_offset} => { //more like relative instr up ind
-                if cond.and_then(|x|Some(x==self.result_val.as_bool())).unwrap_or(true) {
-                    if self.instr_pos > *instr_offset {
-                        self.instr_pos-=*instr_offset+1;
-                        
-                        self.debugger.move_instr_pos(self.instr_pos);
+            Instruction::Jmp{cond,instr_pos:new_instr_pos, debug} => { 
+                if *new_instr_pos > cur_build.instructions.len() {
+                    return Err(MachineError::from_machine(self, MachineErrorType::JmpErr(*new_instr_pos)));
+                }
 
-                        return Ok(()); //continue;
-                    } else {
-                        return Err(MachineError::from_machine(self, MachineErrorType::JmpUpErr(*instr_offset)));
-                    }
-                }
-            }
-            Instruction::JmpDown{cond,instr_offset} => {
                 if cond.and_then(|x|Some(x==self.result_val.as_bool())).unwrap_or(true) {
-                    if self.instr_pos + *instr_offset + 1 <= self.instr_end_pos //build.instructions.len() 
-                    {
-                        self.instr_pos+=*instr_offset+1;
-                        self.debugger.move_instr_pos(self.instr_pos);
-                        return Ok(()); //continue;
-                    } else {
-                        return Err(MachineError::from_machine(self, MachineErrorType::JmpDownErr(*instr_offset) ));
+                    if (*new_instr_pos as i64) != (self.instr_pos as i64)+debug.1 {
+                        println!("id={} cur:{} offset:{}, new:{}",debug.0,self.instr_pos,debug.1,new_instr_pos,);
+                        panic!("");
                     }
+                    
+                    self.instr_pos=*new_instr_pos;
+                    self.debugger.move_instr_pos(self.instr_pos);
+
+                    return Ok(()); 
                 }
             }
+
             
             Instruction::ResultBool(v)  => {
                 self.result_val = Value::Bool(*v);
@@ -935,7 +902,6 @@ impl<'a,'c,X> Machine<'a,'c,X>
 
     
     fn stack_push_params<I:AsRef<[Value]>>(&mut self,params : I) -> Result<usize,MachineError> {
-        // let params=params.into_iter().collect::<Vec<_>>();
         let params=params.as_ref().to_vec();
         let params_num=params.len();
         self.stack.extend(params.into_iter().rev());

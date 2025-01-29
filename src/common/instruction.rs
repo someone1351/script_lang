@@ -5,8 +5,11 @@ use super::types::*;
 pub enum Instruction {
     Include(usize), //path_ind
 
-    JmpUp{cond:Option<bool>,instr_offset:usize},
-    JmpDown{cond:Option<bool>,instr_offset:usize}, 
+    Jmp{
+        cond:Option<bool>,
+        instr_pos:usize,
+        debug:(usize,i64),
+    }, 
     
     ResultBool(bool),
     ResultInt(IntT),
