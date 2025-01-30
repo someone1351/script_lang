@@ -37,7 +37,8 @@ pub enum MachineErrorType{
     FuncBorrowMutError,
     GetUndefinedVar,
     SetUndefinedVar,
-    // VoidNotExpr,
+
+    VoidNotExpr, //necessary?
 }
 
 #[derive(Debug)]
