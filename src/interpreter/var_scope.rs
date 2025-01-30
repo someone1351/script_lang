@@ -62,7 +62,7 @@ impl VarScope {
             return Ok(Some(var.value.as_custom().data_clone::<Value>()?));
         }
 
-        Ok(Some(var.value.clone_leaf()))
+        Ok(Some(var.value.clone_root()))
     }
 
     pub fn get_ref(&mut self,n : &str,gc_scope:&mut GcScope) -> Value { //Option<Value>
@@ -83,7 +83,7 @@ impl VarScope {
             var.is_refvar=true;
         }
         
-        var.value.clone_leaf()
+        var.value.clone_root()
     }
 
     pub fn contains(&mut self,n : &str) -> bool {

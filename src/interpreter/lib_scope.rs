@@ -359,7 +359,7 @@ impl<'a,X> LibScope<'a,X> {
     }
 
     pub fn get_constant(&self,n : &str) -> Option<Value> {
-        self.constants.get(&n.to_string()).map(|x|x.clone_leaf())
+        self.constants.get(&n.to_string()).map(|x|x.clone_root())
     }
 
     fn get_insert_root_node_ind(&mut self,n:&str) -> usize {

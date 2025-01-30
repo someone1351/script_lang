@@ -346,4 +346,5 @@ TODO
 *clean up debugger
 
 * if custom dropped, and weak count==0, can remove it without mark and sweep
+** iterate children, check their weak counts?
 */

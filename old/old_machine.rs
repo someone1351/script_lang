@@ -717,3 +717,21 @@ impl<'a,'c,X> Machine<'a,'c,X>
 }
 
 
+  fn try_copy_val(&mut self, v:Value) -> Result<Option<Value>,MachineError> {
+        if !v.is_custom_any() { //should only use copy on customs?
+            return Ok(None);
+        }
+
+        Ok(self.try_call_method("copy", vec![v.clone_root()])?)
+    }
+
+    
+
+
+    
+
+    // fn stack_params_iter_mut(&mut self, params_num : usize) -> impl Iterator<Item=&mut Value> {
+    //     let params_start = self.stack.len()-params_num;
+    //     let params = self.stack[params_start..].iter_mut().rev();
+    //     params
+    // }
