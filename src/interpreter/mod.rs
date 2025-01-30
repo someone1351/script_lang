@@ -24,7 +24,7 @@ pub use custom::Custom;
 
 pub use var_scope::VarScope;
 pub use lib_scope::LibScope;
-pub use gc_scope::{GcScope,GcTraversable};
+pub use gc_scope::{GcScope,GcTraversable,Traverser};
 
 pub use func_context::FuncContext;
 

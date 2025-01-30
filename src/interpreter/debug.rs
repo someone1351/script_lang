@@ -250,76 +250,6 @@ impl Debugger {
         self.clear_func_names();
     }
 
-    fn _get_result_val_name(&self) -> Option<StringT> {
-        
-        let Some(last_stack_trace) = self.stack_traces.last() else {
-            return None;
-        };
-        match last_stack_trace {
-            StackTrace::BuildFunc { build, instr_pos, .. }
-            | StackTrace::Main { build, instr_pos, .. }
-            | StackTrace::Include { build, instr_pos, .. } => 
-            {
-                if let Some(instr)=build.instructions.get(*instr_pos) {
-
-                    match instr {
-                        Instruction::GetGlobalVarOrConst(symbol_ind,..)
-                        | Instruction::GetGlobalVarRef(symbol_ind)
-                        | Instruction::GetGlobalAccessRef(symbol_ind)
-                        =>{
-                            let n=build.symbols.get(*symbol_ind).unwrap().clone();
-                            return Some(n);
-                        }
-                        Instruction::GetStackVar(stack_offset_ind)|Instruction::GetStackVarDeref(stack_offset_ind) => {                            
-                            let stack_len = self.stack_val_infos.len();
-                            let stack_ind=stack_len - stack_offset_ind - 1;
-                            return self.stack_val_infos.get(stack_ind).unwrap().as_ref().and_then(|x|x.name.clone());
-                        }
-                        _ => {    
-                        }
-                    }
-                }
-            }
-            _ => {
-                
-            }
-        }
-
-        None
-    }
-    fn _get_stack_val_name(&self) -> Option<StringT> {
-
-        let Some(last_stack_trace) = self.stack_traces.last() else {
-            return None;
-        };
-        match last_stack_trace {
-            StackTrace::BuildFunc { build, instr_pos, .. }
-            | StackTrace::Main { build, instr_pos, .. }
-            | StackTrace::Include { build, instr_pos, .. } => 
-            {
-                if let Some(instr)=build.instructions.get(*instr_pos) {
-
-                    match instr {
-                        Instruction::StackPush => {
-                            return self.result_val_info.as_ref().and_then(|x|x.name.clone());
-                        }
-                        Instruction::GetStackVar(stack_offset_ind)|Instruction::GetStackVarDeref(stack_offset_ind) => {                            
-                            let stack_len = self.stack_val_infos.len();
-                            let stack_ind=stack_len - stack_offset_ind - 1;
-                            return self.stack_val_infos.get(stack_ind).unwrap().as_ref().and_then(|x|x.name.clone());
-                        }
-                        _ => {    
-                        }
-                    }
-                }
-            }
-            _ => {
-                
-            }
-        }
-
-        None
-    }
 
     pub fn set_result_val(&mut self) {
         if self.disabled {return;}
@@ -760,9 +690,7 @@ impl Debugger {
         let depth=self.stack_traces.len();//-1;
 
         if cur_instr_pos < cur_instr_end {
-            let instr_str=self.instruction_to_string(cur_build.clone().unwrap(),cur_instr_pos,
-            // stack_len
-        );           
+            let instr_str=self.instruction_to_string(cur_build.clone().unwrap(),cur_instr_pos,); // stack_len       
             println!("{} {instr_ind_str} : {stack_trace_str} : {instr_str}","+".repeat(1+depth));
         } else {    
             println!("{} {instr_ind_str} : {stack_trace_str}","-".repeat(1+depth));
@@ -915,5 +843,79 @@ impl Debugger {
 
         }
     }
+
+
+
+    // fn _get_result_val_name(&self) -> Option<StringT> {
+        
+    //     let Some(last_stack_trace) = self.stack_traces.last() else {
+    //         return None;
+    //     };
+    //     match last_stack_trace {
+    //         StackTrace::BuildFunc { build, instr_pos, .. }
+    //         | StackTrace::Main { build, instr_pos, .. }
+    //         | StackTrace::Include { build, instr_pos, .. } => 
+    //         {
+    //             if let Some(instr)=build.instructions.get(*instr_pos) {
+
+    //                 match instr {
+    //                     Instruction::GetGlobalVarOrConst(symbol_ind,..)
+    //                     | Instruction::GetGlobalVarRef(symbol_ind)
+    //                     | Instruction::GetGlobalAccessRef(symbol_ind)
+    //                     =>{
+    //                         let n=build.symbols.get(*symbol_ind).unwrap().clone();
+    //                         return Some(n);
+    //                     }
+    //                     Instruction::GetStackVar(stack_offset_ind)|Instruction::GetStackVarDeref(stack_offset_ind) => {                            
+    //                         let stack_len = self.stack_val_infos.len();
+    //                         let stack_ind=stack_len - stack_offset_ind - 1;
+    //                         return self.stack_val_infos.get(stack_ind).unwrap().as_ref().and_then(|x|x.name.clone());
+    //                     }
+    //                     _ => {    
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //         _ => {
+                
+    //         }
+    //     }
+
+    //     None
+    // }
+    
+    // fn _get_stack_val_name(&self) -> Option<StringT> {
+
+    //     let Some(last_stack_trace) = self.stack_traces.last() else {
+    //         return None;
+    //     };
+    //     match last_stack_trace {
+    //         StackTrace::BuildFunc { build, instr_pos, .. }
+    //         | StackTrace::Main { build, instr_pos, .. }
+    //         | StackTrace::Include { build, instr_pos, .. } => 
+    //         {
+    //             if let Some(instr)=build.instructions.get(*instr_pos) {
+
+    //                 match instr {
+    //                     Instruction::StackPush => {
+    //                         return self.result_val_info.as_ref().and_then(|x|x.name.clone());
+    //                     }
+    //                     Instruction::GetStackVar(stack_offset_ind)|Instruction::GetStackVarDeref(stack_offset_ind) => {                            
+    //                         let stack_len = self.stack_val_infos.len();
+    //                         let stack_ind=stack_len - stack_offset_ind - 1;
+    //                         return self.stack_val_infos.get(stack_ind).unwrap().as_ref().and_then(|x|x.name.clone());
+    //                     }
+    //                     _ => {    
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //         _ => {
+                
+    //         }
+    //     }
+
+    //     None
+    // }
 }
 

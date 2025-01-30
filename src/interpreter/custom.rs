@@ -245,11 +245,12 @@ impl Custom {
                 // let data2=data.get_mut::<T>()?;
                 // func(& data2)
                 
-                self.data().inner_with_data_mut(|data|func(data))
+                data.inner_with_data_mut(|data|func(data))
             }
             Some(StrongValueInner::NonMut(_))=>{
-                let data2=data.get_non_mut()?;
-                func(& data2)
+                // let data2=data.get_non_mut()?;
+                // func(& data2)
+                func(data.get_non_mut()?)
             }
             // Some(StrongValueInner::MutExt(_))=>{
             //     let data2=data.get_mut::<T>()?;

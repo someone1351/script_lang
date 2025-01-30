@@ -62,56 +62,56 @@ impl GcTraversable for Dict {
 }
 
 
-#[derive (Clone)]
-pub struct MathVec<const N: usize>(pub [FloatT;N]);
+// #[derive (Clone)]
+// pub struct MathVec<const N: usize>(pub [FloatT;N]);
 
-impl<const N: usize> Default for MathVec<N> {
-    fn default() -> Self { 
-        Self([0.0 as FloatT;N])
-    }
-}
+// impl<const N: usize> Default for MathVec<N> {
+//     fn default() -> Self { 
+//         Self([0.0 as FloatT;N])
+//     }
+// }
 
-pub type Vec2 = MathVec<2>;
-pub type Vec3 = MathVec<3>;
-pub type Vec4 = MathVec<4>;
+// pub type Vec2 = MathVec<2>;
+// pub type Vec3 = MathVec<3>;
+// pub type Vec4 = MathVec<4>;
 
-impl<const N: usize> MathVec<N> {
-    pub fn new<I: IntoIterator<Item=FloatT>>(a:I) -> Self {
-        let mut b=[0.0 as FloatT;N];
+// impl<const N: usize> MathVec<N> {
+//     pub fn new<I: IntoIterator<Item=FloatT>>(a:I) -> Self {
+//         let mut b=[0.0 as FloatT;N];
 
-        for (i,x) in a.into_iter().enumerate() {
-            b[i]=x;
-        }
+//         for (i,x) in a.into_iter().enumerate() {
+//             b[i]=x;
+//         }
 
-        Self(b)
-    }
+//         Self(b)
+//     }
 
-    pub fn from_f32<I: IntoIterator<Item=f32>>(a:I) -> Self {
-        Self::new(a.into_iter().map(|x|x as FloatT))
-    }
+//     pub fn from_f32<I: IntoIterator<Item=f32>>(a:I) -> Self {
+//         Self::new(a.into_iter().map(|x|x as FloatT))
+//     }
 
-    pub fn from_f64<I: IntoIterator<Item=f64>>(a:I) -> Self {
-        Self::new(a.into_iter().map(|x|x as FloatT))
-    }
+//     pub fn from_f64<I: IntoIterator<Item=f64>>(a:I) -> Self {
+//         Self::new(a.into_iter().map(|x|x as FloatT))
+//     }
     
-    pub fn as_f32(&self) -> [f32;N] {
-        let mut a = [0.0 as f32;N];
+//     pub fn as_f32(&self) -> [f32;N] {
+//         let mut a = [0.0 as f32;N];
         
-        for (i,&x) in self.0.iter().enumerate() {
-            a[i]=x as f32;
-        }
+//         for (i,&x) in self.0.iter().enumerate() {
+//             a[i]=x as f32;
+//         }
 
-        a
-    }
-    pub fn as_f64(&self) -> [f64;N] {
-        let mut a = [0.0 as f64;N];
+//         a
+//     }
+//     pub fn as_f64(&self) -> [f64;N] {
+//         let mut a = [0.0 as f64;N];
         
-        for (i,&x) in self.0.iter().enumerate() {
-            a[i]=x as f64;
-        }
+//         for (i,&x) in self.0.iter().enumerate() {
+//             a[i]=x as f64;
+//         }
 
-        a
-    }
-}
+//         a
+//     }
+// }
 
-pub struct Mat<const R: usize,const C: usize>(pub [[FloatT;C];R]);
+// pub struct Mat<const R: usize,const C: usize>(pub [[FloatT;C];R]);

@@ -39,6 +39,7 @@ pub enum MachineErrorType{
     SetUndefinedVar,
 
     VoidNotExpr, //necessary?
+    StackLimitReached(usize),
 }
 
 #[derive(Debug)]

@@ -248,7 +248,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         // machine.debug_print_stack();
     }
 
-    //gc_scope.mark_and_sweep();
+    gc_scope.mark_and_sweep().unwrap();
     gc_scope.test();
     
 

@@ -60,6 +60,8 @@ pub struct Machine<'a,'c,X> { //,'b
     includer : Option<Box<dyn FnMut(&Path) -> Option<BuildT> + 'a>>, //can use lifetime a for some reason?
     const_scope:HashMap<&'a str,Value>,
     core_val :   X, //&'a mut 
+
+    stack_limit:usize,
 }
 
 impl<'a,'c,X> Machine<'a,'c,X> {
@@ -98,6 +100,7 @@ impl<'a,'c,X> Machine<'a,'c,X> {
             includer : None, //Box::new(include_resolver),
             const_scope:HashMap::new(),
             core_val,
+            stack_limit:1024,
         }
     }
 
@@ -211,7 +214,7 @@ impl<'a,'c,X> Machine<'a,'c,X> {
         } else if amount==0 {
             Ok(())
         } else {
-            self.stack.truncate(stack_len-amount);            
+            self.stack.truncate(stack_len-amount);
             self.gc_scope.remove_norefs();
             self.debugger.pop_stack_val_amount(amount);
             Ok(())
@@ -251,6 +254,7 @@ impl<'a,'c,X> Machine<'a,'c,X> {
 
         *self.stack.get_mut(stack_ind).unwrap()=v.clone_root();            
         self.debugger.set_stack_val_none(stack_ind);
+        self.gc_scope.remove_norefs();
         Ok(())
     }
     
@@ -263,7 +267,9 @@ impl<'a,'c,X> Machine<'a,'c,X> {
 
         let stack_ind=stack_len - stack_offset_ind - 1;
         *self.stack.get_mut(stack_ind).unwrap()=v.clone_root();
-        self.debugger.set_stack_val_none(stack_ind);           
+        self.debugger.set_stack_val_none(stack_ind);
+        
+        self.gc_scope.remove_norefs();
         Ok(())
     }
     
@@ -271,6 +277,10 @@ impl<'a,'c,X> Machine<'a,'c,X> {
         
         if v.is_void() { 
             return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
+        }
+
+        if self.stack.len()+1>self.stack_limit{
+            return Err(MachineError::from_machine(self, MachineErrorType::StackLimitReached(self.stack.len()+1)));
         }
 
         self.stack.push(v.clone_root());
@@ -351,6 +361,12 @@ impl<'a,'c,X> Machine<'a,'c,X> {
     fn stack_push_params<I:AsRef<[Value]>>(&mut self,params : I) -> Result<usize,MachineError> {
         let params=params.as_ref().to_vec();
         let params_num=params.len();
+
+
+        if self.stack.len()+params_num>self.stack_limit{
+            return Err(MachineError::from_machine(self, MachineErrorType::StackLimitReached(self.stack.len()+params_num)));
+        }
+
         self.stack.extend(params.into_iter().rev());
         self.debugger.stack_extend_none(params_num);
         Ok(params_num)
@@ -864,7 +880,7 @@ impl<'a,'c,X> Machine<'a,'c,X> {
             
                 self.debugger.pop_frame();
         
-                self.gc_scope.remove_norefs(); //hmm called already with set_result? and possibly on stack_pop_amount(params_num>0)
+                // self.gc_scope.remove_norefs(); //hmm called already with set_result? and possibly on stack_pop_amount(params_num>0)
 
                 Ok(())
             }

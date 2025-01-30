@@ -62,8 +62,9 @@ impl TypeInfo {
     }
 }
 
+pub type Traverser<'a> = Box<dyn Iterator<Item=&'a Value>+'a>;
 pub trait GcTraversable : Any + Send {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a>;
+    fn traverser<'a>(&'a self) -> Traverser<'a>;
 }
 // pub trait GcTraversableExt : GcTraversable + ToString {}
 
@@ -169,6 +170,54 @@ struct GcManaged {
     marked : bool,
 }
 
+impl GcManaged {
+    pub fn with_data(&self, func:impl FnOnce(&dyn GcTraversable) ->Result<(),()>)->Result<(),()> {
+        match &self.data {
+            GcManagedInner::Mut(x) => {
+                if let Ok(x)=x.try_lock() {
+                    func(&*x)
+                } else {
+                    Err(())
+                }
+            }
+            GcManagedInner::NonMut(x) => {
+                func(x.as_ref())
+            }
+        }
+    }
+    pub fn _get(&self) -> Result<&dyn GcTraversable,()> {
+        match &self.data {
+            GcManagedInner::Mut(x) => {
+                // let x=x.as_ref().lock().unwrap();
+
+                if let Ok(_x)=x.try_lock() {
+
+                    
+
+
+
+                    // let x=&x;
+                    // x.
+                    // let Ok(x)=std::sync::MutexGuard::try_map(x, |x|{
+                    //     &x
+                    // }) else {
+                    //     return  Err(());
+                    // };
+                    // Ok(x.traverser())
+                    // Err(())
+                    // Ok(x.into())
+                    Err(())
+                } else {
+                    return  Err(());
+                }
+            }
+            GcManagedInner::NonMut(x) => {
+                Ok(x.as_ref())
+                
+            }
+        }
+    }
+}
 #[derive(Default)]
 
 pub struct GcScope {
@@ -252,7 +301,7 @@ impl GcScope {
     }
 
 
-    pub fn mark_and_sweep(&mut self, amount:usize) ->Result<(),()> {
+    pub fn mark_and_sweep(&mut self, ) ->Result<(),()> { //amount:usize
         // for managed in self.manageds.iter_mut() {
         //     managed.marked=true;
         // }
@@ -276,128 +325,183 @@ impl GcScope {
         //     })
         //     .collect::<Vec<_>>();
 
-        if self.stk.is_empty() {
-            
-            //remove marked
-            for gc_index in (0..self.manageds.len()).rev() {
-                if self.manageds.get(gc_index).unwrap().marked {
-                    
-                    self.manageds.swap_remove(gc_index);
-                    // println!("removing {val_ind}");
+        //
+        //could loop through all manageds, check for weak_count==0, and remove, and keep looping over whole thing again til no weak_count==0
+        //  or use drop trait, to update list to remove
+        // loop {
+        //     let Ok(droppeds)=self.dropper.drain() else {
+        //         break;
+        //     };
 
-                    if let Some(val)=self.manageds.get_mut(gc_index) {
-                        val.managed_index.set(gc_index)?;
-                    }
-                }
-            }
 
-            for managed in self.manageds.iter_mut() {
-                managed.marked=true;
-            }
-
-            for (managed_ind,managed) in self.manageds.iter().enumerate() {
-                if managed.root_count.get()?>0 {
-                    self.stk.push(managed_ind);
-                }
-            }
-            // self.stk.extend(self.manageds.iter().enumerate().filter_map(|(managed_ind,managed)|{
-            //     if managed.root_count.get()>0 //||Arc::weak_count(&val.data)>0 
-            //     {
-            //         Some(managed_ind)
-            //     } else {
-            //         None
-            //     }
-
-            // }));
-        }
-
-        // stk.reserve(10000);
-        // println!("!! {stk:?}");
-
-        // println!("{:?}",self.manageds.iter().map(|x|(
-        //     x.managed_index.get(),
-        //     x.marked,
-        //     x.root_count.get(),
-        //     x.root_count.strong_count(),
-        // )).collect::<Vec<_>>());
-
-        let mut c=0;
-        // let mut d=0;
-
-        while let Some(cur_val_ind)=self.stk.pop() {
-            let cur_val=self.manageds.get_mut(cur_val_ind).unwrap();
-            // d+=1;
-            if !cur_val.marked {
-                continue;
-            }
-
-            c+=1;
-
-            cur_val.marked=false;
-
-            match &cur_val.data {
-                GcManagedInner::Mut(x) => {
-                    if let Ok(x)=x.try_lock() {
-                        for val in x.traverser() {
-                            if let Some(gc_index)=val.gc_index()? {
-                                self.stk.push(gc_index);
-                            }
-                        }
-                        // self.stk.extend(x.traverser().filter_map(|val|val.gc_index()));
-                    } else {
-                        return  Err(());
-                    }
-                }
-                GcManagedInner::NonMut(x) => {
-                    for val in x.traverser() {
-                        if let Some(gc_index)=val.gc_index()? {
-                            self.stk.push(gc_index);
-                        }
-                    }
-                    
-                    // self.stk.extend(x.traverser().filter_map(|val|val.gc_index()));
-                }
-                // GcManagedInner::MutExt(x) => {
-                //     self.stk.extend(x.lock().traverser().filter_map(|val|val.gc_index()));
-                // }
-                // GcManagedInner::NonMutExt(x) => {
-                //     self.stk.extend(x.traverser().filter_map(|val|val.gc_index()));
-                // }
-            }
-            // stk.extend(cur_val.data.lock().traverser()
-            //     .filter_map(|val|val.gc_index()));
-            // match &cur_val.inner {
-            //     GcManagedInner::Custom { data, traverser }=>{
-            //         stk.extend(traverser.call(data.lock().as_ref())
-            //             .filter_map(|val|{if let Value::Custom(c)=val{c.val_index()}else{None}}));
-            //     }
-            //     GcManagedInner::Other { data }=>{}
-            // }
-            if c!=0 && c>amount {
-                break;
-            }
-
-        }
-
-        // println!("{c} {d}");
-
-        // //remove marked
-        // for gc_index in (0..self.manageds.len()).rev() {
-        //     if self.manageds.get(gc_index).unwrap().marked {
-                
-        //         self.manageds.swap_remove(gc_index);
-        //         // println!("removing {val_ind}");
-
-        //         if let Some(val)=self.manageds.get_mut(gc_index) {
-        //             val.managed_index.set(gc_index);
-        //         }
-        //     }
         // }
 
 
-        // println!(":{:?}",self.manageds.iter().map(|x|(x.managed_index.get(),x.marked,x.root_count.get())).collect::<Vec<_>>());
+        //mark
+        for managed in self.manageds.iter_mut() {
+            managed.marked=true;
+        }
 
-        // self.dropper.clear();
+        //sweep init
+        let mut stk = Vec::new();
+        
+        for (managed_ind,managed) in self.manageds.iter().enumerate() {
+            if managed.root_count.get()? != 0 {
+                stk.push(managed_ind);
+            }
+        }
+
+        //sweep
+        while let Some(managed_ind)=stk.pop() {
+            let managed=self.manageds.get_mut(managed_ind).unwrap();
+            managed.marked=false;
+            managed.with_data(|data|{
+                for child_val in data.traverser() {
+                    if let Some(gc_index)=child_val.gc_index()? {
+                        self.stk.push(gc_index);
+                    }
+                }
+                Ok(())
+            })?;
+        }
+        
+        //remove
+        for gc_index in (0..self.manageds.len()).rev() {
+            if self.manageds.get(gc_index).unwrap().marked {
+                self.manageds.swap_remove(gc_index);
+                println!("removing {gc_index}");
+
+                if let Some(managed)=self.manageds.get_mut(gc_index) {
+                    managed.managed_index.set(gc_index)?;
+                }
+            }
+        }
+
+
+        // //
+
+        // if self.stk.is_empty() {
+            
+        //     //remove marked
+        //     for gc_index in (0..self.manageds.len()).rev() {
+        //         if self.manageds.get(gc_index).unwrap().marked {
+                    
+        //             self.manageds.swap_remove(gc_index);
+        //             // println!("removing {val_ind}");
+
+        //             if let Some(val)=self.manageds.get_mut(gc_index) {
+        //                 val.managed_index.set(gc_index)?;
+        //             }
+        //         }
+        //     }
+
+        //     for managed in self.manageds.iter_mut() {
+        //         managed.marked=true;
+        //     }
+
+        //     for (managed_ind,managed) in self.manageds.iter().enumerate() {
+        //         if managed.root_count.get()?>0 {
+        //             self.stk.push(managed_ind);
+        //         }
+        //     }
+        //     // self.stk.extend(self.manageds.iter().enumerate().filter_map(|(managed_ind,managed)|{
+        //     //     if managed.root_count.get()>0 //||Arc::weak_count(&val.data)>0 
+        //     //     {
+        //     //         Some(managed_ind)
+        //     //     } else {
+        //     //         None
+        //     //     }
+
+        //     // }));
+        // }
+
+        // // stk.reserve(10000);
+        // // println!("!! {stk:?}");
+
+        // // println!("{:?}",self.manageds.iter().map(|x|(
+        // //     x.managed_index.get(),
+        // //     x.marked,
+        // //     x.root_count.get(),
+        // //     x.root_count.strong_count(),
+        // // )).collect::<Vec<_>>());
+
+        // let mut c=0;
+        // // let mut d=0;
+
+        // while let Some(cur_val_ind)=self.stk.pop() {
+        //     let cur_val=self.manageds.get_mut(cur_val_ind).unwrap();
+        //     // d+=1;
+        //     if !cur_val.marked {
+        //         continue;
+        //     }
+
+        //     c+=1;
+
+        //     cur_val.marked=false;
+
+        //     match &cur_val.data {
+        //         GcManagedInner::Mut(x) => {
+        //             if let Ok(x)=x.try_lock() {
+        //                 for val in x.traverser() {
+        //                     if let Some(gc_index)=val.gc_index()? {
+        //                         self.stk.push(gc_index);
+        //                     }
+        //                 }
+        //                 // self.stk.extend(x.traverser().filter_map(|val|val.gc_index()));
+        //             } else {
+        //                 return  Err(());
+        //             }
+        //         }
+        //         GcManagedInner::NonMut(x) => {
+        //             for val in x.traverser() {
+        //                 if let Some(gc_index)=val.gc_index()? {
+        //                     self.stk.push(gc_index);
+        //                 }
+        //             }
+                    
+        //             // self.stk.extend(x.traverser().filter_map(|val|val.gc_index()));
+        //         }
+        //         // GcManagedInner::MutExt(x) => {
+        //         //     self.stk.extend(x.lock().traverser().filter_map(|val|val.gc_index()));
+        //         // }
+        //         // GcManagedInner::NonMutExt(x) => {
+        //         //     self.stk.extend(x.traverser().filter_map(|val|val.gc_index()));
+        //         // }
+        //     }
+        //     // stk.extend(cur_val.data.lock().traverser()
+        //     //     .filter_map(|val|val.gc_index()));
+        //     // match &cur_val.inner {
+        //     //     GcManagedInner::Custom { data, traverser }=>{
+        //     //         stk.extend(traverser.call(data.lock().as_ref())
+        //     //             .filter_map(|val|{if let Value::Custom(c)=val{c.val_index()}else{None}}));
+        //     //     }
+        //     //     GcManagedInner::Other { data }=>{}
+        //     // }
+        //     if c!=0 && c>amount {
+        //         break;
+        //     }
+
+        // }
+
+        // // println!("{c} {d}");
+
+        // // //remove marked
+        // // for gc_index in (0..self.manageds.len()).rev() {
+        // //     if self.manageds.get(gc_index).unwrap().marked {
+                
+        // //         self.manageds.swap_remove(gc_index);
+        // //         // println!("removing {val_ind}");
+
+        // //         if let Some(val)=self.manageds.get_mut(gc_index) {
+        // //             val.managed_index.set(gc_index);
+        // //         }
+        // //     }
+        // // }
+
+
+        // // println!(":{:?}",self.manageds.iter().map(|x|(x.managed_index.get(),x.marked,x.root_count.get())).collect::<Vec<_>>());
+
+        // // self.dropper.clear();
         Ok(())
     }
 
@@ -411,25 +515,30 @@ impl GcScope {
         // // return;
 
         //renable below (can't use with mark_and_sweep anymore, since that has been changed to run partially, and this will disrupt that)
-        // loop {
-        //     let mut droppeds=self.dropper.drain();
+        loop {
+            let Ok(mut droppeds)=self.dropper.drain() else {
+                break;
+            };
             
-        //     if droppeds.is_empty() {
-        //         break;
-        //     }
+            if droppeds.is_empty() {
+                break;
+            }
 
-        //     while let Some(weak_gc_index)=droppeds.pop() {
-        //         if let Some(gc_index)=weak_gc_index.to_strong() {
-        //             let managed_ind = gc_index.get();
-        //             self.manageds.swap_remove(managed_ind);
+            while let Some(weak_gc_index)=droppeds.pop() {
+                if let Some(gc_index)=weak_gc_index.to_strong() {
+                    let Ok(managed_ind) = gc_index.get() else {break;  };
+                    self.manageds.swap_remove(managed_ind);
         
-        //             //update managed_ind for the moved managed
-        //             if let Some(val)=self.manageds.get_mut(managed_ind) {
-        //                 val.managed_index.set(managed_ind);
-        //             }
-        //         }
-        //     }
-        // }
+                    //update managed_ind for the moved managed
+                    if let Some(val)=self.manageds.get_mut(managed_ind) {
+                        val.managed_index.set(managed_ind).unwrap();
+                        // if val.managed_index.set(managed_ind).is_err() {
+
+                        // }
+                    }
+                }
+            }
+        }
         
     }
 }
