@@ -232,7 +232,7 @@ impl<'a,'c,X> Machine<'a,'c,X> {
     fn set_result_val(&mut self, v:Value) {
         self.result_val=v.clone_root();
         self.debugger.set_result_val();        
-        self.gc_scope.remove_norefs();
+        // self.gc_scope.remove_norefs();
     }
     
     pub fn get_stack_val(&self,stack_ind:usize) -> Result<Value,MachineError> {
@@ -254,7 +254,7 @@ impl<'a,'c,X> Machine<'a,'c,X> {
 
         *self.stack.get_mut(stack_ind).unwrap()=v.clone_root();            
         self.debugger.set_stack_val_none(stack_ind);
-        self.gc_scope.remove_norefs();
+        // self.gc_scope.remove_norefs();
         Ok(())
     }
     
@@ -269,7 +269,7 @@ impl<'a,'c,X> Machine<'a,'c,X> {
         *self.stack.get_mut(stack_ind).unwrap()=v.clone_root();
         self.debugger.set_stack_val_none(stack_ind);
         
-        self.gc_scope.remove_norefs();
+        // self.gc_scope.remove_norefs();
         Ok(())
     }
     

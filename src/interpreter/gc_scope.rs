@@ -502,6 +502,8 @@ impl GcScope {
         // // println!(":{:?}",self.manageds.iter().map(|x|(x.managed_index.get(),x.marked,x.root_count.get())).collect::<Vec<_>>());
 
         // // self.dropper.clear();
+        let _=self.dropper.clear();
+
         Ok(())
     }
 
@@ -560,12 +562,12 @@ impl GcDropper {
         Ok(())
     }
     pub fn clear(&mut self) -> Result<(),()> {
-        let Ok(mut droppeds)=self.droppeds.try_lock() else {return Err(());};
+        let Ok(mut droppeds)=self.droppeds.lock() else {return Err(());};
         droppeds.clear();
         Ok(())
     }
     pub fn drain(&mut self) -> Result<Vec<GcWeakIndex>,()> {
-        let Ok(mut droppeds)=self.droppeds.try_lock() else {return Err(());};
+        let Ok(mut droppeds)=self.droppeds.lock() else {return Err(());};
         Ok(droppeds.drain(0 ..).collect())
     }
 }
@@ -584,7 +586,8 @@ pub struct GcValue {
     pub gc_index:GcWeakIndex,
     pub root_count:GcRootCount,
     pub root:bool,
-    pub dropper : Option<GcDropper>,
+    // pub dropper : Option<GcDropper>, //always set unless an empty ... are empties necessary?
+    pub dropper : GcDropper,
 }
 
 impl Drop for GcValue {
@@ -592,6 +595,8 @@ impl Drop for GcValue {
         if self.root {
             self.root_count.decr().unwrap();
         }
+
+        let _=self.dropper.add(self.gc_index.clone());
         // // self.root=false;
 
         //renable below
@@ -643,7 +648,8 @@ impl GcValue {
             root: false,//true, 
             gc_index: val_index, 
             root_count,
-            dropper : Some(gc_scope.get_dropper()),
+            // dropper : Some(gc_scope.get_dropper()),
+            dropper : gc_scope.get_dropper(),
         }
     }
 
@@ -661,7 +667,8 @@ impl GcValue {
             root: false,//true, 
             gc_index: val_index, 
             root_count,
-            dropper : Some(gc_scope.get_dropper()),
+            // dropper : Some(gc_scope.get_dropper()),
+            dropper : gc_scope.get_dropper(),
         }
     }
 
@@ -709,18 +716,18 @@ impl GcValue {
     // }
     
 
-    pub fn _empty<T:Any+Send>() -> Self { //GcTraversable+
-        let data=Weak::<Mutex<T>>::new();
+    // pub fn _empty<T:Any+Send>() -> Self { //GcTraversable+
+    //     let data=Weak::<Mutex<T>>::new();
        
-        Self {
-            data:WeakValueInner::Mut(data), //data, 
-            root: false, 
-            gc_index: GcWeakIndex::new(), 
-            root_count:GcRootCount::new(), 
-            // droppeds:Weak::new(),
-            dropper : None,
-        }
-    }
+    //     Self {
+    //         data:WeakValueInner::Mut(data), //data, 
+    //         root: false, 
+    //         gc_index: GcWeakIndex::new(), 
+    //         root_count:GcRootCount::new(), 
+    //         // droppeds:Weak::new(),
+    //         dropper : None,
+    //     }
+    // }
     // pub fn clone_to(&self,to_root:Option<bool>) -> Self {
     //     let root = match to_root {
     //         Some(true)=> {
