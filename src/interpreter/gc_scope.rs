@@ -369,7 +369,7 @@ impl GcScope {
         for gc_index in (0..self.manageds.len()).rev() {
             if self.manageds.get(gc_index).unwrap().marked {
                 self.manageds.swap_remove(gc_index);
-                println!("removing {gc_index}");
+                // println!("removing {gc_index}");
 
                 if let Some(managed)=self.manageds.get_mut(gc_index) {
                     managed.managed_index.set(gc_index)?;
