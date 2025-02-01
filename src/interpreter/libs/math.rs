@@ -10,19 +10,19 @@ use super::super::lib_scope::*;
 // use super::super::data::*;
 
 #[derive(Clone)]
-pub struct Vec2([FloatT;2]);
+pub struct Vec2(pub [FloatT;2]);
 #[derive(Clone)]
-pub struct Vec3([FloatT;3]);
+pub struct Vec3(pub [FloatT;3]);
 #[derive(Clone)]
-pub struct Vec4([FloatT;4]);
+pub struct Vec4(pub [FloatT;4]);
 
 
 #[derive(Clone)]
-pub struct IVec2([IntT;2]);
+pub struct IVec2(pub [IntT;2]);
 #[derive(Clone)]
-pub struct IVec3([IntT;3]);
+pub struct IVec3(pub [IntT;3]);
 #[derive(Clone)]
-pub struct IVec4([IntT;4]);
+pub struct IVec4(pub [IntT;4]);
 
 fn get_field_inds(fields:&str,) -> Vec<(char, Option<usize>)> {
     fields.chars().map(|c|(c,match c {

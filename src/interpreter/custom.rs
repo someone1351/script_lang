@@ -99,11 +99,31 @@ impl std::string::ToString for Custom {
 
 impl std::fmt::Debug for Custom {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self.gc_index() {
-            Ok(Some(gc_index))=> write!(f, "Managed:{gc_index}({})",self.type_info.short_name()),
-            Err(())=> write!(f, "Managed:(?)({})",self.type_info.short_name()),
-            Ok(None) => write!(f, "Unmanaged({})",self.type_info.short_name()),
-        }        
+        match (&self.inner,self.gc_index()) {
+            (CustomInner::Managed(_),Ok(Some(gc_index)))=>write!(f, "Managed:{gc_index}({})",self.type_info.short_name()),
+            (CustomInner::Managed(_),Err(()))=>write!(f, "Managed:(Locked)({})",self.type_info.short_name()),
+            (CustomInner::Managed(_),Ok(None))=>write!(f, "Managed:(Dead)({})",self.type_info.short_name()),
+            (CustomInner::Unmanaged(_),_)=>write!(f, "Unmanaged({})",self.type_info.short_name()),
+        }
+        // match &self.inner {
+        //     CustomInner::Managed(_) => {
+        //         match self.gc_index() {
+        //             Ok(Some(gc_index))=> {
+        //                 write!(f, "Managed:{gc_index}({})",self.type_info.short_name())
+        //             }
+        //             Err(())=> {
+        //                 write!(f, "Managed:(Locked)({})",self.type_info.short_name())
+        //             }
+        //             Ok(None) => {
+        //                 write!(f, "Managed:(Dead)({})",self.type_info.short_name())
+        //             }
+        //         }
+        //     }
+        //     CustomInner::Unmanaged(_) => {
+        //         write!(f, "Unmanaged({})",self.type_info.short_name())
+        //     }
+        // }
+
     }
 }
 

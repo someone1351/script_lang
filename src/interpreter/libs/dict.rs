@@ -8,7 +8,18 @@ use super::super::super::common::*;
 use super::super::value::*;
 use super::super::error::*;
 use super::super::lib_scope::*;
-use super::super::data::*;
+// use super::super::data::*;
+use super::super::gc_scope::*;
+use super::array::Array;
+
+#[derive(Clone,Default)] 
+pub struct Dict(pub BTreeMap<String,Value>);
+
+impl GcTraversable for Dict {
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
+        Box::new(self.0.values())
+    }
+}
 
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //dict(any? ...)

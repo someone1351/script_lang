@@ -1,11 +1,22 @@
 use super::super::super::common::*;
 
-use super::super::data::*;
+// use super::super::data::*;
 // use super::super::func_context::*;
 use super::super::value::*;
 use super::super::error::*;
 use super::super::lib_scope::*;
 use super::utils::*;
+use super::super::gc_scope::*;
+
+#[derive(Clone)] 
+pub struct Array(pub Vec<Value>);
+
+impl GcTraversable for Array {
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
+        Box::new(self.0.iter())
+    }
+}
+
 
 
 

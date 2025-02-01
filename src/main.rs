@@ -194,7 +194,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
 
     let compiler=script_lang::langs::cexpr_compiler::Compiler::new();
     
-    let build = compiler.compile(src.as_str(), 0, None, true,
+    let build = compiler.compile(src.as_str(), 0, Some(path), true,
         // false
     );
 

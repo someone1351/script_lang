@@ -30,6 +30,12 @@ pub use func_context::FuncContext;
 
 pub use data::*;
 
+pub use libs::array::Array;
+
+pub use libs::dict::Dict;
+
+pub use libs::math::*;
+
 // pub use libs::fields::{default_get_field,default_set_field};
 // pub use libs as interpreter_libs;
 

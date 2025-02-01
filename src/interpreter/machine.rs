@@ -215,7 +215,9 @@ impl<'a,'c,X> Machine<'a,'c,X> {
             Ok(())
         } else {
             self.stack.truncate(stack_len-amount);
-            self.gc_scope.remove_norefs();
+            // println!("hmm {:?}",self.result_val);
+            // self.gc_scope.remove_norefs();
+
             self.debugger.pop_stack_val_amount(amount);
             Ok(())
         }
@@ -473,6 +475,7 @@ impl<'a,'c,X> Machine<'a,'c,X> {
             }
             Instruction::StackPop(amount) => {
                 self.stack_pop_amount(*amount)?;
+                self.gc_scope.remove_norefs();
             } 
             Instruction::StackSwap => {
                 let stack_len = self.stack.len();

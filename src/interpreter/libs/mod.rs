@@ -6,6 +6,7 @@ pub mod utils;
 pub mod misc;
 pub mod math;
 
+pub use math::*;
 use super::lib_scope::*;
 
 pub fn register_all<X>(lib_scope : &mut LibScope<X>) {

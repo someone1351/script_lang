@@ -5,6 +5,7 @@ use super::super::value::*;
 // use super::super::error::*;
 use super::super::lib_scope::*;
 use super::super::data::*;
+use super::array::Array;
 
 
 pub fn register<X>(func_scope : &mut LibScope<X>) {
