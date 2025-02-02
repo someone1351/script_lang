@@ -143,6 +143,8 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         F : IntoIterator<Item = (T,Loc)>,
     {
 
+        // self.block_start(None); //needed for try_call_method
+
         let fields=fields.into_iter().collect::<Vec<_>>();
 
         //fields
@@ -223,6 +225,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         //  but problem is: set thing.0.color.r 0.5 vs: set thing.0.color.on_press .r 0.5
         // println!("fields num is {fields_num}");
 
+
         for _ in 0 .. fields_len-1 {
             self
                 .rot()
@@ -231,11 +234,14 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
                 
                 //
                 // .try_call_method("set_field", 3) //allowed to fail if no set_field method
-                // .
+                // .to_block_end(JmpCond::Undefined, 0) //todo:need to make try_call_method return undefined on fail
+                // //todo: also need a way to store result of prev set_field, and re set it as result on try_call_method fail
                 //
                 .call_method("set_field", 3)
                 ;
         }
+
+        // self.block_end(); //needed for try_call_method
 
         self
     }
