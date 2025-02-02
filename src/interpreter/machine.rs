@@ -409,7 +409,17 @@ impl<'a,'c,X> Machine<'a,'c,X> {
                     return Err(MachineError::from_machine(self, MachineErrorType::JmpErr(*new_instr_pos)));
                 }
 
-                if cond.and_then(|x|Some(x==self.result_val().as_bool())).unwrap_or(true) {
+                let b= match cond {
+                    JmpCond::None => true,
+                    JmpCond::True => self.result_val().as_bool(),
+                    JmpCond::False => !self.result_val().as_bool(),
+                    JmpCond::Undefined => self.result_val().is_undefined(),
+                    JmpCond::NotUndefined => !self.result_val().is_undefined(),
+                };
+
+                if b //cond.and_then(|x|Some(x==self.result_val().as_bool())).unwrap_or(true) 
+
+                {
                     if (*new_instr_pos as i64) != (self.instr_pos as i64)+debug.1 {
                         println!("id={} cur:{} offset:{}, new:{}",debug.0,self.instr_pos,debug.1,new_instr_pos,);
                         panic!("");

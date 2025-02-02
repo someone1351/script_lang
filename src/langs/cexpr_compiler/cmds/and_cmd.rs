@@ -1,4 +1,6 @@
 
+// use crate::JmpCond;
+use super::super::super::super::common::JmpCond;
 use super::super::builder::*;
 use super::super::super::cexpr_parser::*;
 use super::super::BuilderErrorType;
@@ -17,7 +19,9 @@ pub fn and_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
 
         builder
             .eval(cond)
-            .to_block_end(Some(false),0)
+            .to_block_end(
+                JmpCond::False //Some(false)
+                ,0)
             ;
     }
 

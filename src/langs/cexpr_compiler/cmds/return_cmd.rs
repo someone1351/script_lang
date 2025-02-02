@@ -2,6 +2,7 @@
 use super::super::builder::*;
 use super::super::super::cexpr_parser::*;
 use super::super::BuilderErrorType;
+use super::super::super::super::common::JmpCond;
 
 
 
@@ -17,7 +18,7 @@ pub fn return_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
     }
 
     let e = BuilderError::new(record.start_loc(), BuilderErrorType::ReturnNotInMethodOrLambda);
-    builder.to_block_end_label(None, "func",Some(e));
+    builder.to_block_end_label(JmpCond::None, "func",Some(e));
 
     Ok(())
 }

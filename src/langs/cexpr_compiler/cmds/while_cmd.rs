@@ -2,6 +2,7 @@
 use super::super::builder::*;
 use super::super::super::cexpr_parser::*;
 use super::super::BuilderErrorType;
+use super::super::super::super::common::JmpCond;
 
 pub fn while_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> {
     //while true {}
@@ -25,10 +26,10 @@ pub fn while_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Prim
         // .loop_instr()
         .block_start(Some("loop"))
             .eval(cond_expr)
-            .to_block_end(Some(false),0)
+            .to_block_end(JmpCond::False,0)
             // .eval_sexprs(body_stmts)
             .eval(body)
-            .to_block_start(None,0)
+            .to_block_start(JmpCond::None,0)
         .block_end()
     // .value_instr(&Value::Void)
     ;

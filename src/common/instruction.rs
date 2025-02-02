@@ -1,15 +1,34 @@
 
 use super::types::*;
 
+#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+pub enum JmpCond {
+    None,
+    True,False,
+    Undefined,NotUndefined,
+}
+
+impl JmpCond {
+    pub fn not(&self) -> Self {
+        match self {
+            Self::None => Self::None,
+            Self::True => Self::False,
+            Self::False => Self::True,
+            Self::Undefined => Self::NotUndefined,
+            Self::NotUndefined => Self::Undefined,
+        }
+    }
+}
 #[derive(Debug,Clone)]
 pub enum Instruction {
     Include(usize), //path_ind
 
     Jmp{
-        cond:Option<bool>,
+        // cond:Option<bool>,
+        cond:JmpCond,
         instr_pos:usize,
         debug:(usize,i64),
-    }, 
+    },
     
     ResultBool(bool),
     ResultInt(IntT),

@@ -135,6 +135,7 @@ TODO
 
 use std::{collections::{HashMap,  HashSet},  path::Path};
 
+// use super::super::common::{*,instruction::JmpCond};
 use super::super::common::*;
 
 use include_manager::*;
@@ -332,7 +333,7 @@ impl<'a> Ast<'a> {
         Ok(())
     }
 
-    pub fn to_block_start(&mut self, cond:Option<bool>, block_offset:usize) -> Result<(),AstError> { //Result<bool,AstError>
+    pub fn to_block_start(&mut self, cond:JmpCond, block_offset:usize) -> Result<(),AstError> { //Result<bool,AstError>
         let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
         
         if stack_pushed_num!=0 {
@@ -358,7 +359,7 @@ impl<'a> Ast<'a> {
         Err(AstError::BlockOffsetNotFound(block_offset))
     }
 
-    pub fn to_block_end(&mut self, cond:Option<bool>, block_offset:usize) -> Result<(),AstError> {
+    pub fn to_block_end(&mut self, cond:JmpCond, block_offset:usize) -> Result<(),AstError> {
         let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
         
         if stack_pushed_num!=0 {
@@ -384,7 +385,7 @@ impl<'a> Ast<'a> {
         Err(AstError::BlockOffsetNotFound(block_offset))
     }
     
-    pub fn to_label_block_start(&mut self, cond:Option<bool>, block_label:&'a str) -> Result<bool,AstError> {
+    pub fn to_label_block_start(&mut self, cond:JmpCond, block_label:&'a str) -> Result<bool,AstError> {
         let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
         
         if stack_pushed_num!=0 {
@@ -409,7 +410,7 @@ impl<'a> Ast<'a> {
         Ok(false)
     }
 
-    pub fn to_label_block_end(&mut self, cond:Option<bool>, block_label:&'a str) -> Result<bool,AstError> {
+    pub fn to_label_block_end(&mut self, cond:JmpCond, block_label:&'a str) -> Result<bool,AstError> {
         let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
         
         if stack_pushed_num!=0 {
@@ -1397,8 +1398,11 @@ impl<'a> Ast<'a> {
                     let dif_stack_size=cur_node.stack_size - to_stack_size;
 
                     if dif_stack_size>0 {
-                        if cond.is_some() { //(not_cond,2)
-                            let not_cond=cond.and_then(|b|Some(!b));
+                        if //cond.is_some() 
+                            cond!=JmpCond::None
+                        { //(not_cond,2)
+                            // let not_cond=cond.and_then(|b|Some(!b));
+                            let not_cond=cond.not();
                             let _instr_offset_down:usize = 3;
 
                             instructions.push(Instruction::Jmp { cond: not_cond, 
@@ -1427,8 +1431,11 @@ impl<'a> Ast<'a> {
                     let dif_stack_size=cur_node.stack_size - to_stack_size;
 
                     if dif_stack_size>0 {
-                        if cond.is_some() {
-                            let not_cond=cond.and_then(|b|Some(!b));
+                        if //cond.is_some() 
+                            cond!=JmpCond::None
+                        {
+                            // let not_cond=cond.and_then(|b|Some(!b));
+                            let not_cond=cond.not();
 
                             let _instr_offset_down:usize = 3;
                             

@@ -1,6 +1,7 @@
 use super::super::builder::*;
 use super::super::super::cexpr_parser::*;
 use super::super::BuilderErrorType;
+use super::super::super::super::common::JmpCond;
 
 
 
@@ -18,7 +19,7 @@ pub fn or_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primiti
 
         builder
             .eval(cond)
-            .to_block_end(Some(true),0)
+            .to_block_end(JmpCond::True,0)
             ;
     }
 

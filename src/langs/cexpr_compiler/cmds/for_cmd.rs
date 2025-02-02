@@ -1,6 +1,7 @@
 use super::super::builder::*;
 use super::super::super::cexpr_parser::*;
 use super::super::BuilderErrorType;
+use super::super::super::super::common::JmpCond;
 
 use super::get_idn;
 
@@ -49,7 +50,7 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
                     .param_push()
                     .call_method("<", 2)
                     // .to_block_end_label(Some(false),"loop", None)
-                    .to_block_end(Some(false), 1)
+                    .to_block_end(JmpCond::False, 1)
 
                     .result_void()
                     .eval(body)
@@ -66,7 +67,7 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
                 .set_var(idn)
 
                 //
-                .to_block_start(None,0)
+                .to_block_start(JmpCond::None,0)
             .block_end()
             .get_anon_var("i")
         .block_end()

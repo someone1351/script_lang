@@ -1,5 +1,6 @@
 
 
+// use super::super::super::common::{*,instruction::JmpCond};
 use super::super::super::common::*;
 use super::misc::*;
 
@@ -19,8 +20,16 @@ pub enum AstNodeType<'a> {
 
     // FunctionInstance{func_node_ind:usize,captures_num:usize}, //lambda_ast_node_ind,captures_num
 
-    ToBlockStart{cond:Option<bool>,block_node_ind:usize},
-    ToBlockEnd{cond:Option<bool>,block_node_ind:usize},
+    ToBlockStart{
+        // cond:Option<bool>,
+        cond:JmpCond,
+        block_node_ind:usize,
+    },
+    ToBlockEnd{
+        // cond:Option<bool>,
+        cond:JmpCond,
+        block_node_ind:usize,
+    },
 
     ResultNil,
     ResultVoid,

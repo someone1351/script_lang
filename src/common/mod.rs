@@ -3,7 +3,7 @@ mod loc;
 mod build;
 mod types;
 mod error;
-
+// pub use instruction::Instruction;
 pub use instruction::*;
 pub use loc::*;
 pub use error::*;

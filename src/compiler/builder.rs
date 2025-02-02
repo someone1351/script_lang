@@ -17,6 +17,7 @@ use std::marker::PhantomData;
 
 // use error::AstError;
 
+// use super::super::common::{*,instruction::JmpCond};
 use super::super::common::*;
 // use super::parser::*;
 use super::super::ast::*;
@@ -227,7 +228,11 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
                 .rot()
                 .rot()
                 .swap()
+                
+                //
                 // .try_call_method("set_field", 3) //allowed to fail if no set_field method
+                // .
+                //
                 .call_method("set_field", 3)
                 ;
         }
@@ -555,7 +560,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     
     
 
-    pub fn to_block_start(&mut self,cond:Option<bool>,block_offset:usize) -> &mut Self {
+    pub fn to_block_start(&mut self,cond:JmpCond,block_offset:usize) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToStart(cond,block_offset))
 
         self.add_node(move|ast|{         
@@ -564,7 +569,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         })
     }
 
-    pub fn to_block_end(&mut self,cond:Option<bool>,block_offset:usize) -> &mut Self {
+    pub fn to_block_end(&mut self,cond:JmpCond,block_offset:usize) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToEnd(cond,block_offset))
 
         self.add_node(move|ast|{
@@ -573,11 +578,10 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         })
     }
 
-    pub fn to_block_start_label(&mut self,cond:Option<bool>,label:&'a str, err : Option<BuilderError<E>>) -> &mut Self {
+    pub fn to_block_start_label(&mut self,cond:JmpCond,label:&'a str, err : Option<BuilderError<E>>) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToStartLabel(cond,label,err))
 
-        
-        self.add_node(move|ast|{         
+        self.add_node(move|ast|{
             match ast.to_label_block_start(cond, label) {
                 Ok(x) => {
                     if !x {
@@ -594,7 +598,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         })
     }
 
-    pub fn to_block_end_label(&mut self,cond:Option<bool>,label:&'a str, err : Option<BuilderError<E>>) -> &mut Self {
+    pub fn to_block_end_label(&mut self,cond:JmpCond,label:&'a str, err : Option<BuilderError<E>>) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToEndLabel(cond,label,err))
 
         

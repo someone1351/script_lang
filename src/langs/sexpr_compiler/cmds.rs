@@ -7,6 +7,7 @@ use super::super::builder::*;
 use super::SexprBuilderErrorType;
 
 use super::super::sexpr_parser::*;
+use super::super::super::common::JmpCond;
 
 pub fn get_symbol<'a>(sexpr : SExprContainer<'a>) -> Result<&'a str,BuilderError<SexprBuilderErrorType>> {
     if let Some(symbol)=sexpr.symbol() {
@@ -48,7 +49,7 @@ pub fn while_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprC
         // .loop_instr()
         .block_start(Some("loop"))
             .eval(cond_expr)
-            .to_block_end(Some(false),0);
+            .to_block_end(JmpCond::False,0);
 
     for x in body_stmts {
         builder
@@ -57,7 +58,7 @@ pub fn while_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprC
     // builder
     //         .eval_sexprs(body_stmts);
     builder
-            .to_block_start(None,0)
+            .to_block_start(JmpCond::None,0)
         .block_end()
     // .value_instr(&Value::Void)
     ;
@@ -112,7 +113,7 @@ pub fn for_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
                     .param_push()
                     .call_method("<", 2)
                     // .to_block_end_label(Some(false),"loop", None)
-                    .to_block_end(Some(false), 1)
+                    .to_block_end(JmpCond::False, 1)
 
                     .result_void();
     // builder
@@ -133,7 +134,7 @@ pub fn for_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
 
                 .set_var(idn)
 
-                .to_block_start(None,0)
+                .to_block_start(JmpCond::None,0)
             .block_end()
             .get_anon_var("r")
         .block_end()
@@ -151,7 +152,7 @@ pub fn continue_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SEx
     // builder.continue_instr();
 
     let e = BuilderError::new(sexpr.start_loc(), SexprBuilderErrorType::ContinueNotInLoop);
-    builder.to_block_start_label(None,"loop",Some(e));
+    builder.to_block_start_label(JmpCond::None,"loop",Some(e));
 
     Ok(())
 }
@@ -164,7 +165,7 @@ pub fn break_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprC
 
     // builder.break_instr();
     let e = BuilderError::new(sexpr.start_loc(), SexprBuilderErrorType::BreakNotInLoop);
-    builder.to_block_end_label(None,"loop",Some(e));
+    builder.to_block_end_label(JmpCond::None,"loop",Some(e));
 
     Ok(())
 }
@@ -182,7 +183,7 @@ pub fn return_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
     }
 
     let e = BuilderError::new(sexpr.start_loc(), SexprBuilderErrorType::ReturnNotInMethodOrLambda);
-    builder.to_block_end_label(None, "func",Some(e));
+    builder.to_block_end_label(JmpCond::None, "func",Some(e));
 
     Ok(())
 }
@@ -353,7 +354,7 @@ pub fn if_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCont
             builder
                 .eval(cond_sexpr)
                 .block_start(None)
-                    .to_block_end(Some(false),0);
+                    .to_block_end(JmpCond::False,0);
             // builder
             //         .eval_sexprs(body_sexprs);
             
@@ -363,7 +364,7 @@ pub fn if_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCont
             }
 
             builder
-                    .to_block_end(None,1)
+                    .to_block_end(JmpCond::None,1)
                 .block_end();
         }
     }
@@ -391,9 +392,9 @@ pub fn ternary_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExp
     if let Some(then_sexpr)=then_sexpr {
         builder
             .block_start(None)
-                .to_block_end(Some(false),0)
+                .to_block_end(JmpCond::False,0)
                 .eval(then_sexpr)
-                .to_block_end(None,1)
+                .to_block_end(JmpCond::None,1)
             .block_end()
             ;
 
@@ -424,7 +425,7 @@ pub fn and_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
     for cond_sexpr in sexpr.list_iter_from(1) {
         builder
             .eval(cond_sexpr)
-            .to_block_end(Some(false),0)
+            .to_block_end(JmpCond::False,0)
             ;
     }
 
@@ -443,7 +444,7 @@ pub fn or_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCont
     for cond_sexpr in sexpr.list_iter_from(1) {
         builder
             .eval(cond_sexpr)
-            .to_block_end(Some(true),0)
+            .to_block_end(JmpCond::True,0)
             ;
     }
 

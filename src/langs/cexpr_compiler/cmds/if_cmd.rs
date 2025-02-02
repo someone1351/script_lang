@@ -3,6 +3,7 @@
 use super::super::builder::*;
 use super::super::super::cexpr_parser::*;
 use super::super::BuilderErrorType;
+use super::super::super::super::common::JmpCond;
 
 
 
@@ -75,9 +76,9 @@ pub fn if_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primiti
             builder
                 .block_start(None)
                     .eval(cond)
-                    .to_block_end(Some(false),0)
+                    .to_block_end(JmpCond::False,0)
                     .eval(body)
-                    .to_block_end(None,1)
+                    .to_block_end(JmpCond::None,1)
                 .block_end()
             ;
         } else {
