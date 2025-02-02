@@ -65,10 +65,10 @@ pub struct Machine<'a,'c,X> { //,'b
 }
 
 impl<'a,'c,X> Machine<'a,'c,X> {
-    pub fn core_mut(&mut self) -> &mut X {
+    pub fn get_core_mut(&mut self) -> &mut X {
         &mut self.core_val
     }
-    pub fn core(& self) -> &X {
+    pub fn get_core(& self) -> &X {
         &self.core_val
     }
 

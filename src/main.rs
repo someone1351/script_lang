@@ -218,10 +218,10 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         let mut test_val=0;
         let mut lib_scope=script_lang::LibScope::<'static,(&mut i32,)>::new_full();
         lib_scope.method("get_test", |context|{
-            Ok(script_lang::Value::Int(*context.core().0 as script_lang::IntT))
+            Ok(script_lang::Value::Int(*context.get_core().0 as script_lang::IntT))
         }).end();
         lib_scope.method("set_test", |mut context|{
-            *context.core_mut().0=context.param(0).as_int() as i32;
+            *context.get_core_mut().0=context.param(0).as_int() as i32;
             Ok(script_lang::Value::Void)
         }).int().end();
 
@@ -326,6 +326,7 @@ fn main() {
     test_script3("examples/test7.script");
     test_script3("examples/test8.script");
     // test_script3("examples/test9.script");
+    
 }
 /*
 TODO

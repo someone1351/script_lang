@@ -39,27 +39,27 @@ pub struct FuncContext<'q,'a,'c,X> { //,'b
 }
 
 impl<'q,'a,'c,X> FuncContext<'q,'a,'c,&mut X> { 
-//     pub fn get_core_mut(&mut self) -> &mut X {
-//         self.machine.get_core_mut()
-//     }
-//     pub fn get_core_ref(&self) -> &X {
-//         self.machine.get_core_ref()
-//     }
+    pub fn core_mut(&mut self) -> &mut X {
+        self.machine.get_core_mut()
+    }
+    pub fn core_ref(&self) -> &X {
+        self.machine.get_core()
+    }
 }
 
 impl<'q,'a,'c,X> FuncContext<'q,'a,'c,&X> { 
-//     pub fn get_core_ref(&self) -> &X {
-//         self.machine.get_core_ref()
-//     }
+    pub fn core_ref(&self) -> &X {
+        self.machine.get_core()
+    }
 }
 
 impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b
 
-    pub fn core_mut(&mut self) -> &mut X {
-        self.machine.core_mut()
+    pub fn get_core_mut(&mut self) -> &mut X {
+        self.machine.get_core_mut()
     }
-    pub fn core(& self) -> &X {
-        self.machine.core()
+    pub fn get_core(& self) -> &X {
+        self.machine.get_core()
     }
     pub fn new(machine:&'q mut Machine<'a,'c,X>,params_num : usize,) -> Self { //,'b
         let stack_len = machine.stack().len();
