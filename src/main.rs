@@ -215,8 +215,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         //     Ok(Value::int(x))
         // }))).unwrap();
 
-        let mut test_val=0;
-        let mut lib_scope=script_lang::LibScope::<'static,(&mut i32,)>::new_full();
+        let mut lib_scope=script_lang::LibScope::<(&mut i32,)>::new_full();
         lib_scope.method("get_test", |context|{
             Ok(script_lang::Value::Int(*context.get_core().0 as script_lang::IntT))
         }).end();
@@ -225,6 +224,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
             Ok(script_lang::Value::Void)
         }).int().end();
 
+        let mut test_val=0;
 
         lib_scope.method_mut("do_test2", move|_context|{
             test_val+=1;
@@ -330,22 +330,29 @@ fn main() {
 }
 /*
 TODO
-* use builtin mutex lib
 * fix gc
-* make value clone = clone_as_is
 * replace value clone in machine with value.clone_leaf()
 ** make values returned from func_context, var_scope, lib_scope, machine be leaves
 ** make all values used in working roots?
+** if custom dropped, and weak count==0, can remove it without mark and sweep
+*** iterate children, check their weak counts?
 
 * allow method decl from script?
 * make dict keys accept non strings
-** make value's hashable? 
-*** for customs based on type id
+** make value's hashable? for customs based on type id
 * add matrices to lib
 * remove unnecessary debug code
 * add c like syntax
-*clean up debugger
 
-* if custom dropped, and weak count==0, can remove it without mark and sweep
-** iterate children, check their weak counts?
+* add limits for running, memory usage,
+** limit size of strings? at both compile time and runtime
+*** at add/remove/init?
+** limit size of file willing to compile?
+** limit size of arrays/dicts?
+*** at push/pop/init ?
+** either limit loops (ie to_block_start/end, includeding nested loops) or limit number of instructs run
+** limit number of variables declared?
+*** globals?
+*** manageds?
+*** rest?
 */

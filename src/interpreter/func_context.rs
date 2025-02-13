@@ -31,14 +31,14 @@ todo:
 * * could allow inserting instructions or manipulating (or adding to) the stack?
 */
 
-pub struct FuncContext<'q,'a,'c,X> { //,'b
-    machine:&'q mut Machine<'a,'c, X>, //,'b
+pub struct FuncContext<'q,'a,X> { //,'b
+    machine:&'q mut Machine<'a, X>, //,'b
     params_start : usize,
     params_num : usize,
     
 }
 
-impl<'q,'a,'c,X> FuncContext<'q,'a,'c,&mut X> { 
+impl<'q,'a,X> FuncContext<'q,'a,&mut X> { 
     pub fn core_mut(&mut self) -> &mut X {
         self.machine.get_core_mut()
     }
@@ -47,13 +47,13 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,'c,&mut X> {
     }
 }
 
-impl<'q,'a,'c,X> FuncContext<'q,'a,'c,&X> { 
+impl<'q,'a,X> FuncContext<'q,'a,&X> { 
     pub fn core_ref(&self) -> &X {
         self.machine.get_core()
     }
 }
 
-impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b
+impl<'q,'a,'c,X> FuncContext<'q,'a,X> { //,'b //,'b
 
     pub fn get_core_mut(&mut self) -> &mut X {
         self.machine.get_core_mut()
@@ -61,7 +61,7 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,'c,X> { //,'b //,'b
     pub fn get_core(& self) -> &X {
         self.machine.get_core()
     }
-    pub fn new(machine:&'q mut Machine<'a,'c,X>,params_num : usize,) -> Self { //,'b
+    pub fn new(machine:&'q mut Machine<'a,X>,params_num : usize,) -> Self { //,'b
         let stack_len = machine.stack().len();
 
         Self {

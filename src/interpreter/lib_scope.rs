@@ -98,17 +98,17 @@ impl Arg {
 
 
 
-pub struct MethodInput<'m,'a,X> {
-    lib_scope:&'m mut LibScope<'a,X>,
+pub struct MethodInput<'m,X> {
+    lib_scope:&'m mut LibScope<X>,
     name:&'m str,
-    method_type:MethodType<'a,X>,
+    method_type:MethodType<X>,
 
     args : Vec<Vec<Arg>>,
     optional_start : Option<usize>,
     // variadic:bool,
 }
 
-impl<'m,'a,X> MethodInput<'m,'a,X> {
+impl<'m,X> MethodInput<'m,X> {
     pub fn optional(mut self) -> Self {
         self.optional_start=Some(self.args.len());
         // println!("opt {:?}",self.optional_start);
@@ -277,23 +277,23 @@ impl<'m,'a,X> MethodInput<'m,'a,X> {
     }
 }
 
-pub type FuncType<'a,X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'a +Send+Sync> ; 
-pub type FuncTypeMut<'a,X> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync>>;
+pub type FuncType<X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'static +Send+Sync> ; 
+pub type FuncTypeMut<X> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'static + Send + Sync>>;
 
 #[derive(Clone,)] //Default
-pub struct ArgNode<'a,X> {
+pub struct ArgNode<X> {
     // pub arg_type : ValueType,
     pub variadic : bool,
     // pub optional : bool,
     pub children : HashMap<Arg,usize>,
-    func:Option<MethodType<'a,X>>,
+    func:Option<MethodType<X>>,
 }
-impl<'a,X> Default for ArgNode<'a,X> {
+impl<X> Default for ArgNode<X> {
     fn default() -> Self { 
         Self { variadic: false, children: HashMap::new(), func: None } 
     }
 }
-impl<'a,X> std::fmt::Debug for ArgNode<'a,X> {
+impl<X> std::fmt::Debug for ArgNode<X> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "ArgNode(variadic : {}, children : {:?}, func : {})",
             self.variadic,
@@ -304,12 +304,12 @@ impl<'a,X> std::fmt::Debug for ArgNode<'a,X> {
 }
 
 // #[derive(Clone)]
-pub enum MethodType<'a,X> {
-    Mut(FuncTypeMut<'a,X>),
-    NonMut(FuncType<'a,X>),
+pub enum MethodType<X> {
+    Mut(FuncTypeMut<X>),
+    NonMut(FuncType<X>),
 }
 
-impl<'a,X> Clone for MethodType<'a,X> {
+impl<X> Clone for MethodType<X> {
     fn clone(&self) -> Self {
         match self {
             Self::Mut(x) => Self::Mut(x.clone()),
@@ -319,27 +319,27 @@ impl<'a,X> Clone for MethodType<'a,X> {
 }
 
 #[derive(Clone)]
-pub struct Method<'a,X> {
-    pub method_type:MethodType<'a,X>,
+pub struct Method<X> {
+    pub method_type:MethodType<X>,
     pub args_path:Vec<Arg>,
 }
 
 
 #[derive(Clone)]
-pub struct LibScope<'a,X> { //
+pub struct LibScope<X> { //
     constants : HashMap<String,Value>,
     methods : HashMap<String,usize>, //node_ind
-    nodes : Vec<ArgNode<'a,X>>,
+    nodes : Vec<ArgNode<X>>,
 }
 
 
-impl<'a,X> Default for LibScope<'a,X> {
+impl<X> Default for LibScope<X> {
     fn default() -> Self {        
         Self::new_full()
     }
 }
 
-impl<'a,X> LibScope<'a,X> {
+impl<X> LibScope<X> {
     pub fn new() -> Self {
         Self { 
             constants: Default::default(),
@@ -385,11 +385,11 @@ impl<'a,X> LibScope<'a,X> {
         self.methods.get(n).cloned()
     }
 
-    fn get_node(&self,node_ind:usize) -> &ArgNode<'a,X> {
+    fn get_node(&self,node_ind:usize) -> &ArgNode<X> {
         self.nodes.get(node_ind).unwrap()
     }
 
-    fn get_node_mut(&mut self,node_ind:usize) -> &mut ArgNode<'a,X> {
+    fn get_node_mut(&mut self,node_ind:usize) -> &mut ArgNode<X> {
         self.nodes.get_mut(node_ind).unwrap()
     }
 
@@ -397,7 +397,7 @@ impl<'a,X> LibScope<'a,X> {
         self.get_node(node_ind).children.get(&value_type).cloned()
     }
 
-    fn inner_insert_method<T>(&mut self,n:&str,args : T,optional_start : Option<usize>,variadic:bool,func:MethodType<'a,X>) 
+    fn inner_insert_method<T>(&mut self,n:&str,args : T,optional_start : Option<usize>,variadic:bool,func:MethodType<X>) 
     where
         T:AsRef<[Arg]>
     {
@@ -431,7 +431,7 @@ impl<'a,X> LibScope<'a,X> {
         }
     }
 
-    fn inner_get_method<'x,I>(&self,n : &str, params : I) -> Option<Method<'a,X>>
+    fn inner_get_method<'x,I>(&self,n : &str, params : I) -> Option<Method<X>>
     where
         I: IntoIterator<Item=&'x Value>,
     {
@@ -556,7 +556,7 @@ impl<'a,X> LibScope<'a,X> {
 
     pub fn get_method<'x,I>(&self,n : &str, params : I, 
         // var_scope : &VarScope,
-    ) -> Option<Method<'a,X>> 
+    ) -> Option<Method<X>> 
     where
         I: IntoIterator<Item=&'x Value>
     {
@@ -564,8 +564,8 @@ impl<'a,X> LibScope<'a,X> {
     }
 
     pub fn method<'m>(&'m mut self,name : &'m str, 
-        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'a+Send+Sync  
-    ) -> MethodInput<'m,'a,X> {
+        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync  
+    ) -> MethodInput<'m,X> {
         MethodInput { 
             lib_scope: self, 
             name, 
@@ -577,8 +577,8 @@ impl<'a,X> LibScope<'a,X> {
     }
     pub fn method_mut<'m>(&'m mut self,name : &'m str, 
         // slot:usize
-        func:impl FnMut(FuncContext<X>)->Result<Value,MachineError> + 'a + Send + Sync
-    ) -> MethodInput<'m,'a,X> {
+        func:impl FnMut(FuncContext<X>)->Result<Value,MachineError> + 'static + Send + Sync
+    ) -> MethodInput<'m,X> {
         MethodInput { 
             lib_scope: self, 
             name, 
@@ -591,24 +591,26 @@ impl<'a,X> LibScope<'a,X> {
     
 }
 
-impl<'b,'a:'b,X> LibScope<'a,X> {
-    pub fn make_copy(&self) -> LibScope<'b,X> {
-        let mut nodes: Vec<ArgNode<'b,X>> = Vec::new();
 
-        for node in self.nodes.iter() {
-            let func=match &node.func {
-                Some(MethodType::NonMut(x)) => Some(MethodType::NonMut(x.clone())),
-                Some(MethodType::Mut(x)) => Some(MethodType::Mut(x.clone())),
-                None => None
-            };
 
-            nodes.push(ArgNode { variadic: node.variadic, children: node.children.clone(), func });
-        }
+// impl<'b,'a:'b,X> LibScope<'a,X> {
+//     pub fn make_copy(&self) -> LibScope<'b,X> {
+//         let mut nodes: Vec<ArgNode<'b,X>> = Vec::new();
 
-        LibScope { 
-            constants : self.constants.clone(), 
-            methods : self.methods.clone(), 
-            nodes, 
-        }
-    }
-}
+//         for node in self.nodes.iter() {
+//             let func=match &node.func {
+//                 Some(MethodType::NonMut(x)) => Some(MethodType::NonMut(x.clone())),
+//                 Some(MethodType::Mut(x)) => Some(MethodType::Mut(x.clone())),
+//                 None => None
+//             };
+
+//             nodes.push(ArgNode { variadic: node.variadic, children: node.children.clone(), func });
+//         }
+
+//         LibScope { 
+//             constants : self.constants.clone(), 
+//             methods : self.methods.clone(), 
+//             nodes, 
+//         }
+//     }
+// }

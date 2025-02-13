@@ -45,7 +45,7 @@ pub struct StackFrame {
     // pub ret_stack_size : usize,    
 }
 
-pub struct Machine<'a,'c,X> { //,'b
+pub struct Machine<'a,X> { //,'b
     cur_build : Option<BuildT>,
     instr_pos : usize,
     instr_end_pos : usize,
@@ -56,7 +56,7 @@ pub struct Machine<'a,'c,X> { //,'b
     debugger : Debugger,
     gc_scope : &'a mut GcScope,
     var_scope : &'a mut VarScope, 
-    lib_scope : &'a LibScope<'c,X>, //<'c> //<'b>
+    lib_scope : &'a LibScope<X>, //<'c> //<'b>
     includer : Option<Box<dyn FnMut(&Path) -> Option<BuildT> + 'a>>, //can use lifetime a for some reason?
     const_scope:HashMap<&'a str,Value>,
     core_val :   X, //&'a mut 
@@ -64,7 +64,7 @@ pub struct Machine<'a,'c,X> { //,'b
     stack_limit:usize,
 }
 
-impl<'a,'c,X> Machine<'a,'c,X> {
+impl<'a,X> Machine<'a,X> {
     pub fn get_core_mut(&mut self) -> &mut X {
         &mut self.core_val
     }
@@ -75,7 +75,7 @@ impl<'a,'c,X> Machine<'a,'c,X> {
     pub fn new (
         gc_scope : &'a mut GcScope,
         var_scope : &'a mut VarScope, 
-        lib_scope : &'a LibScope<'c,X>,
+        lib_scope : &'a LibScope<X>,
         core_val :  X,//&'a mut X,
     ) -> Self
     {
@@ -309,7 +309,7 @@ impl<'a,'c,X> Machine<'a,'c,X> {
         self.const_scope.get(n).map(|x|x.clone_root()).or_else(||self.lib_scope.get_constant(n))
     }
 
-    fn get_method(&self, method_name : &str, params_num : usize) -> Option<Method<'c,X>> {
+    fn get_method(&self, method_name : &str, params_num : usize) -> Option<Method<X>> {
         self.lib_scope.get_method(method_name,self.stack_params_iter(params_num),)
     }
 
@@ -849,7 +849,7 @@ impl<'a,'c,X> Machine<'a,'c,X> {
     }
     
 
-    fn inner_call_bound_func(&mut self, params_num : usize, bound_func : Method<'c,X>) -> Result<(),MachineError> {
+    fn inner_call_bound_func(&mut self, params_num : usize, bound_func : Method<X>) -> Result<(),MachineError> {
         
         self.debugger.push_frame_bound_func(params_num, &self.stack, &self.result_val());
         
