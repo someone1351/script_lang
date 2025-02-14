@@ -47,9 +47,12 @@ pub fn test_script<P:AsRef<Path>>(path:P) {
 
         let mut var_scope=script_lang::VarScope::new();
         var_scope.decl("self", Some(script_lang::Value::int(4))).unwrap();
-    
+        // let x=5;
         let  lib_scope=script_lang::LibScope::new_full();
-        let mut machine = script_lang::Machine::new(&mut gc_scope,&mut var_scope, &lib_scope,  ());
+        
+        // let mut core=&x;
+        let mut core=();
+        let mut machine = script_lang::Machine::new(&mut gc_scope,&mut var_scope, &lib_scope,  &mut core);
         // machine.set_debug_print(true);
 
         // build.clone().unwrap().print();
@@ -198,7 +201,33 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         // false
     );
 
+
     let mut my_num:i32=123;
+
+    let mut lib_scope=script_lang::LibScope::<
+        // (&mut i32,)
+        i32
+    >::new_full();
+    lib_scope.method("get_test", |context|{
+        // Ok(script_lang::Value::Int(*context.core().0 as script_lang::IntT))
+        Ok(script_lang::Value::Int(*context.core() as script_lang::IntT))
+    }).end();
+    lib_scope.method("set_test", |mut context|{
+        // *context.core_mut().0=context.param(0).as_int() as i32;
+        *context.core_mut()=context.param(0).as_int() as i32;
+        Ok(script_lang::Value::Void)
+    }).int().end();
+
+    let mut test_val=0;
+
+    lib_scope.method_mut("do_test2", move|_context|{
+        test_val+=1;
+        Ok(script_lang::Value::int(test_val))
+    }).end();
+
+    
+    
+    // let mut core=(&mut my_num,);
 
     if let Err(e)=&build {
         eprintln!("In {path:?}, {}",e.msg());
@@ -215,23 +244,10 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         //     Ok(Value::int(x))
         // }))).unwrap();
 
-        let mut lib_scope=script_lang::LibScope::<(&mut i32,)>::new_full();
-        lib_scope.method("get_test", |context|{
-            Ok(script_lang::Value::Int(*context.get_core().0 as script_lang::IntT))
-        }).end();
-        lib_scope.method("set_test", |mut context|{
-            *context.get_core_mut().0=context.param(0).as_int() as i32;
-            Ok(script_lang::Value::Void)
-        }).int().end();
-
-        let mut test_val=0;
-
-        lib_scope.method_mut("do_test2", move|_context|{
-            test_val+=1;
-            Ok(script_lang::Value::int(test_val))
-        }).end();
-
-        let mut machine = script_lang::Machine::new(&mut gc_scope,&mut var_scope, &lib_scope,  (&mut my_num,));
+        let mut machine = script_lang::Machine::new(&mut gc_scope,&mut var_scope, &lib_scope,  &mut 
+            // core
+            my_num
+        );
         // machine.set_debug_print(true);
 
         // build.clone().unwrap().print();

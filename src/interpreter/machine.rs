@@ -59,24 +59,63 @@ pub struct Machine<'a,X> { //,'b
     lib_scope : &'a LibScope<X>, //<'c> //<'b>
     includer : Option<Box<dyn FnMut(&Path) -> Option<BuildT> + 'a>>, //can use lifetime a for some reason?
     const_scope:HashMap<&'a str,Value>,
-    core_val :   X, //&'a mut 
+    core_val : &'a mut X, //&'a mut 
+    // core_empty : (), //&'a mut 
 
     stack_limit:usize,
 }
 
+
+// impl<'a,X> Machine<'a,&mut X> {
+//     pub fn core_mut(&mut self) -> &mut X {
+//         self.core_val
+//     }
+//     pub fn core(&self) -> &X {
+//         self.core_val
+//     }
+// }
+
+// impl<'a,X> Machine<'a,&X> {
+//     pub fn core(&self) -> &X {
+//         self.core_val
+//     }
+// }
+
+
+// impl<'a> Machine<'a,()> {
+//     pub fn new2 (
+//         gc_scope : &'a mut GcScope,
+//         var_scope : &'a mut VarScope, 
+//         lib_scope : &'a LibScope<()>,
+//     ) -> Self
+//     {
+//         // let mut core=();
+        
+//         Self::new(gc_scope,var_scope,lib_scope,&mut self core)
+//     }
+// }
+
 impl<'a,X> Machine<'a,X> {
-    pub fn get_core_mut(&mut self) -> &mut X {
-        &mut self.core_val
+    // pub fn get_core_mut(&mut self) -> &mut X {
+    //     // &mut 
+    //     self.core_val
+    // }
+    // pub fn get_core(& self) -> &X {
+    //     // &
+    //     self.core_val
+    // }
+    pub fn core_mut(&mut self) -> &mut X {
+        self.core_val
     }
-    pub fn get_core(& self) -> &X {
-        &self.core_val
+    pub fn core(& self) -> &X {
+        self.core_val
     }
 
     pub fn new (
         gc_scope : &'a mut GcScope,
         var_scope : &'a mut VarScope, 
         lib_scope : &'a LibScope<X>,
-        core_val :  X,//&'a mut X,
+        core_val :  &'a mut X,//&'a mut X,
     ) -> Self
     {
         let debugger = Debugger::new(); //debugger_enabled,debugger_print
@@ -100,6 +139,7 @@ impl<'a,X> Machine<'a,X> {
             includer : None, //Box::new(include_resolver),
             const_scope:HashMap::new(),
             core_val,
+            // core_empty:(),
             stack_limit:1024,
         }
     }

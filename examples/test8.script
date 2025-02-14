@@ -24,3 +24,7 @@ println a
 println "test2 {}" {do_test2}
 println "test2 {}" {do_test2}
 println "test2 {}" {do_test2}
+
+println "get_test1 {}" {get_test}
+set_test 554
+println "get_test2 {}" {get_test}
