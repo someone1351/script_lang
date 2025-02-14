@@ -113,8 +113,8 @@ impl<'a,X> Machine<'a,X> {
 
     pub fn new (
         gc_scope : &'a mut GcScope,
-        var_scope : &'a mut VarScope, 
         lib_scope : &'a LibScope<X>,
+        var_scope : &'a mut VarScope,
         core_val :  &'a mut X,//&'a mut X,
     ) -> Self
     {

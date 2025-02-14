@@ -52,7 +52,7 @@ pub fn test_script<P:AsRef<Path>>(path:P) {
         
         // let mut core=&x;
         let mut core=();
-        let mut machine = script_lang::Machine::new(&mut gc_scope,&mut var_scope, &lib_scope,  &mut core);
+        let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope,&mut var_scope,   &mut core);
         // machine.set_debug_print(true);
 
         // build.clone().unwrap().print();
@@ -244,7 +244,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         //     Ok(Value::int(x))
         // }))).unwrap();
 
-        let mut machine = script_lang::Machine::new(&mut gc_scope,&mut var_scope, &lib_scope,  &mut 
+        let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope, &mut var_scope,  &mut 
             // core
             my_num
         );
