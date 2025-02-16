@@ -16,7 +16,7 @@ mod mem_scope;
 
 pub mod libs;
 
-// pub use mem_scope::*;
+pub use mem_scope::*;
 
 pub use error::MachineError;
 
