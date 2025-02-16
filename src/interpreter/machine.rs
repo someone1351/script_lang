@@ -461,7 +461,10 @@ impl<'a,X> Machine<'a,X> {
 
                 {
                     if (*new_instr_pos as i64) != (self.instr_pos as i64)+debug.1 {
-                        println!("id={} cur:{} offset:{}, new:{}",debug.0,self.instr_pos,debug.1,new_instr_pos,);
+                        let id=debug.0;
+                        let offset=debug.1;
+                        let cur=self.instr_pos;
+                        println!("id={id} cur:{cur} offset:{offset}, new:{new_instr_pos}",);
                         panic!("");
                     }
                     

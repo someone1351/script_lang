@@ -1223,6 +1223,7 @@ impl<'a> Ast<'a> {
         let //mut 
             instr_stack_var_names=HashMap::new();
 
+        //instructions are stored main first, then functions in order after that
         let mut instrs_stk : Vec<Vec<Instruction>> = Vec::new();
         let mut instr_locs_stk : Vec<Vec<Option<Loc>>> = vec![Vec::new()];
         let mut instr_stk_inds : Vec<usize> = vec![0];
@@ -1279,6 +1280,7 @@ impl<'a> Ast<'a> {
 
 
                             let _instr_offset_down: usize=cur_instr_ind-to_end_instr_ind;
+                            println!("cur_instr_ind={cur_instr_ind}, to_end_instr_ind={to_end_instr_ind}, _instr_offset_down={_instr_offset_down}");
 
                             let Instruction::Jmp { 
                                 instr_pos , 
@@ -1611,8 +1613,26 @@ impl<'a> Ast<'a> {
             }
         } //end while
 
+        //instr jmp pos's are local to the function, so need to offset
+        {                
+            let mut offset = instrs_stk.first().unwrap().len();
+
+            for instrs_stk_ind in 1..instrs_stk.len() {
+                let instrs= instrs_stk.get_mut(instrs_stk_ind).unwrap();
+
+                for instr in instrs.iter_mut() {
+                    let Instruction::Jmp { instr_pos, ..}=instr else {continue;};
+                    // println!("=> {instr_pos}+{offset}={}",*instr_pos+offset);
+                    *instr_pos+=offset;
+                }
+
+                offset+=instrs.len();
+            }
+        }
+
         //
         let instructions = instrs_stk.iter().flatten().map(|x|x.clone()).collect::<Vec<_>>();
+
         let locs = instr_locs_stk.iter().flatten().map(|x|x.clone()).collect::<Vec<_>>();
 
         //

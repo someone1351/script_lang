@@ -501,7 +501,7 @@ impl Debugger {
         if self.disabled||self.debug_print_disabled {return;}
         
         let val=if result_val.is_custom::<Closure>() {
-            let (func_build,func_ind)=result_val.as_custom().with_data_mut(|x:&mut Closure|Ok((x.build.clone(),x.func_ind))).unwrap();
+            let (func_build,func_ind)=result_val.as_custom().with_data_ref(|x:&Closure|Ok((x.build.clone(),x.func_ind))).unwrap();
             let p=func_build.path.as_ref().and_then(|p|p.to_str()).map(|p|p.to_string()+", ").unwrap_or("".to_string());
             format!("{p}func[{func_ind}]")
         }else{
