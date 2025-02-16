@@ -1280,7 +1280,7 @@ impl<'a> Ast<'a> {
 
 
                             let _instr_offset_down: usize=cur_instr_ind-to_end_instr_ind;
-                            println!("cur_instr_ind={cur_instr_ind}, to_end_instr_ind={to_end_instr_ind}, _instr_offset_down={_instr_offset_down}");
+                            // println!("cur_instr_ind={cur_instr_ind}, to_end_instr_ind={to_end_instr_ind}, _instr_offset_down={_instr_offset_down}");
 
                             let Instruction::Jmp { 
                                 instr_pos , 
