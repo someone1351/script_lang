@@ -8,6 +8,9 @@ TODO 2
 * make failed locks etc not panic and crash the program, return an error instead
 
 */
+
+#![allow(dead_code)]
+
 use std::{any::Any, sync::{Arc, Mutex, Weak} };
 
 // use parking_lot::Mutex;
@@ -526,9 +529,10 @@ impl GcScope {
             if droppeds.is_empty() {
                 break;
             }
-            println!("manageds {:?}",self.manageds.iter().map(|x|{
-                (x.managed_index.get().unwrap(),x.type_info.short_name())
-            }).collect::<Vec<_>>());
+
+            // println!("manageds {:?}",self.manageds.iter().map(|x|{
+            //     (x.managed_index.get().unwrap(),x.type_info.short_name())
+            // }).collect::<Vec<_>>());
 
             
 
