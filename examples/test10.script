@@ -9,13 +9,9 @@
 #var _ns {create _stubs 0 root};
 
 fn _n1 {self} {
-    println "self is {self}"
-    var q 5;
     add_event_listener self "click" [fn {} {
-        println "clicking"
         println "{self} was clicked";
     }];
-    return {dict};
 }
 #var _r1 {_n1 _ns.1};
 var _r1 {_n1 123};

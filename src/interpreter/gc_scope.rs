@@ -227,7 +227,7 @@ impl GcManaged {
 pub struct GcScope {
     manageds : Vec<GcManaged>,
     dropper : GcDropper, //drop managed inds
-    stk : Vec<usize>,
+    // stk : Vec<usize>,
 }
 
 // impl Default for GcScope {
@@ -243,7 +243,7 @@ impl GcScope {
             manageds : Vec::new(),
             // dropper : Arc::new(Mutex::new(Vec::new())),
             dropper : GcDropper::default(),
-            stk : Vec::new(),
+            // stk : Vec::new(),
         }
     }
 
@@ -302,6 +302,41 @@ impl GcScope {
         //     // }
         // }
 
+        #[derive(Debug)]
+        struct Test {
+            managed_index:usize,
+            gc_index:usize,
+            root_count:usize,
+            name:String,
+            children:Vec<Child>,
+
+        }
+
+        #[derive(Debug)]
+        struct Child {
+            gc_index:Result<Option<usize>, ()>,
+            name:String,
+        }
+        let mut test=Vec::new();
+        for (managed_index,managed) in self.manageds.iter().enumerate() {
+
+            let gc_index=managed.managed_index.get().unwrap();
+            let root_count=managed.root_count.get().unwrap();
+            let name=managed.type_info.short_name();
+            let mut children=Vec::new();
+
+            managed.with_data(|data|{
+                for x in data.traverser() {
+                    children.push(Child{gc_index:x.gc_index(),name:x.type_string()});
+                }
+                Ok(())
+            }).unwrap();
+
+
+            test.push(Test{ managed_index, gc_index, root_count, name, children });
+
+        }
+        println!("test {test:?}");
     }
 
 
@@ -346,6 +381,8 @@ impl GcScope {
             managed.marked=true;
         }
 
+        // println!("marking {:?}",(0..self.manageds.len()).collect::<Vec<usize>>());
+
         //
         let mut stk = Vec::new();
 
@@ -356,15 +393,20 @@ impl GcScope {
             }
         }
 
+        // println!("stk init {stk:?}");
+
         //sweep
         while let Some(managed_ind)=stk.pop() {
             let managed=self.manageds.get_mut(managed_ind).unwrap();
 
             if !managed.marked { //already done
+                // println!("skipping {managed_ind}");
                 continue;
             }
 
             managed.marked=false;
+
+            // println!("unmarking {managed_ind}");
 
             // let managed=&*managed;
             let managed=self.manageds.get(managed_ind).unwrap();
@@ -373,7 +415,9 @@ impl GcScope {
                 for child_val in data.traverser() {
                     if let Some(gc_index)=child_val.gc_index()? {
                         if self.manageds.get(gc_index).unwrap().marked { //not done yet
-                            self.stk.push(gc_index);
+                            stk.push(gc_index);
+
+                            // println!("stk push {gc_index}");
                         }
                     }
                 }
@@ -383,9 +427,10 @@ impl GcScope {
 
         //remove
         for gc_index in (0..self.manageds.len()).rev() {
-            if self.manageds.get(gc_index).unwrap().marked {
+            let managed=self.manageds.get(gc_index).unwrap();
+            if managed.marked {
+                // println!("removing {gc_index} {:?}",managed.type_info.short_name());
                 self.manageds.swap_remove(gc_index);
-                // println!("removing {gc_index}");
 
                 if let Some(managed)=self.manageds.get_mut(gc_index) {
                     managed.managed_index.set(gc_index)?;
