@@ -432,7 +432,6 @@ impl<'a,X> Machine<'a,X> {
                     break;
                 }
             } else { //if self.instr_ind <= self.instr_end
-                println!("===4");
                 self.step()?;
             }
         }
@@ -604,19 +603,14 @@ impl<'a,X> Machine<'a,X> {
 
             }
             Instruction::GetStackVarDeref(stack_offset_ind) => { //todo
-                println!("===a0");
                 let custom=self.get_stack_offset_value(*stack_offset_ind)?.as_custom();
 
-                println!("===a1");
                 if custom.is_type::<GlobalAccessRef>() {
-                    println!("===a1a");
                     let data=custom.data_clone::<GlobalAccessRef>()
                         .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
-                    println!("===a1b");
                     let var_data=data.var.as_custom().data_clone::<Value>()
                         .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
 
-                        println!("===a1c");
                     if !var_data.is_undefined() {
                         self.set_result_val(var_data);
                     } else if let Some(v)=self.constant_get(&data.name) {
@@ -625,19 +619,14 @@ impl<'a,X> Machine<'a,X> {
                         return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(data.name.to_string()) ));
                     }
                 } else {
-                    println!("===a2a");
                     custom.with_data_ref(|data:& Value|{
-                        println!("===a3");
                         if data.is_undefined() {
                             return Err(MachineError::from_machine(self, MachineErrorType::GetUndefinedVar ));
                         }
 
-                        println!("===a4");
                         let v=self.copy_val(data.clone_leaf())?; //leaf, to skip incr root count
 
-                        println!("===a5");
                         self.set_result_val(v);
-                        println!("===a6");
                         Ok(())
                     })?;
                 }
@@ -1007,10 +996,8 @@ impl<'a,X> Machine<'a,X> {
     fn inner_call_value(&mut self, params_num:usize, v:Value, finish:bool) -> Result<bool,MachineError> {
         if v.is_custom::<Closure>() {
 
-            println!("===5");
             let data=v.as_custom().data_clone::<Closure>()?;
 
-            println!("===6");
             let func_build=data.build.clone();
             let func_ind=data.func_ind;
 
@@ -1072,12 +1059,9 @@ impl<'a,X> Machine<'a,X> {
         // self.debugger.push_frame_main(build.clone());
         //
         let params_num=self.stack_push_params(params)?;
-        println!("===1");
         if self.inner_call_value(params_num, v, true)? {
-            println!("===2");
             self.run()?;
         }
-        println!("===3");
 
         // self.debugger.pop_frame();
 
