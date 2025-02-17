@@ -15,8 +15,8 @@
 
 use std::path::Path;
 
-use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs, 
-// MachineError, Value 
+use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs,  Value,
+// MachineError, Value
 };
 
 // use script_lang::{cmd_lang::{self,parser::{Block, BlockContainer, Primitive, PrimitiveContainer, PrimitiveType, PrimitiveTypeContainer, Record, RecordContainer}}, error_msg};
@@ -32,7 +32,7 @@ pub fn test_script<P:AsRef<Path>>(path:P) {
 
     println!("===");
     let mut gc_scope= script_lang::GcScope::new();
-    
+
     let path = path.as_ref();
     let src = std::fs::read_to_string(path).unwrap();
 
@@ -49,14 +49,14 @@ pub fn test_script<P:AsRef<Path>>(path:P) {
         var_scope.decl("self", Some(script_lang::Value::int(4))).unwrap();
         // let x=5;
         let  lib_scope=script_lang::LibScope::new_full();
-        
+
         // let mut core=&x;
         let mut core=();
         let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope,&mut var_scope,   &mut core);
         // machine.set_debug_print(true);
 
         // build.clone().unwrap().print();
-        
+
         let res=machine.run_build(&build.unwrap());
         println!("the result is {res:?}");
 
@@ -71,7 +71,7 @@ pub fn test_script<P:AsRef<Path>>(path:P) {
 
     //gc_scope.mark_and_sweep();
     gc_scope.test();
-    
+
 
 }
 
@@ -84,7 +84,7 @@ pub fn test_script2<P:AsRef<Path>>(path:P) {
     let src = std::fs::read_to_string(path).unwrap();
 
     let res=langs::cexpr_parser::parse(src.as_str());
-    
+
     match res {
         Ok(parsed)=>{
             // println!("{}",parsed.root_block().len());
@@ -95,55 +95,55 @@ pub fn test_script2<P:AsRef<Path>>(path:P) {
                 Field(FieldContainer<'a>),
                 Primitive(PrimitiveContainer<'a>),
             }
-            
+
             struct Traverse<'a> {
                 depth:usize,
                 traverse_type:TraverseType<'a>,
             }
-    
+
             let mut stk=vec![Traverse{depth:0,traverse_type:TraverseType::Block(parsed.root_block())}];
-    
+
             while let Some(traverse)=stk.pop() {
                 let indent="    ".repeat(traverse.depth);
-    
+
                 match traverse.traverse_type {
                     TraverseType::Block(b)=>{
                         // println!("{indent}Block({}) rs={:?}",b.block_ind,b.records_range());
                         println!("{indent}Block");
 
-                        stk.extend(b.records().rev().map(|x|Traverse { 
-                            depth: traverse.depth+1, 
-                            traverse_type: TraverseType::Record(x), 
+                        stk.extend(b.records().rev().map(|x|Traverse {
+                            depth: traverse.depth+1,
+                            traverse_type: TraverseType::Record(x),
                         }));
-    
+
                     }
                     TraverseType::Record(r)=>{
                         // println!("{indent}Record({}) ps={:?}",r.record_ind,r.primitives_range());
                         println!("{indent}Record");
 
-                        stk.extend(r.params().rev().map(|x|Traverse { 
-                            depth: traverse.depth+1, 
-                            traverse_type: TraverseType::Param(x), 
+                        stk.extend(r.params().rev().map(|x|Traverse {
+                            depth: traverse.depth+1,
+                            traverse_type: TraverseType::Param(x),
                         }));
                     }
                     TraverseType::Param(p)=>{
                         println!("{indent}Param");
 
-                        stk.extend(p.fields().rev().map(|x|Traverse { 
-                            depth: traverse.depth+1, 
-                            traverse_type: TraverseType::Field(x), 
+                        stk.extend(p.fields().rev().map(|x|Traverse {
+                            depth: traverse.depth+1,
+                            traverse_type: TraverseType::Field(x),
                         }));
 
-                        stk.push(Traverse { 
-                            depth: traverse.depth+1, 
-                            traverse_type: TraverseType::Primitive(p.primitive()), 
+                        stk.push(Traverse {
+                            depth: traverse.depth+1,
+                            traverse_type: TraverseType::Primitive(p.primitive()),
                         });
                     }
                     TraverseType::Field(f)=>{
                         println!("{indent}Field");
-                        stk.push(Traverse { 
-                            depth: traverse.depth+1, 
-                            traverse_type: TraverseType::Primitive(f.primitive()), 
+                        stk.push(Traverse {
+                            depth: traverse.depth+1,
+                            traverse_type: TraverseType::Primitive(f.primitive()),
                         });
                     }
                     TraverseType::Primitive(p)=>{
@@ -191,12 +191,12 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
 
     println!("===");
     let mut gc_scope= script_lang::GcScope::new();
-    
+
     let path = path.as_ref();
     let src = std::fs::read_to_string(path).unwrap();
 
     let compiler=script_lang::langs::cexpr_compiler::Compiler::new();
-    
+
     let build = compiler.compile(src.as_str(), 0, Some(path), true,
         // false
     );
@@ -210,6 +210,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         // (&mut i32,)
         i32
     >::new_full();
+
     lib_scope.method("get_test", |context|{
         // Ok(script_lang::Value::Int(*context.core().0 as script_lang::IntT))
         Ok(script_lang::Value::Int(*context.core() as script_lang::IntT))
@@ -227,8 +228,8 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         Ok(script_lang::Value::int(test_val))
     }).end();
 
-    
-    
+
+
     // let mut core=(&mut my_num,);
 
     if let Err(e)=&build {
@@ -237,7 +238,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
 
         let mut var_scope=script_lang::VarScope::new();
         var_scope.decl("self", Some(script_lang::Value::int(4))).unwrap();
-    
+
         // var_scope.decl("goa", Some(script_lang::Value::custom_callable_unmanaged(45 as i32,|context|{
         //     let mut x:i32=context.param(0).as_custom().data_copy()?;
         //     for i in 1 .. context.params_num() {
@@ -246,14 +247,14 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
         //     Ok(Value::int(x))
         // }))).unwrap();
 
-        let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope, &mut var_scope,  &mut 
+        let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope, &mut var_scope,  &mut
             // core
             my_num
         );
         // machine.set_debug_print(true);
 
         // build.clone().unwrap().print();
-        
+
         let res=machine.run_build(&build.unwrap());
         println!("the result is {res:?}");
 
@@ -268,7 +269,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
 
     gc_scope.mark_and_sweep().unwrap();
     gc_scope.test();
-    
+
 
 }
 
@@ -279,12 +280,12 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
 
 //     println!("===");
 //     let mut gc_scope= script_lang::GcScope::new();
-    
+
 //     let path = path.as_ref();
 //     let src = std::fs::read_to_string(path).unwrap();
 
 //     let compiler=script_lang::langs::cexpr_compiler::Compiler::new();
-    
+
 //     let build = compiler.compile(src.as_str(), 0, None, true,
 //         // false
 //     );
@@ -312,7 +313,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
 //         // machine.set_debug_print(true);
 
 //         // build.clone().unwrap().print();
-        
+
 //         let res=machine.run_build(&build.unwrap());
 //         println!("the result is {res:?}");
 
@@ -327,9 +328,67 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
 
 //     //gc_scope.mark_and_sweep();
 //     gc_scope.test();
-    
+
 
 // }
+
+
+pub fn test_script5<P:AsRef<Path>>(path:P) {
+
+    println!("===");
+    let mut gc_scope= script_lang::GcScope::new();
+
+    let path = path.as_ref();
+    let src = std::fs::read_to_string(path).unwrap();
+
+    let compiler=script_lang::langs::cexpr_compiler::Compiler::new();
+
+    let build = compiler.compile(src.as_str(), 0, Some(path), true,
+        // false
+    );
+
+    // build.clone().unwrap().print();
+
+    let mut lib_scope=script_lang::LibScope::<Vec<Value>>::new_full();
+
+    lib_scope.method("add_event_listener",|mut context|{
+        let listener=context.param(2);
+        let listeners=context.core_mut();
+        listeners.push(listener.clone_root());
+        Ok(Value::Void)
+    }).any().str().func().end();
+    let mut myval: Vec<Value>=vec![];
+
+    let mut var_scope=script_lang::VarScope::new();
+    if let Err(e)=&build {
+        eprintln!("In {path:?}, {}",e.msg());
+    } else {
+
+        // let mut core=();
+        let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope, &mut var_scope,  &mut myval);
+        // machine.set_debug_print(true);
+
+        // build.clone().unwrap().print();
+
+        let res=machine.run_build(&build.unwrap());
+        println!("the result is {res:?}");
+
+        if let Err(e)=&res {
+            e.eprint(None);
+            machine.debug_print_stack_trace(true);
+            machine.debug_print_stack();
+            // machine.print_state();
+        }
+        // machine.debug_print_stack();
+    }
+
+    gc_scope.mark_and_sweep().unwrap();
+    gc_scope.test();
+
+    println!("abs is {:?}",myval);
+
+
+}
 
 
 
@@ -339,16 +398,16 @@ fn main() {
     // // test_script("examples/test.script");
     // // test_script3("examples/test5.script");
     // // test_script4("examples/test8.script");
-    
+
     // // test_script2("examples/test6.script");
-    
-    test_script3("examples/test7.script");
-    test_script3("examples/test8.script");
+
+    // test_script3("examples/test7.script");
+    // test_script3("examples/test8.script");
 
     // // test_script3("examples/test9.script");
-    
-    // test_script3("examples/test10.script");
-    
+
+    test_script5("examples/test10.script");
+
 }
 /*
 TODO
@@ -377,4 +436,9 @@ TODO
 *** globals?
 *** manageds?
 *** rest?
+
+
+* use call for function calls
+** if used not on a func, then call method "call"
+** disable $ prefix
 */

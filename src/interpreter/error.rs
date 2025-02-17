@@ -30,6 +30,7 @@ pub enum MachineErrorType{
     // CustomInstanceEmpty,
     // CustomIdEmpty,
     // CustomOwnerIdEmpty,
+    CustomDataDead,
     CustomDataEmpty,
     CustomDataNotMut,
     CustomDataNotNonMut,
@@ -69,7 +70,7 @@ impl MachineError{
     //         error_type,
     //     }
     // }
-    
+
     pub fn method<S: Into<String>>(msg : S) -> Self {
         Self { build : None, loc : None, error_type:MachineErrorType::MethodRunError(msg.into()), }
     }
@@ -90,19 +91,19 @@ impl MachineError{
     // pub fn bound_func_new<S: Into<String>>(msg:S) -> Self {
     //     // panic!("");
     //     Self::new(MachineErrorType::BoundFuncError(msg.into()))
-        
+
     // }
 
     pub fn eprint(&self, msg : Option<String>) {
         // let path = self.build.as_ref().and_then(|b|b.path.clone());
         // let path = path.as_ref().map(|p|p.as_path());
-        
+
         // let src=self.build.clone().and_then(|b|b.src.clone());
         // let src=src.as_ref().map(|s|s.as_str());
-        
+
         // eprint_error(&self.error_type,path,self.loc,src,msg);
         // let src=self.build.as_ref().and_then(|b|b.src.as_ref()).map(|s|s.as_str());
-      
+
 
 
         eprintln!("{}{}",
@@ -114,7 +115,7 @@ impl MachineError{
                 self.build.as_ref().and_then(|b|b.path()),
             ),
         );
-        
+
     }
 }
 

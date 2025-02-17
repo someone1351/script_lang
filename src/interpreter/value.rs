@@ -49,7 +49,7 @@ impl Value {
     pub fn string<S: Into<String>>(x:S) -> Self {
         Self::String(StringT::new(x.into()))
     }
-    
+
 
     pub fn type_string(&self) -> String {
         match self {
@@ -65,27 +65,27 @@ impl Value {
             Value::Undefined=>"undefined".to_string(),
         }
     }
-    
-    pub fn is_bool(&self) -> bool { 
+
+    pub fn is_bool(&self) -> bool {
         if let Value::Bool(_)=self{true}else{false}
     }
-    
-    pub fn is_float(&self) -> bool { 
+
+    pub fn is_float(&self) -> bool {
         if let Value::Float(_)=self{true}else{false}
     }
-    
-    pub fn is_int(&self) -> bool { 
+
+    pub fn is_int(&self) -> bool {
         if let Value::Int(_)=self{true}else{false}
     }
-    
-    pub fn is_string(&self) -> bool { 
+
+    pub fn is_string(&self) -> bool {
         if let Value::String(_)=self{true}else{false}
     }
-    
-    pub fn is_custom_any(&self) -> bool { 
+
+    pub fn is_custom_any(&self) -> bool {
         if let Value::Custom(_)=self{true}else{false}
     }
-    
+
     pub fn is_custom<T:Any>(&self) -> bool {
         if let Value::Custom(x)=self {
             x.type_info().id()==TypeId::of::<T>()
@@ -94,10 +94,10 @@ impl Value {
         }
     }
 
-    pub fn is_nil(&self) -> bool { 
+    pub fn is_nil(&self) -> bool {
         if let Value::Nil=self{true}else{false}
     }
- 
+
     pub fn is_void(&self) -> bool {
         if let Value::Void = self {true} else {false}
     }
@@ -124,7 +124,7 @@ impl Value {
             _=>None,
         }
     }
-    
+
     pub fn get_string(&self) -> Option<StringT> {
         match self {
             Value::String(x)=>Some(x.clone()),
@@ -133,16 +133,16 @@ impl Value {
     }
 
     pub fn get_parse<T:FromStr>(&self) -> Option<T> {
-        self.get_string().and_then(|x|T::from_str(x.as_str()).ok())       
+        self.get_string().and_then(|x|T::from_str(x.as_str()).ok())
     }
 
     pub fn get_custom(&self) -> Option<Custom> {
         match self {
-            Value::Custom(c)=>Some(c.clone()), 
+            Value::Custom(c)=>Some(c.clone()),
             _=>None,
         }
     }
-    
+
     pub fn as_bool(&self) -> bool {
         match self {
             Value::Nil=>false,
@@ -185,8 +185,8 @@ impl Value {
                 // format!(
                 //     "{}",
                 //     //"Custom({})",
-                //     c.type_info().short_name(), 
-                //     // c.type_name(), 
+                //     c.type_info().short_name(),
+                //     // c.type_name(),
                 // )
                 c.to_string(),
             Value::Nil => "nil".to_string(),
@@ -206,11 +206,11 @@ impl Value {
 
     pub fn as_custom(&self) -> Custom {
         match self {
-            Value::Custom(c)=>c.clone(), //c.clone_root(), 
-            _=>Custom::new_unmanaged((),), //None
+            Value::Custom(c)=>c.clone(), //c.clone_root(),
+            _=>Custom::new_empty(), //Custom::new_unmanaged((),), //None
         }
     }
-    
+
 
     // pub fn custom_managed<T:GcTraversable+Send+Sync>(data : T,is_mut:bool,gc_scope : &mut GcScope) -> Self {
     //     if is_mut {
@@ -227,13 +227,13 @@ impl Value {
     //         Self::Custom(Custom::new_unmanaged_non_mut(data))
     //     }
     // }
-    
+
     //
 
     pub fn custom_managed_mut<T:GcTraversable+Send>(data : T,gc_scope : &mut GcScope) -> Self {
         Self::Custom(Custom::new_managed_mut(data, gc_scope))
     }
-    
+
     pub fn custom_managed<T:GcTraversable+Send+Sync>(data : T,gc_scope : &mut GcScope) -> Self {
         Self::Custom(Custom::new_managed(data, gc_scope))
     }
@@ -241,7 +241,7 @@ impl Value {
     pub fn custom_unmanaged_mut<T:Any+Send>(data : T) -> Self {
         Self::Custom(Custom::new_unmanaged_mut(data,))
     }
-    
+
     pub fn custom_unmanaged<T:Any+Send+Sync>(data : T) -> Self {
         Self::Custom(Custom::new_unmanaged(data,))
     }
@@ -250,7 +250,7 @@ impl Value {
     // pub fn custom_callable_managed_mut<T:GcTraversable+Send>(data : T, caller:Caller,gc_scope : &mut GcScope) -> Self {
     //     Self::Custom(Custom::new_managed_mut(data,Some(caller), gc_scope))
     // }
-    
+
     // pub fn custom_callable_managed<T:GcTraversable+Send+Sync>(data : T, caller:Caller,gc_scope : &mut GcScope) -> Self {
     //     Self::Custom(Custom::new_managed(data,Some(caller), gc_scope))
     // }
@@ -258,7 +258,7 @@ impl Value {
     // pub fn custom_callable_unmanaged_mut<T:Any+Send>(data : T, caller:Caller) -> Self {
     //     Self::Custom(Custom::new_unmanaged_mut(data,Some(caller)))
     // }
-    
+
     // pub fn custom_callable_unmanaged<T:Any+Send+Sync>(data : T, caller:Caller) -> Self {
     //     Self::Custom(Custom::new_unmanaged(data,Some(caller)))
     // }
@@ -266,7 +266,7 @@ impl Value {
     // // pub fn custom_callable_managed_mut<T:GcTraversable+Send>(data : T, caller:Option<Caller>,gc_scope : &mut GcScope) -> Self {
     // //     Self::Custom(Custom::new_managed_mut(data,caller, gc_scope))
     // // }
-    
+
     // // pub fn custom_callable_managed<T:GcTraversable+Send+Sync>(data : T, caller:Option<Caller>,gc_scope : &mut GcScope) -> Self {
     // //     Self::Custom(Custom::new_managed(data,caller, gc_scope))
     // // }
@@ -274,7 +274,7 @@ impl Value {
     // // pub fn custom_callable_unmanaged_mut<T:Any+Send>(data : T, caller:Option<Caller>) -> Self {
     // //     Self::Custom(Custom::new_unmanaged_mut(data,caller))
     // // }
-    
+
     // // pub fn custom_callable_unmanaged<T:Any+Send+Sync>(data : T, caller:Option<Caller>) -> Self {
     // //     Self::Custom(Custom::new_unmanaged(data,caller))
     // // }
@@ -283,11 +283,11 @@ impl Value {
     // // pub fn custom_managed_mut_ext<T:GcTraversableExt+Send>(data : T,gc_scope : &mut GcScope) -> Self {
     // //     Self::Custom(Custom::new_managed_mut_ext(data, gc_scope))
     // // }
-    
+
     // // pub fn custom_unmanaged_mut_ext<T:Any+ToString+Send>(data : T) -> Self {
     // //     Self::Custom(Custom::new_unmanaged_mut_ext(data))
     // // }
-    
+
     // // pub fn custom_managed_non_mut_ext<T:GcTraversableExt+Send+Sync>(data : T,gc_scope : &mut GcScope) -> Self {
     // //     Self::Custom(Custom::new_managed_non_mut_ext(data, gc_scope))
     // // }

@@ -38,7 +38,7 @@ impl TypeInfo {
     }
 
     pub fn short_name(&self) -> String {
-        let mut s=String::new();        
+        let mut s=String::new();
         let mut r=false;
 
         for c in self.name.chars().rev() {
@@ -59,7 +59,7 @@ impl TypeInfo {
 
         s.chars().rev().collect::<String>()
     }
-    
+
     pub fn name(&self) -> &'static str {
         self.name
     }
@@ -82,15 +82,15 @@ impl GcIndex {
         Ok(())
     }
 
-    pub fn get(&self)->Result<usize,()> { 
+    pub fn get(&self)->Result<usize,()> {
         let Ok(data)=self.0.try_lock() else {return Err(());};
         Ok(*data)
     }
 
-    pub fn strong_count(&self)->usize { 
-        Arc::strong_count(&self.0) 
+    pub fn strong_count(&self)->usize {
+        Arc::strong_count(&self.0)
     }
-    
+
     pub fn weak_count(&self)->usize {
         Arc::weak_count(&self.0)
     }
@@ -110,11 +110,11 @@ impl GcWeakIndex {
     pub fn to_strong(&self)->Option<GcIndex> {
         self.0.upgrade().and_then(|x|Some(GcIndex(x)))
     }
-    
-    pub fn strong_count(&self)->usize { 
-        Weak::strong_count(&self.0) 
+
+    pub fn strong_count(&self)->usize {
+        Weak::strong_count(&self.0)
     }
-    
+
     pub fn weak_count(&self)->usize {
         Weak::weak_count(&self.0)
     }
@@ -124,24 +124,24 @@ impl GcWeakIndex {
 pub struct GcRootCount(Arc<Mutex<usize>>);
 
 impl GcRootCount {
-    fn new() -> Self { 
-        Self(Arc::new(Mutex::new(0))) 
+    fn new() -> Self {
+        Self(Arc::new(Mutex::new(0)))
     }
 
-    pub fn incr(&self) -> Result<(),()> {        
+    pub fn incr(&self) -> Result<(),()> {
         let Ok(mut data)=self.0.lock() else {return Err(());};
-        *data+=1; 
+        *data+=1;
         // println!("incr!");
         Ok(())
     }
-    pub fn decr(&self) -> Result<(),()> { 
+    pub fn decr(&self) -> Result<(),()> {
         let Ok(mut data)=self.0.lock() else {return Err(());};
         // println!("root({}) decr",self.get());
         *data-=1;
         // println!("decr!");
         Ok(())
     }
-    fn get(&self)->Result<usize,()> { 
+    fn get(&self)->Result<usize,()> {
         let Ok(data)=self.0.lock() else {return Err(());};
         Ok(*data)
     }
@@ -167,10 +167,10 @@ struct GcManaged {
     type_info:TypeInfo,
 
 
-    managed_index:GcIndex, 
+    managed_index:GcIndex,
     root_count:GcRootCount,
-    
-    
+
+
     marked : bool,
 }
 
@@ -196,7 +196,7 @@ impl GcManaged {
 
                 if let Ok(_x)=x.try_lock() {
 
-                    
+
 
 
 
@@ -217,7 +217,7 @@ impl GcManaged {
             }
             GcManagedInner::NonMut(x) => {
                 Ok(x.as_ref())
-                
+
             }
         }
     }
@@ -231,9 +231,9 @@ pub struct GcScope {
 }
 
 // impl Default for GcScope {
-//     fn default() -> Self {        
+//     fn default() -> Self {
 //         Self {
-            
+
 //         }
 //     }
 // }
@@ -282,11 +282,11 @@ impl GcScope {
         // println!("gc_scope_test:");
         // for (i,managed) in self.manageds.iter().enumerate() {
         //     println!("\t{i}: {}", managed.type_info.short_name() );
-            
+
         //     // println!("{i}: {:?}", managed.data.lock().);
 
 
-        //     // if let Some(x)=&c.traverser 
+        //     // if let Some(x)=&c.traverser
         //     // if let GcManagedInner::Custom { data, traverser }=&c.inner
         //     {
 
@@ -296,7 +296,7 @@ impl GcScope {
         //         for a in children {
         //             println!("\t\t {:?}",a);
         //         }
-        //     } 
+        //     }
         //     // else {
         //     //     println!("\t Nothing");
         //     // }
@@ -314,7 +314,7 @@ impl GcScope {
         // let mut cur_val_ind=0;
         // let mut stk=self.manageds.iter().enumerate()
         //     .filter_map(|(managed_ind,managed)|{
-        //         if managed.root_count.get()>0 //||Arc::weak_count(&val.data)>0 
+        //         if managed.root_count.get()>0 //||Arc::weak_count(&val.data)>0
         //         {
         //             Some(managed_ind)
         //         } else {
@@ -346,29 +346,41 @@ impl GcScope {
             managed.marked=true;
         }
 
-        //sweep init
+        //
         let mut stk = Vec::new();
-        
-        for (managed_ind,managed) in self.manageds.iter().enumerate() {
-            if managed.root_count.get()? != 0 {
-                stk.push(managed_ind);
+
+        //push roots on stk
+        for (gc_index,managed) in self.manageds.iter().enumerate() {
+            if managed.root_count.get()? > 0 {
+                stk.push(gc_index);
             }
         }
 
         //sweep
         while let Some(managed_ind)=stk.pop() {
             let managed=self.manageds.get_mut(managed_ind).unwrap();
+
+            if !managed.marked { //already done
+                continue;
+            }
+
             managed.marked=false;
+
+            // let managed=&*managed;
+            let managed=self.manageds.get(managed_ind).unwrap();
+
             managed.with_data(|data|{
                 for child_val in data.traverser() {
                     if let Some(gc_index)=child_val.gc_index()? {
-                        self.stk.push(gc_index);
+                        if self.manageds.get(gc_index).unwrap().marked { //not done yet
+                            self.stk.push(gc_index);
+                        }
                     }
                 }
                 Ok(())
             })?;
         }
-        
+
         //remove
         for gc_index in (0..self.manageds.len()).rev() {
             if self.manageds.get(gc_index).unwrap().marked {
@@ -385,11 +397,11 @@ impl GcScope {
         // //
 
         // if self.stk.is_empty() {
-            
+
         //     //remove marked
         //     for gc_index in (0..self.manageds.len()).rev() {
         //         if self.manageds.get(gc_index).unwrap().marked {
-                    
+
         //             self.manageds.swap_remove(gc_index);
         //             // println!("removing {val_ind}");
 
@@ -409,7 +421,7 @@ impl GcScope {
         //         }
         //     }
         //     // self.stk.extend(self.manageds.iter().enumerate().filter_map(|(managed_ind,managed)|{
-        //     //     if managed.root_count.get()>0 //||Arc::weak_count(&val.data)>0 
+        //     //     if managed.root_count.get()>0 //||Arc::weak_count(&val.data)>0
         //     //     {
         //     //         Some(managed_ind)
         //     //     } else {
@@ -462,7 +474,7 @@ impl GcScope {
         //                     self.stk.push(gc_index);
         //                 }
         //             }
-                    
+
         //             // self.stk.extend(x.traverser().filter_map(|val|val.gc_index()));
         //         }
         //         // GcManagedInner::MutExt(x) => {
@@ -492,7 +504,7 @@ impl GcScope {
         // // //remove marked
         // // for gc_index in (0..self.manageds.len()).rev() {
         // //     if self.manageds.get(gc_index).unwrap().marked {
-                
+
         // //         self.manageds.swap_remove(gc_index);
         // //         // println!("removing {val_ind}");
 
@@ -513,57 +525,57 @@ impl GcScope {
 
 
     //should probably run in at the end of a code block, storing vals to check in a vec?
-    pub fn remove_norefs(&mut self, 
+    pub fn remove_norefs(&mut self,
         // //val:GcValue
         // gc_index:usize,
         // recursive:bool,
     ) {
-        // return;
+        // // return;
 
-        //renable below (can't use with mark_and_sweep anymore, since that has been changed to run partially, and this will disrupt that)
-        loop {
-            let Ok(mut droppeds)=self.dropper.drain() else {
-                break;
-            };
+        // //renable below (can't use with mark_and_sweep anymore, since that has been changed to run partially, and this will disrupt that)
+        // loop {
+        //     let Ok(mut droppeds)=self.dropper.drain() else {
+        //         break;
+        //     };
 
-            if droppeds.is_empty() {
-                break;
-            }
+        //     if droppeds.is_empty() {
+        //         break;
+        //     }
 
-            // println!("manageds {:?}",self.manageds.iter().map(|x|{
-            //     (x.managed_index.get().unwrap(),x.type_info.short_name())
-            // }).collect::<Vec<_>>());
+        //     // println!("manageds {:?}",self.manageds.iter().map(|x|{
+        //     //     (x.managed_index.get().unwrap(),x.type_info.short_name())
+        //     // }).collect::<Vec<_>>());
 
-            
 
-            while let Some(weak_gc_index)=droppeds.pop() {
-                let Some(gc_index)=weak_gc_index.to_strong() else {
-                    // panic!("a");
-                    continue;
-                };
-                let Ok(managed_ind) = gc_index.get() else {
-                    // break;  
-                    panic!("b");
-                };
 
-                // self.manageds.get(managed_ind).unwrap().data.
+        //     while let Some(weak_gc_index)=droppeds.pop() {
+        //         let Some(gc_index)=weak_gc_index.to_strong() else {
+        //             // panic!("a");
+        //             continue;
+        //         };
+        //         let Ok(managed_ind) = gc_index.get() else {
+        //             // break;
+        //             panic!("b");
+        //         };
 
-                self.manageds.swap_remove(managed_ind);
-    
-                if self.manageds.is_empty() {
-                    continue;
-                }
-                //update managed_ind for the moved managed
-                let Some(val)=self.manageds.get_mut(managed_ind) else {
-                    panic!("c");
-                };
+        //         // self.manageds.get(managed_ind).unwrap().data.
 
-                val.managed_index.set(managed_ind).unwrap();
-                    // if val.managed_index.set(managed_ind).is_err() { }
-                
-            }
-        }
-        
+        //         self.manageds.swap_remove(managed_ind);
+
+        //         if self.manageds.is_empty() {
+        //             continue;
+        //         }
+        //         //update managed_ind for the moved managed
+        //         let Some(val)=self.manageds.get_mut(managed_ind) else {
+        //             panic!("c {} of {}",managed_ind,self.manageds.len());
+        //         };
+
+        //         val.managed_index.set(managed_ind).unwrap();
+        //             // if val.managed_index.set(managed_ind).is_err() { }
+
+        //     }
+        // }
+
     }
 }
 
@@ -639,7 +651,7 @@ impl Clone for GcValue {
     fn clone(&self) -> Self {
         // self.clone_to(None)
 
-        
+
         // Self {
         //     data:self.data.clone(),
         //     gc_index:self.gc_index.clone(),
@@ -654,42 +666,42 @@ impl Clone for GcValue {
 }
 
 impl GcValue {
-    pub fn new<T:GcTraversable>(data : T, gc_scope: &mut GcScope) -> Self { 
-       
+    pub fn new<T:GcTraversable>(data : T, gc_scope: &mut GcScope) -> Self {
+
         let data=Arc::new(Mutex::new(data));
 
         // let type_name=std::any::type_name::<T>();
 
         let (val_index, root_count)=gc_scope.new_other(
             GcManagedInner::Mut(Arc::clone(&data) as _),
-            // type_name 
+            // type_name
             TypeInfo::new::<T>()
         );
-        // root_count.incr();        
-       
+        // root_count.incr();
+
         Self {
-            data: WeakValueInner::Mut(Arc::downgrade(&data) as _), //Arc::downgrade(&data) as _, 
-            root: false,//true, 
-            gc_index: val_index, 
+            data: WeakValueInner::Mut(Arc::downgrade(&data) as _), //Arc::downgrade(&data) as _,
+            root: false,//true,
+            gc_index: val_index,
             root_count,
             // dropper : Some(gc_scope.get_dropper()),
             dropper : gc_scope.get_dropper(),
         }
     }
 
-    
-    pub fn new_non_mut<T:GcTraversable+Sync>(data : T, gc_scope: &mut GcScope) -> Self { 
+
+    pub fn new_non_mut<T:GcTraversable+Sync>(data : T, gc_scope: &mut GcScope) -> Self {
         let data=Arc::new(data);
 
         let (val_index, root_count)=gc_scope.new_other(
             GcManagedInner::NonMut(Arc::clone(&data) as _),
             TypeInfo::new::<T>()
-        ); 
-       
+        );
+
         Self {
-            data: WeakValueInner::NonMut(Arc::downgrade(&data) as _), //Arc::downgrade(&data) as _, 
-            root: false,//true, 
-            gc_index: val_index, 
+            data: WeakValueInner::NonMut(Arc::downgrade(&data) as _), //Arc::downgrade(&data) as _,
+            root: false,//true,
+            gc_index: val_index,
             root_count,
             // dropper : Some(gc_scope.get_dropper()),
             dropper : gc_scope.get_dropper(),
@@ -697,57 +709,57 @@ impl GcValue {
     }
 
     //
-    
-    
-    // pub fn new_ext<T:GcTraversableExt>(data : T, gc_scope: &mut GcScope) -> Self { 
-       
+
+
+    // pub fn new_ext<T:GcTraversableExt>(data : T, gc_scope: &mut GcScope) -> Self {
+
     //     let data=Arc::new(Mutex::new(data));
 
     //     // let type_name=std::any::type_name::<T>();
 
     //     let (val_index, root_count)=gc_scope.new_other(
     //         GcManagedInner::MutExt(Arc::clone(&data) as _),
-    //         // type_name 
+    //         // type_name
     //         TypeInfo::new::<T>()
     //     );
-    //     // root_count.incr();        
-       
+    //     // root_count.incr();
+
     //     Self {
-    //         data: WeakValueInner::MutExt(Arc::downgrade(&data) as _), //Arc::downgrade(&data) as _, 
-    //         root: false,//true, 
-    //         gc_index: val_index, 
+    //         data: WeakValueInner::MutExt(Arc::downgrade(&data) as _), //Arc::downgrade(&data) as _,
+    //         root: false,//true,
+    //         gc_index: val_index,
     //         root_count,
     //         dropper : Some(gc_scope.get_dropper()),
     //     }
     // }
 
-    
-    // pub fn new_non_mut_ext<T:GcTraversableExt+Sync>(data : T, gc_scope: &mut GcScope) -> Self { 
+
+    // pub fn new_non_mut_ext<T:GcTraversableExt+Sync>(data : T, gc_scope: &mut GcScope) -> Self {
     //     let data=Arc::new(data);
 
     //     let (val_index, root_count)=gc_scope.new_other(
     //         GcManagedInner::NonMutExt(Arc::clone(&data) as _),
     //         TypeInfo::new::<T>()
-    //     ); 
-       
+    //     );
+
     //     Self {
-    //         data: WeakValueInner::NonMutExt(Arc::downgrade(&data) as _), //Arc::downgrade(&data) as _, 
-    //         root: false,//true, 
-    //         gc_index: val_index, 
+    //         data: WeakValueInner::NonMutExt(Arc::downgrade(&data) as _), //Arc::downgrade(&data) as _,
+    //         root: false,//true,
+    //         gc_index: val_index,
     //         root_count,
     //         dropper : Some(gc_scope.get_dropper()),
     //     }
     // }
-    
+
 
     // pub fn _empty<T:Any+Send>() -> Self { //GcTraversable+
     //     let data=Weak::<Mutex<T>>::new();
-       
+
     //     Self {
-    //         data:WeakValueInner::Mut(data), //data, 
-    //         root: false, 
-    //         gc_index: GcWeakIndex::new(), 
-    //         root_count:GcRootCount::new(), 
+    //         data:WeakValueInner::Mut(data), //data,
+    //         root: false,
+    //         gc_index: GcWeakIndex::new(),
+    //         root_count:GcRootCount::new(),
     //         // droppeds:Weak::new(),
     //         dropper : None,
     //     }
@@ -812,7 +824,7 @@ impl GcValue {
             dropper:self.dropper.clone(),
         }
     }
-    // pub fn data(&self) -> Option<GcValueTyping2> //Option<Arc<Mutex<dyn Any+Send >>> 
+    // pub fn data(&self) -> Option<GcValueTyping2> //Option<Arc<Mutex<dyn Any+Send >>>
     // {
     //     match &self.data {
     //         GcValueTyping::Mut(x) => {

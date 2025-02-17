@@ -21,7 +21,25 @@ impl Deref for StringT {
         self.0.deref()
     }
 }
+impl std::borrow::Borrow<std::string::String> for StringT {
+    fn borrow(&self) -> &std::string::String {
+        &self.0
+    }
+}
+impl std::borrow::Borrow<str> for StringT {
+    fn borrow(&self) -> &str {
+        &self.0.as_str()
+    }
+}
+// impl Equivalent<StringT> for String {
+    
+// }
 
+// impl std::hash::Hash for StringT {
+//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+//         self.0.hash(state);
+//     }
+// }
 
 #[derive(Clone,Debug)]
 pub struct BuildT(Arc<Build>);
