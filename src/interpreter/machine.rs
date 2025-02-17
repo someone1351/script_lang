@@ -341,6 +341,7 @@ impl<'a,X> Machine<'a,X> {
     }
 
     fn stack_params_iter(&self, params_num : usize) -> impl DoubleEndedIterator<Item=&Value> {
+        // println!("=== {} {}",self.stack.len(),params_num);
         let params_start = self.stack.len()-params_num;
         self.stack[params_start..].iter().rev()
     }
@@ -1003,6 +1004,7 @@ impl<'a,X> Machine<'a,X> {
     }
 
     fn inner_call_value(&mut self, params_num:usize, v:Value, finish:bool) -> Result<bool,MachineError> {
+        // println!("~== {params_num} : {}",self.stack.len());
         if v.is_custom::<Closure>() {
 
             let data=v.as_custom().data_clone::<Closure>()?;
@@ -1020,10 +1022,32 @@ impl<'a,X> Machine<'a,X> {
             self.inner_call_build_func(params_num, func_build, func_ind, finish)?;
 
             Ok(true)
-        } else if let Some(_)=self.inner_try_call_method("call",params_num)? {
-            Ok(true)
         } else {
-            Err(MachineError::from_machine(self,  MachineErrorType::ValueNotAFunc(v.type_string()) ))
+            // self.stack_push_params([v.clone_root()])?;
+            self.push_stack_val(v.clone_root())?;
+            self.debugger.set_stack_from_last();
+
+            // println!("~=== {params_num} : {}",self.stack.len());
+            if let Some(x)=self.get_method("call", params_num+1) {
+                self.debugger.add_func_name("call");
+                self.inner_call_bound_func(params_num+1, x)?;
+
+                //
+                self.instr_pos+=1;
+                self.debugger.move_instr_pos(self.instr_pos);
+
+                //
+                Ok(true)
+            } else {
+            // }
+
+            // if let Some(_)=self.inner_try_call_method("call",params_num+1)? {
+            //     Ok(true)
+            // } else {
+                self.stack_pop_amount(1)?;
+                // println!("noo {params_num}");
+                Err(MachineError::from_machine(self,  MachineErrorType::ValueNotAFunc(v.type_string()) ))
+            }
         }
     }
 
