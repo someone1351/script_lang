@@ -381,12 +381,23 @@ impl<'a,X> Machine<'a,X> {
             return Ok(v);
         }
 
-        Ok(self.inner_try_call_method("copy", vec![v.clone_root()])?.unwrap_or(v))
+        Ok(self.inner_try_call_method_wparams("copy", vec![v.clone_root()])?.unwrap_or(v))
     }
 
-    fn inner_try_call_method<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Option<Value>,MachineError> {
+    fn inner_try_call_method_wparams<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Option<Value>,MachineError> {
         //
         let params_num=self.stack_push_params(params)?;
+
+        let r=self.inner_try_call_method(name,params_num)?;
+
+        if r.is_none() {
+            self.stack_pop_amount(params_num)?;
+        }
+
+        Ok(r)
+    }
+
+    fn inner_try_call_method(&mut self,name:&str,params_num : usize) -> Result<Option<Value>,MachineError> {
 
         // if let Some(x)=self.lib_scope.get_method(name,params.into_iter(),self.var_scope)
         if let Some(x)=self.get_method(name, params_num) {
@@ -395,11 +406,9 @@ impl<'a,X> Machine<'a,X> {
             self.inner_call_bound_func(params_num, x)?; //,symbol.clone()
             Ok(Some(self.result_val()))
         } else {
-            self.stack_pop_amount(params_num)?;
             Ok(None)
         }
     }
-
     fn stack_push_params<I:AsRef<[Value]>>(&mut self,params : I) -> Result<usize,MachineError> {
         let params=params.as_ref().to_vec();
         let params_num=params.len();
@@ -1011,6 +1020,8 @@ impl<'a,X> Machine<'a,X> {
             self.inner_call_build_func(params_num, func_build, func_ind, finish)?;
 
             Ok(true)
+        } else if let Some(_)=self.inner_try_call_method("call",params_num)? {
+            Ok(true)
         } else {
             Err(MachineError::from_machine(self,  MachineErrorType::ValueNotAFunc(v.type_string()) ))
         }
@@ -1048,7 +1059,7 @@ impl<'a,X> Machine<'a,X> {
             self.clear();
         }
 
-        Ok(self.inner_try_call_method(name,params)?.map(|x|x.clone_leaf()))
+        Ok(self.inner_try_call_method_wparams(name,params)?.map(|x|x.clone_leaf()))
     }
 
     pub fn call_value<I:AsRef<[Value]>>(&mut self,v:Value,params : I) -> Result<Value,MachineError> {

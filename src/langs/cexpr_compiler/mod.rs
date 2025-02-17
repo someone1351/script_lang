@@ -88,7 +88,7 @@ pub enum BuilderErrorType {
     // EmptySExpr, //
     // // BuilderAst(BuilderAstError),
 
-    
+
     ContinueNotInLoop,
     BreakNotInLoop,
     ReturnNotInMethodOrLambda,
@@ -160,10 +160,10 @@ impl Compiler {
     pub fn new_empty() -> Self {
         Self{
             cmds:Default::default(),
-            get_var_prefix : Some("$"),
-            // get_var_prefix : None,
-            optional_get_var_prefix:true,
-            funcs_without_call:true, //
+            // get_var_prefix : Some("$"),
+            get_var_prefix : None,
+            optional_get_var_prefix:true, //not used when no prefix
+            funcs_without_call:false, //true, //
         }
     }
     pub fn new() -> Self { //denote_get_var:bool,
@@ -194,12 +194,12 @@ impl Compiler {
         cmd_scope.add_cmd("fn", lambda_cmd);
         cmd_scope.add_cmd("call", call_func_cmd);
         cmd_scope.add_cmd("?", ternary_cmd);
-        
+
 
         cmd_scope
     }
 
-    pub fn add_cmd<F>(&mut self,k:&str,cmd : F) 
+    pub fn add_cmd<F>(&mut self,k:&str,cmd : F)
     where
         // F : Fn(RecordContainer, &mut Builder<PrimitiveContainer,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> + 'static,
         F : for<'a> Fn(RecordContainer<'a>, &mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> + 'static,
@@ -224,7 +224,7 @@ impl Compiler {
         builder.loc(top_primitive.start_loc());
         let hasnt_fields=top_primitive.param().map(|x|x.fields_num()==0).unwrap_or(true);
 
-        match top_primitive.primitive_type() //sexpr.val() 
+        match top_primitive.primitive_type() //sexpr.val()
         {
             PrimitiveTypeContainer::Block(block) => {
                 //on no records, should to to void or nil?
@@ -241,7 +241,7 @@ impl Compiler {
                 //
                 for record in block.records() {
                     builder.loc(record.start_loc());
-                
+
                     if record.params_num()==0 {
                         builder.result_void();
                     }
@@ -266,19 +266,19 @@ impl Compiler {
                             } else if first_param.fields_num()==0 { //no fields
                                 if let Some(cmds)=self.get(symbol) {  //command
                                     let mut errors=Vec::<BuilderError<BuilderErrorType>>::new();
-        
+
                                     // let last_loc=builder.cur_loc;
                                     // let temp_stk_last_len = builder.temp_stk.len();
                                     builder.temp_mark();
-                                    
+
                                     // builder.in_cmd=true;
                                     builder.anon_scope(*next_anon_id);
-        
+
                                     for cmd in cmds {
                                         //
                                         if let Err(e)=cmd(record,builder) {
                                             errors.push(e);
-        
+
                                             //reset
                                             // builder.cur_loc=last_loc;
                                             // builder.temp_stk.truncate(temp_stk_last_len);
@@ -290,11 +290,11 @@ impl Compiler {
                                             break;
                                         }
                                     }
-        
+
                                     //
                                     // builder.in_cmd=false;
                                     builder.anon_scope(0);
-        
+
                                     //
                                     if errors.len()>0 {
                                         errors.sort_by(|a,b|a.loc.cmp(&b.loc));
@@ -302,7 +302,7 @@ impl Compiler {
                                     }
                                 } else if record.params_num()==1 { //no args, no fields
                                     if let Some(get_var_prefix)=self.get_var_prefix {
-                                        if let Some(symbol)=symbol.strip_prefix(get_var_prefix) {                                            
+                                        if let Some(symbol)=symbol.strip_prefix(get_var_prefix) {
                                             builder.get_var(symbol);
                                         } else if self.funcs_without_call {
                                             builder.call(symbol, 0);
@@ -321,7 +321,7 @@ impl Compiler {
                                         builder.eval(x.primitive());
                                         builder.param_push();
                                     }
-                                    
+
                                     // builder.commit_param_locs();
                                     builder.loc(first_param.start_loc());
 
@@ -339,10 +339,10 @@ impl Compiler {
                                     builder.eval(x.primitive());
                                     builder.param_push();
                                 }
-                                
+
                                 // builder.commit_param_locs();
                                 builder.loc(first_param.start_loc());
-                                
+
                                 builder.eval(first_param.primitive());
                                 builder.call_result(record.params_num()-1);
                             } else if record.params_num()==1 { //has fields, no args
@@ -364,7 +364,7 @@ impl Compiler {
 
                 }
 
-                
+
                 if !hasnt_fields {
                     self.get_fields(builder,top_primitive)?;
                 }
@@ -421,7 +421,7 @@ impl Compiler {
                                 return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
                             }
                         } else {
-                            let symbol=if let Some(get_var_prefix)=self.get_var_prefix {   
+                            let symbol=if let Some(get_var_prefix)=self.get_var_prefix {
                                 if let Some(symbol)=symbol.strip_prefix(get_var_prefix) {
                                     if symbol.is_empty() {
                                         return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
@@ -456,7 +456,7 @@ impl Compiler {
         builder:&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>,
         top_primitive:PrimitiveContainer<'a>,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
-        
+
 
         builder.get_fields(top_primitive.param().unwrap().fields().map(|field|{
             let s=field.primitive().symbol();
@@ -485,10 +485,10 @@ impl Compiler {
         //             if symbol.starts_with(get_var_prefix) {
         //                 builder.eval(field.primitive());
         //             } else { //is string
-        //                 builder.result_string(symbol);            
+        //                 builder.result_string(symbol);
         //             }
         //         } else { //is string
-        //             builder.result_string(symbol);   
+        //             builder.result_string(symbol);
         //         }
         //     } else { //not a symbol
         //         builder.eval(field.primitive());
@@ -504,7 +504,7 @@ impl Compiler {
 
         //     //
         //     builder.call_method("get_field", 2);
-            
+
         //     // last_start_loc=field.start_loc();
         //     // last_end_loc=field.end_loc();
         // }
@@ -531,15 +531,15 @@ impl Compiler {
         let mut builder = builder::Builder::new();
 
         builder.eval(parsed.root_block_primitive());
-        
+
         let mut ast = ast::Ast::new(false,true);
-        
+
         if let Err(e)=builder.generate_ast(&mut ast,|builder,primitive|{
             self.run(builder, primitive,&mut next_anon_id)
         }) {
             return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CexprCompileErrorType::CexprBuilder(e.error_type)});
         }
-        
+
         if let Err(e)=ast.calc_vars(false) {
             return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CexprCompileErrorType::AstVar(e.error_type)});
         }
@@ -552,8 +552,8 @@ impl Compiler {
 
         // let kept_src=if keep_src {Some(common::StringType::new(src))} else {None};
         let kept_src=if keep_src {Some(src.clone())} else {None};
-        
-        let build = ast.compile(version, path, kept_src,true,true);                    
+
+        let build = ast.compile(version, path, kept_src,true,true);
         Ok(BuildT::new(build))
     }
 }

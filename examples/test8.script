@@ -6,14 +6,15 @@ var b {array 1 2 3}
 var bb {clone b}
 
 for i 0 {len bb} {
-    println bb.$i
+    #println bb.$i
+    println bb.{i}
 }
 
 
 fn my_add {a b} {
-    $a
+    a
 }
-println {call $my_add 15 9}
+println {call my_add 15 9}
 
 substr "012345" 2 4
 
