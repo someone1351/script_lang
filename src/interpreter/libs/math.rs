@@ -794,7 +794,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut Vec2|{
             set_field_util(fields.as_str(),&mut data.0,&to).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<Vec2>().str().float().end();
@@ -807,7 +807,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut Vec3|{
             set_field_util(fields.as_str(),&mut data.0,&to).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<Vec3>().str().float().end();
@@ -820,7 +820,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut Vec4|{
             set_field_util(fields.as_str(),&mut data.0,&to).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<Vec4>().str().float().end();
@@ -833,7 +833,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut Vec2|{
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<Vec2>().str().custom_ref::<Vec2>().end();
@@ -846,7 +846,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut Vec3|{
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<Vec3>().str().custom_ref::<Vec2>().end();
@@ -859,7 +859,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut Vec3|{
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<Vec3>().str().custom_ref::<Vec3>().end();
@@ -872,7 +872,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut Vec4|{
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<Vec4>().str().custom_ref::<Vec2>().end();
@@ -885,7 +885,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut Vec4|{
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<Vec4>().str().custom_ref::<Vec3>().end();
@@ -898,7 +898,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut Vec4|{
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<Vec4>().str().custom_ref::<Vec4>().end();
@@ -911,7 +911,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut IVec2|{
             set_field_util(fields.as_str(),&mut data.0,&to).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<IVec2>().str().int().end();
@@ -924,7 +924,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut IVec3|{
             set_field_util(fields.as_str(),&mut data.0,&to).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<IVec3>().str().int().end();
@@ -937,7 +937,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut IVec4|{
             set_field_util(fields.as_str(),&mut data.0,&to).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<IVec4>().str().int().end();
@@ -950,7 +950,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut IVec2|{
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     }).custom_ref::<IVec2>().str().custom_ref::<IVec2>().end();
 
@@ -962,7 +962,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut IVec3|{
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<IVec3>().str().custom_ref::<IVec2>().end();
@@ -975,7 +975,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut IVec3|{
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<IVec3>().str().custom_ref::<IVec3>().end();
@@ -988,7 +988,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut IVec4|{
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<IVec4>().str().custom_ref::<IVec2>().end();
@@ -1001,7 +1001,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut IVec4|{
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     }).custom_ref::<IVec4>().str().custom_ref::<IVec3>().end();
 
@@ -1013,7 +1013,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         this.as_custom().with_data_mut(|data:&mut IVec4|{
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
-            Ok(this)
+            Ok(Value::Void)
         })
     })
         .custom_ref::<IVec4>().str().custom_ref::<IVec4>().end();

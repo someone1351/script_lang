@@ -40,6 +40,9 @@ todo
 
 * make builder methods request file/line so on error can see where it came from
 * should setfields be required to return the object they modified? which then can be used for the next set_field in the chain
+** does that make sense? shouldn't it return the value it was set to?
+
+* instead of try method, could just return undefined on missing methods?
 */
 
 

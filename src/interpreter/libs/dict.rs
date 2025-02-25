@@ -78,7 +78,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         dict.as_custom().with_data_mut(|data:&mut Dict|{
             data.0.insert(key, val);
-            Ok(dict)
+            Ok(Value::Void)
         })
     }).custom_ref::<Dict>().any().any().end();
 

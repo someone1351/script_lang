@@ -170,7 +170,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
             *x.0.get_mut(i).unwrap()=val.clone();
 
-            Ok(array)
+            Ok(Value::Void)
         })
     }).custom_ref::<Array>().int().any().end();
 
