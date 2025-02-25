@@ -39,6 +39,7 @@ todo
 * is start/end loc really needed for params? would be simpler just to have the start loc
 
 * make builder methods request file/line so on error can see where it came from
+* should setfields be required to return the object they modified? which then can be used for the next set_field in the chain
 */
 
 
