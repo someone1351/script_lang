@@ -21,7 +21,7 @@ TODO
 
 - label can be in scope if declared before or after the goto position
 - - can jump down/up to cur/ancestor blocks
-- - 
+- -
 - can jump into block if label is at start of a block?
 - - including a block multiple depths deep, as long as each block at start of parent block
 
@@ -206,12 +206,12 @@ impl<'a> Ast<'a> {
     fn add_next(&mut self,node_type:AstNodeType<'a>) {
         let mut stack_pushed_num=0;
 
-        if let AstNodeType::Function{..}=&node_type {            
+        if let AstNodeType::Function{..}=&node_type {
         } else {
             for child_ind in (0 .. self.body_node().children.len()).rev() {
                 let &child_node_ind=self.body_node().children.get(child_ind).unwrap();
-                
-                if let AstNodeType::Function{..}=self.get_node(child_node_ind).node_type {                    
+
+                if let AstNodeType::Function{..}=self.get_node(child_node_ind).node_type {
                 } else {
                     stack_pushed_num=self.get_node(child_node_ind).stack_pushed_num;
                     break;
@@ -231,10 +231,10 @@ impl<'a> Ast<'a> {
 
         //
         self.body_node_mut().children.push(node_ind);
-        self.last_node_ind=node_ind;        
+        self.last_node_ind=node_ind;
     }
 
-    fn add_body(&mut self,node_type:AstNodeType<'a>, 
+    fn add_body(&mut self,node_type:AstNodeType<'a>,
         // from_last:bool
     ) {
         self.add_next(node_type);
@@ -247,7 +247,7 @@ impl<'a> Ast<'a> {
     fn end_body(&mut self) -> Result<(),AstError> {
         if let Some(&child_node_ind) = self.body_node().children.last() {
             let stack_pushed_num=self.get_node(child_node_ind).stack_pushed_num;
-            
+
             if stack_pushed_num!=0 {
                 return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
             }
@@ -256,13 +256,13 @@ impl<'a> Ast<'a> {
         let parent_ind = self.body_node_mut().parent.unwrap();
         self.last_node_ind=self.body_node_ind;
         self.body_node_ind=parent_ind;
-        
+
         //
         Ok(())
     }
 
     /////////////////
-    
+
     pub fn block_start(&mut self,block_label:Option<&'a str>) {
         self.add_body(AstNodeType::Block{label:block_label,}); //,true
     }
@@ -273,10 +273,18 @@ impl<'a> Ast<'a> {
         };
 
         self.end_body()?;
-        
+
         Ok(())
     }
 
+    pub fn pop_params(&mut self) {
+        let params = self.last_node().stack_pushed_num;
+
+        if params > 0 {
+            self.add_next(AstNodeType::StackPop(params));
+            self.last_node_mut().stack_pushed_num=0;
+        }
+    }
     pub fn func_start(&mut self,in_params:Vec<&'a str>,variadic:bool) -> Result<(), AstError> {
         if variadic && in_params.len()==0 {
             // panic!("scriptlang, ast, funcstart, params 0 and variadic");
@@ -298,7 +306,7 @@ impl<'a> Ast<'a> {
                 captured:false,
                 stack_ind:0,
             }))
-            .collect::<_>(); //params minus the variadic 
+            .collect::<_>(); //params minus the variadic
 
         self.funcs.push(AstFunc {
             params:func_params,
@@ -335,7 +343,7 @@ impl<'a> Ast<'a> {
 
     pub fn to_block_start(&mut self, cond:JmpCond, block_offset:usize) -> Result<(),AstError> { //Result<bool,AstError>
         let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
-        
+
         if stack_pushed_num!=0 {
             return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
         }
@@ -343,7 +351,7 @@ impl<'a> Ast<'a> {
         //
         let mut cur_node_ind = self.body_node_ind;
         let mut i =0;
-        
+
         while let AstNodeType::Block{..} = self.nodes.get(cur_node_ind).unwrap().node_type {
             if i==block_offset {
                 self.add_next(AstNodeType::ToBlockStart{cond,block_node_ind:cur_node_ind});
@@ -354,14 +362,14 @@ impl<'a> Ast<'a> {
                 i+=1;
             }
         }
-        
+
         // Ok(false)
         Err(AstError::BlockOffsetNotFound(block_offset))
     }
 
     pub fn to_block_end(&mut self, cond:JmpCond, block_offset:usize) -> Result<(),AstError> {
         let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
-        
+
         if stack_pushed_num!=0 {
             return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
         }
@@ -369,7 +377,7 @@ impl<'a> Ast<'a> {
         //
         let mut cur_node_ind = self.body_node_ind;
         let mut i =0;
-        
+
         while let AstNodeType::Block{..} = self.nodes.get(cur_node_ind).unwrap().node_type {
             if i==block_offset {
                 self.add_next(AstNodeType::ToBlockEnd{cond,block_node_ind:cur_node_ind});
@@ -380,14 +388,14 @@ impl<'a> Ast<'a> {
                 i+=1;
             }
         }
-        
+
         // Ok(false)
         Err(AstError::BlockOffsetNotFound(block_offset))
     }
-    
+
     pub fn to_label_block_start(&mut self, cond:JmpCond, block_label:&'a str) -> Result<bool,AstError> {
         let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
-        
+
         if stack_pushed_num!=0 {
             return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
         }
@@ -412,7 +420,7 @@ impl<'a> Ast<'a> {
 
     pub fn to_label_block_end(&mut self, cond:JmpCond, block_label:&'a str) -> Result<bool,AstError> {
         let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
-        
+
         if stack_pushed_num!=0 {
             return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
         }
@@ -442,7 +450,7 @@ impl<'a> Ast<'a> {
     }
     pub fn stack_rot(&mut self) {
         //todo check stack size? return err?
-        
+
         self.add_next(AstNodeType::StackRot);
     }
     pub fn stack_dup(&mut self) {
@@ -455,23 +463,23 @@ impl<'a> Ast<'a> {
         if self.last_node().stack_pushed_num == 0 {
             return Err(AstError::StackSizeAlreadyZero);
         }
-        
+
         self.add_next(AstNodeType::StackPop(amount));
         self.last_node_mut().stack_pushed_num-=amount;
 
         Ok(())
     }
-    pub fn stack_param_push(&mut self) { 
-        //pushes result onto stack        
+    pub fn stack_param_push(&mut self) {
+        //pushes result onto stack
         self.add_next(AstNodeType::StackPush);
         self.last_node_mut().stack_pushed_num+=1;
     }
     pub fn result_string(&mut self,v: &'a str) {
         self.add_next(AstNodeType::ResultString(v));
-    }    
+    }
     pub fn result_bool(&mut self,v: bool) {
         self.add_next(AstNodeType::ResultBool(v));
-    }    
+    }
     pub fn result_int(&mut self,v: IntT) {
         self.add_next(AstNodeType::ResultInt(v));
     }
@@ -484,7 +492,7 @@ impl<'a> Ast<'a> {
     pub fn result_nil(&mut self) {
         self.add_next(AstNodeType::ResultNil);
     }
-    
+
     pub fn decl_var_start(&mut self,name:&'a str, init_nil:bool, anon_id:Option<usize>) {
         if self.body_node().depth==0 && anon_id.is_none() {
             let decl=AstDeclVar::Global;
@@ -525,7 +533,7 @@ impl<'a> Ast<'a> {
                     local_ind
                 } else {
                     let local_ind=self.body_node().local_decls.len();
-                    
+
                     self.body_node_mut().local_decls.push(AstLocalDecl{
                         name : VarName { name, anon_id },
                         // name,
@@ -538,7 +546,7 @@ impl<'a> Ast<'a> {
                 };
 
                 self.add_next(AstNodeType::DeclVarStart { name, decl:AstDeclVar::Local { local_ind, }, anon_id, });
-                
+
                 {
                     let name=VarName{name,anon_id,};
                     let decl=AstDeclVar::Local { local_ind, };
@@ -559,7 +567,7 @@ impl<'a> Ast<'a> {
     pub fn decl_var_end(&mut self) -> Result<(),AstError> {
         if let Some((name,decl,init_nil))=self.decls_starts.pop() {
             self.add_next(AstNodeType::DeclVarEnd { name:name.name,decl,anon_id:name.anon_id, });
-        
+
             if init_nil {
                 self.result_nil();
                 self.set_var(name.name,name.anon_id).unwrap();
@@ -571,7 +579,7 @@ impl<'a> Ast<'a> {
         }
     }
 
-    pub fn set_var(&mut self,name:&'a str, anon_id:Option<usize>) -> Result<(),AstError> { //sets global/local var to result		
+    pub fn set_var(&mut self,name:&'a str, anon_id:Option<usize>) -> Result<(),AstError> { //sets global/local var to result
         self.add_next(AstNodeType::SetVar{name,var:AstAccessVar::None, anon_id});
 
         // if anon_id.is_some() && self.{
@@ -581,12 +589,12 @@ impl<'a> Ast<'a> {
         Ok(())
     }
 
-    pub fn get_var(&mut self,name:&'a str, anon_id:Option<usize>) -> Result<(),AstError> { //gets global/local var to and stores in result		
+    pub fn get_var(&mut self,name:&'a str, anon_id:Option<usize>) -> Result<(),AstError> { //gets global/local var to and stores in result
         self.add_next(AstNodeType::GetVar{name,var:AstAccessVar::None, anon_id});
         Ok(())
     }
 
-    pub fn call_var_or_method(&mut self,name:&'a str,params_num:usize, anon_id:Option<usize>) -> Result<(),AstError> { 
+    pub fn call_var_or_method(&mut self,name:&'a str,params_num:usize, anon_id:Option<usize>) -> Result<(),AstError> {
         //don't need anon_id? since when would you want to call an anon var or a method?
 
         //uses and pops off params_num amount off stack
@@ -594,25 +602,25 @@ impl<'a> Ast<'a> {
         if self.last_node().stack_pushed_num < params_num {
             return Err(AstError::CallNotEnoughParamsPushedOnStack);
         }
-        
+
         self.add_next(AstNodeType::CallVarOrMethod{name,params_num,var:AstAccessVar::None, anon_id});
 
         self.last_node_mut().stack_pushed_num-=params_num;
-        
+
         Ok(())
     }
 
-    // pub fn call_var(&mut self,name:&'a str,params_num:usize, anon_id:Option<usize>) -> Result<(),AstError> { 
+    // pub fn call_var(&mut self,name:&'a str,params_num:usize, anon_id:Option<usize>) -> Result<(),AstError> {
     //     //uses and pops off params_num amount off stack
 
     //     if self.last_node().stack_pushed_num < params_num {
     //         return Err(AstError::CallNotEnoughParamsPushedOnStack);
     //     }
-        
+
     //     self.add_next(AstNodeType::CallVarOrMethod{name,params_num,var:AstAccessVar::None, anon_id});
 
     //     self.last_node_mut().stack_pushed_num-=params_num;
-        
+
     //     Ok(())
     // }
 
@@ -621,13 +629,13 @@ impl<'a> Ast<'a> {
 
         Ok(())
     }
-    pub fn call_method(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> { 
+    pub fn call_method(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> {
         //uses and pops off params_num amount off stack
 
         if self.last_node().stack_pushed_num < params_num {
             return Err(AstError::CallNotEnoughParamsPushedOnStack);
         }
-        
+
         self.add_next(AstNodeType::CallMethod{name,params_num});
 
         self.last_node_mut().stack_pushed_num-=params_num;
@@ -635,20 +643,20 @@ impl<'a> Ast<'a> {
         Ok(())
     }
 
-    pub fn try_call_method(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> { 
+    pub fn try_call_method(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> {
         //uses and pops off params_num amount off stack
 
         if self.last_node().stack_pushed_num < params_num {
             return Err(AstError::CallNotEnoughParamsPushedOnStack);
         }
-        
+
         self.add_next(AstNodeType::TryCallMethod{name,params_num});
 
         self.last_node_mut().stack_pushed_num-=params_num;
 
         Ok(())
     }
-    // pub fn has_method(&mut self,name:&'a str) -> Result<(),AstError> { 
+    // pub fn has_method(&mut self,name:&'a str) -> Result<(),AstError> {
     //     //checks if method exists, store bool in result?
 
     //     self.add_next(AstNodeType::HasMethod{name,});
@@ -656,13 +664,13 @@ impl<'a> Ast<'a> {
 
     //     Ok(())
     // }
-    pub fn call_result(&mut self,params_num:usize) -> Result<(),AstError> { 
+    pub fn call_result(&mut self,params_num:usize) -> Result<(),AstError> {
         //uses and pops off params_num amount off stack
 
         if self.last_node().stack_pushed_num < params_num {
             return Err(AstError::CallNotEnoughParamsPushedOnStack);
         }
-        
+
         self.add_next(AstNodeType::CallResult{params_num});
 
         self.last_node_mut().stack_pushed_num-=params_num;
@@ -675,14 +683,14 @@ impl<'a> Ast<'a> {
     }
 
     //////////////////
-    
+
     pub fn print(&self) {
         let mut stk = vec![0];
-        
+
         while let Some(cur_node_ind)=stk.pop() {
             let cur_node = self.nodes.get(cur_node_ind).unwrap();
             stk.extend(cur_node.children.iter().rev());
-            
+
             println!("{:0>3} [{}=>{} : {}] {}{:?}",
                 cur_node_ind,
                 cur_node.last_stack_size,
@@ -713,13 +721,13 @@ impl<'a> Ast<'a> {
             // }
         }
     }
-    
+
     fn clear_calc_vars(&mut self) { //clear changes done by calc_vars()
         for node in self.nodes.iter_mut() {
             match &mut node.node_type {
                 AstNodeType::GetVar{var,..}
                 | AstNodeType::SetVar{var, ..}
-                | AstNodeType::CallVarOrMethod{var, ..} 
+                | AstNodeType::CallVarOrMethod{var, ..}
                 | AstNodeType::GetVarOrCallMethod { var, .. }
                 => {
                     *var=AstAccessVar::None
@@ -752,21 +760,21 @@ impl<'a> Ast<'a> {
         // let must_decl_globals=self.must_decl_globals;
 
         self.clear_calc_vars();
-        
+
         let mut root_after_env: HashMap<VarName, AstAccessVar> = HashMap::new();
         let mut bodies_before_envs: Vec<HashMap<VarName, AstAccessVar>> = Vec::new(); //[body_depth][var_name]=stack_var
         let mut funcs_after_envs: Vec<HashMap<VarName, AstAccessVar>> = Vec::new(); //[func_ind][var_name]=stack_var
 
         //cant put access var in capturables, as wont know from which env they came from ie the cur on a prev
-        let mut funcs_capturables: Vec<HashSet<VarName>> = Vec::new(); //[func_ind][capturable_name], 
-        let mut funcs_captures: Vec<Vec<AstCapture>> = Vec::new(); //[func_ind]=captures, 
-        let mut funcs_body_depths = Vec::<usize>::new(); //[func_ind]=body_depth, 
+        let mut funcs_capturables: Vec<HashSet<VarName>> = Vec::new(); //[func_ind][capturable_name],
+        let mut funcs_captures: Vec<Vec<AstCapture>> = Vec::new(); //[func_ind]=captures,
+        let mut funcs_body_depths = Vec::<usize>::new(); //[func_ind]=body_depth,
 
         funcs_after_envs.resize(self.funcs.len(), HashMap::new());
         funcs_capturables.resize(self.funcs.len(), HashSet::new());
         funcs_captures.resize(self.funcs.len(), Vec::new());
         funcs_body_depths.resize(self.funcs.len(), 0);
-        
+
         //
         let mut node_stk = vec![0]; //(node_ind,on_exit) //,(0,true)
 
@@ -791,14 +799,14 @@ impl<'a> Ast<'a> {
 
                 func_ind_stk.reverse();
             }
-            
+
             //
             let cur_node_depth= self.get_node(cur_node_ind).depth;
             let parent_node_ind= self.get_node(cur_node_ind).parent;
 
             //clear bodies_before_envs to ..
             bodies_before_envs.truncate(cur_node_depth);
-    
+
             //create root after env
             if cur_node_depth==1 {
                 root_after_env.clear();
@@ -806,13 +814,13 @@ impl<'a> Ast<'a> {
                 let sibling_node_inds=self.get_node(0).children.clone();
                 let next_sibling_start=sibling_node_inds.iter().position(|&x|x==cur_node_ind).unwrap()+1;
 
-                for &sibling_node_ind in &sibling_node_inds[next_sibling_start ..] {                        
+                for &sibling_node_ind in &sibling_node_inds[next_sibling_start ..] {
                     if let AstNodeType::DeclVarStart { name, decl, anon_id } = self.get_node(sibling_node_ind).node_type {
                         root_after_env.entry(VarName{name,anon_id,}).or_insert(match decl {
                             AstDeclVar::Global => AstAccessVar::Global,
                             AstDeclVar::Local { local_ind } => AstAccessVar::Local {
                                 node_ind: parent_node_ind.unwrap(),
-                                local_ind, 
+                                local_ind,
                                 // anon_id,
                             },
                             AstDeclVar::Param { func_ind, param_ind } => AstAccessVar::Param {
@@ -831,20 +839,20 @@ impl<'a> Ast<'a> {
                 }
                 AstNodeType::Block { .. } => {
                     bodies_before_envs.push(bodies_before_envs.last().cloned().unwrap_or_default());
-                }                
+                }
                 AstNodeType::Function { func_ind } => {
                     funcs_body_depths[func_ind]=cur_node_depth;
 
                     let parent_before_envs=bodies_before_envs.last().unwrap().clone();
                     bodies_before_envs.push(HashMap::new());
-                    
+
                     //add func params to env
                     {
                         let func=self.funcs.get(func_ind).unwrap();
 
                         for (param_ind,param) in func.params.iter().enumerate() {
                             bodies_before_envs.last_mut().unwrap().insert(
-                                VarName{name:param.name,anon_id:None}, 
+                                VarName{name:param.name,anon_id:None},
                                 AstAccessVar::Param { func_ind, param_ind },
                             );
                         }
@@ -854,10 +862,10 @@ impl<'a> Ast<'a> {
                     let sibling_node_inds=self.get_node(parent_node_ind.unwrap()).children.clone();
                     let next_sibling_start=sibling_node_inds.iter().position(|&x|x==cur_node_ind).unwrap()+1;
 
-                    for &sibling_node_ind in &sibling_node_inds[next_sibling_start ..] {                        
+                    for &sibling_node_ind in &sibling_node_inds[next_sibling_start ..] {
                         if let AstNodeType::DeclVarStart { name, decl, anon_id } = self.get_node(sibling_node_ind).node_type {
                             funcs_after_envs[func_ind].entry(VarName{name,anon_id})
-                                .or_insert(match decl 
+                                .or_insert(match decl
                             {
                                 AstDeclVar::Global => AstAccessVar::Global,
                                 AstDeclVar::Local { local_ind } => AstAccessVar::Local {
@@ -872,13 +880,13 @@ impl<'a> Ast<'a> {
                             });
                         }
                     }
-                    
+
                     //add parent before_env to capturables
                     funcs_capturables[func_ind].extend(parent_before_envs.iter().map(|kv|kv.0));
-                    
+
                     //add func after_env to capturables
                     funcs_capturables[func_ind].extend(funcs_after_envs[func_ind].iter().map(|kv|kv.0));
-                    
+
                     //add root after_env to capturables
                     funcs_capturables[func_ind].extend(root_after_env.iter().map(|kv|kv.0));
 
@@ -903,7 +911,7 @@ impl<'a> Ast<'a> {
                             param_ind,
                         },
                     };
-                    
+
                     bodies_before_envs.last_mut().unwrap().insert(VarName{name,anon_id},var);
                 }
 
@@ -913,25 +921,25 @@ impl<'a> Ast<'a> {
                         | (AstNodeType::SetVar{name,anon_id, ..},_)
                         | (AstNodeType::CallVarOrMethod{name,anon_id, ..},_)
                         | (AstNodeType::GetVarOrCallMethod { name, .. },anon_id)
-                    => {                                        
+                    => {
                         let mut end_depth = cur_node_depth;
-    
+
                         //create/add captures to before_envs
                         for (func_stk_ind,&func_ind) in func_ind_stk.iter().enumerate().rev() {
                             let func_depth = funcs_body_depths[func_ind];
-                                
+
                             //
                             if bodies_before_envs.get(end_depth-1).unwrap().contains_key(&VarName{name,anon_id})  {
                                 break;
                             }
-                            
+
                             //
                             if !capture_undecl_globals {
                                 if !funcs_capturables.get(func_ind).unwrap().contains(&VarName{name,anon_id}) {
                                     break;
                                 }
                             }
-    
+
                             //
                             let capture_ind = {
                                 //need func's parent depth for beforeenvs
@@ -942,43 +950,43 @@ impl<'a> Ast<'a> {
                                 } else if func_stk_ind==0 { //undecl global var, or lib constant/method
                                     AstAccessVar::None
                                     // AstAccessVar::Global
-                                } else { 
+                                } else {
                                     //dont need to worry about func_stk_ind being 0, since an if above will resolve first
-    
+
                                     //has to be a func capture var, otherwise would of been caught in the prev if's
-    
+
                                     let prev_func_stk_ind=func_stk_ind-1;
                                     let prev_func_ind=*func_ind_stk.get(prev_func_stk_ind).unwrap();
                                     let prev_func_captures=funcs_captures.get(prev_func_ind).unwrap();
-                                    
+
                                     //capture var from ancestor func, doesnt create it, but capture_ind to the future created one
                                     let capture_ind2=prev_func_captures.len();
                                     AstAccessVar::Capture { func_ind:prev_func_ind,capture_ind:capture_ind2 }
                                 };
-    
+
                                 //add capture to func
                                 let func_captures=funcs_captures.get_mut(func_ind).unwrap();
                                 let capture_ind=func_captures.len();
-    
-                                func_captures.push(AstCapture { 
-                                    name, 
+
+                                func_captures.push(AstCapture {
+                                    name,
                                     var: capture_var,
-                                    stack_ind:0,                                
+                                    stack_ind:0,
                                 });
-    
+
                                 //
                                 capture_ind
                             };
-                            
+
                             let capture_var=AstAccessVar::Capture { func_ind,capture_ind };
-                            
+
                             for depth in (func_depth..end_depth).rev() {
                                 bodies_before_envs.get_mut(depth).unwrap()
                                     .insert(VarName{name,anon_id},capture_var);
                             }
-                            
+
                             end_depth=func_depth;
-                            
+
                             //
                             if funcs_after_envs[func_ind].contains_key(&VarName{name,anon_id}) {
                                 break;
@@ -988,47 +996,47 @@ impl<'a> Ast<'a> {
                         //
                         let cur_loc=self.get_node(cur_node_ind).loc;
 
-    
+
                         //
                         match &mut self.get_node_mut(cur_node_ind).node_type {
                             AstNodeType::GetVar{name,var,..}
                             | AstNodeType::SetVar{name,var, ..}
-                            | AstNodeType::CallVarOrMethod{name,var, ..} 
+                            | AstNodeType::CallVarOrMethod{name,var, ..}
                             | AstNodeType::GetVarOrCallMethod { name,var, .. }
                             => {
                                 if let Some(&env_var)=bodies_before_envs.get(cur_node_depth-1).unwrap().get(&VarName{name,anon_id}) {
                                     *var=env_var; //modification here!
                                 // } else { //what was this originally here for? as it seems it is set to global from somewhere above?
                                     // *var=AstAccessVar::Global; //modification here!
-                                } 
+                                }
                                 // else if must_decl_globals {
                                 //     println!("it is {name:?} {var:?} {cur_loc:?}");
 
-                                //     let loc = cur_loc.unwrap_or(Loc::zero());//should usually be set, but if a mistake was made in the builder, 
+                                //     let loc = cur_loc.unwrap_or(Loc::zero());//should usually be set, but if a mistake was made in the builder,
 
                                 //     return Err(AstVarError{error_type:AstVarErrorType::GlobalNotDecl(name.to_string()),loc});
                                 // }
                             }
                             _ => {}
                         }
-                        
+
                         // if let AstNodeType::CallMethodOrGetVar{name,var,..}=self.get_node_mut(cur_node_ind).node_type {
-                            
+
                         // }
                         match &self.get_node(cur_node_ind).node_type {
-                            // AstNodeType::GetVar{name,var,..}   | 
+                            // AstNodeType::GetVar{name,var,..}   |
                             AstNodeType::SetVar{name,var, ..}
-                            // | AstNodeType::CallVarOrMethod{name,var, ..} 
+                            // | AstNodeType::CallVarOrMethod{name,var, ..}
                             => {
                                 if self.must_decl_globals && *var==AstAccessVar::None{
                                     // println!("it is {name:?} {var:?} {cur_loc:?}");
 
-                                    let loc = cur_loc.unwrap_or(Loc::zero());//should usually be set, but if a mistake was made in the builder, 
+                                    let loc = cur_loc.unwrap_or(Loc::zero());//should usually be set, but if a mistake was made in the builder,
 
                                     return Err(AstVarError{error_type:AstVarErrorType::GlobalNotDecl(name.to_string()),loc});
                                 }
                             }
-                                
+
                             _ => {}
                         }
                     }
@@ -1054,11 +1062,11 @@ impl<'a> Ast<'a> {
                             .local_decls.get_mut(local_ind).unwrap()
                             .captured=true; //modification here!
                     }
-                    AstAccessVar::Global => { 
+                    AstAccessVar::Global => {
 						//not needed, uses get_global_var_ref
                     }
                     // AstAccessVar::OuterGlobal => {  }
-                    AstAccessVar::Capture { .. } => { 
+                    AstAccessVar::Capture { .. } => {
 						//already a refvar
                     }
                     AstAccessVar::None => {
@@ -1075,12 +1083,12 @@ impl<'a> Ast<'a> {
         }
 
         //calc stack sizes
-        {            
+        {
             let mut stk = vec![0];
 
             while let Some(cur_node_ind)=stk.pop() {
                 stk.extend(self.get_node(cur_node_ind).children.iter().rev());
-                
+
                 //sibling/parent stack_size
                 let last_stack_size = if let Some(parent_node_ind)=self.get_node(cur_node_ind).parent {
                     let parent_node=self.get_node(parent_node_ind);
@@ -1089,7 +1097,7 @@ impl<'a> Ast<'a> {
                     if child_ind!=0 {
                         let sibling_node_ind=*parent_node.children.get(child_ind-1).unwrap();
                         let sibling_node=self.get_node(sibling_node_ind);
-                        
+
                         match sibling_node.node_type {
                             AstNodeType::Function { .. } => {
                                 sibling_node.last_stack_size
@@ -1108,7 +1116,7 @@ impl<'a> Ast<'a> {
                     0
                 };
 
-                //                
+                //
                 self.get_node_mut(cur_node_ind).last_stack_size=last_stack_size;
 
                 //
@@ -1117,7 +1125,7 @@ impl<'a> Ast<'a> {
                     let params_num=self.funcs.get(func_ind).unwrap().params.len();
                     let captures_num=self.funcs.get(func_ind).unwrap().captures.len();
 
-                    self.get_node_mut(cur_node_ind).stack_size = params_num+captures_num;                    
+                    self.get_node_mut(cur_node_ind).stack_size = params_num+captures_num;
                 } else {
                     self.get_node_mut(cur_node_ind).stack_size = last_stack_size;
                 }
@@ -1130,10 +1138,10 @@ impl<'a> Ast<'a> {
                     AstNodeType::StackPop(amount) => {
                         self.get_node_mut(cur_node_ind).stack_size-=amount;
                     }
-                    AstNodeType::CallMethod { params_num, .. } 
-                    | AstNodeType::TryCallMethod { params_num, .. } 
-                    | AstNodeType::CallResult { params_num } 
-                    | AstNodeType::CallVarOrMethod { params_num, .. } => 
+                    AstNodeType::CallMethod { params_num, .. }
+                    | AstNodeType::TryCallMethod { params_num, .. }
+                    | AstNodeType::CallResult { params_num }
+                    | AstNodeType::CallVarOrMethod { params_num, .. } =>
                     {
                         self.get_node_mut(cur_node_ind).stack_size-=params_num;
                     }
@@ -1147,19 +1155,19 @@ impl<'a> Ast<'a> {
             }
         }
 
-        //calc local decl stack_inds        
+        //calc local decl stack_inds
         for node_ind in 0 .. self.nodes.len() {
             //local decls already in stack_size, so need to subtract
             let stack_size=self.get_node(node_ind).stack_size - self.get_node(node_ind).local_decls.len();
 
             for (local_decl_ind,local_decl) in self.get_node_mut(node_ind).local_decls.iter_mut().enumerate() {
-                local_decl.stack_ind = stack_size + local_decl_ind; 
+                local_decl.stack_ind = stack_size + local_decl_ind;
             }
         }
 
         //calc func param/capture stack_inds
-        for //(func_ind,func) 
-            func in self.funcs.iter_mut() //.enumerate() 
+        for //(func_ind,func)
+            func in self.funcs.iter_mut() //.enumerate()
         {
             let params_num=func.params.len(); //non variadic num
 
@@ -1177,33 +1185,33 @@ impl<'a> Ast<'a> {
         Ok(())
     }
 
-    pub fn clear(&mut self) {        
+    pub fn clear(&mut self) {
         self.nodes.clear();
         self.funcs.clear();
         self.body_node_ind = 0;
         self.last_node_ind = 0;
         self.cur_loc = None;
     }
-    
+
     fn calc_var_stack_offset(&self, var : AstAccessVar, stack_size:usize) -> Option<(usize,bool)> {
         match var {
-            AstAccessVar::Global | AstAccessVar::None => { //AstAccessVar::OuterGlobal | 
+            AstAccessVar::Global | AstAccessVar::None => { //AstAccessVar::OuterGlobal |
                 None
             }
             AstAccessVar::Local { node_ind, local_ind, //anon_id
             } => {
                 let local_decl=self.get_node(node_ind).local_decls.get(local_ind).unwrap();
-                let stack_offset=stack_size-local_decl.stack_ind-1;    
+                let stack_offset=stack_size-local_decl.stack_ind-1;
                 Some((stack_offset,local_decl.captured))
             }
             AstAccessVar::Param { func_ind, param_ind } => {
                 let param=self.funcs.get(func_ind).unwrap().params.get(param_ind).unwrap();
-                let stack_offset=stack_size-param.stack_ind-1;    
+                let stack_offset=stack_size-param.stack_ind-1;
                 Some((stack_offset,param.captured))
             }
             AstAccessVar::Capture { func_ind, capture_ind } => {
                 let capture=self.funcs.get(func_ind).unwrap().captures.get(capture_ind).unwrap();
-                let stack_offset=stack_size-capture.stack_ind-1;                
+                let stack_offset=stack_size-capture.stack_ind-1;
                 Some((stack_offset,true))
             }
         }
@@ -1220,7 +1228,7 @@ impl<'a> Ast<'a> {
         let mut block_start_instr_inds = HashMap::<usize,usize>::new();
         let mut block_to_ends = HashMap::<usize,Vec<usize>>::new();
 
-        let //mut 
+        let //mut
             instr_stack_var_names=HashMap::new();
 
         //instructions are stored main first, then functions in order after that
@@ -1231,9 +1239,9 @@ impl<'a> Ast<'a> {
         //
         instrs_stk.resize(self.funcs.len()+1, Vec::new());
         instr_locs_stk.resize(self.funcs.len()+1, Vec::new());
-        
+
         //
-        //instructions is where main instructions are inserted permanently, and 
+        //instructions is where main instructions are inserted permanently, and
         //  function instructions temporarily before being move to func_instructions
 
         let mut node_stk = vec![(0,false)]; //root enter
@@ -1253,12 +1261,12 @@ impl<'a> Ast<'a> {
                 AstNodeType::Root => { //on enter
                     node_stk.push((cur_node_ind,true)); //root exit
                     node_stk.extend(cur_node.children.iter().rev().map(|&x|(x,false)));
-                    
+
                     //push locals
                     if cur_node.local_decls.len()>0 {
                         instructions.push(Instruction::StackLocals(cur_node.local_decls.len()));
                     }
-                    
+
                     for local_decl in cur_node.local_decls.iter() {
                         if local_decl.captured {
                             let stack_offset = cur_node.stack_size-local_decl.stack_ind-1;
@@ -1267,7 +1275,7 @@ impl<'a> Ast<'a> {
                     }
                 }
                 AstNodeType::Block{..} if exited => { //on exit
-                    //pop locals                    
+                    //pop locals
                     if cur_node.local_decls.len()>0 {
                         instructions.push(Instruction::StackPop(cur_node.local_decls.len()));
                     }
@@ -1282,9 +1290,9 @@ impl<'a> Ast<'a> {
                             let _instr_offset_down: usize=cur_instr_ind-to_end_instr_ind;
                             // println!("cur_instr_ind={cur_instr_ind}, to_end_instr_ind={to_end_instr_ind}, _instr_offset_down={_instr_offset_down}");
 
-                            let Instruction::Jmp { 
-                                instr_pos , 
-                                debug, 
+                            let Instruction::Jmp {
+                                instr_pos ,
+                                debug,
                                 ..
                             } = instructions.get_mut(to_end_instr_ind).unwrap() else {
                                 panic!("scriptlang,builder,ast, expected Jmp instr");
@@ -1295,7 +1303,7 @@ impl<'a> Ast<'a> {
                             *debug=(4,_instr_offset_down as i64);
                         }
                     }
-                    
+
                     block_to_ends.remove(&cur_node_ind); //pointless, but cleans memory up a bit
                 }
                 AstNodeType::Block{..} => { //on enter
@@ -1309,7 +1317,7 @@ impl<'a> Ast<'a> {
                     if cur_node.local_decls.len()>0 {
                         instructions.push(Instruction::StackLocals(cur_node.local_decls.len()));
                     }
-                    
+
                     //setup refvars
                     for local_decl in cur_node.local_decls.iter() {
                         if local_decl.captured {
@@ -1325,7 +1333,7 @@ impl<'a> Ast<'a> {
                     // let params_num=self.funcs.get(func_ind).unwrap().params.len();//non_variadic_params_num;
                     let captures_num=self.funcs.get(func_ind).unwrap().captures.len();
 
-                    //pop locals                    
+                    //pop locals
                     if cur_node.local_decls.len()>0 {
                         instructions.push(Instruction::StackPop(cur_node.local_decls.len()));
                     }
@@ -1336,12 +1344,12 @@ impl<'a> Ast<'a> {
 
                     //push captures
                     // println!("captures {:?}",self.funcs.get(func_ind).unwrap().captures);
-                    
+
                     for (capture_ind,capture) in self.funcs.get(func_ind).unwrap().captures.iter().enumerate() {
                         let stack_size = capture_ind + cur_node.last_stack_size;
 
                         if let AstAccessVar::None = capture.var { //an undeclared global (call/get/set)?
-                            // panic!(""); 
+                            // panic!("");
                             instructions.push(Instruction::GetGlobalAccessRef(symbol_inds.get(capture.name)));
 
                         } else if let Some((stack_offset,_))=self.calc_var_stack_offset(capture.var,stack_size) {
@@ -1367,7 +1375,7 @@ impl<'a> Ast<'a> {
 
                     instr_stk_inds.push(func_ind + 1);
                     instructions=instrs_stk.get_mut(*instr_stk_inds.last().unwrap()).unwrap();
-                    
+
                     //
                     node_stk.push((cur_node_ind,true)); //lambda exit
                     node_stk.extend(cur_node.children.iter().rev().map(|&x|(x,false)));
@@ -1400,14 +1408,14 @@ impl<'a> Ast<'a> {
                     let dif_stack_size=cur_node.stack_size - to_stack_size;
 
                     if dif_stack_size>0 {
-                        if //cond.is_some() 
+                        if //cond.is_some()
                             cond!=JmpCond::None
                         { //(not_cond,2)
                             // let not_cond=cond.and_then(|b|Some(!b));
                             let not_cond=cond.not();
                             let _instr_offset_down:usize = 3;
 
-                            instructions.push(Instruction::Jmp { cond: not_cond, 
+                            instructions.push(Instruction::Jmp { cond: not_cond,
                                 instr_pos: instructions.len()+3, //ok2
                                 debug:(0,_instr_offset_down as i64),
                             });
@@ -1418,7 +1426,7 @@ impl<'a> Ast<'a> {
 
                     //
                     let jmp_instr_ind = block_start_instr_inds.get(&block_node_ind).unwrap();
-                 
+
                     let _instr_offset_up: usize = instructions.len()- *jmp_instr_ind;
 
                     instructions.push(Instruction::Jmp{cond,
@@ -1433,14 +1441,14 @@ impl<'a> Ast<'a> {
                     let dif_stack_size=cur_node.stack_size - to_stack_size;
 
                     if dif_stack_size>0 {
-                        if //cond.is_some() 
+                        if //cond.is_some()
                             cond!=JmpCond::None
                         {
                             // let not_cond=cond.and_then(|b|Some(!b));
                             let not_cond=cond.not();
 
                             let _instr_offset_down:usize = 3;
-                            
+
                             instructions.push(Instruction::Jmp{cond:not_cond,
                                 instr_pos:instructions.len()+3, //ok2
                                 debug:(2,_instr_offset_down as i64),
@@ -1453,9 +1461,9 @@ impl<'a> Ast<'a> {
                     //
                     block_to_ends.entry(block_node_ind).or_default().push(instructions.len());
 
-                    instructions.push(Instruction::Jmp { 
-                        cond, 
-                        instr_pos: 0, 
+                    instructions.push(Instruction::Jmp {
+                        cond,
+                        instr_pos: 0,
                         debug:(3,0),
                     }); //(cond,0)
                 }
@@ -1526,13 +1534,13 @@ impl<'a> Ast<'a> {
                         }
                     }
                 }
-                AstNodeType::DeclVarEnd { 
+                AstNodeType::DeclVarEnd {
                     // name, decl, anon_id,
                     ..
                 } => {
                 }
-                AstNodeType::GetVar{name,var, 
-                    // anon_id, 
+                AstNodeType::GetVar{name,var,
+                    // anon_id,
                     ..
                 } => { //copy result ?
                     if let Some((stack_offset,captured))=self.calc_var_stack_offset(var,cur_node.stack_size) {
@@ -1548,7 +1556,7 @@ impl<'a> Ast<'a> {
                         instructions.push(Instruction::GetGlobalVarOrConst(symbol_inds.get(name),get_global));
                     }
                 }
-                AstNodeType::SetVar{name,var, 
+                AstNodeType::SetVar{name,var,
                     // anon_id
                     ..
                 } => { //copy result ?
@@ -1564,7 +1572,7 @@ impl<'a> Ast<'a> {
                         instructions.push(Instruction::SetGlobalVar(symbol_inds.get(name)));
                     }
                 }
-                AstNodeType::CallVarOrMethod{name,params_num,var, 
+                AstNodeType::CallVarOrMethod{name,params_num,var,
                     // anon_id
                     ..
                 } => {
@@ -1572,13 +1580,13 @@ impl<'a> Ast<'a> {
                         if captured {
                             // instructions.push(Instruction::GetStackVarDeref(stack_offset));
                             // instructions.push(Instruction::CallResult(params_num));
-                            
+
                             instructions.push(Instruction::CallStackVarDeref(stack_offset,params_num));
                         } else {
                             instructions.push(Instruction::GetStackVar(stack_offset));
                             instructions.push(Instruction::CallResult(params_num));
                         }
-                        
+
                     } else {
                         instructions.push(Instruction::CallGlobalOrMethod(symbol_inds.get(name),params_num));
                     }
@@ -1614,7 +1622,7 @@ impl<'a> Ast<'a> {
         } //end while
 
         //instr jmp pos's are local to the function, so need to offset
-        {                
+        {
             let mut offset = instrs_stk.first().unwrap().len();
 
             for instrs_stk_ind in 1..instrs_stk.len() {
@@ -1649,7 +1657,7 @@ impl<'a> Ast<'a> {
             instruct_start_pos+=instruct_len;
         }
 
-        //        
+        //
         let mut instr_locs_map = HashMap::<usize,Loc>::new();
         let mut instr_locs_alt = Vec::<(usize,Option<Loc>)>::new();
 

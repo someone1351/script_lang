@@ -32,18 +32,20 @@ use super::super::ast::*;
 
 
 //todo: allow return of both builderrs and asterrs, so that mistakes in cmds don't panic/crash the program
-/* 
+/*
 todo
 * instead of setting param loc, set optional loc for results, which the param loc is then gotten by
 * * for params, if eval a code block, need to reset loc to the start of that block? no? eg b.loc(x).eval(y).push_param() the loc x will be used by push_param?
 * is start/end loc really needed for params? would be simpler just to have the start loc
+
+* make builder methods request file/line so on error can see where it came from
 */
 
 
 // #[derive(Debug,Clone)]
 // pub enum BuilderError2<E:Clone+Debug> {
 //     Builder(E),
-//     Ast(AstError),    
+//     Ast(AstError),
 // }
 
 
@@ -72,7 +74,7 @@ pub enum BuilderNodeType<'a,T:Clone+Debug+'a,E:Clone+Debug> {
     ),
 
     Ast(Box<dyn Fn(&mut Ast<'a>)->Result<(),BuilderError<E>>+'a>),
-    
+
 }
 
 
@@ -94,7 +96,7 @@ pub struct Builder<'a,T:Clone+Debug+'a,E:Clone+Debug> {
 
     // ast : BuilderAst<'a>,
 
-    
+
     // nodes : Vec<BuilderNode<'a,T,E>>,
     nodes : Vec<(Box<dyn Fn(&mut Ast<'a>)->Result<(),BuilderError<E>>+'a>,Option<Loc>)>,
     // global_decls : HashSet<&'a str>,
@@ -112,12 +114,12 @@ pub struct Builder<'a,T:Clone+Debug+'a,E:Clone+Debug> {
 // }
 
 impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
-    pub fn get_fields<F>(&mut self, fields : F) -> &mut Self 
-    where 
+    pub fn get_fields<F>(&mut self, fields : F) -> &mut Self
+    where
         // F : IntoIterator<Item = (BuilderField<'a,T>,Loc)>,
         F : IntoIterator<Item = (T,Loc)>,
     {
-            
+
         //fields
         for field in fields.into_iter() {
             self.param_push(); //last result
@@ -138,12 +140,12 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         self
     }
 
-    pub fn set_fields_begin<F>(&mut self, fields : F) -> &mut Self 
-    where 
+    pub fn set_fields_begin<F>(&mut self, fields : F) -> &mut Self
+    where
         F : IntoIterator<Item = (T,Loc)>,
     {
 
-        // self.block_start(None); //needed for try_call_method
+        self.block_start(None); //needed for try_call_method
 
         let fields=fields.into_iter().collect::<Vec<_>>();
 
@@ -153,7 +155,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
             if fields.len()>1 {
                 self.param_push();
             }
-            
+
             //push last result
             self.param_push();
 
@@ -193,7 +195,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
             //on not last field
             if field_ind!=fields.len()-1 {
                 //push field, swap
-                self 
+                self
                     .param_push()
                     .swap();
 
@@ -218,10 +220,10 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         //sometimes is unecessary to call, for things like arrays and dicts, since they hold "pointer" like values,
         //  and not copies, but for get_field's that return a copy and not a "pointer", then
         //  it must be modified and then copied back to its original owner
-        
+
         //if a set_field method doesn't exist, want to abandon the set_field chain?
-        //could try to call a special set_field_end (and also a get_field_end), 
-        //  might be useful for special fields like thing.0.color vs thing.0.color.on_press 
+        //could try to call a special set_field_end (and also a get_field_end),
+        //  might be useful for special fields like thing.0.color vs thing.0.color.on_press
         //  but problem is: set thing.0.color.r 0.5 vs: set thing.0.color.on_press .r 0.5
         // println!("fields num is {fields_num}");
 
@@ -231,17 +233,25 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
                 .rot()
                 .rot()
                 .swap()
-                
+
                 //
-                // .try_call_method("set_field", 3) //allowed to fail if no set_field method
-                // .to_block_end(JmpCond::Undefined, 0) //todo:need to make try_call_method return undefined on fail
-                // //todo: also need a way to store result of prev set_field, and re set it as result on try_call_method fail
-                //
-                .call_method("set_field", 3)
+                .try_call_method("set_field", 3) //allowed to fail if no set_field method
+                .block_start(None)
+                    .to_block_end(JmpCond::NotUndefined, 0)
+                    .pop_params()
+                    .to_block_end(JmpCond::None, 1) //todo:need to make try_call_method return undefined on fail
+                .block_end()
+                //todo: also need a way to store result of prev set_field, and re set it as result on try_call_method fail
+                //  why? don't use the result of a set_field anyway?
+                //     because it can eg var r {set a.x 5}, could optionally return void or something else
+                //       in that case just return undefined when method missing?
+                //todo: on try method fail, pop off unused params? don't need to, ast handles that?
+
+                // .call_method("set_field", 3)
                 ;
         }
 
-        // self.block_end(); //needed for try_call_method
+        self.block_end(); //needed for try_call_method
 
         self
     }
@@ -264,7 +274,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
             // next_cmd_anon_id:1,
             // in_cmd : false,
             cur_anon_id:0,
-                    
+
             temp_last_loc:None,
             temp_stk_last_len : 0,
         }
@@ -273,7 +283,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         self.cur_anon_id=anon_scope;
 
     }
-    
+
     pub fn loc(&mut self, loc:Loc) -> &mut Self {
         self.cur_loc=Some(loc);
         self
@@ -295,19 +305,19 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     //     //todo
     //     self
     // }
-    
+
     // pub fn commit_param_locs(&mut self) {
     //     //todo
     // }
-    
+
 
     // pub fn result_value(&mut self,v:&Value) -> &mut Self {
     //     self.temp_stk.push(BuilderInputNode::ResultValue(v.clone()));
     //     self
     // }
 
-    fn add_node<F>(&mut self,func:F) -> &mut Self 
-    where 
+    fn add_node<F>(&mut self,func:F) -> &mut Self
+    where
         F:Fn(&mut Ast<'a>)->Result<(),BuilderError<E>>+'a,
     {
         // self.temp_stk.push(BuilderNode{node_type,loc:self.cur_loc});
@@ -316,19 +326,19 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
             loc:self.cur_loc,
         });
 
-        
+
         self
     }
 
     pub fn result_void(&mut self) -> &mut Self {
         // self.add_node(BuilderNodeType::ResultVoid)
-        
+
         self.add_node(|ast|{
             ast.result_void();
             Ok(())
         })
     }
-    
+
     pub fn result_nil(&mut self) -> &mut Self {
         // self.add_node(BuilderNodeType::ResultNil)
 
@@ -428,7 +438,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
 
     pub fn decl_var_start(&mut self,name:&'a str,init_nil:bool) -> &mut Self {
         // self.add_node(BuilderNodeType::DeclVarStart{name:n,init_nil,anon_id:None,})
-        
+
         self.add_node(move|ast|{
             ast.decl_var_start(name,init_nil,None);
             Ok(())
@@ -437,7 +447,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
 
     pub fn decl_var_end(&mut self) -> &mut Self {
         // self.add_node(BuilderNodeType::DeclVarEnd)
-        
+
         self.add_node(|ast|{
             ast.decl_var_end().unwrap();
             Ok(())
@@ -455,7 +465,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
 
     pub fn get_var(&mut self,name:&'a str) -> &mut Self {
         // self.add_node(BuilderNodeType::GetVar{name:n,anon_id:None,})
-        
+
         self.add_node(|ast|{
             ast.get_var(name,None).unwrap();
             Ok(())
@@ -479,7 +489,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         // let anon_id=if self.in_cmd{Some(self.next_cmd_anon_id)}else{Some(0)};
         let anon_id=Some(self.cur_anon_id);
         // self.add_node(BuilderNodeType::SetVar{name:n,anon_id,})
-        
+
         self.add_node(move|ast|{
             ast.set_var(name,anon_id).unwrap();
             Ok(())
@@ -490,7 +500,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         // let anon_id=if self.in_cmd{Some(self.next_cmd_anon_id)}else{Some(0)};
         let anon_id=Some(self.cur_anon_id);
         // self.add_node(BuilderNodeType::GetVar{name:n,anon_id,})
-        
+
         self.add_node(move|ast|{
             ast.get_var(name,anon_id).unwrap();
             Ok(())
@@ -502,7 +512,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::Call{name:n,params_num,anon_id})
 
-        
+
         self.add_node(move|ast|{
             ast.get_var(name, anon_id).unwrap();
             ast.call_result(params_num).unwrap();
@@ -526,7 +536,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::TryCallMethod(n,params_num))
 
-        
+
         self.add_node(move|ast|{
             ast.try_call_method(name, params_num).unwrap();
             Ok(())
@@ -546,7 +556,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     pub fn call_result(&mut self,params_num:usize) -> &mut Self {
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::CallResult(params_num))
-        
+
         self.add_node(move|ast|{
             ast.call_result(params_num).unwrap();
             Ok(())
@@ -557,19 +567,19 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::CallMethodOrGetVar{name},)
 
-        self.add_node(|ast|{           
+        self.add_node(|ast|{
             ast.get_var_or_call_method(name).unwrap();
             Ok(())
         })
     }
 
-    
-    
+
+
 
     pub fn to_block_start(&mut self,cond:JmpCond,block_offset:usize) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToStart(cond,block_offset))
 
-        self.add_node(move|ast|{         
+        self.add_node(move|ast|{
             ast.to_block_start(cond, block_offset).unwrap();
             Ok(())
         })
@@ -607,7 +617,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     pub fn to_block_end_label(&mut self,cond:JmpCond,label:&'a str, err : Option<BuilderError<E>>) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToEndLabel(cond,label,err))
 
-        
+
         self.add_node(move|ast|{
             match ast.to_label_block_end(cond, label) {
                 Ok(x) => {
@@ -623,7 +633,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
                     Err(e)
                 }
             }.unwrap();
-            
+
             Ok(())
         })
     }
@@ -634,7 +644,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
 
     pub fn block_start(&mut self,label:Option<&'a str>) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockStart(label))
-        
+
         self.add_node(move|ast|{
             ast.block_start(label);
             Ok(())
@@ -650,6 +660,12 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         })
     }
 
+    pub fn pop_params(&mut self) -> &mut Self {
+        self.add_node(|ast|{
+            ast.pop_params();
+            Ok(())
+        })
+    }
     pub fn func_start(&mut self,params:Vec<&'a str>,variadic:bool) -> &mut Self {
         // self.add_node(BuilderNodeType::FuncStart(params,variadic))
         self.add_node(move|ast|{
@@ -658,7 +674,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         })
 
     }
-    
+
     pub fn func_end(&mut self) -> &mut Self {
         // self.add_node(BuilderNodeType::FuncEnd)
 
@@ -681,8 +697,8 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         self
     }
 
-    // pub fn eval_sexprs<I>(&mut self, sexprs : I) -> &mut Self 
-    // where 
+    // pub fn eval_sexprs<I>(&mut self, sexprs : I) -> &mut Self
+    // where
     //     I: IntoIterator<Item=PrimitiveContainer<'a>>
     // {
     //     for sexpr in sexprs.into_iter() {
@@ -692,8 +708,8 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     //     self
     // }
 
-    // fn param_eval_push_sexprs<I>(&mut self, sexprs : I) -> &mut Self 
-    // where 
+    // fn param_eval_push_sexprs<I>(&mut self, sexprs : I) -> &mut Self
+    // where
     //     I: IntoIterator<Item=PrimitiveContainer<'a>>
     // {
     //     for sexpr in sexprs.into_iter() {
@@ -728,7 +744,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
                     self.nodes.push((x,node.loc));
                 }
             }
-      
+
             working_stk.extend(self.temp_stk.drain(0 ..).rev());
         }
         // for (node_ind,node) in self.nodes.iter().enumerate() {
@@ -740,8 +756,8 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         // }
 
         let mut nodes=self.nodes.drain(0 ..).rev().collect::<Vec<_>>();
-        
-        // for node in nodes 
+
+        // for node in nodes
         while let Some((node,loc))=nodes.pop()
         {
             ast.set_cur_loc(loc);

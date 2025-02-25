@@ -347,7 +347,7 @@ pub fn test_script5<P:AsRef<Path>>(path:P) {
         // false
     );
 
-    // build.clone().unwrap().print();
+    build.clone().unwrap().print();
 
     let mut lib_scope=script_lang::LibScope::<Vec<Value>>::new_full();
 
@@ -357,16 +357,17 @@ pub fn test_script5<P:AsRef<Path>>(path:P) {
         listeners.push(listener.clone_root());
         Ok(Value::Void)
     }).any().str().func().end();
-    let mut myval: Vec<Value>=vec![];
 
+    let mut myval: Vec<Value>=vec![];
     let mut var_scope=script_lang::VarScope::new();
+
     if let Err(e)=&build {
         eprintln!("In {path:?}, {}",e.msg());
     } else {
 
         // let mut core=();
         let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope, &mut var_scope,  &mut myval);
-        // machine.set_debug_print(true);
+        machine.set_debug_print(true);
 
         // build.clone().unwrap().print();
 
@@ -407,7 +408,7 @@ fn main() {
 
     // // test_script3("examples/test9.script");
 
-    // test_script5("examples/test10.script");
+    // test_script5("examples/test11.script");
 
 }
 /*

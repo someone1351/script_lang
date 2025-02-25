@@ -1,2 +1,3 @@
-var thing {thing};
-call thing 1 2 3
+var g {array 0 1 (array 2 3 {dict "x" 11 "y" 22 "z" {array 33 44 55}})}
+set g.2.2.z.1 99
+println g
