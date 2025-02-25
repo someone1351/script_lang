@@ -12,7 +12,7 @@ use super::super::lib_scope::*;
 use super::super::gc_scope::*;
 use super::array::Array;
 
-#[derive(Clone,Default)] 
+#[derive(Clone,Default)]
 pub struct Dict(pub BTreeMap<String,Value>);
 
 impl GcTraversable for Dict {
@@ -26,23 +26,23 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     lib_scope.method("dict",|mut context|{
         let mut data=BTreeMap::new();
         let mut i=0;
-    
+
         while i <context.params_num() {
             let k = context.value_to_string(&context.param(i))?;
             let v=context.param(i+1).clone();
             data.insert(k, v);
             i+=2;
         }
-    
+
         Ok(Value::custom_managed_mut(Dict(data), context.gc_scope()))
     }).optional().any().variadic_end();
-    
+
     //insert(dict,any,any)
     lib_scope.method("insert", |mut context|{
         let dict=context.param(0).as_custom();
         let key=context.value_to_string(&context.param(1))?;
         let val=context.param(2).clone();
-    
+
         dict.with_data_mut(|data:&mut Dict|{
             data.0.insert(key, val.clone());
             Ok(val)
@@ -52,7 +52,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //remove(dict,any)
     lib_scope.method("remove", |mut context|{
         let key=context.value_to_string(&context.param(1))?;
-    
+
         context.param(0).as_custom().with_data_mut(|data:&mut Dict|{
             Ok(data.0.remove(&key).unwrap_or(Value::Nil))
         })
@@ -72,13 +72,13 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
     //set_field(dict,any,any)
     lib_scope.method("set_field", |mut context|{
-        let dict=context.param(0).as_custom();
+        let dict=context.param(0);
         let key=context.value_to_string(&context.param(1))?;
         let val=context.param(2).clone();
-        
-        dict.with_data_mut(|data:&mut Dict|{
+
+        dict.as_custom().with_data_mut(|data:&mut Dict|{
             data.0.insert(key, val);
-            Ok(Value::Void)
+            Ok(dict)
         })
     }).custom_ref::<Dict>().any().any().end();
 
@@ -88,11 +88,11 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         match dict.with_data_ref(|data:&Dict|{
             let mut element_strings=Vec::new();
-        
+
             for (k,v) in data.0.iter() {
                 element_strings.push(format!("{}:{}",k,context.value_to_string(v)?));
             }
-    
+
             Ok(Value::string(format!("Dict({})",element_strings.join(","))))
         }) {
             Err(x) if x.error_type==MachineErrorType::CustomDataBorrowMutError => Ok(Value::String(StringT::new("Dict(_)"))),
@@ -111,17 +111,15 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     }).custom_ref::<Dict>().end();
-    
+
     //extend(dict,dict)
     lib_scope.method("extend", |context|{
         let dict=context.param(0).as_custom();
-        let dict2=context.param(1).as_custom();
-    
+        let other=context.param(1).as_custom().with_data_ref(|data2:&Dict|{ Ok(data2.clone()) })?;
+
         dict.with_data_mut(|data:&mut Dict|{
-            dict2.with_data_ref(|data2:&Dict|{
-                data.0.extend(data2.0.iter().map(|(k,v)|(k.clone(),v.clone())));
-                Ok(Value::Void)
-            })
+            data.0.extend(other.0.iter().map(|(k,v)|(k.clone(),v.clone())));
+            Ok(Value::Void)
         })
     })
         .custom_ref::<Dict>()
