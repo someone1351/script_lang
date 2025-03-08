@@ -13,6 +13,9 @@ TODO
 * * eg var a {vec3 0.0}; set a {some_method}; #where some_method()->vec3
 * * methods can optionally specify a ret type, err check if ret matches specified type?
 * * not viaable? eg method1(method2()) #cant specify ret for method2, have to be any
+
+* instead of pushing missing params on stk for func calls,
+** add instr eg Param(usize), that will return the correct val from the stk or nil if param missing
 */
 
 use std::collections::HashMap;
