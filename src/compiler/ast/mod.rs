@@ -305,6 +305,7 @@ impl<'a> Ast<'a> {
                 name,
                 captured:false,
                 stack_ind:0,
+                modified:false,
             }))
             .collect::<_>(); //params minus the variadic
 
@@ -747,6 +748,7 @@ impl<'a> Ast<'a> {
         for func in self.funcs.iter_mut() {
             for param in func.params.iter_mut() {
                 param.captured=false; //
+                param.modified=false; //
                 param.stack_ind=0;
             }
 
@@ -767,12 +769,14 @@ impl<'a> Ast<'a> {
 
         //cant put access var in capturables, as wont know from which env they came from ie the cur on a prev
         let mut funcs_capturables: Vec<HashSet<VarName>> = Vec::new(); //[func_ind][capturable_name],
-        let mut funcs_captures: Vec<Vec<AstCapture>> = Vec::new(); //[func_ind]=captures,
+        let mut funcs_captures: Vec<Vec<AstCapture>> = Vec::new(); //[func_ind]=(param? no, includes locals) captures,
+        // let mut funcs_sets: Vec<Vec<AstCapture>> = Vec::new(); //[func_ind]=(param) sets,
         let mut funcs_body_depths = Vec::<usize>::new(); //[func_ind]=body_depth,
 
         funcs_after_envs.resize(self.funcs.len(), HashMap::new());
         funcs_capturables.resize(self.funcs.len(), HashSet::new());
         funcs_captures.resize(self.funcs.len(), Vec::new());
+        // funcs_sets.resize(self.funcs.len(), Vec::new());
         funcs_body_depths.resize(self.funcs.len(), 0);
 
         //
@@ -1023,12 +1027,16 @@ impl<'a> Ast<'a> {
                         // if let AstNodeType::CallMethodOrGetVar{name,var,..}=self.get_node_mut(cur_node_ind).node_type {
 
                         // }
-                        match &self.get_node(cur_node_ind).node_type {
+                        match self.get_node(cur_node_ind).node_type.clone() {
                             // AstNodeType::GetVar{name,var,..}   |
                             AstNodeType::SetVar{name,var, ..}
                             // | AstNodeType::CallVarOrMethod{name,var, ..}
                             => {
-                                if self.must_decl_globals && *var==AstAccessVar::None{
+                                if let AstAccessVar::Param { func_ind, param_ind }=var {
+                                    self.funcs.get_mut(func_ind).unwrap().params.get_mut(param_ind).unwrap().modified=true;
+                                }
+
+                                if self.must_decl_globals && var==AstAccessVar::None{
                                     // println!("it is {name:?} {var:?} {cur_loc:?}");
 
                                     let loc = cur_loc.unwrap_or(Loc::zero());//should usually be set, but if a mistake was made in the builder,

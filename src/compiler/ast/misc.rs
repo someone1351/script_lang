@@ -11,6 +11,7 @@ pub struct AstFuncParam<'a> {
     pub name : &'a str,
     pub captured : bool,
     pub stack_ind : usize,
+    pub modified : bool,
 }
 
 #[derive(Debug,Clone)]
@@ -30,7 +31,7 @@ pub enum AstDeclVar {
     Global,
 
     //only used for (var somedecl _) where somedecl matches cur func param name in root of the func, ie not in a block etc,
-    Param{func_ind:usize,param_ind:usize,}, 
+    Param{func_ind:usize,param_ind:usize,},
 
     Local{local_ind:usize,},
     // Vararg{local_ind:usize,},

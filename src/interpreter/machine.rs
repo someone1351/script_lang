@@ -336,8 +336,12 @@ impl<'a,X> Machine<'a,X> {
     fn get_stack_offset_value(&self,stack_offset_ind:usize) -> Result<Value,MachineError> {
         let stack_len = self.stack.len();
 
+
+
         if stack_offset_ind < stack_len {
-            Ok(self.stack.get(stack_len - stack_offset_ind - 1).unwrap().clone_root())
+            let stack_ind=stack_len - stack_offset_ind - 1;
+
+            Ok(self.stack.get(stack_ind).unwrap().clone_root())
         } else {
             Err(MachineError::from_machine(self, MachineErrorType::InvalidStackAccess(stack_offset_ind) ))
         }
@@ -369,12 +373,12 @@ impl<'a,X> Machine<'a,X> {
         self.var_scope.get(&n).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))
     }
 
-    fn stack_param_get(&self, params_num : usize, param_ind : usize) -> Value {
+    fn stack_param_get(&self, params_num : usize, param_ind : usize) -> Value { //used by bound funcs (rust funcs)
         let params_start = self.stack.len()-params_num;
         let stack_ind = params_start + params_num - param_ind - 1;
         self.stack.get(stack_ind).unwrap().clone_root()
     }
-    fn stack_param_set(&mut self, params_num : usize, param_ind : usize, value:Value) {
+    fn stack_param_set(&mut self, params_num : usize, param_ind : usize, value:Value) { //used by bound funcs (rust funcs)
         let params_start = self.stack.len()-params_num;
         let stack_ind = params_start + params_num - param_ind - 1;
         self.set_stack_val(stack_ind, value).unwrap();

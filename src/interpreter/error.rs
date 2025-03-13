@@ -11,6 +11,7 @@ pub enum MachineErrorType{
     JmpUpErr(usize), //instr_offset_ind,
     JmpDownErr(usize), //instr_offset_ind,
     InvalidStackAccess(usize), //stack_offset
+    // CannotSetStackParam(usize), //param_ind
     // InvalidStackPop(usize), //
     // StackPop,
     MissingSymbol(usize), //symbol_ind
