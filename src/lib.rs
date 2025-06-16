@@ -44,7 +44,7 @@ TODO2
 - - dynamic return the dynamic
 - there is no type inference
 - can force select method with return type by decl var with type
-- - what if var is uninitialised? force typed vars to be initialised? 
+- - what if var is uninitialised? force typed vars to be initialised?
 
 TODO3
 * remove func calls from within methods
@@ -60,7 +60,8 @@ TODO
 - - - could initialise the includes also first, so their declared methods are also init first
 - - - - and then run the rest (decl vars etc) once the include is reached
 
-
+TODO
+* store methods used in build, then check at runtime if they exists? no as can't know param types
 */
 
 
