@@ -24,8 +24,8 @@ use super::error::*;
 pub enum StrongValueInner {
     Mut(Arc<Mutex<dyn Any+Send>>),
     NonMut(Arc<dyn Any+Send+Sync>),
-    Dead, //for manageds, when using get (strong) data
-    Empty,
+    Dead, //for manageds, when using get (strong) data, also used for rc_weak => rc_strong
+    Empty, //used for when getting data from something that isn't a custom, instead of failing, return empty data ?
     // MutExt(Arc<Mutex<dyn ToString+Send>>),
     // NonMutExt(Arc<dyn ToString+Send+Sync>),
 }
