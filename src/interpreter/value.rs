@@ -246,6 +246,13 @@ impl Value {
         Self::Custom(Custom::new_unmanaged(data,))
     }
 
+    pub fn custom_rc_mut<T:Any+Send>(data : T) -> Self {
+        Self::Custom(Custom::new_rc_mut(data,))
+    }
+
+    pub fn custom_rc<T:Any+Send+Sync>(data : T) -> Self {
+        Self::Custom(Custom::new_rc(data,))
+    }
     //
     // pub fn custom_callable_managed_mut<T:GcTraversable+Send>(data : T, caller:Caller,gc_scope : &mut GcScope) -> Self {
     //     Self::Custom(Custom::new_managed_mut(data,Some(caller), gc_scope))

@@ -259,6 +259,13 @@ impl Custom {
         Self { type_info: TypeInfo::new::<()>(), inner: CustomInner::Empty }
     }
 
+    pub fn new_rc_mut<T:Any+Send>(data : T,) -> Self {
+        Self::new::<T>(CustomInner::RcStrong(StrongValueInner::Mut(Arc::new(Mutex::new(data)))), )
+    }
+    pub fn new_rc<T:Any+Send+Sync>(data : T, ) -> Self {
+        Self::new::<T>(CustomInner::RcStrong(StrongValueInner::NonMut(Arc::new(data))), )
+    }
+
     // pub fn new_managed_mut_ext<T:GcTraversable+Send+ToString>(data : T,gc_scope : &mut GcScope) -> Self {
     //     Self::new::<T>(CustomInner::Managed(GcValue::new(data,gc_scope)))
     // }
