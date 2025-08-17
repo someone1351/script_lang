@@ -31,8 +31,27 @@ impl std::borrow::Borrow<str> for StringT {
         &self.0.as_str()
     }
 }
+
+impl From<&str> for StringT {
+    fn from(value: &str) -> Self {
+        Self::new(value)
+    }
+}
+
+impl From<String> for StringT {
+    fn from(value: String) -> Self {
+        Self::new(value)
+    }
+}
+
+
+impl Into<String> for StringT {
+    fn into(self) -> String {
+        self.to_string()
+    }
+}
 // impl Equivalent<StringT> for String {
-    
+
 // }
 
 // impl std::hash::Hash for StringT {
@@ -56,7 +75,7 @@ impl BuildT {
             b.instructions.push(Instruction::Include(i));
             b.includes.push(p.to_path_buf());
         }
-        
+
         b.main_instruct_len=paths.len();
 
         Self::new(b)

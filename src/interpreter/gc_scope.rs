@@ -15,7 +15,7 @@ use std::{any::Any, sync::{Arc, Mutex, Weak} };
 
 // use parking_lot::Mutex;
 
-use super::value::*;
+use super::{custom::WeakValueInner, value::*};
 // use super::error::*;
 
 #[derive(Copy,Clone)]
@@ -651,14 +651,6 @@ impl GcDropper {
     }
 }
 
-
-#[derive(Clone)]
-pub enum WeakValueInner {
-    Mut(Weak<Mutex<dyn Any+Send>>),
-    NonMut(Weak<dyn Any+Send+Sync>),
-    // MutExt(Weak<Mutex<dyn ToString+Send>>),
-    // NonMutExt(Weak<dyn ToString+Send+Sync>),
-}
 
 pub struct GcValue {
     pub data:WeakValueInner, //Weak<Mutex<dyn Any+Send>>,

@@ -62,6 +62,10 @@ TODO
 
 TODO
 * store methods used in build, then check at runtime if they exists? no as can't know param types
+
+TODO
+* allow garbage collecting on single val
+** so when val is dropped, or vals are dropped, can try to gc them immediately, also can add any other vals dropped in the process to the gc'ing list
 */
 
 
