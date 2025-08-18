@@ -81,10 +81,10 @@ pub struct Parsed {
 }
 
 impl Parsed {
-    pub fn root_block(&self) -> BlockContainer {
+    pub fn root_block(&'_ self) -> BlockContainer<'_> {
         BlockContainer { parsed: self, block_ind: 0 }
     }
-    pub fn root_block_primitive(&self) -> PrimitiveContainer {
+    pub fn root_block_primitive(&self) -> PrimitiveContainer<'_> {
         PrimitiveContainer { parsed: self, primitive_ind: 0, to_string:false, }
     }
     // pub fn src(&self)->&'a str {

@@ -34,11 +34,11 @@ impl SExprTree {
     //     }
     // }
 
-    pub fn sexprs(&self) -> SExprContainerIter {
+    pub fn sexprs(&self) -> SExprContainerIter<'_> {
         SExprContainerIter::new(self, 0)
     }
     // pub fn root(&self) -> SExprIter {
-   
+
     // }
 }
 
@@ -90,8 +90,8 @@ impl<'a> SExprContainer<'a> {
         &self.sexpr_tree.sexprs[sexpr_index]
     }
 
-    pub fn new(sexpr_tree : &'a SExprTree, sexpr_index : usize, ) -> Self{ 
-        Self { sexpr_tree:sexpr_tree, sexpr_index, } //records, path 
+    pub fn new(sexpr_tree : &'a SExprTree, sexpr_index : usize, ) -> Self{
+        Self { sexpr_tree:sexpr_tree, sexpr_index, } //records, path
     }
 
     pub fn sexpr_index(&self) -> usize {
@@ -104,7 +104,7 @@ impl<'a> SExprContainer<'a> {
 
     pub fn val(&self) -> SExprValContainer<'a> {
         let sexpr = &self.sexpr_tree.sexprs[self.sexpr_index];
-        
+
         match &sexpr.val {
             SExprVal::List(_) => SExprValContainer::List(SExprContainerIter::new(self.sexpr_tree, self.sexpr_index)),
             SExprVal::Symbol(v) => SExprValContainer::Symbol(v.as_str()),
@@ -137,7 +137,7 @@ impl<'a> SExprContainer<'a> {
 
     pub fn is_symbol(&self) -> bool {
         let sexpr = &self.sexpr_tree.sexprs[self.sexpr_index];
-        
+
         if let SExprVal::Symbol(_)=sexpr.val {
             true
         } else {
@@ -147,7 +147,7 @@ impl<'a> SExprContainer<'a> {
 
     pub fn is_string(&self) -> bool {
         let sexpr = &self.sexpr_tree.sexprs[self.sexpr_index];
-        
+
         if let SExprVal::String(_)=sexpr.val {
             true
         } else {
@@ -211,7 +211,7 @@ impl<'a> SExprContainer<'a> {
 
     pub fn depth(&self) -> usize {
         let sexpr = &self.sexpr_tree.sexprs[self.sexpr_index];
-        sexpr.depth-1 //depth 1 is actual root, but depth 0 is like the container, so when getting depth sub 1, as the container of roots isn't exposed 
+        sexpr.depth-1 //depth 1 is actual root, but depth 0 is like the container, so when getting depth sub 1, as the container of roots isn't exposed
     }
     pub fn start_loc(&self) -> Loc {
         let sexpr = &self.sexpr_tree.sexprs[self.sexpr_index];
@@ -244,7 +244,7 @@ impl<'a> SExprContainerIter<'a> {
         Self::new_from_to(sexpr_tree, sexpr_index, from_ind, len)
     }
 
-    pub fn new_from_to(sexpr_tree :&'a SExprTree, sexpr_index : usize, from_ind:usize,to_ind:usize) -> Self {        
+    pub fn new_from_to(sexpr_tree :&'a SExprTree, sexpr_index : usize, from_ind:usize,to_ind:usize) -> Self {
         Self {
             sexpr_index,
             child_index:from_ind,
@@ -276,7 +276,7 @@ impl<'a> Iterator for SExprContainerIter<'a> {
 impl<'a> DoubleEndedIterator for SExprContainerIter<'a> {
     fn next_back(&mut self) -> Option<SExprContainer<'a>> {
         let sexpr = &self.sexpr_tree.sexprs[self.sexpr_index];
-        
+
         if let SExprVal::List(children)=&sexpr.val {
             if self.child_back_index > self.child_index {
                 self.child_back_index-=1;
@@ -284,7 +284,7 @@ impl<'a> DoubleEndedIterator for SExprContainerIter<'a> {
                 Some(SExprContainer::new(self.sexpr_tree,child_sexpr_index))
             } else {
                 None
-            }            
+            }
         } else {
             None
         }

@@ -140,7 +140,7 @@ impl Compiler {
         v.push(cmd);
     }
 
-    pub fn get(&self,k:&str) -> Option<CmdIter> {
+    pub fn get(&self,k:&str) -> Option<CmdIter<'_>> {
         if let Some(v)=self.cmds.get(k) {
             Some(CmdIter { index: 0, v })
         } else {
@@ -161,7 +161,7 @@ impl Compiler {
                 let Some(v0)=sexpr.get(0) else {
                     return Err(BuilderError::new(sexpr.start_loc(), SexprBuilderErrorType::EmptySExpr)); //empty list
                 };
-            
+
                 builder.loc(v0.start_loc());
 
                 if let Some(symbol)=v0.symbol() {
@@ -207,9 +207,9 @@ impl Compiler {
                             builder.eval(sexpr);
                             builder.param_push();
                         }
-                
+
                         // .eval_push_sexprs(sexpr.list_iter_from(1))
-                        
+
                         // for x in sexpr.list_iter_from(1).rev() {
                         //     // builder.param_loc(x.start_loc(),x.end_loc());
                         // }
@@ -226,9 +226,9 @@ impl Compiler {
                     }
                     builder.eval(v0); //func;
                     // .call(symbol,sexpr.len()-1,v0.start_loc())
-                        
-                    
-                
+
+
+
                     // for x in sexpr.list_iter_from(1).rev() {
                     //     // builder.param_loc(x.start_loc(),x.end_loc());
                     // }
@@ -240,7 +240,7 @@ impl Compiler {
                     builder.call_result(sexpr.len()-1);
                     // return Err(BuilderError::new(sexpr.start_loc(), BuilderErrorType::InvalidSyntax)); //first element of list not a symbol
                 }
-                
+
             }
             SExprValContainer::Symbol(symbol)=> { //get var
                 match symbol {
@@ -287,19 +287,19 @@ impl Compiler {
         let mut next_anon_id=1;
         let src= StringT::new(src);
         let pathbuf=path.map(|x|x.to_path_buf());
-        
+
         match sexpr_parser::parse(src.as_str(), false, path) {
             Ok(sexpr_tree)=> {
                 let mut builder = builder::Builder::new();
-    
+
                 for x in sexpr_tree.sexprs() {
                     builder.eval(x);
                 }
-    
+
                 // builder.eval_sexprs(sexpr_tree.sexprs());
-                
+
                 let mut ast = ast::Ast::new(false,false);
-                    
+
                 match builder.generate_ast(&mut ast,|builder,primitive|{
                     self.run(builder, primitive,&mut next_anon_id)
                 }) {
@@ -312,15 +312,15 @@ impl Compiler {
                                 error_type:CompileErrorType::AstVar(e.error_type),
                             });
                         }
-    
+
                         if print_ast {
                             ast.print();
                         }
-    
+
                         // let kept_src=if keep_src {Some(common::StringType::new(src))} else {None};
                         let kept_src=if keep_src {Some(src.clone())} else {None};
-                        
-                        let build = ast.compile(version, path, kept_src,true,true);                    
+
+                        let build = ast.compile(version, path, kept_src,true,true);
                         Ok(BuildT::new(build))
                     }
                     Err(builder_error)=> {
@@ -343,5 +343,5 @@ impl Compiler {
             }
         }
     }
-    
+
 }
