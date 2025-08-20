@@ -33,3 +33,9 @@ println "get_test2 {}" {get_test}
 var g {array 0 1 (array 2 3 {dict "x" 11 "y" 22 "z" {array 33 44 55}})}
 set g.2.2.z.1 99
 println g
+
+
+var q0 5,q1 6, q2, q3 (+ q1 88) ;
+
+println "q {q0} {q1} {q2} {q3}"
+#println "{q0}"

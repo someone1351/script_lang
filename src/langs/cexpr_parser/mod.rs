@@ -130,10 +130,10 @@ pub fn parse<'a>(src:&'a str,
 
     pub enum TempWork {
         Block{block : TempBlock, block_start_loc : Loc, field_start_loc : Option<Loc>,bracket:Option<BlockBracket>},
-        Param{param:TempParam, 
+        Param{param:TempParam,
             // start_loc : Loc,
         }
-        
+
     }
 
 
@@ -148,7 +148,7 @@ pub fn parse<'a>(src:&'a str,
         block_start_loc:Loc::one(),
         field_start_loc : None,
         bracket:None,
-    }]; // end_loc: Loc::zero() 
+    }]; // end_loc: Loc::zero()
 
     // let mut bracket_stk=Vec::new();
     //
@@ -164,19 +164,19 @@ pub fn parse<'a>(src:&'a str,
                 if let Some(primitive)=parse_number(&mut input,false,&mut text_map) {
                     cur_work_param.fields.push(TempField{ primitive, start_loc: field_start_loc });
                 } else if let Some((text_ind,start_loc,end_loc))=parse_ident_symbol(&mut input,&mut text_map) {
-                    // let primitive_type=TempPrimitiveType::String(text_ind); 
+                    // let primitive_type=TempPrimitiveType::String(text_ind);
                     let primitive_type=TempPrimitiveType::Symbol(text_ind); //fixed
                     let primitive=TempPrimitive { primitive_type, start_loc, end_loc };
                     cur_work_param.fields.push(TempField{ primitive, start_loc: field_start_loc });
                 } else if let Some(primitive)=parse_string(&mut input,&mut text_map)? {
                     cur_work_param.fields.push(TempField{ primitive, start_loc: field_start_loc });
                 } else if let Some(bracket)=parse_block_begin(&mut input) {
-                    temp_works_stk.push(TempWork::Block { 
-                        block: TempBlock { records: Vec::new(),}, 
+                    temp_works_stk.push(TempWork::Block {
+                        block: TempBlock { records: Vec::new(),},
                         block_start_loc:loc,
                         field_start_loc: Some(field_start_loc),
                         bracket:Some(bracket)
-                    }); // end_loc: Loc::zero(), 
+                    }); // end_loc: Loc::zero(),
                 } else {
                     return Err(ParseError{
                         // path:path.map(|p|p.to_path_buf()),
@@ -187,22 +187,22 @@ pub fn parse<'a>(src:&'a str,
 
                 continue;
             } else {
-                let TempWork::Param { 
-                    param:popped_work_param, 
-                    // start_loc: popped_start_loc 
+                let TempWork::Param {
+                    param:popped_work_param,
+                    // start_loc: popped_start_loc
                 }=temp_works_stk.pop().unwrap() else{panic!("");};
-                
+
                 let TempWork::Block { block:cur_work_block, ..}=temp_works_stk.last_mut().unwrap() else{panic!("");};
 
                 //
                 if cur_work_block.records.last().map(|r|r.ended).unwrap_or(true) {
                     cur_work_block.records.push(TempRecord { params: Vec::new(), ended: false, semi_colon_end_loc:None, });
                 }
-                
+
                 let cur_record=cur_work_block.records.last_mut().unwrap();
                 // let loc=input.loc();
-                // TempPrimitive { 
-                //     primitive_type: TempPrimitiveType::Symbol(popped_work_param), 
+                // TempPrimitive {
+                //     primitive_type: TempPrimitiveType::Symbol(popped_work_param),
                 //     start_loc:popped_start_loc, end_loc:loc,
                 // }
                 // popped_work_param
@@ -227,7 +227,7 @@ pub fn parse<'a>(src:&'a str,
             if let Some(cur_record)=cur_block.records.last_mut() {
                 cur_record.ended=true; //might already be true //?? not true?? //only when this has run multiple times eg multiple newlines
             }
-            
+
             //
             if input.is_end() {
                 break;
@@ -254,7 +254,7 @@ pub fn parse<'a>(src:&'a str,
             } else {
                 cur_block.records.push(TempRecord { params: Vec::new(), ended: true, semi_colon_end_loc:Some(loc), });
             }
-            
+
             //
             if input.is_end() {
                 break;
@@ -262,11 +262,11 @@ pub fn parse<'a>(src:&'a str,
                 continue;
             }
         }
-        
+
         //on non root block begin
         if let Some(bracket)=parse_block_begin(&mut input) {
-            temp_works_stk.push(TempWork::Block { 
-                block: TempBlock { records: Vec::new(),}, 
+            temp_works_stk.push(TempWork::Block {
+                block: TempBlock { records: Vec::new(),},
                 block_start_loc:loc,
                 field_start_loc:None,
                 bracket:Some(bracket),
@@ -290,11 +290,11 @@ pub fn parse<'a>(src:&'a str,
             //
             // let popped_block=temp_elements_stk.pop().unwrap();
             // let cur_element=temp_elements_stk.last_mut().unwrap();
-            let TempWork::Block { 
-                block:popped_work_block, 
+            let TempWork::Block {
+                block:popped_work_block,
                 block_start_loc:popped_work_block_start_loc,
-                field_start_loc, 
-                bracket, 
+                field_start_loc,
+                bracket,
             } = temp_works_stk.pop().unwrap() else {
                 panic!("");
             };
@@ -317,10 +317,10 @@ pub fn parse<'a>(src:&'a str,
 
             match cur_work {
                 TempWork::Param { param, .. } => {
-                    let primitive=TempPrimitive { 
-                        primitive_type: TempPrimitiveType::Block(popped_work_block), 
+                    let primitive=TempPrimitive {
+                        primitive_type: TempPrimitiveType::Block(popped_work_block),
                         start_loc: popped_work_block_start_loc,
-                        end_loc: block_end_loc, 
+                        end_loc: block_end_loc,
                     };
 
                     param.fields.push(TempField { primitive, start_loc: field_start_loc.unwrap() });
@@ -329,26 +329,26 @@ pub fn parse<'a>(src:&'a str,
                     if cur_block.records.last().map(|r|r.ended).unwrap_or(true) {
                         cur_block.records.push(TempRecord { params: Vec::new(), ended: false, semi_colon_end_loc:None, });
                     }
-                                
+
                     // let cur_record=cur_block.records.last_mut().unwrap();
-        
-                    let primitive=TempPrimitive { 
+
+                    let primitive=TempPrimitive {
                         primitive_type: TempPrimitiveType::Block(popped_work_block), //popped_block.block
-                        start_loc: popped_work_block_start_loc, //popped_block.start_loc, 
-                        end_loc: loc, 
+                        start_loc: popped_work_block_start_loc, //popped_block.start_loc,
+                        end_loc: loc,
                     };
 
-                    let param=TempParam { 
-                        primitive, 
-                        // start_loc: cur_block., 
-                        // end_loc: (), 
-                        fields: Vec::new(), 
+                    let param=TempParam {
+                        primitive,
+                        // start_loc: cur_block.,
+                        // end_loc: (),
+                        fields: Vec::new(),
                     };
 
                     temp_works_stk.push(TempWork::Param { param,  });
                     // cur_record.params.push();
                 }
-                
+
             }
             // let TempElement::Block { block:cur_block, .. } = temp_elements_stk.last_mut().unwrap() else {
             //     continue;
@@ -367,15 +367,15 @@ pub fn parse<'a>(src:&'a str,
             if cur_block.records.last().map(|r|r.ended).unwrap_or(true) {
                 cur_block.records.push(TempRecord { params: Vec::new(), ended: false, semi_colon_end_loc:None, });
             }
-            
+
             let cur_record=cur_block.records.last_mut().unwrap();
-            
+
             //no fields allowed for string, float or int, so pushed directly on record
             cur_record.params.push(TempParam { primitive, fields: Vec::new() });
 
             continue;
         }
-        
+
         // println!("{:?}, {}",input.getc(0),input.loc());
         let mut had_char_symbol = false;
 
@@ -394,9 +394,9 @@ pub fn parse<'a>(src:&'a str,
             had_char_symbol=true;
             // continue;
         }
-        
+
         //make sure there are spaces between primitives
-        else if !input.is_end() && !spc { 
+        else if !input.is_end() && !spc {
             // let cur_element=temp_elements_stk.last().unwrap();
             let TempWork::Block { block:cur_block, .. } = temp_works_stk.last_mut().unwrap() else {panic!("");};
 
@@ -419,9 +419,9 @@ pub fn parse<'a>(src:&'a str,
             if cur_block.records.last().map(|r|r.ended).unwrap_or(true) {
                 cur_block.records.push(TempRecord { params: Vec::new(), ended: false, semi_colon_end_loc:None, });
             }
-            
+
             let cur_record=cur_block.records.last_mut().unwrap();
-            
+
             //no fields allowed for string, float or int, so pushed directly on record
             cur_record.params.push(TempParam { primitive, fields: Vec::new() });
 
@@ -434,18 +434,18 @@ pub fn parse<'a>(src:&'a str,
             // let TempElement::Block { block:cur_block, .. } = temp_elements_stk.last_mut().unwrap() else {
             //     panic!("");
             // };
-   
-            let primitive=TempPrimitive{ 
-                primitive_type: TempPrimitiveType::Symbol(text_ind), 
-                start_loc, 
-                end_loc 
+
+            let primitive=TempPrimitive{
+                primitive_type: TempPrimitiveType::Symbol(text_ind),
+                start_loc,
+                end_loc
             };
 
-            let param=TempParam { 
-                // text_ind, 
-                // start_loc, 
-                // end_loc, 
-                fields: Vec::new(), 
+            let param=TempParam {
+                // text_ind,
+                // start_loc,
+                // end_loc,
+                fields: Vec::new(),
                 primitive,
             };
 
@@ -467,7 +467,7 @@ pub fn parse<'a>(src:&'a str,
             loc:input.loc(),
             error_type:ParserErrorType::Unknown,
         });
-    } else if temp_works_stk.len()!=1 { 
+    } else if temp_works_stk.len()!=1 {
         return Err(ParseError{
             // path:path.map(|p|p.to_path_buf()),
             loc:input.loc(),
@@ -478,26 +478,26 @@ pub fn parse<'a>(src:&'a str,
     // let temp_work_root=temp_works_stk.first().unwrap();
     let temp_root_block=if let TempWork::Block { block, .. } = temp_works_stk.first().unwrap() {
         block
-    } else { 
-        panic!(""); 
+    } else {
+        panic!("");
     };
 
     // temp_root_block.end_loc=input.loc();
-   
+
    Ok(generate_parsed(temp_root_block,input.loc(),text_map))
 }
 
 fn generate_parsed(temp_root_block:&TempBlock,last_loc:Loc,text_map:HashMap<String, usize>) -> Parsed {
-    let mut parsed=Parsed { 
-        blocks:vec![Block{primitive:0,records:0..0,params:0..0}], // end_loc: Loc::zero() 
+    let mut parsed=Parsed {
+        blocks:vec![Block{primitive:0,records:0..0,params:0..0}], // end_loc: Loc::zero()
         records:Vec::new(),
         params:Vec::new(),
         fields:Vec::new(),
         primitives:vec![Primitive{
             primitive_type:PrimitiveType::Block(0),
             start_loc:Loc::one(),
-            end_loc:last_loc, 
-            param: None, field: None 
+            end_loc:last_loc,
+            param: None, field: None
         }],
         texts:Vec::new(),
         // src,
@@ -527,9 +527,9 @@ fn generate_parsed(temp_root_block:&TempBlock,last_loc:Loc,text_map:HashMap<Stri
                     let new_params_start=parsed.params.len();
                     let new_params_end=new_params_start+temp_record.params.len();
 
-                    parsed.records.push(Record { 
+                    parsed.records.push(Record {
                         params : new_params_start..new_params_end,
-                        semi_colon_loc:temp_record.semi_colon_end_loc, 
+                        semi_colon_loc:temp_record.semi_colon_end_loc,
                     });
 
                     //push params
@@ -556,11 +556,11 @@ fn generate_parsed(temp_root_block:&TempBlock,last_loc:Loc,text_map:HashMap<Stri
                                 TempPrimitiveType::String(s)=>PrimitiveType::String(*s),
                                 TempPrimitiveType::Symbol(s)=>PrimitiveType::Symbol(*s),
                             };
-    
-                            parsed.primitives.push(Primitive { 
-                                primitive_type, 
-                                start_loc: temp_param.start_loc(), end_loc: temp_param.end_loc(), 
-                                param: Some(new_param_ind), field: None, 
+
+                            parsed.primitives.push(Primitive {
+                                primitive_type,
+                                start_loc: temp_param.start_loc(), end_loc: temp_param.end_loc(),
+                                param: Some(new_param_ind), field: None,
                             });
                         }
 
@@ -584,11 +584,11 @@ fn generate_parsed(temp_root_block:&TempBlock,last_loc:Loc,text_map:HashMap<Stri
                                 TempPrimitiveType::Symbol(s)=>PrimitiveType::Symbol(*s), //fixed
                                 _ => {panic!("")},
                             };
-    
-                            parsed.primitives.push(Primitive { 
-                                primitive_type, 
-                                start_loc: temp_field.primitive.start_loc, end_loc: temp_field.primitive.end_loc, 
-                                param: None, field: Some(new_field_primitive_ind), 
+
+                            parsed.primitives.push(Primitive {
+                                primitive_type,
+                                start_loc: temp_field.primitive.start_loc, end_loc: temp_field.primitive.end_loc,
+                                param: None, field: Some(new_field_primitive_ind),
                             });
                         }
                     }
@@ -668,7 +668,7 @@ pub fn parse_cmnt(input:&mut Input) -> bool {
             input.next(x.len());
             break;
         }
-        
+
         if input.is_end() {
             break;
         }
@@ -680,7 +680,7 @@ pub fn parse_cmnt(input:&mut Input) -> bool {
 }
 
 pub fn parse_end(input:&mut Input) -> bool {
-    if let Some(x)=input.has(0, ["\r\n","\n"]) { //";", 
+    if let Some(x)=input.has(0, ["\r\n","\n"]) { //";",
         input.next(x.len());
         true
     } else {
@@ -688,7 +688,7 @@ pub fn parse_end(input:&mut Input) -> bool {
     }
 }
 pub fn parse_semi_colon(input:&mut Input) -> bool {
-    if let Some(x)=input.has(0, [";"]) { 
+    if let Some(x)=input.has(0, [";"]) {
         input.next(x.len());
         true
     } else {
@@ -709,9 +709,9 @@ pub fn parse_space(input:&mut Input) -> bool {
 pub fn parse_string<'a>(
     input:&mut Input,
     text_map:&mut HashMap<String,usize>,
-    // texts:&mut Vec<String>, 
+    // texts:&mut Vec<String>,
     // src:&'a str,
-    // path:Option<&'a Path>, 
+    // path:Option<&'a Path>,
 ) -> Result<Option<TempPrimitive>,ParseError> {
     let quotes=["\"\"\"","'''","\"","'"];
 
@@ -737,7 +737,7 @@ pub fn parse_string<'a>(
                 break;
             }
 
-            //escapes  
+            //escapes
             if let Some(x)=input.get(0, 2) {
                 let xs=x.chars().collect::<Vec<_>>();
 
@@ -769,14 +769,14 @@ pub fn parse_string<'a>(
             }
 
             //
-            return Err(ParseError { 
+            return Err(ParseError {
                 // path:path.map(|p|p.to_path_buf()),
-                loc: input.loc(), 
+                loc: input.loc(),
                 error_type: ParserErrorType::ClosingQuoteExpected(quote),
             });
 
         }
-        
+
         //
         let text_map_size=text_map.len();
         let text_ind=*text_map.entry(s).or_insert(text_map_size);
@@ -792,12 +792,14 @@ pub fn parse_string<'a>(
 
 fn parse_char_symbol(
     input:&mut Input,
-    // texts:&mut Vec<String>, 
+    // texts:&mut Vec<String>,
     text_map:&mut HashMap<String,usize>,
 ) -> Option<(usize,Loc,Loc)> {
-    if let Some(x)=input.has(0, ["~","!","@","%","^","&","*","-","+","=","<",">","?","/","|",]) {
+    if let Some(x)=input.has(0, ["~","!","@","%","^","&","*","-","+","=","<",">","?","/","|",
+        ",",
+    ]) {
         let start_loc=input.loc();
-        
+
         let text_map_size=text_map.len();
         let text_ind=*text_map.entry(x.to_string()).or_insert(text_map_size);
 
@@ -812,12 +814,12 @@ fn parse_char_symbol(
 
 fn parse_ident_symbol(
     input:&mut Input,
-    // texts:&mut Vec<String>, 
+    // texts:&mut Vec<String>,
     text_map:&mut HashMap<String,usize>,
 ) -> Option<(usize,Loc,Loc)> {
     //[^ \t\r\n"',;{}]+
 
-    //symbol_str=[^ \t\r\n"',;{}]+   
+    //symbol_str=[^ \t\r\n"',;{}]+
     //symbol=symbol_str ([.](symbol_str|block))*
 
 /*
@@ -843,12 +845,12 @@ fn parse_ident_symbol(
     } else {
         let start_loc=input.loc();
         let val=input.get(0, i).unwrap().to_string();
-        
+
         let text_map_size=text_map.len();
         let text_ind=*text_map.entry(val).or_insert(text_map_size);
 
 
-        
+
         input.next(i);
         let end_loc=input.loc();
         Some((text_ind,start_loc,end_loc))
@@ -870,14 +872,14 @@ fn parse_field_sep(
     }
 }
 fn parse_number(
-    input:&mut Input, 
+    input:&mut Input,
     float_aswell:bool,
     text_map:&mut HashMap<String,usize>,
 ) -> Option<TempPrimitive> {
     let mut i=0;
     let mut is_float=false;
     let mut ok=false;
-    
+
     let mut has_prefix=false;
 
     if let Some(c)=input.get(i, 1) {
@@ -886,7 +888,7 @@ fn parse_number(
             i+=1;
         }
     }
-    
+
     while let Some(c)=input.get(i, 1) {
         if ("0"..="9").contains(&c) {
             i+=1;
@@ -895,13 +897,13 @@ fn parse_number(
             break;
         }
     }
-    
+
     if float_aswell {
         if Some(".")==input.get(i, 1) {
             i+=1;
             is_float=true;
         }
-    
+
         while let Some(c)=input.get(i, 1) {
             if ("0"..="9").contains(&c) {
                 i+=1;
@@ -918,7 +920,7 @@ fn parse_number(
 
     let start_loc=input.loc();
     let token=input.get(0, i).unwrap();
-    
+
     let text_map_size=text_map.len();
     let text_ind=*text_map.entry(token.to_string()).or_insert(text_map_size);
 

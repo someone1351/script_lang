@@ -94,7 +94,7 @@ pub enum BuilderErrorType {
     ReturnNotInMethodOrLambda,
 
     ExpectBlock,
-    NoSemiColonsAllowed,
+    NoSemiColonsAllowed, //only used within func param decl
     NoBlocksAllowed,
     NoFieldsAllowed,
     InvalidStringSymbol,
@@ -263,6 +263,8 @@ impl Compiler {
                                 } else {
                                     return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
                                 }
+                            } else if [","].contains(&symbol) {
+                                return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
                             } else if first_param.fields_num()==0 { //no fields
                                 if let Some(cmds)=self.get(symbol) {  //command
                                     let mut errors=Vec::<BuilderError<BuilderErrorType>>::new();
@@ -409,6 +411,9 @@ impl Compiler {
                             return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
                         }
                     }
+                    // "," => {
+                    //     return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
+                    // }
                     _=>{
                         if let Some(symbol)=symbol.strip_prefix(":") {
                             if hasnt_fields {

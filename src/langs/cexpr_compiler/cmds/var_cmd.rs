@@ -8,7 +8,8 @@ pub fn var_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
     //var x 123
     //var x
 
-    if record.params_num() < 2 || record.params_num() > 3 {
+    if record.params_num() < 2 //|| record.params_num() > 3
+    {
         return Err(BuilderError::new(record.last_param().unwrap().start_loc(), BuilderErrorType::IncorrectParamsNum));
     }
 
@@ -23,23 +24,57 @@ pub fn var_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
 
 
     // }
+    let mut i=1;
 
-    let idn = get_idn(record.param(1).unwrap())?;
+    while i< record.params_num() {
 
-    let is_init_nil=record.params_num()==2;
+        let idn = get_idn(record.param(i).unwrap())?;
+        let is_init_nil= i+1==record.params_num() || record.param(i+1).and_then(|param|param.primitive().symbol()) == Some(",");
 
-    builder.decl_var_start(idn,is_init_nil);
+        // println!("hmm {idn} {is_init_nil}");
+        builder.decl_var_start(idn,is_init_nil);
 
-    if !is_init_nil {
-        let val_expr = record.param(2).unwrap().primitive();
-        builder.eval(val_expr);
+        if !is_init_nil {
+            let val_expr = record.param(i+1).unwrap().primitive();
+            builder.eval(val_expr);
+        }
+
+        builder.decl_var_end();
+
+        if !is_init_nil {
+            builder.set_var(idn);
+        }
+
+        if is_init_nil {
+            i+=1; //just idn
+        } else {
+            i+=2; //idn and var
+        }
+
+        if record.param(i).and_then(|param|param.primitive().symbol()) == Some(",") {
+            i+=1;
+        }
     }
 
-    builder.decl_var_end();
+    //
 
-    if !is_init_nil {
-        builder.set_var(idn);
-    }
-    
+    // let idn = get_idn(record.param(1).unwrap())?;
+
+    // let is_init_nil=record.params_num()==2;
+
+    // builder.decl_var_start(idn,is_init_nil);
+
+    // if !is_init_nil {
+    //     let val_expr = record.param(2).unwrap().primitive();
+    //     builder.eval(val_expr);
+    // }
+
+    // builder.decl_var_end();
+
+    // if !is_init_nil {
+    //     builder.set_var(idn);
+    // }
+
+    //
     Ok(())
 }
