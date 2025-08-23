@@ -121,7 +121,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     pub fn get_fields<F>(&mut self, fields : F) -> &mut Self
     where
         // F : IntoIterator<Item = (BuilderField<'a,T>,Loc)>,
-        F : IntoIterator<Item = (T,Loc)>,
+        F : IntoIterator<Item = (T,bool,Loc)>,
     {
 
         //fields
@@ -135,10 +135,12 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
 
             self.eval(field.0.clone());
             self
-                .loc(field.1)
+                .loc(field.2)
                 .param_push()
                 .swap()
-                .call_method("get_field", 2);
+                // .call_method("get_field", 2)
+                .get_field(field.1)
+                ;
         }
 
         self
@@ -146,7 +148,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
 
     pub fn set_fields_begin<F>(&mut self, fields : F) -> &mut Self
     where
-        F : IntoIterator<Item = (T,Loc)>,
+        F : IntoIterator<Item = (T,bool,Loc)>,
     {
 
         self.block_start(None); //needed for try_call_method
@@ -188,7 +190,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
             let field=fields.get(field_ind).unwrap();
 
             self.eval(field.0.clone());
-            self.loc(field.1);
+            self.loc(field.2);
 
 
             //push field, swap
@@ -204,14 +206,25 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
                     .swap();
 
                 //get_field
-                self.call_method("get_field", 2);
+                // self.call_method("get_field", 2);
+                self.get_field(field.1);
             }
         }
 
         //
         self
     }
-    pub fn set_fields_end(&mut self, fields_len:usize) -> &mut Self {
+    pub fn set_fields_end<F>(&mut self,
+        //fields_len:usize
+        fields : F) -> &mut Self
+    where
+        F : DoubleEndedIterator<Item = (T,bool,Loc)>,
+    {
+        let mut fields=fields.into_iter().rev();
+        let last_field=fields.next().unwrap();
+        // for f in fields {
+
+        // }
         //push to_val
         self //=> field result
             .param_push() //=> field result to_val
@@ -219,7 +232,8 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
             .rot(); //=> to_val field result
 
         //
-        self.call_method("set_field", 3);
+        // self.call_method("set_field", 3);
+        self.set_field(last_field.1);
 
         //sometimes is unecessary to call, for things like arrays and dicts, since they hold "pointer" like values,
         //  and not copies, but for get_field's that return a copy and not a "pointer", then
@@ -232,26 +246,29 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         // println!("fields num is {fields_num}");
 
 
-        for _ in 0 .. fields_len-1 {
+        // for _ in 0 .. fields_len-1
+        for field in fields
+        {
             self
                 .rot()
                 .rot()
                 .swap()
 
                 //
-                .try_call_method("set_field", 3) //allowed to fail if no set_field method
-                .block_start(None)
-                    .to_block_end(JmpCond::NotUndefined, 0)
-                    .pop_params()
-                    .to_block_end(JmpCond::None, 1) //todo:need to make try_call_method return undefined on fail
-                .block_end()
-                //todo: also need a way to store result of prev set_field, and re set it as result on try_call_method fail
-                //  why? don't use the result of a set_field anyway?
-                //     because it can eg var r {set a.x 5}, could optionally return void or something else
-                //       in that case just return undefined when method missing?
-                //todo: on try method fail, pop off unused params? don't need to, ast handles that?
+                // // .try_call_method("set_field", 3) //allowed to fail if no set_field method
+                // // .block_start(None)
+                // //     .to_block_end(JmpCond::NotUndefined, 0)
+                // //     .pop_params() //will pop all params though ...
+                // //     .to_block_end(JmpCond::None, 1) //todo:need to make try_call_method return undefined on fail
+                // // .block_end()
+                // // //todo: also need a way to store result of prev set_field, and re set it as result on try_call_method fail
+                // // //  why? don't use the result of a set_field anyway?
+                // // //     because it can eg var r {set a.x 5}, could optionally return void or something else
+                // // //       in that case just return undefined when method missing?
+                // // //todo: on try method fail, pop off unused params? don't need to, ast handles that?
 
                 // .call_method("set_field", 3)
+                .set_field(field.1)
                 ;
         }
 
@@ -525,6 +542,21 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         })
     }
 
+    pub fn set_field(&mut self,is_field_static:bool) -> &mut Self {
+        self.add_node(move|ast|{
+            // ast.call_method("set_field", 3).unwrap();
+            ast.set_field(is_field_static).unwrap();
+            Ok(())
+        })
+    }
+
+    pub fn get_field(&mut self,is_field_static:bool) -> &mut Self {
+        self.add_node(move|ast|{
+            // ast.call_method("get_field", 2).unwrap();
+            ast.get_field(is_field_static).unwrap();
+            Ok(())
+        })
+    }
 
     pub fn call_method(&mut self,name:&'a str,params_num:usize) -> &mut Self {
         // self.commit_param_locs();

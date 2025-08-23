@@ -5,13 +5,13 @@ use super::super::BuilderErrorType;
 use super::get_idn;
 
 pub fn set_var_cmd<'a>(
-    record : RecordContainer<'a>, 
+    record : RecordContainer<'a>,
     builder :&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>,
     get_var_prefix : Option<&'static str>,
 ) -> Result<(),BuilderError<BuilderErrorType>> {
     //set x 123
 
-    if record.params_num() != 3 {        
+    if record.params_num() != 3 {
         return Err(BuilderError::new(record.last_param().unwrap().start_loc(), BuilderErrorType::IncorrectParamsNum));
     }
 
@@ -28,7 +28,7 @@ pub fn set_var_cmd<'a>(
     // } else {
 
     // }
-    
+
     //idn
     let name_param=record.param(1).unwrap();
 
@@ -36,14 +36,14 @@ pub fn set_var_cmd<'a>(
 
         let idn = get_idn(name_param)?;
         let idn_loc=record.param(1).unwrap().start_loc();
-    
+
         //val
         let val_sexpr = record.param(record.params_num()-1).unwrap().primitive();
-    
+
         //
-    
+
         builder.loc(loc);
-    
+
         builder
             .loc(idn_loc)
             .eval(val_sexpr)
@@ -55,7 +55,7 @@ pub fn set_var_cmd<'a>(
 
         if let Some(idn)=name_param.primitive().symbol() {
             // let idn_loc=var_param.start_loc();
-        
+
             builder
                 // .loc(var_param.start_loc())
                 .get_var(idn);
@@ -66,20 +66,23 @@ pub fn set_var_cmd<'a>(
         //
         // builder.eval(var_param.primitive());
 
-        
+
         let to_val=record.param(2).unwrap();
 
         //
-        builder.set_fields_begin(name_param.fields().map(|field|{
+        let fields=name_param.fields().map(|field|{
             let s=field.primitive().symbol();
-            let f=if s.is_none()||get_var_prefix.map(|x|s.unwrap().starts_with(x)).unwrap_or_default(){
-                field.primitive()
+            let (f, is_field_symbol)=if s.is_none()||get_var_prefix.map(|x|s.unwrap().starts_with(x)).unwrap_or_default(){
+                (field.primitive(),false)
             } else {
-                field.string_primitive()
+                (field.string_primitive(),true)
             };
 
-            (f,field.start_loc())
-        }));
+            (f,is_field_symbol,field.start_loc())
+        });
+
+
+        builder.set_fields_begin(fields.clone());
 
         //
         builder
@@ -87,7 +90,10 @@ pub fn set_var_cmd<'a>(
             .eval(to_val.primitive());
 
         //
-        builder.set_fields_end(name_param.fields_num());
+        builder.set_fields_end(
+            fields
+            // name_param.fields_num()
+        );
     }
 
 

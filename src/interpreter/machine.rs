@@ -461,6 +461,34 @@ impl<'a,X> Machine<'a,X> {
         let instr=cur_build.instructions.get(self.instr_pos).unwrap();
 
         match instr {
+            Instruction::GetField(is_field_symbol) => {
+                let params_num =2;
+                let symbol="get_field";
+
+                if let Some(x)=self.get_method(symbol, params_num) {
+                    self.debugger.add_func_name(symbol);
+                    self.inner_call_bound_func(params_num, x)?;
+                } else {
+                    let param_types=self.get_stack_param_types(params_num);
+                    return Err(MachineError::from_machine(self, MachineErrorType::MethodNotFound(symbol.to_string(),param_types) ));
+                }
+            }
+            Instruction::SetField(is_field_symbol) => {
+                let params_num =3;
+                let symbol="set_field";
+
+                println!("hmm {:?}",self.get_stack_offset_value(1));
+                // if let Some(x)=self.get_method(symbol, 2) {
+                // }
+                // else
+                if let Some(x)=self.get_method(symbol, params_num) {
+                    self.debugger.add_func_name(symbol);
+                    self.inner_call_bound_func(params_num, x)?;
+                } else {
+                    let param_types=self.get_stack_param_types(params_num);
+                    return Err(MachineError::from_machine(self, MachineErrorType::MethodNotFound(symbol.to_string(),param_types) ));
+                }
+            }
             Instruction::Jmp{cond,instr_pos:new_instr_pos, debug} => {
                 if *new_instr_pos > cur_build.instructions.len() {
                     return Err(MachineError::from_machine(self, MachineErrorType::JmpErr(*new_instr_pos)));

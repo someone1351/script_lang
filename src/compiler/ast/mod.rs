@@ -630,6 +630,28 @@ impl<'a> Ast<'a> {
 
         Ok(())
     }
+    pub fn set_field(&mut self,is_field_static:bool)-> Result<(),AstError> {
+        if self.last_node().stack_pushed_num < 3 {
+            return Err(AstError::CallNotEnoughParamsPushedOnStack);
+        }
+
+        // self.add_next(AstNodeType::CallMethod{name:"set_field",params_num:3});
+        self.add_next(AstNodeType::SetField{ is_field_static });
+        self.last_node_mut().stack_pushed_num-=3;
+
+        Ok(())
+    }
+    pub fn get_field(&mut self,is_field_static:bool)-> Result<(),AstError> {
+        if self.last_node().stack_pushed_num < 2 {
+            return Err(AstError::CallNotEnoughParamsPushedOnStack);
+        }
+
+        // self.add_next(AstNodeType::CallMethod{name:"get_field",params_num:2});
+        self.add_next(AstNodeType::GetField{ is_field_static });
+        self.last_node_mut().stack_pushed_num-=2;
+
+        Ok(())
+    }
     pub fn call_method(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> {
         //uses and pops off params_num amount off stack
 
@@ -638,7 +660,6 @@ impl<'a> Ast<'a> {
         }
 
         self.add_next(AstNodeType::CallMethod{name,params_num});
-
         self.last_node_mut().stack_pushed_num-=params_num;
 
         Ok(())
@@ -1153,6 +1174,12 @@ impl<'a> Ast<'a> {
                     {
                         self.get_node_mut(cur_node_ind).stack_size-=params_num;
                     }
+                    AstNodeType::SetField{..} => {
+                        self.get_node_mut(cur_node_ind).stack_size-=3;
+                    }
+                    AstNodeType::GetField{..} => {
+                        self.get_node_mut(cur_node_ind).stack_size-=2;
+                    }
                     _ => {}
                 }
 
@@ -1614,6 +1641,14 @@ impl<'a> Ast<'a> {
                         // instructions.push(Instruction::CallMethod(symbol_inds.get(name),0));
                     }
 
+                }
+                AstNodeType::SetField { is_field_static } => {
+                    instructions.push(Instruction::SetField(is_field_static));
+                    // instructions.push(Instruction::CallMethod(symbol_inds.get("set_field"),3));
+                }
+                AstNodeType::GetField{ is_field_static } => {
+                    instructions.push(Instruction::GetField(is_field_static));
+                    // instructions.push(Instruction::CallMethod(symbol_inds.get("get_field"),2));
                 }
             }
 

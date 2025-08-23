@@ -116,8 +116,11 @@ pub enum Instruction {
     // HasMethod(usize), //symbol_ind,
     CallResult(usize), //params_num
 
-    GetGlobalOrConstOrCallMethod(usize,bool) //symbol_ind, get_global
+    GetGlobalOrConstOrCallMethod(usize,bool), //symbol_ind, get_global
     // GetFields(usize), //params_num
     // SetFields(usize), //params_num
+
+    GetField(bool), //is_field_static
+    SetField(bool), //is_field_static
 
 }

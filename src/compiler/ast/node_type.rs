@@ -8,7 +8,7 @@ use super::misc::*;
 pub enum AstNodeType<'a> {
     Root,
     Block {label:Option<&'a str>},
-    
+
     Function{
         func_ind:usize,
         // params_num:usize, //replace with params ? no because params would include the variadic name, which isn't counted in params_num
@@ -16,7 +16,7 @@ pub enum AstNodeType<'a> {
         // params:Vec<&'a str>,
         // captured_params:BTreeSet<usize>, //param_inds
         // variadic:bool,
-    }, 
+    },
 
     // FunctionInstance{func_node_ind:usize,captures_num:usize}, //lambda_ast_node_ind,captures_num
 
@@ -46,7 +46,7 @@ pub enum AstNodeType<'a> {
     StackPush,
     StackDup,
     StackPop(usize),
-    
+
     // GetStackVar{stack_var:AstStackVar, deref_on_ref:bool, name:Option<&'a str>}, //var,deref_on_ref
 
     //
@@ -56,7 +56,7 @@ pub enum AstNodeType<'a> {
     CallMethod{name:&'a str,params_num:usize},
     TryCallMethod{name:&'a str,params_num:usize},
     // HasMethod{name:&'a str,},
-    CallResult{params_num:usize}, 
+    CallResult{params_num:usize},
 
     //
     Include(&'a str),
@@ -72,14 +72,14 @@ pub enum AstNodeType<'a> {
     // SetStackVar{stack_var:AstStackVar, name:&'a str},
     // SetGlobalVar(&'a str),
 
-    // CallStackVar{stack_var:AstStackVar,params_num:usize, name:&'a str}, 
+    // CallStackVar{stack_var:AstStackVar,params_num:usize, name:&'a str},
     // CallGlobal{name:&'a str,params_num:usize},
-    
+
     // DeclGlobalVar{name:&'a str,},
     // DeclParamVar{name:&'a str,func_ind:usize,param_ind:usize,},
     // Local{local_ind:usize,},
 
-    DeclVarStart{name:&'a str,decl:AstDeclVar,anon_id:Option<usize>}, //the anon_id is actually an id for each "cmd" used, 
+    DeclVarStart{name:&'a str,decl:AstDeclVar,anon_id:Option<usize>}, //the anon_id is actually an id for each "cmd" used,
     DeclVarEnd{name:&'a str,decl:AstDeclVar,anon_id:Option<usize>},
     GetVar{name:&'a str,var:AstAccessVar,anon_id:Option<usize>}, //,no_deref:bool
     SetVar{name:&'a str,var:AstAccessVar,anon_id:Option<usize>},
@@ -91,5 +91,8 @@ pub enum AstNodeType<'a> {
     // ScopePush,
     // ScopePop,
     //ScopeVar(&'a str), //name
+
+    SetField{is_field_static:bool},
+    GetField{is_field_static:bool},
 }
 

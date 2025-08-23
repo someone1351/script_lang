@@ -465,13 +465,17 @@ impl Compiler {
 
         builder.get_fields(top_primitive.param().unwrap().fields().map(|field|{
             let s=field.primitive().symbol();
-            let f=if s.is_none()||self.get_var_prefix.map(|x|s.unwrap().starts_with(x)).unwrap_or_default(){
-                field.primitive()
+            let (f,is_field_symbol)=if s.is_none()||self.get_var_prefix.map(|prefix|s.unwrap().starts_with(prefix)).unwrap_or_default(){
+                //if it's not a symbol or is a symbol with a var prefix
+                //  these primitives will be evaluated, so a variable will be gotten, an expr evaluated etc?
+                (field.primitive(),false)
             } else {
-                field.string_primitive()
+                //is a symbol, symbols can be "+", "-", but also "abc"
+                //  use string primitive, so that the symbol abc will be converted to the string "abc" ?
+                (field.string_primitive(),true)
             };
 
-            (f,field.start_loc())
+            (f,is_field_symbol,field.start_loc(),)
         }));
 
         // // let mut last_start_loc=top_primitive.start_loc();

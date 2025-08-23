@@ -11,7 +11,7 @@ TODO
 */
 
 pub fn func_cmd<'a>(
-    record : RecordContainer<'a>, 
+    record : RecordContainer<'a>,
     builder :&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>,
     get_var_prefix : Option<&'static str>,
 ) -> Result<(),BuilderError<BuilderErrorType>> {
@@ -29,7 +29,7 @@ pub fn func_cmd<'a>(
     fn abc {a b c} {
         + a b;
     }
-    fn abc {a b 
+    fn abc {a b
             c} {
         + a b;
     }
@@ -77,7 +77,7 @@ pub fn func_cmd<'a>(
 
     //params
     let params_primitive=record.param(2).unwrap().primitive();
-    
+
     let Some(params_block)=params_primitive.block() else {
         return Err(BuilderError::new(params_primitive.start_loc(), BuilderErrorType::IncorrectParamsNum));
     };
@@ -98,26 +98,31 @@ pub fn func_cmd<'a>(
 
     // if var_param.fields_num()==0 {
     //
+    let fields=
     if let Some(idn)=idn {
         builder
             .decl_var_start(idn,false)
             .decl_var_end();
+        None
     } else { //fields
         builder.loc(name_param.start_loc());
         builder.get_var(name_param.primitive().symbol().unwrap());
-    
+
         //
-        builder.set_fields_begin(name_param.fields().map(|field|{
+        let fields=name_param.fields().map(|field|{
             let s=field.primitive().symbol();
-            let f=if s.is_none()||get_var_prefix.map(|x|s.unwrap().starts_with(x)).unwrap_or_default(){
-                field.primitive()
+            let (f,is_field_symbol)=if s.is_none()||get_var_prefix.map(|x|s.unwrap().starts_with(x)).unwrap_or_default(){
+                (field.primitive(),false)
             } else {
-                field.string_primitive()
+                (field.string_primitive(),true)
             };
 
-            (f,field.start_loc())
-        }));
-    }
+            (f,is_field_symbol,field.start_loc())
+        });
+        //
+        builder.set_fields_begin(fields.clone());
+        Some(fields)
+    };
 
     //
     builder
@@ -126,7 +131,7 @@ pub fn func_cmd<'a>(
         .eval(body)
         .block_end()
         .func_end();
-        
+
     if let Some(idn)=idn {
         builder.set_var(idn);
     } else { //fields
@@ -134,7 +139,10 @@ pub fn func_cmd<'a>(
         builder.loc(name_param.start_loc());
 
         //
-        builder.set_fields_end(name_param.fields_num());
+        builder.set_fields_end(
+            // name_param.fields_num()
+            fields.unwrap()
+        );
 
 
     }

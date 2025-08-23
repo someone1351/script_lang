@@ -75,7 +75,7 @@ pub fn for_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
     }
 
     let header = sexpr.get(1).unwrap();
-    
+
     if !header.is_list() {
         return Err(BuilderError::new(header.start_loc(), SexprBuilderErrorType::ExpectList));
     }
@@ -89,7 +89,7 @@ pub fn for_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
     let body_stmts = sexpr.list_iter_from(2);
 
     //
-    
+
     builder
         .block_start(None)
             .decl_var_start(idn, false)
@@ -104,7 +104,7 @@ pub fn for_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
 
             .eval(header.get(1).unwrap())
             .set_var(idn)
-            
+
             .block_start(Some("loop"))
                 .block_start(None)
                     .get_anon_var("n")
@@ -212,7 +212,7 @@ pub fn decl_var_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SEx
     if !is_init_nil {
         builder.set_var(idn);
     }
-    
+
     // else if !is_global {
     //     builder.result_nil();
     // }
@@ -234,13 +234,13 @@ pub fn decl_var_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SEx
 pub fn set_var_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprContainer<'a>,SexprBuilderErrorType>) -> Result<(),BuilderError<SexprBuilderErrorType>> {
     //eg (set x 123)
 
-    if sexpr.len() != 3 {        
+    if sexpr.len() != 3 {
         return Err(BuilderError::new(sexpr.last().unwrap().start_loc(), SexprBuilderErrorType::IncorrectParamsNum));
     }
 
     //
     let loc = sexpr.start_loc();
-    
+
     //idn
     let idn = get_symbol(sexpr.get(1).unwrap())?;
     let idn_loc=sexpr.get(1).unwrap().start_loc();
@@ -271,19 +271,21 @@ pub fn set_field_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
     if sexpr.len() < 4 {
         return Err(BuilderError::new(sexpr.last().unwrap().start_loc(), SexprBuilderErrorType::IncorrectParamsNum));
     }
-    
+
     //push idn
     builder.eval(sexpr.get(1).unwrap());
 
     //
     let fields_num = sexpr.len()-3;
 
-    //
-    builder.set_fields_begin((0 .. fields_num).map(|field_ind|{
+    let fields=(0 .. fields_num).map(|field_ind|{
         let param_ind=2+field_ind;
         let field=sexpr.get(param_ind).unwrap();
-        (field,field.start_loc())
-    }));
+        (field,false,field.start_loc(),)
+    });
+
+    //
+    builder.set_fields_begin(fields.clone());
 
     //
     let to_val_sexpr = sexpr.get(sexpr.len()-1).unwrap();
@@ -295,7 +297,10 @@ pub fn set_field_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
         ;
 
     //
-    builder.set_fields_end(fields_num);
+    builder.set_fields_end(
+        fields
+        // fields_num
+    );
 
     //
     Ok(())
@@ -309,13 +314,13 @@ pub fn get_field_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
     if sexpr.len() < 3 {
         return Err(BuilderError::new(sexpr.last().unwrap().start_loc(), SexprBuilderErrorType::IncorrectParamsNum));
     }
-    
+
     //
     builder.eval(sexpr.get(1).unwrap());
-    
+
     builder.get_fields((2 .. sexpr.len()).map(|field_ind|{
         let field=sexpr.get(field_ind).unwrap();
-        (field,field.start_loc())
+        (field,false,field.start_loc())
     }));
 
     //
@@ -357,7 +362,7 @@ pub fn if_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCont
                     .to_block_end(JmpCond::False,0);
             // builder
             //         .eval_sexprs(body_sexprs);
-            
+
             for x in body_sexprs {
                 builder
                     .eval(x);
@@ -370,7 +375,7 @@ pub fn if_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCont
     }
 
     builder.block_end();
-    
+
     Ok(())
 }
 
@@ -410,7 +415,7 @@ pub fn ternary_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExp
     }
 
     builder.block_end();
-    
+
     Ok(())
 }
 
@@ -418,10 +423,10 @@ pub fn and_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
     if sexpr.len() < 2 {
         return Err(BuilderError::new(sexpr.last().unwrap().start_loc(), SexprBuilderErrorType::IncorrectParamsNum));
     }
-    
+
     // let mut last_val=Value::Bool(false);
     builder.block_start(None);
-    
+
     for cond_sexpr in sexpr.list_iter_from(1) {
         builder
             .eval(cond_sexpr)
@@ -437,10 +442,10 @@ pub fn or_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCont
     if sexpr.len() < 2 {
         return Err(BuilderError::new(sexpr.last().unwrap().start_loc(), SexprBuilderErrorType::IncorrectParamsNum));
     }
-    
+
     // let mut last_val=Value::Bool(false);
     builder.block_start(None);
-    
+
     for cond_sexpr in sexpr.list_iter_from(1) {
         builder
             .eval(cond_sexpr)
@@ -464,18 +469,18 @@ pub fn get_func_params<'a>(params_sexpr : SExprContainer<'a>, ) -> Result<(Vec<&
     let mut params=Vec::<&str>::new();
     let mut variadic=false;
 
-    for (i,param_sexpr) in params_sexpr.list_iter().enumerate() {   
-        // println!("i {i}, len {}",params_sexpr.len()); 
+    for (i,param_sexpr) in params_sexpr.list_iter().enumerate() {
+        // println!("i {i}, len {}",params_sexpr.len());
         let idn = get_symbol(param_sexpr)?;
 
         if idn=="..." { //variadic
             if i!=params_sexpr.len()-1 {
                 return Err(BuilderError::new(param_sexpr.start_loc(), SexprBuilderErrorType::VariadicMustBeAtEnd));
             }
-            
+
             variadic=true;
-        } else { //param  
-            params.push(idn);           
+        } else { //param
+            params.push(idn);
         }
     }
 
@@ -536,7 +541,7 @@ pub fn decl_func_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
         builder
             .block_end();
     }
-    
+
     builder
         .func_end()
         // .decl_global_var(idn)
@@ -546,7 +551,7 @@ pub fn decl_func_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
         .set_var(idn)
         ;
 
- 
+
 
     //
     Ok(())
@@ -630,7 +635,7 @@ pub fn lambda_func_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,
 // //             .eval_sexprs(body_sexprs)
 // //             .block_end();
 // //     }
-    
+
 // //     builder
 // //         .func_end()
 // //         .decl_global_var(idn)
@@ -650,9 +655,9 @@ pub fn add_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
 
     builder.eval(sexpr.get(1).unwrap());
     let loc = sexpr.get(0).unwrap().start_loc();
-    
+
     for i in 2 .. sexpr.len() {
-        
+
         builder.loc(loc);
 
         builder
@@ -674,13 +679,13 @@ pub fn sub_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
 
     builder.eval(sexpr.get(1).unwrap());
     let loc = sexpr.get(0).unwrap().start_loc();
-    
+
     builder.loc(loc);
 
     if sexpr.len()==2 {
         builder
             .param_push()
-            .call_method("-",1); //,loc       
+            .call_method("-",1); //,loc
     } else {
         for i in 2 .. sexpr.len() {
             builder
@@ -702,7 +707,7 @@ pub fn mul_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
     }
 
     //a*b*c*d = a*(b*(c*d))
-    
+
     builder.eval(sexpr.last().unwrap());
     let loc = sexpr.get(0).unwrap().start_loc();
 
@@ -798,33 +803,33 @@ pub fn format_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
     builder
         .result_string("")
         .param_push();
-    
+
     //
     let mut j=1;
 
     if sexpr.get(1).unwrap().is_string() {
         j+=1;
 
-        
+
         //parse format string
 
         let s =sexpr.get(1).unwrap().string().unwrap();
         let mut cs=s.chars();
         let mut char_ind=0;
-    
+
         let mut texts: Vec<(usize, usize)>= vec![(0,0)];
         let mut vars: Vec<(usize, usize)> =Vec::new();
-      
+
         while let Some(c)=cs.next() {
             char_ind+=1;
-            
+
             match c {
                 '{' => {
                     vars.push((char_ind,char_ind));
-    
+
                     while let Some(c)=cs.next() {
                         char_ind+=1;
-    
+
                         match c {
                             '}' => {
                                 vars.last_mut().unwrap().1=char_ind-1;
@@ -834,14 +839,14 @@ pub fn format_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
                                 if cs.next().is_some() {
                                     char_ind+=1;
                                 }
-    
+
                                 continue;
                             }
                             _=>{
                             }
                         }
                     }
-    
+
                     texts.push((char_ind,char_ind));
                 }
                 '\\' => {
@@ -849,7 +854,7 @@ pub fn format_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
                         char_ind+=1;
                         texts.last_mut().unwrap().1=char_ind;
                     }
-    
+
                     continue;
                 }
                 _=>{
@@ -857,15 +862,15 @@ pub fn format_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
                 }
             }
         }
-        
+
         //
 
         for i in 0 .. texts.len() {
             let (text_start,text_end) = texts[i];
             let text_str=&s[text_start..text_end];
-    
+
             // println!("a: {text_str:?}");
-    
+
             if !text_str.is_empty() {
                 builder
                     .result_string(text_str)
@@ -875,38 +880,38 @@ pub fn format_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
                     .param_push()
                     ;
             }
-    
+
             if let Some((var_start,var_end)) = vars.get(i).cloned() {
                 let var_str=&s[var_start..var_end];
                 // println!("v: {var_str:?}");
-    
+
                 if var_str.is_empty() {
                     builder.eval(sexpr.get(j).unwrap());
-    
+
                     j+=1;
                 } else {
                     builder.get_var(var_str);
                 }
-    
+
                 builder
                     .param_push()
                     .call_method("string", 1)
-    
+
                     .param_push()
                     .swap()
                     .call_method("+", 2)
-    
+
                     .param_push();
             }
         }
-    
+
     }
 
     for k in j .. sexpr.len() {
         if k>=2 {
             builder
                 .result_string(" ")
-                
+
                 .param_push()
                 .swap()
                 .call_method("+", 2)
@@ -931,7 +936,7 @@ pub fn format_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
 
     builder.pop();
     // builder.call_method("console_out", 1);
-//     
+//
     return Ok(());
 
 }
