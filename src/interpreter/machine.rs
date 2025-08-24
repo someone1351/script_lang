@@ -461,19 +461,46 @@ impl<'a,X> Machine<'a,X> {
         let instr=cur_build.instructions.get(self.instr_pos).unwrap();
 
         match instr {
-            Instruction::GetField(is_field_symbol) => {
-                let params_num =2;
-                let symbol="get_field";
+            &Instruction::GetField(is_field_symbol) => {
 
-                if let Some(x)=self.get_method(symbol, params_num) {
-                    self.debugger.add_func_name(symbol);
-                    self.inner_call_bound_func(params_num, x)?;
-                } else {
-                    let param_types=self.get_stack_param_types(params_num);
-                    return Err(MachineError::from_machine(self, MachineErrorType::MethodNotFound(symbol.to_string(),param_types) ));
+                // println!("hmm {self_val:?} {field_val:?}");
+
+                let mut done=false;
+
+                if is_field_symbol {
+                    // let field_name=self.get_stack_offset_value(1)?.get_string().unwrap();
+                    let field_val=self.get_stack_offset_value(1)?;
+                    let self_val=self.get_stack_offset_value(0)?;
+
+                    if let Some(field_name)=field_val.get_string() {
+                        if let Some(x)=self.lib_scope.get_method(field_name.as_str(),[&self_val]) {
+                            // println!("--");
+                            self.stack_swap()?; // self=>field
+                            self.stack_pop_amount(1)?; //field
+                            // println!("==");
+
+                            self.debugger.add_func_name(field_name.as_str());
+                            self.inner_call_bound_func(1, x)?;
+
+                            done=true;
+                        }
+                    }
+                }
+
+                if !done {
+                    let params_num =2;
+                    let symbol="get_field";
+
+                    if let Some(x)=self.get_method(symbol, params_num) {
+                        self.debugger.add_func_name(symbol);
+                        self.inner_call_bound_func(params_num, x)?;
+                    } else {
+                        let param_types=self.get_stack_param_types(params_num);
+                        return Err(MachineError::from_machine(self, MachineErrorType::MethodNotFound(symbol.to_string(),param_types) ));
+                    }
                 }
             }
-            Instruction::SetField(is_field_symbol) => {
+            &Instruction::SetField(_is_field_symbol) => {
                 let params_num =3;
                 let symbol="set_field";
 
@@ -576,24 +603,10 @@ impl<'a,X> Machine<'a,X> {
                 self.gc_scope.remove_norefs();
             }
             Instruction::StackSwap => {
-                let stack_len = self.stack.len();
-
-                if stack_len>=2 {
-                    self.stack.swap(stack_len-1, stack_len-2);
-                    self.debugger.stack_swap();
-                } else {
-                    return Err(MachineError::from_machine(self, MachineErrorType::InvalidStackAccess(2) ));
-                }
+                self.stack_swap()?;
             }
             Instruction::StackRot => {
-                let stack_len = self.stack.len();
-
-                if stack_len>=3 {
-                    self.stack[stack_len-3 ..].rotate_left(1);
-                    self.debugger.stack_rot();
-                } else {
-                    return Err(MachineError::from_machine(self, MachineErrorType::InvalidStackAccess(3) ));
-                }
+                self.stack_rot()?;
             }
             Instruction::SetStackVar(stack_offset_ind) => {
                 let v=self.copy_val(self.result_val())?;
@@ -1288,6 +1301,31 @@ impl<'a,X> Machine<'a,X> {
         Ok(cur_value)
     }
 
+    fn stack_swap(&mut self) -> Result<(),MachineError> {
+        let stack_len = self.stack.len();
+
+        if stack_len>=2 {
+            self.stack.swap(stack_len-1, stack_len-2);
+            self.debugger.stack_swap();
+        } else {
+            return Err(MachineError::from_machine(self, MachineErrorType::InvalidStackAccess(2) ));
+        }
+
+        Ok(())
+    }
+
+    fn stack_rot(&mut self) -> Result<(),MachineError> {
+        let stack_len = self.stack.len();
+
+        if stack_len>=3 {
+            self.stack[stack_len-3 ..].rotate_left(1);
+            self.debugger.stack_rot();
+        } else {
+            return Err(MachineError::from_machine(self, MachineErrorType::InvalidStackAccess(3) ));
+        }
+
+        Ok(())
+    }
 }
 
 

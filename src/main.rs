@@ -187,7 +187,7 @@ pub fn test_script2<P:AsRef<Path>>(path:P) {
 //     Ok(script_lang::Value::int(4))
 // }
 
-pub fn test_script3<P:AsRef<Path>>(path:P) {
+pub fn test_script3<P:AsRef<Path>>(path:P,debug:bool) {
 
     println!("===");
     let mut gc_scope= script_lang::GcScope::new();
@@ -251,7 +251,10 @@ pub fn test_script3<P:AsRef<Path>>(path:P) {
             // core
             my_num
         );
-        // machine.set_debug_print(true);
+
+        if debug {
+            machine.set_debug_print(true);
+        }
 
         // build.clone().unwrap().print();
 
@@ -404,7 +407,8 @@ fn main() {
     // // test_script2("examples/test6.script");
 
     // test_script3("examples/test7.script");
-    test_script3("examples/test8.script");
+     test_script3("examples/test8.script",false);
+    //test_script3("examples/test12.script",true);
 
     // // test_script3("examples/test9.script");
 
