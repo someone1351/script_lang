@@ -21,7 +21,7 @@ use super::func_context::*;
 use super::data::*;
 
 
-#[derive(Debug,Clone,Copy,Hash,PartialEq,Eq)] 
+#[derive(Debug,Clone,Copy,Hash,PartialEq,Eq)]
 pub enum Arg {
     Bool,
     Float,
@@ -46,7 +46,7 @@ impl Arg {
     pub fn custom_ref<T:'static>() -> Arg {
         Arg::CustomRef(std::any::TypeId::of::<T>())
     }
-    pub fn from_value(value:&Value) -> Option<Arg> { 
+    pub fn from_value(value:&Value) -> Option<Arg> {
         match value {
             Value::Bool(_) => Some(Arg::Bool),
             Value::Int(_) => Some(Arg::Int),
@@ -74,7 +74,7 @@ impl Arg {
             None
         }
     }
-    pub fn is_value(&self,value:&Value) -> bool { 
+    pub fn is_value(&self,value:&Value) -> bool {
         match (value,self) {
             (Value::Bool(_),Arg::Bool) => true,
             (Value::Int(_),Arg::Int) => true,
@@ -88,7 +88,7 @@ impl Arg {
 
             (Value::Custom(_),Arg::CustomAny) => true,
             (Value::Custom(_),Arg::CustomAnyRef) => true,
-            
+
             (_,Arg::Any) => true,
 
             _ => false,
@@ -158,7 +158,7 @@ impl<'m,X> MethodInput<'m,X> {
         self.args.push(vec![Arg::custom_ref::<T>()]);
         self
     }
-    
+
     pub fn or_bool(mut self) -> Self {
         self.args.last_mut().unwrap().push(Arg::Bool);
         self
@@ -206,7 +206,7 @@ impl<'m,X> MethodInput<'m,X> {
 
     pub fn inner_end(mut self,variadic:bool) -> Self {
         if self.args.len() > 0 {
-           
+
                 //could n= arg0.len*arg1.len * .. * argn.len
                 // for i in 0 ...n { convert i to positions }
 
@@ -216,40 +216,40 @@ impl<'m,X> MethodInput<'m,X> {
                 //x = i % w;
                 //y = i / w;
 
-                
+
                 //i=(z * w * h) + (y * w) + x;
                 //i=x + (y + (z * h))*w;
                 //z = i / (w * h);
                 //y = (i-(z * w * h)) / w;
                 //x = (i-(z * w * h)) % w;
-              
+
 
                 //i = x + y * w + z * w * h
                 //x = i % w
                 //y = ( i / w ) % h
                 //z = i / ( w * h )
-            
+
 
 
             //
             let mut positions = vec![0;self.args.len()];
-        
-            loop {    
-                for i in 0 .. self.args.len()-1 {        
+
+            loop {
+                for i in 0 .. self.args.len()-1 {
                     if positions[i]==self.args[i].len() {
-                        positions[i]=0;                
+                        positions[i]=0;
                         *positions.get_mut(i+1).unwrap() +=1;
                     } else {
                         break;
                     }
                 }
-                
+
                 if *positions.last().unwrap() == self.args.last().unwrap().len() {
                     break;
                 }
-                
+
                 // println!("{:?}",positions.iter().map(|x|x.to_string()).collect::<String>());
-                
+
                 let args = positions.iter().enumerate().map(|(arg_ind,&x)|self.args
                     .get(arg_ind).unwrap().get(x).unwrap().clone()).collect::<Vec<_>>();
 
@@ -257,7 +257,7 @@ impl<'m,X> MethodInput<'m,X> {
 
                 self.lib_scope.inner_insert_method(self.name, args, self.optional_start, variadic, self.method_type.clone());
 
-                positions[0]+=1;        
+                positions[0]+=1;
             }
         } else {
             self.lib_scope.inner_insert_method(self.name, [], self.optional_start, variadic, self.method_type.clone());
@@ -277,7 +277,7 @@ impl<'m,X> MethodInput<'m,X> {
     }
 }
 
-pub type FuncType<X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'static +Send+Sync> ; 
+pub type FuncType<X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'static +Send+Sync> ;
 pub type FuncTypeMut<X> = Arc<Mutex<dyn FnMut(FuncContext<X>)->Result<Value,MachineError> + 'static + Send + Sync>>;
 
 #[derive(Clone,)] //Default
@@ -289,8 +289,8 @@ pub struct ArgNode<X> {
     func:Option<MethodType<X>>,
 }
 impl<X> Default for ArgNode<X> {
-    fn default() -> Self { 
-        Self { variadic: false, children: HashMap::new(), func: None } 
+    fn default() -> Self {
+        Self { variadic: false, children: HashMap::new(), func: None }
     }
 }
 impl<X> std::fmt::Debug for ArgNode<X> {
@@ -334,14 +334,14 @@ pub struct LibScope<X> { //
 
 
 impl<X> Default for LibScope<X> {
-    fn default() -> Self {        
+    fn default() -> Self {
         Self::new_full()
     }
 }
 
 impl<X> LibScope<X> {
     pub fn new() -> Self {
-        Self { 
+        Self {
             constants: Default::default(),
             methods: Default::default(),
             nodes: Default::default(),
@@ -369,7 +369,7 @@ impl<X> LibScope<X> {
             ind
         })
     }
-    
+
     fn get_insert_child_node_ind(&mut self, node_ind:usize, value_type : Arg) -> usize {
         if let Some(&child_node_ind)=self.get_node(node_ind).children.get(&value_type) {
             child_node_ind
@@ -397,7 +397,7 @@ impl<X> LibScope<X> {
         self.get_node(node_ind).children.get(&value_type).cloned()
     }
 
-    fn inner_insert_method<T>(&mut self,n:&str,args : T,optional_start : Option<usize>,variadic:bool,func:MethodType<X>) 
+    fn inner_insert_method<T>(&mut self,n:&str,args : T,optional_start : Option<usize>,variadic:bool,func:MethodType<X>)
     where
         T:AsRef<[Arg]>
     {
@@ -407,8 +407,8 @@ impl<X> LibScope<X> {
         if args.len()==0 || optional_start==Some(0) {
             let root_node=self.nodes.get_mut(root_node_ind).unwrap();
             root_node.func=Some(func.clone());
-        } 
-        
+        }
+
         //
         let mut cur_node_ind=root_node_ind;
 
@@ -440,8 +440,8 @@ impl<X> LibScope<X> {
 
         let params = params.into_iter().collect::<Vec<_>>();
 
-        let Some(root_node_ind)=self.get_root_node_ind(n) else { 
-            return None; 
+        let Some(root_node_ind)=self.get_root_node_ind(n) else {
+            return None;
         };
 
         //
@@ -462,15 +462,15 @@ impl<X> LibScope<X> {
 
         //
         let mut stk: Vec<(usize, usize, usize,Vec<Arg>)>=vec![(0,root_node_ind,0,Vec::new())]; //(param_ind,node_ind,score,path)
-        
+
         while let Some((param_ind,node_ind,score,path))=stk.pop() {
             let is_end=param_ind+1==params.len();
             let param=*params.get(param_ind).unwrap();
             // let node=self.get_node(node_ind);
-            
+
             //
             let mut todos=Vec::new(); //param_type,node_ind,score
-            
+
             //make list of children of cur node to traverse
             if param.is_custom_any() {
                 for arg_type in [Arg::from_custom_value(param),Arg::from_custom_value_ref(param)] {
@@ -504,7 +504,7 @@ impl<X> LibScope<X> {
 
                 let mut path=path.clone();
                 path.push(arg_type);
-                
+
                 if is_end {
                     if let Some(child_func)=&child_node.func {
                         if child_score>best_score {
@@ -522,7 +522,7 @@ impl<X> LibScope<X> {
                         for inner_param_ind in param_ind+1 .. params.len() {
                             let inner_param=*params.get(inner_param_ind).unwrap();
 
-                            // if !inner_param.is_type(arg_type) 
+                            // if !inner_param.is_type(arg_type)
                             if !arg_type.is_value(inner_param)
                             {
                                 ok=false;
@@ -554,43 +554,74 @@ impl<X> LibScope<X> {
         }));
     }
 
-    pub fn get_method<'x,I>(&self,n : &str, params : I, 
+    pub fn get_method<'x,I>(&self,n : &str, params : I,
         // var_scope : &VarScope,
-    ) -> Option<Method<X>> 
+    ) -> Option<Method<X>>
     where
         I: IntoIterator<Item=&'x Value>
     {
         self.inner_get_method(n, params)
     }
 
-    pub fn method<'m>(&'m mut self,name : &'m str, 
-        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync  
+    pub fn method<'m>(&'m mut self,name : &'m str,
+        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
     ) -> MethodInput<'m,X> {
-        MethodInput { 
-            lib_scope: self, 
-            name, 
+        MethodInput {
+            lib_scope: self,
+            name,
             method_type:MethodType::NonMut(Arc::new(func)),
-            args: Vec::new(), 
-            optional_start: None, 
+            args: Vec::new(),
+            optional_start: None,
             // variadic: false,
         }
     }
-    pub fn method_mut<'m>(&'m mut self,name : &'m str, 
+    pub fn method_mut<'m>(&'m mut self,name : &'m str,
         // slot:usize
         func:impl FnMut(FuncContext<X>)->Result<Value,MachineError> + 'static + Send + Sync
     ) -> MethodInput<'m,X> {
-        MethodInput { 
-            lib_scope: self, 
-            name, 
+        MethodInput {
+            lib_scope: self,
+            name,
             method_type:MethodType::Mut(Arc::new(Mutex::new(func))),
-            args: Vec::new(), 
-            optional_start: None, 
+            args: Vec::new(),
+            optional_start: None,
             // variadic: false,
         }
     }
-    
+
 }
 
+/*
+current:
+    lib_scope.method("method",|context|Ok(Value::Nil))
+        .any().end()
+
+idea 1:
+    lib_scope
+        .method("parent").custom_ref::<Entity>().end()
+        .getter(Some("parent")).custom_ref::<Entity>().end()
+        .submit(|context|{
+            Ok(Value::Nil)
+        });
+
+    lib_scope
+        .setter(Some("parent")).custom_ref::<Entity>().custom_ref::<Entity>().end()
+        .submit(|context|{
+            Ok(Value::Nil)
+        });
+
+idea2:
+    lib_scope.binding(|context|{
+        Ok(Value::Nil)
+    })
+    lib_scope.method("parent").custom_ref::<Entity>().end();
+    lib_scope.getter(Some("parent")).custom_ref::<Entity>().end();
+
+    lib_scope.binding(|context|{
+        Ok(Value::Nil)
+    }).setter(Some("parent")).custom_ref::<Entity>().custom_ref::<Entity>().end()
+
+*/
 
 
 // impl<'b,'a:'b,X> LibScope<'a,X> {
@@ -607,10 +638,10 @@ impl<X> LibScope<X> {
 //             nodes.push(ArgNode { variadic: node.variadic, children: node.children.clone(), func });
 //         }
 
-//         LibScope { 
-//             constants : self.constants.clone(), 
-//             methods : self.methods.clone(), 
-//             nodes, 
+//         LibScope {
+//             constants : self.constants.clone(),
+//             methods : self.methods.clone(),
+//             nodes,
 //         }
 //     }
 // }
