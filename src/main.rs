@@ -411,8 +411,8 @@ fn main() {
     // // test_script2("examples/test6.script");
 
     // test_script3("examples/test7.script");
-    //  test_script3("examples/test8.script",true,false);
-    test_script3("examples/test12.script",true,false);
+     test_script3("examples/test8.script",false,false);
+    // test_script3("examples/test12.script",true,false);
 
     // // test_script3("examples/test9.script");
 
