@@ -22,13 +22,13 @@ var a {vec4 11.0 {vec2 22.0 33.0} 44.0};
 set a.xyzw a.wzyx;
 println a
 
-println "test2 {}" {do_test2}
-println "test2 {}" {do_test2}
-println "test2 {}" {do_test2}
+#println "test2 {}" {do_test2}
+#println "test2 {}" {do_test2}
+#println "test2 {}" {do_test2}
 
-println "get_test1 {}" {get_test}
-set_test 554
-println "get_test2 {}" {get_test}
+#println "get_test1 {}" {get_test}
+#set_test 554
+#println "get_test2 {}" {get_test}
 
 var g {array 0 1 (array 2 3 {dict "x" 11 "y" 22 "z" {array 33 44 55}})}
 set g.2.2.z.1 99

@@ -22,6 +22,7 @@ pub enum MachineErrorType{
     GlobalFuncOrMethodNotFound(String,Vec<String>),
     // BoundFuncNotFound(String),
     MethodNotFound(String,Vec<String>),
+    FieldNotFound(Vec<String>),
     MethodOrGlobalVarNotFound(String),
     MethodRunError(String), //msg //Option<String>, Option<Vec<String>>,
     // InvalidFunctionParamsNum(usize), //req params num

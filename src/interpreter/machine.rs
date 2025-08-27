@@ -466,14 +466,16 @@ impl<'a,X> Machine<'a,X> {
                 // println!("hmm {self_val:?} {field_val:?}");
 
                 let mut done=false;
+                let field_val=self.get_stack_offset_value(1)?;
+                let self_val=self.get_stack_offset_value(0)?;
 
                 if is_field_symbol {
                     // let field_name=self.get_stack_offset_value(1)?.get_string().unwrap();
-                    let field_val=self.get_stack_offset_value(1)?;
-                    let self_val=self.get_stack_offset_value(0)?;
 
                     if let Some(field_name)=field_val.get_string() {
-                        if let Some(x)=self.lib_scope.get_method(field_name.as_str(),[&self_val]) {
+                        if let Some(x)=self.lib_scope.get_method(field_name.as_str(),[&self_val])
+                            .or_else(||self.lib_scope.get_method_field_named(field_name.as_str(),[&self_val]))
+                        {
                             // println!("--");
                             self.stack_swap()?; // self=>field
                             self.stack_pop_amount(1)?; //field
@@ -489,31 +491,55 @@ impl<'a,X> Machine<'a,X> {
 
                 if !done {
                     let params_num =2;
-                    let symbol="get_field";
+                    // let symbol="get_field";
 
-                    if let Some(x)=self.get_method(symbol, params_num) {
-                        self.debugger.add_func_name(symbol);
+                    let x= if is_field_symbol {
+                        self.lib_scope.get_method_field(true, [&self_val,&field_val])
+
+                    } else {
+                        self.lib_scope.get_method_field(true, [&self_val,&field_val])
+                            .or_else(||self.lib_scope.get_method_field(false, [&self_val,&field_val]))
+                    };
+
+                    if let Some(x)=x
+                        // self.get_method(symbol, params_num)
+
+                    {
+                        self.debugger.add_func_name("field"); //should have enum eg method(name), field,
                         self.inner_call_bound_func(params_num, x)?;
                     } else {
                         let param_types=self.get_stack_param_types(params_num);
-                        return Err(MachineError::from_machine(self, MachineErrorType::MethodNotFound(symbol.to_string(),param_types) ));
+                        return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(
+                            // symbol.to_string(),
+                            param_types) ));
                     }
                 }
             }
-            &Instruction::SetField(_is_field_symbol) => {
+            &Instruction::SetField(is_field_symbol) => {
                 let params_num =3;
-                let symbol="set_field";
+                // let symbol="set_field";
 
-                println!("hmm {:?}",self.get_stack_offset_value(1));
+                let to_val=self.get_stack_offset_value(2)?;
+                let field_val=self.get_stack_offset_value(1)?;
+                let self_val=self.get_stack_offset_value(0)?;
+
+                let x= if is_field_symbol {
+                    self.lib_scope.get_method_field(true, [&self_val,&field_val,&to_val])
+                } else {
+                    self.lib_scope.get_method_field(true, [&self_val,&field_val,&to_val])
+                        .or_else(||self.lib_scope.get_method_field(false, [&self_val,&field_val,&to_val]))
+                };
+                // println!("hmm {:?}",self.get_stack_offset_value(1));
                 // if let Some(x)=self.get_method(symbol, 2) {
                 // }
                 // else
-                if let Some(x)=self.get_method(symbol, params_num) {
-                    self.debugger.add_func_name(symbol);
+                if let Some(x)=x //self.get_method(symbol, params_num)
+                {
+                    self.debugger.add_func_name("field");
                     self.inner_call_bound_func(params_num, x)?;
                 } else {
                     let param_types=self.get_stack_param_types(params_num);
-                    return Err(MachineError::from_machine(self, MachineErrorType::MethodNotFound(symbol.to_string(),param_types) ));
+                    return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(param_types) ));
                 }
             }
             Instruction::Jmp{cond,instr_pos:new_instr_pos, debug} => {

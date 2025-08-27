@@ -221,12 +221,12 @@ pub fn test_script3<P:AsRef<Path>>(path:P,debug:bool) {
         Ok(script_lang::Value::Void)
     }).int().end();
 
-    let mut test_val=0;
+    // let mut test_val=0;
 
-    lib_scope.method_mut("do_test2", move|_context|{
-        test_val+=1;
-        Ok(script_lang::Value::int(test_val))
-    }).end();
+    // lib_scope.method_mut("do_test2", move|_context|{
+    //     test_val+=1;
+    //     Ok(script_lang::Value::int(test_val))
+    // }).end();
 
 
 
