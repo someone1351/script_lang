@@ -523,23 +523,44 @@ impl<'a,X> Machine<'a,X> {
                 let field_val=self.get_stack_offset_value(1)?;
                 let self_val=self.get_stack_offset_value(0)?;
 
-                let x= if is_field_symbol {
-                    self.lib_scope.get_method_field(true, [&self_val,&field_val,&to_val])
-                } else {
-                    self.lib_scope.get_method_field(true, [&self_val,&field_val,&to_val])
-                        .or_else(||self.lib_scope.get_method_field(false, [&self_val,&field_val,&to_val]))
-                };
-                // println!("hmm {:?}",self.get_stack_offset_value(1));
-                // if let Some(x)=self.get_method(symbol, 2) {
-                // }
-                // else
-                if let Some(x)=x //self.get_method(symbol, params_num)
-                {
-                    self.debugger.add_func_name("field");
-                    self.inner_call_bound_func(params_num, x)?;
-                } else {
-                    let param_types=self.get_stack_param_types(params_num);
-                    return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(param_types) ));
+                let mut done=false;
+
+                if is_field_symbol {
+                    if let Some(field_name)=field_val.get_string() {
+                        if let Some(x)=self.lib_scope.get_method_field_named(field_name.as_str(),[&self_val,&to_val])
+                        {
+                            // println!("--");
+                            self.stack_swap()?; // self=>field
+                            self.stack_pop_amount(1)?; //field
+                            // println!("==");
+
+                            self.debugger.add_func_name(field_name.as_str());
+                            self.inner_call_bound_func(2, x)?;
+
+                            done=true;
+                        }
+                    }
+                }
+
+                if !done {
+                    let x= if is_field_symbol {
+                        self.lib_scope.get_method_field(true, [&self_val,&field_val,&to_val])
+                    } else {
+                        self.lib_scope.get_method_field(true, [&self_val,&field_val,&to_val])
+                            .or_else(||self.lib_scope.get_method_field(false, [&self_val,&field_val,&to_val]))
+                    };
+                    // println!("hmm {:?}",self.get_stack_offset_value(1));
+                    // if let Some(x)=self.get_method(symbol, 2) {
+                    // }
+                    // else
+                    if let Some(x)=x //self.get_method(symbol, params_num)
+                    {
+                        self.debugger.add_func_name("field");
+                        self.inner_call_bound_func(params_num, x)?;
+                    } else {
+                        let param_types=self.get_stack_param_types(params_num);
+                        return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(param_types) ));
+                    }
                 }
             }
             Instruction::Jmp{cond,instr_pos:new_instr_pos, debug} => {
