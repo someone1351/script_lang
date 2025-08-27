@@ -7,6 +7,8 @@ TODO
 * take single record from existing block, and return in its own block
 */
 
+use std::ops::{Bound, RangeBounds};
+
 use super::super::super::common::Loc;
 use super::{ Block, Field, Param, Parsed, Primitive, PrimitiveType, Record };
 
@@ -65,7 +67,7 @@ impl<'a> BlockContainer<'a> {
         } else {
             None
         }
-    }    
+    }
     pub fn first_param(&self) -> Option<ParamContainer<'a>> {
         self.param(0)
     }
@@ -75,14 +77,14 @@ impl<'a> BlockContainer<'a> {
         } else {
             self.param(self.params_num()-1)
         }
-    } 
+    }
 }
 
 impl<'a> std::fmt::Debug for BlockContainer<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        // 
+        //
 
-        for (i,record) in self.records().enumerate() 
+        for (i,record) in self.records().enumerate()
         {
             if i>0 {
                 write!(f,", ")?;
@@ -105,7 +107,7 @@ pub struct RecordContainer<'a> {
 impl<'a> RecordContainer<'a> {
     fn record(&self) -> &Record {
         self.parsed.records.get(self.record_ind).unwrap()
-    }    
+    }
     pub fn params(&self) -> ParamIter<'a> {
         let record=self.record();
         ParamIter { start: record.params.start, end: record.params.end, parsed: self.parsed }
@@ -133,7 +135,7 @@ impl<'a> RecordContainer<'a> {
         } else {
             self.param(self.params_num()-1)
         }
-    }    
+    }
     pub fn start_loc(&self) -> Loc {
         self.first_param().map(|x|x.start_loc()).unwrap_or_else(||self.semi_colon_loc().unwrap()) //if no params, then will have a semi colon
     }
@@ -187,7 +189,7 @@ impl<'a> PrimitiveContainer<'a> {
         } else {
 
             match primitive.primitive_type.clone() {
-                // x if self.to_string => 
+                // x if self.to_string =>
                 PrimitiveType::Block(block_ind) => PrimitiveTypeContainer::Block(BlockContainer {parsed:self.parsed,block_ind}),
                 PrimitiveType::Float(f,_s,p) => PrimitiveTypeContainer::Float(f,p),
                 PrimitiveType::Int(i,_s,p) => PrimitiveTypeContainer::Int(i,p),
@@ -337,8 +339,45 @@ impl<'a> ParamContainer<'a> {
     }
     pub fn fields(&self) -> FieldIter<'a> {
         let param=self.param();
-        FieldIter { start: param.fields.start, end: param.fields.end, parsed: self.parsed } 
+        FieldIter { start: param.fields.start, end: param.fields.end, parsed: self.parsed }
     }
+
+    pub fn fields_range<R:RangeBounds<usize>>(&self,r:R) -> FieldIter<'a> {
+
+        let param=self.param();
+
+        let range_start=match r.start_bound() {
+            Bound::Included(x)=>*x,
+            Bound::Excluded(_)=>panic!(""),
+            Bound:: Unbounded=>0,
+        };
+
+        let range_end=match r.start_bound() {
+            Bound::Included(x)=>*x+1,
+            Bound::Excluded(x)=>*x,
+            Bound:: Unbounded=>param.fields.len(),
+        };
+
+        if range_start>range_end {
+            return FieldIter { start: 0, end: 0, parsed: self.parsed };
+        } //if range start==end will return some empty iter
+
+        let x_len=range_end-range_start;
+
+        if x_len>param.fields.len() {
+            return FieldIter { start: 0, end: 0, parsed: self.parsed };
+        }
+
+        let x_start=param.fields.start+range_start;
+        let x_end = x_start+x_len;
+
+        FieldIter {
+            start: x_start,
+            end: x_end,
+            parsed: self.parsed,
+        }
+    }
+
     pub fn start_loc(&self) -> Loc {
         self.primitive().start_loc()
     }
@@ -361,7 +400,7 @@ pub struct FieldContainer<'a> {
 impl<'a> std::fmt::Debug for FieldContainer<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         // self.primitive().fmt(f)?;
-        
+
         write!(f,"Field({:?})",self.primitive())?;
         Ok(())
     }

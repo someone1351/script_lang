@@ -133,7 +133,8 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
             //     BuilderField::String(x) => { self.result_string(x); }
             // }
 
-            self.eval(field.0.clone());
+            self.eval(field.0.clone()); //what is this for??
+
             self
                 .loc(field.2)
                 .param_push()

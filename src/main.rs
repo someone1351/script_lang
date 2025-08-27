@@ -187,7 +187,7 @@ pub fn test_script2<P:AsRef<Path>>(path:P) {
 //     Ok(script_lang::Value::int(4))
 // }
 
-pub fn test_script3<P:AsRef<Path>>(path:P,debug:bool) {
+pub fn test_script3<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
 
     println!("===");
     let mut gc_scope= script_lang::GcScope::new();
@@ -200,6 +200,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P,debug:bool) {
     let build = compiler.compile(src.as_str(), 0, Some(path), true,
         // false
     );
+
 
     // build.clone().unwrap().print();
 
@@ -232,6 +233,9 @@ pub fn test_script3<P:AsRef<Path>>(path:P,debug:bool) {
 
     // let mut core=(&mut my_num,);
 
+    if debug_compile && build.is_ok() {
+        build.as_ref().unwrap().print();
+    }
     if let Err(e)=&build {
         eprintln!("In {path:?}, {}",e.msg());
     } else {
@@ -407,8 +411,8 @@ fn main() {
     // // test_script2("examples/test6.script");
 
     // test_script3("examples/test7.script");
-     test_script3("examples/test8.script",false);
-    //test_script3("examples/test12.script",true);
+    //  test_script3("examples/test8.script",true,false);
+    test_script3("examples/test12.script",true,false);
 
     // // test_script3("examples/test9.script");
 

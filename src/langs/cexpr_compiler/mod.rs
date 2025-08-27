@@ -48,6 +48,11 @@ abc.{$i}
 /*
 TODO
 * make anything in parenthesis an expression? eg (1+2 * 5 -9) => (1 +2 * 5 -9) => {- {+ 1 {* 2 555}} 9}
+
+* pass cmds an iter of primitives, and let them take as much as they like,
+** possibly even partial blocks? somehow
+** so can do things like have val decl span multiple blocks (lines)
+
 */
 // pub mod cexpr_parser;
 // pub mod cmd_scope;
@@ -355,7 +360,42 @@ impl Compiler {
                                 }
                                 // println!("dffsd {:?}",first_param.primitive());
                             } else { //args and fields
-                                return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
+
+
+                                let mut field_iter=first_param.fields();
+
+                                let last_field=field_iter.next_back().unwrap();
+
+                                // println!("hmm {:?}",field_iter.collect::<Vec<_>>());
+
+                                if last_field.primitive().symbol().is_none() {
+                                    return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
+
+                                }
+
+                                //
+                                for i in (1 .. record.params_num()).rev() {
+                                    let x=record.param(i).unwrap();
+                                    // builder.param_loc(x.start_loc(),x.end_loc());
+                                    builder.eval(x.primitive());
+                                    builder.param_push();
+                                }
+
+                                builder.loc(first_param.start_loc());
+
+                                //
+
+                                // let mid_fields=first_param.fields_range(0..first_param.fields_num()-1);
+
+                                // builder.result_float(1.23);
+                                // builder.get_fields(field_iter.map(|field|(field.primitive(),field.primitive().symbol().is_some(),field.start_loc())));
+                                builder.get_var(first_param.primitive().symbol().unwrap());
+
+                                self.get_fields(builder, field_iter)?;
+                                // builder.result_float(2.23);
+                                builder.param_push();
+                                let symbol=last_field.primitive().symbol().unwrap();
+                                builder.call_method(symbol, record.params_num());
                             }
                         } else if record.params_num()==1 { //no args, first not symbol
                             builder.eval(first_param.primitive()); //not symbol, no args
@@ -368,7 +408,7 @@ impl Compiler {
 
 
                 if !hasnt_fields {
-                    self.get_fields(builder,top_primitive)?;
+                    self.get_fields(builder,top_primitive.param().unwrap().fields())?;
                 }
             }
             PrimitiveTypeContainer::Float(f,_) => {
@@ -445,7 +485,7 @@ impl Compiler {
                             builder.get_var(symbol);
 
                             if !hasnt_fields {
-                                self.get_fields(builder,top_primitive)?;
+                                self.get_fields(builder,top_primitive.param().unwrap().fields())?;
                             }
                         }
                     }
@@ -457,13 +497,23 @@ impl Compiler {
         Ok(())
     }
 
+    // fn get_fields<'a>(&self,
+    //     builder:&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>,
+    //     top_primitive:PrimitiveContainer<'a>,
+    // ) -> Result<(),BuilderError<BuilderErrorType>> {
+    //     self.get_fields_ext(builder,top_primitive)
+    // }
     fn get_fields<'a>(&self,
         builder:&mut Builder<'a,PrimitiveContainer<'a>,BuilderErrorType>,
-        top_primitive:PrimitiveContainer<'a>,
+        // top_primitive:PrimitiveContainer<'a>,
+        fields : FieldIter<'a>,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
 
+        //requires object fields coming from to be on result register
 
-        builder.get_fields(top_primitive.param().unwrap().fields().map(|field|{
+        // let fields=top_primitive.param().unwrap().fields();
+
+        builder.get_fields(fields.map(|field|{
             let s=field.primitive().symbol();
             let (f,is_field_symbol)=if s.is_none()||self.get_var_prefix.map(|prefix|s.unwrap().starts_with(prefix)).unwrap_or_default(){
                 //if it's not a symbol or is a symbol with a var prefix

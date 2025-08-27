@@ -20,6 +20,11 @@ use super::func_context::*;
 // use super::machine::*;
 use super::data::*;
 
+/*
+* have option to use method as get_field or not ?
+
+*/
+
 
 #[derive(Debug,Clone,Copy,Hash,PartialEq,Eq)]
 pub enum Arg {

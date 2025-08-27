@@ -1,3 +1,6 @@
-var a (array 1 2 3)
+#var a (array 1 2 3)
+#a.len
 
-a.len
+var v (array (dict "abc" (array )))
+v.0.abc.push 99
+println v
