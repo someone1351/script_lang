@@ -691,7 +691,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     }).custom_ref::<IVec4>().end();
 
     //get_field(vec2,ind)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let v=context.param(0).as_custom().data_clone::<Vec2>()?;
         let ind = context.param(1).as_int();
         Ok(match ind {0..2 => Value::float(v.0[ind as usize]), _ => Value::Nil,})
@@ -699,7 +699,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec2>().int().end();
 
     //get_field(vec3,ind)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let v=context.param(0).as_custom().data_clone::<Vec3>()?;
         let ind = context.param(1).as_int();
         Ok(match ind {0..3 => Value::float(v.0[ind as usize]), _ => Value::Nil,})
@@ -707,7 +707,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec3>().int().end();
 
     //get_field(vec4,ind)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let v=context.param(0).as_custom().data_clone::<Vec4>()?;
         let ind = context.param(1).as_int();
         Ok(match ind {0..4 => Value::float(v.0[ind as usize]), _ => Value::Nil,})
@@ -715,7 +715,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec4>().int().end();
 
     //get_field(vec2,str)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let v=context.param(0).as_custom().data_clone::<Vec2>()?;
         let fields = context.param(1).as_string();
         get_field_util_float(fields.as_str(), & v.0).map_err(|e|context.error(e))
@@ -723,7 +723,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec2>().str().end();
 
     //get_field(vec3,str)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let v=context.param(0).as_custom().data_clone::<Vec3>()?;
         let fields = context.param(1).as_string();
         get_field_util_float(fields.as_str(), & v.0).map_err(|e|context.error(e))
@@ -731,7 +731,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec3>().str().end();
 
     //get_field(vec4,str)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let v=context.param(0).as_custom().data_clone::<Vec4>()?;
         let fields = context.param(1).as_string();
         get_field_util_float(fields.as_str(), & v.0).map_err(|e|context.error(e))
@@ -739,7 +739,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec4>().str().end();
 
     //get_field(ivec2,ind)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let v=context.param(0).as_custom().data_clone::<IVec2>()?;
         let ind = context.param(1).as_int();
         Ok(match ind {0..2 => Value::int(v.0[ind as usize]), _ => Value::Nil,})
@@ -747,7 +747,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<IVec2>().int().end();
 
     //get_field(ivec3,ind)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let v=context.param(0).as_custom().data_clone::<IVec3>()?;
         let ind = context.param(1).as_int();
         Ok(match ind {0..3 => Value::int(v.0[ind as usize]), _ => Value::Nil,})
@@ -755,7 +755,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<IVec3>().int().end();
 
     //get_field(ivec4,ind)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let v=context.param(0).as_custom().data_clone::<IVec4>()?;
         let ind = context.param(1).as_int();
         Ok(match ind {0..4 => Value::int(v.0[ind as usize]), _ => Value::Nil,})
@@ -763,7 +763,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<IVec4>().int().end();
 
     //get_field(ivec2,str)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let v=context.param(0).as_custom().data_clone::<IVec2>()?;
         let fields = context.param(1).as_string();
         get_field_util_int(fields.as_str(), & v.0).map_err(|e|context.error(e))
@@ -771,7 +771,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<IVec2>().str().end();
 
     //get_field(ivec3,str)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let v=context.param(0).as_custom().data_clone::<IVec3>()?;
         let fields = context.param(1).as_string();
         get_field_util_int(fields.as_str(), & v.0).map_err(|e|context.error(e))
@@ -779,7 +779,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<IVec3>().str().end();
 
     //get_field(ivec4,str)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let v=context.param(0).as_custom().data_clone::<IVec4>()?;
         let fields = context.param(1).as_string();
         get_field_util_int(fields.as_str(), & v.0).map_err(|e|context.error(e))
@@ -787,7 +787,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<IVec4>().str().end();
 
     //set_field(vec2,str,f)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = [context.param(2).as_float()];
@@ -800,7 +800,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec2>().str().float().end();
 
     //set_field(vec3,str,f)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = [context.param(2).as_float()];
@@ -813,7 +813,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec3>().str().float().end();
 
     //set_field(vec4,str,f)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = [context.param(2).as_float()];
@@ -826,7 +826,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec4>().str().float().end();
 
     //set_field(vec2,str,vec2)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<Vec2>()?;
@@ -839,7 +839,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec2>().str().custom_ref::<Vec2>().end();
 
     //set_field(vec3,str,vec2)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<Vec2>()?;
@@ -852,7 +852,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec3>().str().custom_ref::<Vec2>().end();
 
     //set_field(vec3,str,vec3)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<Vec3>()?;
@@ -865,7 +865,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec3>().str().custom_ref::<Vec3>().end();
 
     //set_field(vec4,str,vec2)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<Vec2>()?;
@@ -878,7 +878,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec4>().str().custom_ref::<Vec2>().end();
 
     //set_field(vec4,str,vec3)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<Vec3>()?;
@@ -891,7 +891,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec4>().str().custom_ref::<Vec3>().end();
 
     //set_field(vec4,str,vec4)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<Vec4>()?;
@@ -904,7 +904,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vec4>().str().custom_ref::<Vec4>().end();
 
     //set_field(ivec2,str,f)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = [context.param(2).as_int()];
@@ -917,7 +917,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<IVec2>().str().int().end();
 
     //set_field(ivec3,str,f)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = [context.param(2).as_int()];
@@ -930,7 +930,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<IVec3>().str().int().end();
 
     //set_field(ivec4,str,f)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = [context.param(2).as_int()];
@@ -943,7 +943,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<IVec4>().str().int().end();
 
     //set_field(ivec2,str,ivec2)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<IVec2>()?;
@@ -955,7 +955,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     }).custom_ref::<IVec2>().str().custom_ref::<IVec2>().end();
 
     //set_field(ivec3,str,ivec2)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<IVec2>()?;
@@ -968,7 +968,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<IVec3>().str().custom_ref::<IVec2>().end();
 
     //set_field(ivec3,str,ivec3)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<IVec3>()?;
@@ -981,7 +981,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<IVec3>().str().custom_ref::<IVec3>().end();
 
     //set_field(ivec4,str,ivec2)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<IVec2>()?;
@@ -994,7 +994,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<IVec4>().str().custom_ref::<IVec2>().end();
 
     //set_field(ivec4,str,ivec3)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<IVec3>()?;
@@ -1006,7 +1006,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     }).custom_ref::<IVec4>().str().custom_ref::<IVec3>().end();
 
     //set_field(ivec4,str,ivec4)
-    lib_scope.field(true,|context|{
+    lib_scope.field(false,|context|{
         let this=context.param(0);
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<IVec4>()?;

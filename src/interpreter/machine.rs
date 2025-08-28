@@ -494,11 +494,10 @@ impl<'a,X> Machine<'a,X> {
                     // let symbol="get_field";
 
                     let x= if is_field_symbol {
-                        self.lib_scope.get_method_field(true, [&self_val,&field_val])
-
+                        self.lib_scope.get_method_field(false, [&self_val,&field_val])
                     } else {
-                        self.lib_scope.get_method_field(true, [&self_val,&field_val])
-                            .or_else(||self.lib_scope.get_method_field(false, [&self_val,&field_val]))
+                        self.lib_scope.get_method_field(false, [&self_val,&field_val])
+                            .or_else(||self.lib_scope.get_method_field(true, [&self_val,&field_val]))
                     };
 
                     if let Some(x)=x
@@ -544,10 +543,10 @@ impl<'a,X> Machine<'a,X> {
 
                 if !done {
                     let x= if is_field_symbol {
-                        self.lib_scope.get_method_field(true, [&self_val,&field_val,&to_val])
+                        self.lib_scope.get_method_field(false, [&self_val,&field_val,&to_val])
                     } else {
-                        self.lib_scope.get_method_field(true, [&self_val,&field_val,&to_val])
-                            .or_else(||self.lib_scope.get_method_field(false, [&self_val,&field_val,&to_val]))
+                        self.lib_scope.get_method_field(false, [&self_val,&field_val,&to_val])
+                            .or_else(||self.lib_scope.get_method_field(true, [&self_val,&field_val,&to_val]))
                     };
                     // println!("hmm {:?}",self.get_stack_offset_value(1));
                     // if let Some(x)=self.get_method(symbol, 2) {

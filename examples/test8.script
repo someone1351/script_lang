@@ -44,4 +44,5 @@ println "q {q0} {q1} {q2} {q3}"
 
 var v (array (dict "abc" (array )))
 v.0."abc".push 99
+v.0.abc.push 100
 println v

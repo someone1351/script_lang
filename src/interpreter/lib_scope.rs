@@ -105,20 +105,20 @@ impl Arg {
 pub enum MethodInputType<'m> {
     Method{name:&'m str},
     FieldNamed{name:&'m str},
-    Field{allow_symbols:bool},
+    Field{no_symbols:bool},
 }
 #[derive(Clone, Hash,Eq,PartialEq )]
 pub enum MethodInputType2 {
     Method{name:String},
     FieldNamed{name:String},
-    Field{allow_symbols:bool},
+    Field{no_symbols:bool},
 }
 impl Into<MethodInputType2> for  MethodInputType<'_> {
     fn into(self) -> MethodInputType2 {
         match self {
             MethodInputType::Method { name } => MethodInputType2::Method { name: name.to_string() },
             MethodInputType::FieldNamed { name } => MethodInputType2::FieldNamed { name: name.to_string() },
-            MethodInputType::Field { allow_symbols } => MethodInputType2::Field { allow_symbols },
+            MethodInputType::Field { no_symbols: allow_symbols } => MethodInputType2::Field { no_symbols: allow_symbols },
         }
     }
 }
@@ -667,14 +667,14 @@ impl<X> LibScope<X> {
     }
 
     pub fn get_method_field<'x,I>(&self,
-        allow_symbols:bool,
+        no_symbols:bool,
         params : I,
         // var_scope : &VarScope,
     ) -> Option<Method<X>>
     where
         I: IntoIterator<Item=&'x Value>
     {
-        self.inner_get_method(&MethodInputType2::Field { allow_symbols }, params)
+        self.inner_get_method(&MethodInputType2::Field { no_symbols }, params)
     }
 
     pub fn field_named<'m>(&'m mut self,name : &'m str,
@@ -690,13 +690,13 @@ impl<X> LibScope<X> {
             // variadic: false,
         }
     }
-    pub fn field<'m>(&'m mut self,allow_symbols:bool,
+    pub fn field<'m>(&'m mut self,no_symbols:bool,
         func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
     ) -> MethodInput<'m,X> {
         MethodInput {
             lib_scope: self,
             // name,
-            input_type:MethodInputType::Field { allow_symbols, } ,
+            input_type:MethodInputType::Field { no_symbols, } ,
             method_type:MethodType::NonMut(Arc::new(func)),
             args: Vec::new(),
             optional_start: None,
