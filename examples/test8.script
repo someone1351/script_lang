@@ -46,3 +46,8 @@ var v (array (dict "abc" (array )))
 v.0."abc".push 99
 v.0.abc.push 100
 println v
+
+var d (dict "c" (vec4 1.0 2.0 3.0 4.0))
+#var c (vec4 1.0 2.0 3.0 4.0)
+set d.c.rgb (vec3 5.0 6.0 7.0);
+println d
