@@ -690,13 +690,26 @@ impl<X> LibScope<X> {
             // variadic: false,
         }
     }
-    pub fn field<'m>(&'m mut self,no_symbols:bool,
+    pub fn field_no_symbols<'m>(&'m mut self,
         func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
     ) -> MethodInput<'m,X> {
         MethodInput {
             lib_scope: self,
             // name,
-            input_type:MethodInputType::Field { no_symbols, } ,
+            input_type:MethodInputType::Field { no_symbols:true, } ,
+            method_type:MethodType::NonMut(Arc::new(func)),
+            args: Vec::new(),
+            optional_start: None,
+            // variadic: false,
+        }
+    }
+    pub fn field<'m>(&'m mut self, //no_symbols:bool,
+        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
+    ) -> MethodInput<'m,X> {
+        MethodInput {
+            lib_scope: self,
+            // name,
+            input_type:MethodInputType::Field { no_symbols:false, } ,
             method_type:MethodType::NonMut(Arc::new(func)),
             args: Vec::new(),
             optional_start: None,

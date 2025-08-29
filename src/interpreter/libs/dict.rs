@@ -64,14 +64,14 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     }).custom_ref::<Dict>().end();
 
     //get_field(dict,any)
-    lib_scope.field(false, |mut context|{
+    lib_scope.field( |mut context|{
         let dict=context.param(0).as_custom();
         let key=context.value_to_string(&context.param(1))?;
         dict.with_data_ref(|data:&Dict|{Ok(data.0.get(&key).and_then(|x|Some(x.clone())).unwrap_or(Value::Nil))})
     }).custom_ref::<Dict>().any().end();
 
     //set_field(dict,any,any)
-    lib_scope.field(false, |mut context|{
+    lib_scope.field( |mut context|{
         let dict=context.param(0);
         let key=context.value_to_string(&context.param(1))?;
         let val=context.param(2).clone();

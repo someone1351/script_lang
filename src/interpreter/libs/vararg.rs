@@ -20,7 +20,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .custom_ref::<Vararg>().end();
 
     //get_field(vararg,int)
-    lib_scope.field(false, |context|{
+    lib_scope.field( |context|{
         //0 vararg, 1 index
 
         //
