@@ -5,7 +5,7 @@ use super::super::super::common::*;
 use super::super::value::*;
 use super::super::error::*;
 use super::super::lib_scope::*;
-use super::utils::*;
+// use super::utils::*;
 use super::super::gc_scope::*;
 
 #[derive(Clone)]
@@ -148,8 +148,13 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
     //get_field(array,int)
     lib_scope.field(false,|context|{
+
         context.param(0).as_custom().with_data_ref(|x:&Array|{
-            Ok(calc_ind(context.param(1).as_int(),x.0.len()).and_then(|i|x.0.get(i)).cloned().unwrap_or(Value::Nil))
+            let index=context.param(1).as_index(x.0.len());
+            let v=index.map(|i|x.0.get(i).unwrap()).cloned().unwrap_or(Value::Nil);
+            Ok(v)
+
+            // Ok(calc_ind(context.param(1).as_int(),x.0.len()).and_then(|i|x.0.get(i)).cloned().unwrap_or(Value::Nil))
         })
     }).custom_ref::<Array>().int().end();
 
@@ -164,7 +169,11 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
                 return Err(context.error(format!("Array len is 0.")));
             }
 
-            let Some(i)=calc_ind(ind,x.0.len()) else {
+
+            let Some(i)=
+                context.param(1).as_index(x.0.len())
+                // calc_ind(ind,x.0.len())
+            else {
                 return Err(context.error(format!("Invalid index to array: {:?}",ind)));
             };
 

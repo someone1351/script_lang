@@ -165,6 +165,19 @@ impl Value {
         }
     }
 
+    pub fn as_index(&self,len:usize) -> Option<usize> {
+        let Some(len ) = len.try_into().ok() else {return None;};
+
+        let ind=self.as_int();
+
+        if ind >= len || (ind < 0 && ind.abs() > len) {
+            None
+        } else {
+            let ind = if ind<0 {len+ind} else {ind};
+            Some(ind.try_into().unwrap_or_default())
+        }
+    }
+
     pub fn as_float(&self) -> FloatT {
         match self {
             Value::Int(x)=>*x as FloatT,
