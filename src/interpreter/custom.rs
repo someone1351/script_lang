@@ -24,8 +24,8 @@ use super::error::*;
 pub enum StrongValueInner {
     Mut(Arc<Mutex<dyn Any+Send>>),
     NonMut(Arc<dyn Any+Send+Sync>),
-    Dead, //for manageds, when using get (strong) data, also used for rc_weak => rc_strong
-    Empty, //used for when getting data from something that isn't a custom, instead of failing, return empty data ?
+    // Dead, //for manageds, when using get (strong) data, also used for rc_weak => rc_strong
+    // Empty, //used for when getting data from something that isn't a custom, instead of failing, return empty data ?
     // MutExt(Arc<Mutex<dyn ToString+Send>>),
     // NonMutExt(Arc<dyn ToString+Send+Sync>),
 }
@@ -35,8 +35,8 @@ impl StrongValueInner {
         match self {
             StrongValueInner::Mut(_) => true,
             StrongValueInner::NonMut(_) => false,
-            StrongValueInner::Dead => false,
-            StrongValueInner::Empty => false,
+            // StrongValueInner::Dead => false,
+            // StrongValueInner::Empty => false,
         }
     }
 //     // pub fn get_non_mut(&self) -> Option<Arc<dyn Any+Send+Sync>> {
@@ -63,12 +63,18 @@ impl StrongValueInner {
     //         Self::Empty => Self::Empty,
     //     }
     // }
-    pub fn downgrade(&self) -> Option<WeakValueInner> {
+    // pub fn downgrade(&self) -> Option<WeakValueInner> {
+    //     match self {
+    //         Self::Mut(x) => Some(WeakValueInner::Mut(Arc::downgrade(x))),
+    //         Self::NonMut(x) => Some(WeakValueInner::NonMut(Arc::downgrade(x))),
+    //         // Self::Dead => None,
+    //         // Self::Empty => None,
+    //     }
+    // }
+    pub fn downgrade(&self) -> WeakValueInner {
         match self {
-            Self::Mut(x) => Some(WeakValueInner::Mut(Arc::downgrade(x))),
-            Self::NonMut(x) => Some(WeakValueInner::NonMut(Arc::downgrade(x))),
-            Self::Dead => None,
-            Self::Empty => None,
+            Self::Mut(x) => WeakValueInner::Mut(Arc::downgrade(x)),
+            Self::NonMut(x) => WeakValueInner::NonMut(Arc::downgrade(x)),
         }
     }
 }
@@ -94,10 +100,16 @@ impl WeakValueInner {
     //         Self::NonMut(x)=>x.upgrade().map(|x|StrongValueInner::NonMut(x)),
     //     }
     // }
-    pub fn upgrade(&self) -> StrongValueInner {
+    // pub fn upgrade(&self) -> StrongValueInner {
+    //     match self {
+    //         Self::Mut(x)=>x.upgrade().map(|x|StrongValueInner::Mut(x)).unwrap_or(StrongValueInner::Dead),
+    //         Self::NonMut(x)=>x.upgrade().map(|x|StrongValueInner::NonMut(x)).unwrap_or(StrongValueInner::Dead),
+    //     }
+    // }
+    pub fn upgrade(&self) -> Option<StrongValueInner> {
         match self {
-            Self::Mut(x)=>x.upgrade().map(|x|StrongValueInner::Mut(x)).unwrap_or(StrongValueInner::Dead),
-            Self::NonMut(x)=>x.upgrade().map(|x|StrongValueInner::NonMut(x)).unwrap_or(StrongValueInner::Dead),
+            Self::Mut(x)=>x.upgrade().map(|x|StrongValueInner::Mut(x)),
+            Self::NonMut(x)=>x.upgrade().map(|x|StrongValueInner::NonMut(x)),
         }
     }
 }
@@ -121,7 +133,8 @@ impl CustomInner {
         match self {
             CustomInner::Managed(_) => None,
             CustomInner::Unmanaged(_) => None,
-            CustomInner::UnmanagedWeak(weak_value_inner) => Some(Self::Unmanaged(weak_value_inner.upgrade())),
+            // CustomInner::UnmanagedWeak(weak_value_inner) => Some(Self::Unmanaged(weak_value_inner.upgrade())),
+            CustomInner::UnmanagedWeak(weak_value_inner) => weak_value_inner.upgrade().map(|strong_value_inner|Self::Unmanaged(strong_value_inner)),
             CustomInner::Empty => None,
         }
     }
@@ -129,12 +142,28 @@ impl CustomInner {
     pub fn to_weak(&self) -> Option<Self> {
         match self {
             CustomInner::Managed(_) => None,
-            CustomInner::Unmanaged(strong_value_inner) => strong_value_inner.downgrade().map(|x|Self::UnmanagedWeak(x)),
+            CustomInner::Unmanaged(strong_value_inner) => Some(Self::UnmanagedWeak(strong_value_inner.downgrade())),
             CustomInner::UnmanagedWeak(_) => None,
             CustomInner::Empty => None,
         }
     }
 
+    // pub fn to_root(&self) -> Option<Self> {
+    //     match self {
+    //         Self::Managed(x)=>Some(Self::Managed(x.clone_root())),
+    //         Self::Unmanaged(_)=>None,
+    //         Self::UnmanagedWeak(_) => None,
+    //         Self::Empty => None,
+    //     }
+    // }
+    // pub fn to_leaf(&self) -> Option<Self> {
+    //     match self {
+    //         Self::Managed(x)=>Some(Self::Managed(x.clone_leaf())),
+    //         Self::Unmanaged(_)=>None,
+    //         Self::UnmanagedWeak(_) => None,
+    //         Self::Empty => None,
+    //     }
+    // }
 
     pub fn clone_root(&self) -> Self {
         match self {
@@ -392,14 +421,14 @@ impl Custom {
     pub fn data(&self) ->CustomData {
         // self
         // self.inner
-        let data: StrongValueInner=match &self.inner {
+        let data: Option<StrongValueInner>=match &self.inner {
             CustomInner::Managed (x)=>{
                 match &x.data {
                     WeakValueInner::Mut(x) => {
-                        x.upgrade().map(|x|StrongValueInner::Mut(x)).unwrap_or(StrongValueInner::Dead)
+                        x.upgrade().map(|x|StrongValueInner::Mut(x)) //.unwrap_or(StrongValueInner::Dead)
                     }
                     WeakValueInner::NonMut(x) => {
-                        x.upgrade().map(|x|StrongValueInner::NonMut(x)).unwrap_or(StrongValueInner::Dead)
+                        x.upgrade().map(|x|StrongValueInner::NonMut(x)) //.unwrap_or(StrongValueInner::Dead)
                     }
                     // WeakValueInner::MutExt(x) => {
                     //     x.upgrade().map(|x|StrongValueInner::MutExt(x))
@@ -409,9 +438,10 @@ impl Custom {
                     // }
                 }
             },
-            CustomInner::Unmanaged (data)=>data.clone(),
+            CustomInner::Unmanaged (data)=>Some(data.clone()),
             CustomInner::UnmanagedWeak (x)=>x.upgrade(),
-            CustomInner::Empty => StrongValueInner::Empty,
+            // CustomInner::Empty => StrongValueInner::Empty,
+            CustomInner::Empty => None, //StrongValueInner::Dead,
             // CustomInner::RcStrong(x) => x.clone(),
             // CustomInner::RcWeak(x) => x.upgrade(),
         };
@@ -428,16 +458,21 @@ impl Custom {
 
     pub fn with_data_ref<T:Any,R>(&self,func:impl FnOnce(&T)->Result<R,MachineError>) -> Result<R,MachineError> {
         let data=self.data();
+        // data.data.as_ref().and_then(|data|match data {
+        //     StrongValueInner::Mut(_) => todata.inner_with_data_mut(|data|func(data)),
+        //     StrongValueInner::NonMut(_) => func(data.get_non_mut()?),
+        // })
+
 
         match &data.data {
-            StrongValueInner::Mut(_)=>data.inner_with_data_mut(|data|func(data)),
+            Some(StrongValueInner::Mut(_))=>data.inner_with_data_mut(|data|func(data)),
             // {
             //     // let data2=data.get_mut::<T>()?;
             //     // func(& data2)
 
 
             // }
-            StrongValueInner::NonMut(_)=>func(data.get_non_mut()?),
+            Some(StrongValueInner::NonMut(_))=>func(data.get_non_mut()?),
             // {
             //     // let data2=data.get_non_mut()?;
             //     // func(& data2)
@@ -451,8 +486,9 @@ impl Custom {
             //     let data2=data.get_non_mut()?;
             //     func(& data2)
             // }
-            StrongValueInner::Empty => Err(MachineError::new(MachineErrorType::CustomDataEmpty)),
-            StrongValueInner::Dead => Err(MachineError::new(MachineErrorType::CustomDataDead)),
+            // StrongValueInner::Empty => Err(MachineError::new(MachineErrorType::CustomDataEmpty)),
+            // StrongValueInner::Dead => Err(MachineError::new(MachineErrorType::CustomDataDead)),
+            None => Err(MachineError::new(MachineErrorType::CustomDataDead)),
         }
     }
 
@@ -479,7 +515,8 @@ impl Custom {
 // }
 // #[derive(Clone)]
 pub struct CustomData {
-    data: StrongValueInner, //Option<>,//Option<Arc<Mutex<dyn Any+Send>>>,
+    // data: StrongValueInner, //Option<>,//Option<Arc<Mutex<dyn Any+Send>>>,
+    data: Option<StrongValueInner>,
     // type_name : &'static str,
     type_info : TypeInfo,
 }
@@ -514,8 +551,8 @@ impl CustomData {
         // Ok(data)
 
         match &self.data {
-            StrongValueInner::Mut(_) => Err(MachineError::new(MachineErrorType::CustomDataNotNonMut)),
-            StrongValueInner::NonMut(data2) => {
+            Some(StrongValueInner::Mut(_)) => Err(MachineError::new(MachineErrorType::CustomDataNotNonMut)),
+            Some(StrongValueInner::NonMut(data2)) => {
                 if let Some(data)=data2.as_ref().downcast_ref() {
 
                     Ok(data)
@@ -526,8 +563,9 @@ impl CustomData {
                     }))
                 }
             },
-            StrongValueInner::Dead => Err(MachineError::new(MachineErrorType::CustomDataDead)),
-            StrongValueInner::Empty => Err(MachineError::new(MachineErrorType::CustomDataEmpty)),
+            // StrongValueInner::Dead => Err(MachineError::new(MachineErrorType::CustomDataDead)),
+            // StrongValueInner::Empty => Err(MachineError::new(MachineErrorType::CustomDataEmpty)),
+            None => Err(MachineError::new(MachineErrorType::CustomDataDead)),
         }
 
     }
@@ -556,7 +594,7 @@ impl CustomData {
         // func(b)
 
         match &self.data {
-            StrongValueInner::Mut(data2) => {
+            Some(StrongValueInner::Mut(data2)) => {
                 if let Ok(mut b) = data2.try_lock() {
                     if let Some(b)=b.downcast_mut::<T>() {
                         func(b)
@@ -570,9 +608,10 @@ impl CustomData {
                     return Err(MachineError::new(MachineErrorType::CustomDataBorrowMutError));
                 }
             },
-            StrongValueInner::NonMut(_) => Err(MachineError::new(MachineErrorType::CustomDataNotMut)),
-            StrongValueInner::Dead => Err(MachineError::new(MachineErrorType::CustomDataDead)),
-            StrongValueInner::Empty => Err(MachineError::new(MachineErrorType::CustomDataEmpty)),
+            Some(StrongValueInner::NonMut(_)) => Err(MachineError::new(MachineErrorType::CustomDataNotMut)),
+            // StrongValueInner::Dead => Err(MachineError::new(MachineErrorType::CustomDataDead)),
+            // StrongValueInner::Empty => Err(MachineError::new(MachineErrorType::CustomDataEmpty)),
+            None => Err(MachineError::new(MachineErrorType::CustomDataDead)),
         }
     }
 
