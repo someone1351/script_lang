@@ -5,7 +5,7 @@ use super::super::value::*;
 // use super::super::error::*;
 use super::super::lib_scope::*;
 use super::super::data::*;
-use super::array::Array;
+// use super::array::Array;
 
 
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
@@ -62,7 +62,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             .map(|stack_ind|context.stack_val(stack_ind).unwrap().clone())
             .collect::<Vec<_>>();
 
-        Ok(Value::custom_managed_mut(Array(data), context.gc_scope()))
+        Ok(Value::custom_managed_mut(data, context.gc_scope()))
     })
         .custom_ref::<Vararg>()
         .end();

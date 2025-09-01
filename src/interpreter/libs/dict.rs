@@ -10,7 +10,7 @@ use super::super::error::*;
 use super::super::lib_scope::*;
 // use super::super::data::*;
 use super::super::gc_scope::*;
-use super::array::Array;
+// use super::array::Array;
 
 #[derive(Clone,Default)]
 pub struct Dict(pub BTreeMap<String,Value>);
@@ -132,7 +132,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
         dict.with_data_ref(|data:&Dict|{
             let keys=data.0.keys().map(|k|Value::string(k)).collect::<Vec<_>>();
-            Ok(Value::custom_managed_mut(Array(keys), context.gc_scope()))
+            Ok(Value::custom_managed_mut(keys, context.gc_scope()))
         })
     })
         .custom_ref::<Dict>()
