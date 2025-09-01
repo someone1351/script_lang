@@ -37,9 +37,14 @@ pub enum Arg {
     // Func,
 
     Custom(std::any::TypeId),
+    CustomMut(std::any::TypeId),
     CustomRef(std::any::TypeId),
+    CustomMutRef(std::any::TypeId),
+
     CustomAny,
+    CustomAnyMut,
     CustomAnyRef,
+    CustomAnyMutRef,
 
     Any,
 }
@@ -51,6 +56,13 @@ impl Arg {
     pub fn custom_ref<T:'static>() -> Arg {
         Arg::CustomRef(std::any::TypeId::of::<T>())
     }
+    pub fn custom_mut<T:'static>() -> Arg {
+        Arg::CustomMut(std::any::TypeId::of::<T>())
+    }
+    pub fn custom_mut_ref<T:'static>() -> Arg {
+        Arg::CustomMutRef(std::any::TypeId::of::<T>())
+    }
+
     pub fn from_value(value:&Value) -> Option<Arg> {
         match value {
             Value::Bool(_) => Some(Arg::Bool),
@@ -71,6 +83,7 @@ impl Arg {
             None
         }
     }
+
     pub fn from_custom_value_ref(value:&Value) -> Option<Arg> {
         if let Value::Custom(c)=value {
             // Some(Arg::CustomRef(c.type_id()))
@@ -79,6 +92,14 @@ impl Arg {
             None
         }
     }
+
+    pub fn from_custom_value_mut(value:&Value) -> Option<Arg> {
+        value.get_custom().and_then(|c|c.is_mut().then(||Arg::CustomMut(c.type_info().id())))
+    }
+    pub fn from_custom_value_mut_ref(value:&Value) -> Option<Arg> {
+        value.get_custom().and_then(|c|c.is_mut().then(||Arg::CustomMutRef(c.type_info().id())))
+    }
+
     pub fn is_value(&self,value:&Value) -> bool {
         match (value,self) {
             (Value::Bool(_),Arg::Bool) => true,
@@ -94,9 +115,28 @@ impl Arg {
             (Value::Custom(_),Arg::CustomAny) => true,
             (Value::Custom(_),Arg::CustomAnyRef) => true,
 
+            (Value::Custom(c),Arg::CustomMut(t)) => c.is_mut() && c.type_info().id()==*t,
+            (Value::Custom(c),Arg::CustomMutRef(t)) => c.is_mut() && c.type_info().id()==*t,
+
+            (Value::Custom(c),Arg::CustomAnyMut) => c.is_mut(),
+            (Value::Custom(c),Arg::CustomAnyMutRef) => c.is_mut(),
+
             (_,Arg::Any) => true,
 
             _ => false,
+        }
+    }
+
+    pub fn is_custom_not_ref(&self) -> bool {
+        match self {
+            Arg::Custom(_)|Arg::CustomAny| Arg::CustomMut(_)|Arg::CustomAnyMut => true,
+            _ => false
+        }
+    }
+    pub fn is_custom_ref(&self) -> bool {
+        match self {
+            Arg::CustomRef(_)|Arg::CustomAnyRef |Arg::CustomMutRef(_)|Arg::CustomAnyMutRef => true,
+            _ => false
         }
     }
 }
@@ -208,6 +248,24 @@ impl<'m,X> MethodInput<'m,X> {
         self
     }
 
+
+    pub fn custom_any_mut(mut self) -> Self {
+        self.args.push(vec![Arg::CustomAnyMut]);
+        self
+    }
+    pub fn custom_any_mut_ref(mut self) -> Self {
+        self.args.push(vec![Arg::CustomAnyMutRef]);
+        self
+    }
+    pub fn custom_mut<T:'static>(mut self) -> Self {
+        self.args.push(vec![Arg::custom_mut::<T>()]);
+        self
+    }
+    pub fn custom_mut_ref<T:'static>(mut self) -> Self {
+        self.args.push(vec![Arg::custom_mut_ref::<T>()]);
+        self
+    }
+
     pub fn or_bool(mut self) -> Self {
         self.args.last_mut().unwrap().push(Arg::Bool);
         self
@@ -250,6 +308,23 @@ impl<'m,X> MethodInput<'m,X> {
     }
     pub fn or_custom_ref<T:'static>(mut self) -> Self {
         self.args.last_mut().unwrap().push(Arg::custom_ref::<T>());
+        self
+    }
+
+    pub fn or_custom_any_mut(mut self) -> Self {
+        self.args.last_mut().unwrap().push(Arg::CustomAnyMut);
+        self
+    }
+    pub fn or_custom_any_mut_ref(mut self) -> Self {
+        self.args.last_mut().unwrap().push(Arg::CustomAnyMutRef);
+        self
+    }
+    pub fn or_custom_mut<T:'static>(mut self) -> Self {
+        self.args.last_mut().unwrap().push(Arg::custom_mut::<T>());
+        self
+    }
+    pub fn or_custom_mut_ref<T:'static>(mut self) -> Self {
+        self.args.last_mut().unwrap().push(Arg::custom_mut_ref::<T>());
         self
     }
 
@@ -563,12 +638,35 @@ impl<X> LibScope<X> {
 
             //make list of children of cur node to traverse
             if param.is_custom_any() {
-                for arg_type in [Arg::from_custom_value(param),Arg::from_custom_value_ref(param)] {
+                // for arg_type in [
+                //     Arg::from_custom_value(param),
+                //     Arg::from_custom_value_ref(param),
+                //     Arg::from_custom_value_mut(param),
+                //     Arg::from_custom_value_mut_ref(param),
+                // ] {
+                //     let arg_type=arg_type.unwrap();
+
+                //     if let Some(child_node_ind)=self.get_child_node_ind(node_ind, arg_type) {
+                //         // let child_node=self.get_node(child_node_ind);
+                //         todos.push((arg_type,child_node_ind,score+6)); //specific types have highest score
+                //     }
+                // }
+
+                for arg_type in [Arg::from_custom_value(param),Arg::from_custom_value_ref(param),] {
                     let arg_type=arg_type.unwrap();
 
                     if let Some(child_node_ind)=self.get_child_node_ind(node_ind, arg_type) {
-                        // let child_node=self.get_node(child_node_ind);
                         todos.push((arg_type,child_node_ind,score+6)); //specific types have highest score
+                    }
+                }
+
+                if param.is_mut() {
+                    for arg_type in [Arg::from_custom_value_mut(param),Arg::from_custom_value_mut_ref(param),] {
+                        let arg_type=arg_type.unwrap();
+
+                        if let Some(child_node_ind)=self.get_child_node_ind(node_ind, arg_type) {
+                            todos.push((arg_type,child_node_ind,score+6)); //specific types have highest score
+                        }
                     }
                 }
             } else if let Some(arg_type)=Arg::from_value(param) {
@@ -581,6 +679,21 @@ impl<X> LibScope<X> {
             if param.is_custom_any() {
                 if let Some(child_node_ind)=self.get_child_node_ind(node_ind, Arg::CustomAny) {
                     todos.push((Arg::CustomAny,child_node_ind,score+4)); //general custom lessor score
+                }
+
+                if let Some(child_node_ind)=self.get_child_node_ind(node_ind, Arg::CustomAnyRef) {
+                    todos.push((Arg::CustomAnyRef,child_node_ind,score+4)); //general custom lessor score
+                }
+
+                if param.is_mut() {
+                    if let Some(child_node_ind)=self.get_child_node_ind(node_ind, Arg::CustomAnyMut) {
+                        todos.push((Arg::CustomAnyMut,child_node_ind,score+4)); //general custom lessor score
+                    }
+
+
+                    if let Some(child_node_ind)=self.get_child_node_ind(node_ind, Arg::CustomAnyMutRef) {
+                        todos.push((Arg::CustomAnyMutRef,child_node_ind,score+4)); //general custom lessor score
+                    }
                 }
             }
 

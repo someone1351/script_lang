@@ -1002,16 +1002,20 @@ impl<'a,X> Machine<'a,X> {
 
         //
         for (param_ind,arg) in bound_func.args_path.iter().enumerate() {
-            match arg {
-                Arg::Custom(_)|Arg::CustomAny => {
-                    let v=self.copy_val(self.stack_param_get(params_num, param_ind))?;
-                    self.stack_param_set(params_num, param_ind, v);
-                }
-                Arg::CustomRef(_)|Arg::CustomAnyRef => {
-                }
-                _=> {
-                }
+            if arg.is_custom_not_ref() {
+                let v=self.copy_val(self.stack_param_get(params_num, param_ind))?;
+                self.stack_param_set(params_num, param_ind, v);
             }
+
+            // match arg {
+            //     Arg::Custom(_)|Arg::CustomAny| Arg::CustomMut(_)|Arg::CustomAnyMut => {
+
+            //     }
+            //     Arg::CustomRef(_)|Arg::CustomAnyRef |Arg::CustomMutRef(_)|Arg::CustomAnyMutRef => {
+            //     }
+            //     _=> {
+            //     }
+            // }
         }
 
         //

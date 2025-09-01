@@ -797,7 +797,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<Vec2>().str().float().end();
+        .custom_mut_ref::<Vec2>().str().float().end();
 
     //set_field(vec3,str,f)
     lib_scope.field(|context|{
@@ -810,7 +810,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<Vec3>().str().float().end();
+        .custom_mut_ref::<Vec3>().str().float().end();
 
     //set_field(vec4,str,f)
     lib_scope.field(|context|{
@@ -823,7 +823,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<Vec4>().str().float().end();
+        .custom_mut_ref::<Vec4>().str().float().end();
 
     //set_field(vec2,str,vec2)
     lib_scope.field(|context|{
@@ -836,7 +836,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<Vec2>().str().custom_ref::<Vec2>().end();
+        .custom_mut_ref::<Vec2>().str().custom_ref::<Vec2>().end();
 
     //set_field(vec3,str,vec2)
     lib_scope.field(|context|{
@@ -849,7 +849,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<Vec3>().str().custom_ref::<Vec2>().end();
+        .custom_mut_ref::<Vec3>().str().custom_ref::<Vec2>().end();
 
     //set_field(vec3,str,vec3)
     lib_scope.field(|context|{
@@ -862,7 +862,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<Vec3>().str().custom_ref::<Vec3>().end();
+        .custom_mut_ref::<Vec3>().str().custom_ref::<Vec3>().end();
 
     //set_field(vec4,str,vec2)
     lib_scope.field(|context|{
@@ -875,7 +875,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<Vec4>().str().custom_ref::<Vec2>().end();
+        .custom_mut_ref::<Vec4>().str().custom_ref::<Vec2>().end();
 
     //set_field(vec4,str,vec3)
     lib_scope.field(|context|{
@@ -888,7 +888,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<Vec4>().str().custom_ref::<Vec3>().end();
+        .custom_mut_ref::<Vec4>().str().custom_ref::<Vec3>().end();
 
     //set_field(vec4,str,vec4)
     lib_scope.field(|context|{
@@ -901,7 +901,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<Vec4>().str().custom_ref::<Vec4>().end();
+        .custom_mut_ref::<Vec4>().str().custom_ref::<Vec4>().end();
 
     //set_field(ivec2,str,f)
     lib_scope.field(|context|{
@@ -914,7 +914,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<IVec2>().str().int().end();
+        .custom_mut_ref::<IVec2>().str().int().end();
 
     //set_field(ivec3,str,f)
     lib_scope.field(|context|{
@@ -927,7 +927,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<IVec3>().str().int().end();
+        .custom_mut_ref::<IVec3>().str().int().end();
 
     //set_field(ivec4,str,f)
     lib_scope.field(|context|{
@@ -940,7 +940,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<IVec4>().str().int().end();
+        .custom_mut_ref::<IVec4>().str().int().end();
 
     //set_field(ivec2,str,ivec2)
     lib_scope.field(|context|{
@@ -952,7 +952,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
-    }).custom_ref::<IVec2>().str().custom_ref::<IVec2>().end();
+    }).custom_mut_ref::<IVec2>().str().custom_ref::<IVec2>().end();
 
     //set_field(ivec3,str,ivec2)
     lib_scope.field(|context|{
@@ -965,7 +965,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<IVec3>().str().custom_ref::<IVec2>().end();
+        .custom_mut_ref::<IVec3>().str().custom_ref::<IVec2>().end();
 
     //set_field(ivec3,str,ivec3)
     lib_scope.field(|context|{
@@ -978,7 +978,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<IVec3>().str().custom_ref::<IVec3>().end();
+        .custom_mut_ref::<IVec3>().str().custom_ref::<IVec3>().end();
 
     //set_field(ivec4,str,ivec2)
     lib_scope.field(|context|{
@@ -991,7 +991,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<IVec4>().str().custom_ref::<IVec2>().end();
+        .custom_mut_ref::<IVec4>().str().custom_ref::<IVec2>().end();
 
     //set_field(ivec4,str,ivec3)
     lib_scope.field(|context|{
@@ -1003,7 +1003,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             set_field_util(fields.as_str(),&mut data.0,&to.0).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
-    }).custom_ref::<IVec4>().str().custom_ref::<IVec3>().end();
+    }).custom_mut_ref::<IVec4>().str().custom_ref::<IVec3>().end();
 
     //set_field(ivec4,str,ivec4)
     lib_scope.field(|context|{
@@ -1016,7 +1016,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<IVec4>().str().custom_ref::<IVec4>().end();
+        .custom_mut_ref::<IVec4>().str().custom_ref::<IVec4>().end();
 
     //neg(vec2)
     lib_scope.method("-",|context|{

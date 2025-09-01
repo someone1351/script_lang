@@ -47,7 +47,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             data.0.insert(key, val.clone());
             Ok(val)
         })
-    }).custom_ref::<Dict>().any().any().end();
+    }).custom_mut_ref::<Dict>().any().any().end();
 
     //remove(dict,any)
     lib_scope.method("remove", |mut context|{
@@ -56,7 +56,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         context.param(0).as_custom().with_data_mut(|data:&mut Dict|{
             Ok(data.0.remove(&key).unwrap_or(Value::Nil))
         })
-    }).custom_ref::<Dict>().any().end();
+    }).custom_mut_ref::<Dict>().any().end();
 
     //len(dict)
     lib_scope.method("len", |context|{
@@ -80,7 +80,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             data.0.insert(key, val);
             Ok(Value::Void)
         })
-    }).custom_ref::<Dict>().any().any().end();
+    }).custom_mut_ref::<Dict>().any().any().end();
 
     //string(dict)
     lib_scope.method("string", |mut context|{
@@ -122,7 +122,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             Ok(Value::Void)
         })
     })
-        .custom_ref::<Dict>()
+        .custom_mut_ref::<Dict>()
         .custom_ref::<Dict>()
         .end();
 
