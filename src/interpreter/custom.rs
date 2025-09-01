@@ -131,20 +131,19 @@ impl CustomInner {
 
     pub fn to_strong(&self) -> Option<Self> {
         match self {
-            CustomInner::Managed(_) => None,
-            CustomInner::Unmanaged(_) => None,
-            // CustomInner::UnmanagedWeak(weak_value_inner) => Some(Self::Unmanaged(weak_value_inner.upgrade())),
-            CustomInner::UnmanagedWeak(weak_value_inner) => weak_value_inner.upgrade().map(|strong_value_inner|Self::Unmanaged(strong_value_inner)),
-            CustomInner::Empty => None,
+            Self::Managed(_) => None,
+            Self::Unmanaged(_) => None,
+            Self::UnmanagedWeak(w) => w.upgrade().map(|s|Self::Unmanaged(s)),
+            Self::Empty => None,
         }
     }
 
     pub fn to_weak(&self) -> Option<Self> {
         match self {
-            CustomInner::Managed(_) => None,
-            CustomInner::Unmanaged(strong_value_inner) => Some(Self::UnmanagedWeak(strong_value_inner.downgrade())),
-            CustomInner::UnmanagedWeak(_) => None,
-            CustomInner::Empty => None,
+            Self::Managed(_) => None,
+            Self::Unmanaged(s) => Some(Self::UnmanagedWeak(s.downgrade())),
+            Self::UnmanagedWeak(_) => None,
+            Self::Empty => None,
         }
     }
 
