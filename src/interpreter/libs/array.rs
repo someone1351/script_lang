@@ -118,14 +118,14 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             x.0.push(v.clone());
             Ok(v)
         })
-    }).custom_ref::<Array>().any().end();
+    }).custom_mut_ref::<Array>().any().end();
 
     //pop(array)
     lib_scope.method("pop",|context|{
         context.param(0).as_custom().with_data_mut(|x:&mut Array|{
             Ok(x.0.pop().map(|x|x.clone()).unwrap_or(Value::Nil))
         })
-    }).custom_ref::<Array>().end();
+    }).custom_mut_ref::<Array>().end();
 
     //extend(array,array)
     lib_scope.method("extend",|context|{
@@ -134,7 +134,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             x.0.extend(other.0.iter().map(|z|z.clone()));
             Ok(Value::Void)
         })
-    }).custom_ref::<Array>().custom_mut_ref::<Array>().end();
+    }).custom_mut_ref::<Array>().custom_mut_ref::<Array>().end();
 
     //len(array)
     lib_scope.method("len",|context|{
