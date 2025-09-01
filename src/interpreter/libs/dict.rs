@@ -12,8 +12,44 @@ use super::super::lib_scope::*;
 use super::super::gc_scope::*;
 // use super::array::Array;
 
+#[derive(Debug,Clone,PartialEq, Eq,Hash,PartialOrd, Ord)]
+// #[derive(Debug,)]
+pub enum ValueKey {
+    // Undefined,
+    Nil,
+    // Void,
+    Bool(bool),
+    // Float(FloatT),
+    Int(IntT),
+    String(StringT),
+    // Custom(Custom),
+}
+
+impl ValueKey {
+    pub fn new(v:&Value) -> Option<Self> {
+        match v {
+            // Value::Undefined => todo!(),
+            Value::Nil => Some(ValueKey::Nil),
+            // Value::Void => todo!(),
+            Value::Bool(x) => Some(ValueKey::Bool(*x)),
+            // Value::Float(_) => todo!(),
+            Value::Int(x) => Some(ValueKey::Int(*x)),
+            Value::String(x) => Some(ValueKey::String(x.clone())),
+            // Value::Custom(custom) => todo!(),
+            _ => None,
+        }
+    }
+    pub fn to_value(&self) -> Value {
+        match self.clone() {
+            ValueKey::Nil => Value::Nil,
+            ValueKey::Bool(x) => Value::Bool(x),
+            ValueKey::Int(x) => Value::Int(x),
+            ValueKey::String(x) => Value::String(x),
+        }
+    }
+}
 #[derive(Clone,Default)]
-pub struct Dict(pub BTreeMap<String,Value>);
+pub struct Dict(pub BTreeMap<ValueKey,Value>);
 
 impl GcTraversable for Dict {
     fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
@@ -28,7 +64,9 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let mut i=0;
 
         while i <context.params_num() {
-            let k = context.value_to_string(&context.param(i))?;
+            // let k = context.value_to_string(&context.param(i))?;
+            let k=context.param(i);
+            let Some(k) = ValueKey::new(&k) else { return Err(MachineError::method(format!("invalid key '{}' at {i}",k.type_string()))); };
             let v=context.param(i+1).clone();
             data.insert(k, v);
             i+=2;
@@ -38,25 +76,34 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     }).optional().any().variadic_end();
 
     //insert(dict,any,any)
-    lib_scope.method("insert", |mut context|{
+    lib_scope.method("insert", | context|{
         let dict=context.param(0).as_custom();
-        let key=context.value_to_string(&context.param(1))?;
+        // let key=context.value_to_string(&context.param(1))?;
+        let key=context.param(1);
         let val=context.param(2).clone();
 
+        // let Some(kk) = ValueKey::new(&k) else { return Err(MachineError::method(format!("invalid key '{}'",k.type_string()))); };
+        let key=ValueKey::new(&key).unwrap();
         dict.with_data_mut(|data:&mut Dict|{
             data.0.insert(key, val.clone());
             Ok(val)
         })
-    }).custom_mut_ref::<Dict>().any().any().end();
+    }).custom_mut_ref::<Dict>()
+        .int().or_bool().or_nil().or_str()
+        .any().end();
 
     //remove(dict,any)
-    lib_scope.method("remove", |mut context|{
-        let key=context.value_to_string(&context.param(1))?;
+    lib_scope.method("remove", | context|{
+        // let key=context.value_to_string(&context.param(1))?;
+        let key=context.param(1);
+        let key=ValueKey::new(&key).unwrap();
 
         context.param(0).as_custom().with_data_mut(|data:&mut Dict|{
             Ok(data.0.remove(&key).unwrap_or(Value::Nil))
         })
-    }).custom_mut_ref::<Dict>().any().end();
+    }).custom_mut_ref::<Dict>()
+        .int().or_bool().or_nil().or_str()
+        .end();
 
     //len(dict)
     lib_scope.method("len", |context|{
@@ -64,23 +111,32 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     }).custom_ref::<Dict>().end();
 
     //get_field(dict,any)
-    lib_scope.field( |mut context|{
+    lib_scope.field( | context|{
         let dict=context.param(0).as_custom();
-        let key=context.value_to_string(&context.param(1))?;
+        // let key=context.value_to_string(&context.param(1))?;
+        let key=context.param(1);
+        let key=ValueKey::new(&key).unwrap();
         dict.with_data_ref(|data:&Dict|{Ok(data.0.get(&key).and_then(|x|Some(x.clone())).unwrap_or(Value::Nil))})
-    }).custom_ref::<Dict>().any().end();
+    }).custom_ref::<Dict>()
+        .int().or_bool().or_nil().or_str()
+        .end();
 
     //set_field(dict,any,any)
-    lib_scope.field( |mut context|{
+    lib_scope.field( | context|{
         let dict=context.param(0);
-        let key=context.value_to_string(&context.param(1))?;
+        // let key=context.value_to_string(&context.param(1))?;
+
+        let key=context.param(1);
+        let key=ValueKey::new(&key).unwrap();
         let val=context.param(2).clone();
 
         dict.as_custom().with_data_mut(|data:&mut Dict|{
             data.0.insert(key, val);
             Ok(Value::Void)
         })
-    }).custom_mut_ref::<Dict>().any().any().end();
+    }).custom_mut_ref::<Dict>()
+        .int().or_bool().or_nil().or_str()
+        .any().end();
 
     //string(dict)
     lib_scope.method("string", |mut context|{
@@ -90,7 +146,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             let mut element_strings=Vec::new();
 
             for (k,v) in data.0.iter() {
-                element_strings.push(format!("{}:{}",k,context.value_to_string(v)?));
+                element_strings.push(format!("{:?}:{}",k.to_value(),context.value_to_string(v)?));
             }
 
             Ok(Value::string(format!("Dict({})",element_strings.join(","))))
@@ -131,7 +187,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let dict=context.param(0).as_custom();
 
         dict.with_data_ref(|data:&Dict|{
-            let keys=data.0.keys().map(|k|Value::string(k)).collect::<Vec<_>>();
+            let keys=data.0.keys().map(|k|k.to_value()).collect::<Vec<_>>();
             Ok(Value::custom_managed_mut(keys, context.gc_scope()))
         })
     })
@@ -141,11 +197,14 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //contains(dict,any)
     lib_scope.method("contains", |context|{
         let dict=context.param(0).as_custom();
-        let key=context.param(1).as_string();
+        // let key=context.param(1).as_string();
+
+        let key=context.param(1);
+        let key=ValueKey::new(&key).unwrap();
         dict.with_data_ref(|data:&Dict|Ok(Value::Bool(data.0.contains_key(&key))))
     })
         .custom_ref::<Dict>()
-        .str()
+        .int().or_bool().or_nil().or_str()
         .end();
 }
 

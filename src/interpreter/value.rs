@@ -20,6 +20,50 @@ pub enum Value {
     String(StringT),
     Custom(Custom),
 }
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Bool(l0), Self::Bool(r0)) => l0 == r0,
+            (Self::Float(l0), Self::Float(r0)) => l0 == r0,
+            (Self::Int(l0), Self::Int(r0)) => l0 == r0,
+            (Self::String(l0), Self::String(r0)) => l0 == r0,
+            (Self::Nil,Self::Nil) => true,
+
+            // (Self::Custom(_), Self::Custom(_)) => false,
+            // _ => core::mem::discriminant(self) == core::mem::discriminant(other),
+            _ => false,
+        }
+    }
+}
+
+// impl std::hash::Hash for Value {
+//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+//         match self {
+//             // Value::Undefined => todo!(),
+//             Value::Nil => {
+//                 core::mem::discriminant(self).hash(state);
+//             }
+//             // Value::Void => todo!(),
+//             Value::Bool(x) => {
+//                 x.hash(state);
+//             }
+//             // Value::Float(x) => x.hash(state),
+//             Value::Int(x) => {
+//                 x.hash(state);
+//             }
+//             Value::String(x) => {
+//                 x.hash(state);
+//             }
+//             // Value::Custom(custom) => todo!(),
+//             _ => {
+
+//             }
+//         }
+//         // core::mem::discriminant(self).hash(state);
+//     }
+// }
+
 impl Default for Value {
     fn default() -> Self { Value::Nil }
 }
