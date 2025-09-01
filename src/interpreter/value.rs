@@ -37,6 +37,10 @@ impl Default for Value {
 //     }
 // }
 impl Value {
+    pub fn is_mut(&self) -> bool {
+        self.get_custom().map(|c|c.is_mut()).unwrap_or_default()
+    }
+
     pub fn float<T: TryInto<FloatT>>(x:T) -> Self {
         Self::Float(x.try_into().ok().unwrap_or(0.0))
     }
@@ -259,13 +263,13 @@ impl Value {
         Self::Custom(Custom::new_unmanaged(data,))
     }
 
-    pub fn custom_rc_mut<T:Any+Send>(data : T) -> Self {
-        Self::Custom(Custom::new_rc_mut(data,))
-    }
+    // pub fn custom_rc_mut<T:Any+Send>(data : T) -> Self {
+    //     Self::Custom(Custom::new_rc_mut(data,))
+    // }
 
-    pub fn custom_rc<T:Any+Send+Sync>(data : T) -> Self {
-        Self::Custom(Custom::new_rc(data,))
-    }
+    // pub fn custom_rc<T:Any+Send+Sync>(data : T) -> Self {
+    //     Self::Custom(Custom::new_rc(data,))
+    // }
     //
     // pub fn custom_callable_managed_mut<T:GcTraversable+Send>(data : T, caller:Caller,gc_scope : &mut GcScope) -> Self {
     //     Self::Custom(Custom::new_managed_mut(data,Some(caller), gc_scope))
@@ -344,6 +348,15 @@ impl Value {
         } else {
             Ok(None)
         }
+    }
+
+
+    pub fn to_strong(&self) -> Option<Self> {
+        self.get_custom().and_then(|c|c.to_strong()).map(|c|Value::Custom(c))
+    }
+
+    pub fn to_weak(&self) -> Option<Self> {
+        self.get_custom().and_then(|c|c.to_weak()).map(|c|Value::Custom(c))
     }
 }
 

@@ -31,6 +31,14 @@ pub enum StrongValueInner {
 }
 
 impl StrongValueInner {
+    pub fn is_mut(&self) -> bool {
+        match self {
+            StrongValueInner::Mut(_) => true,
+            StrongValueInner::NonMut(_) => false,
+            StrongValueInner::Dead => false,
+            StrongValueInner::Empty => false,
+        }
+    }
 //     // pub fn get_non_mut(&self) -> Option<Arc<dyn Any+Send+Sync>> {
 //     //     match self {
 //     //         Self::NonMut(data) =>Some(data.clone()),
@@ -74,6 +82,12 @@ pub enum WeakValueInner {
 }
 
 impl WeakValueInner {
+    pub fn is_mut(&self) -> bool {
+        match self {
+            WeakValueInner::Mut(_) => true,
+            WeakValueInner::NonMut(_) => false,
+        }
+    }
     // pub fn upgrade(&self) -> Option<StrongValueInner> {
     //     match self {
     //         Self::Mut(x)=>x.upgrade().map(|x|StrongValueInner::Mut(x)),
@@ -92,47 +106,71 @@ pub enum CustomInner {
     Managed(GcValue),
     // Unmanaged(Arc<Mutex<dyn Any+Send>>),
     Unmanaged(StrongValueInner),
+    UnmanagedWeak(WeakValueInner),
     // UnmanagedStatic(Arc<dyn Any+Send>),
     // None(&'static str),
     // Rc(),
-    RcStrong(StrongValueInner),
-    RcWeak(WeakValueInner),
+    // RcStrong(StrongValueInner),
+    // RcWeak(WeakValueInner),
     Empty,
 }
 
 impl CustomInner {
+
+    pub fn to_strong(&self) -> Option<Self> {
+        match self {
+            CustomInner::Managed(_) => None,
+            CustomInner::Unmanaged(_) => None,
+            CustomInner::UnmanagedWeak(weak_value_inner) => Some(Self::Unmanaged(weak_value_inner.upgrade())),
+            CustomInner::Empty => None,
+        }
+    }
+
+    pub fn to_weak(&self) -> Option<Self> {
+        match self {
+            CustomInner::Managed(_) => None,
+            CustomInner::Unmanaged(strong_value_inner) => strong_value_inner.downgrade().map(|x|Self::UnmanagedWeak(x)),
+            CustomInner::UnmanagedWeak(_) => None,
+            CustomInner::Empty => None,
+        }
+    }
+
+
     pub fn clone_root(&self) -> Self {
         match self {
             Self::Managed(x)=>Self::Managed(x.clone_root()),
             Self::Unmanaged(x)=>Self::Unmanaged(x.clone()),
+            Self::UnmanagedWeak(x) => Self::UnmanagedWeak(x.clone()),
             // Self::UnmanagedStatic(x) => Self::UnmanagedStatic(x.clone()),
             // Self::None(x) => Self::None(*x),
             Self::Empty => Self::Empty,
 
-            Self::RcStrong(x)=>Self::RcStrong(x.clone()),
-            Self::RcWeak(x)=>Self::RcStrong(x.upgrade()),
+            // Self::RcStrong(x)=>Self::RcStrong(x.clone()),
+            // Self::RcWeak(x)=>Self::RcStrong(x.upgrade()),
         }
     }
     pub fn clone_as_is(&self) -> Self {
         match self {
             Self::Managed(x)=>Self::Managed(x.clone_as_is()),
             Self::Unmanaged(x)=>Self::Unmanaged(x.clone()),
+            Self::UnmanagedWeak(x) => Self::UnmanagedWeak(x.clone()),
             // Self::UnmanagedStatic(x) => Self::UnmanagedStatic(x.clone()),
             Self::Empty => Self::Empty,
 
-            Self::RcStrong(x)=>Self::RcStrong(x.clone()),
-            Self::RcWeak(x)=>Self::RcWeak(x.clone()),
+            // Self::RcStrong(x)=>Self::RcStrong(x.clone()),
+            // Self::RcWeak(x)=>Self::RcWeak(x.clone()),
         }
     }
     pub fn clone_leaf(&self) -> Self {
         match self {
             Self::Managed(x)=>Self::Managed(x.clone_leaf()),
             Self::Unmanaged(x)=>Self::Unmanaged(x.clone()),
+            Self::UnmanagedWeak(x) => Self::UnmanagedWeak(x.clone()),
             Self::Empty => Self::Empty,
             // Self::UnmanagedStatic(x) => Self::UnmanagedStatic(x.clone()),
 
-            Self::RcStrong(x)=>Self::RcWeak(x.downgrade().unwrap()),
-            Self::RcWeak(x)=>Self::RcWeak(x.clone()),
+            // Self::RcStrong(x)=>Self::RcWeak(x.downgrade().unwrap()),
+            // Self::RcWeak(x)=>Self::RcWeak(x.clone()),
         }
     }
 }
@@ -175,15 +213,18 @@ impl std::fmt::Debug for Custom {
             CustomInner::Unmanaged(_) => {
                 write!(f, "Unmanaged:({})",self.type_info.short_name())
             }
+            CustomInner::UnmanagedWeak(_) => {
+                write!(f, "UnmanagedWeak:({})",self.type_info.short_name())
+            }
             CustomInner::Empty => {
                 write!(f, "Empty")
             }
-            CustomInner::RcStrong(_) => {
-                write!(f, "RcStrong:({})",self.type_info.short_name())
-            },
-            CustomInner::RcWeak(_) => {
-                write!(f, "RcWeak:({})",self.type_info.short_name())
-            },
+            // CustomInner::RcStrong(_) => {
+            //     write!(f, "RcStrong:({})",self.type_info.short_name())
+            // },
+            // CustomInner::RcWeak(_) => {
+            //     write!(f, "RcWeak:({})",self.type_info.short_name())
+            // },
         }
         // match (&self.inner,self.gc_index()) {
         //     (CustomInner::Managed(_),Ok(Some(gc_index)))=>write!(f, "Managed:{gc_index}({})",self.type_info.short_name()),
@@ -215,6 +256,30 @@ impl std::fmt::Debug for Custom {
 }
 
 impl Custom {
+    pub fn to_strong(&self) -> Option<Self> {
+        self.inner.to_strong().map(|inner|Self { type_info: self.type_info, inner })
+    }
+
+    pub fn to_weak(&self) -> Option<Self> {
+        self.inner.to_weak().map(|inner|Self { type_info: self.type_info, inner })
+    }
+
+    pub fn is_mut(&self) -> bool {
+        match &self.inner {
+            CustomInner::Managed(gc_value) => gc_value.data.is_mut(),
+            CustomInner::Unmanaged(strong_value_inner) => strong_value_inner.is_mut(),
+            CustomInner::UnmanagedWeak(weak_value_inner) => weak_value_inner.is_mut(),
+            // CustomInner::RcStrong(strong_value_inner) => strong_value_inner.is_mut(),
+            // CustomInner::RcWeak(weak_value_inner) => weak_value_inner.is_mut(),
+            CustomInner::Empty => false,
+        }
+    }
+    pub fn to_mut(&self) -> Custom {
+        Custom::new_empty()
+    }
+    pub fn to_non_mut(&self) -> Custom {
+        Custom::new_empty()
+    }
     fn new<T:Any>(inner:CustomInner,
         // caller : Option<Caller>
     ) -> Self {
@@ -259,12 +324,12 @@ impl Custom {
         Self { type_info: TypeInfo::new::<()>(), inner: CustomInner::Empty }
     }
 
-    pub fn new_rc_mut<T:Any+Send>(data : T,) -> Self {
-        Self::new::<T>(CustomInner::RcStrong(StrongValueInner::Mut(Arc::new(Mutex::new(data)))), )
-    }
-    pub fn new_rc<T:Any+Send+Sync>(data : T, ) -> Self {
-        Self::new::<T>(CustomInner::RcStrong(StrongValueInner::NonMut(Arc::new(data))), )
-    }
+    // pub fn new_rc_mut<T:Any+Send>(data : T,) -> Self {
+    //     Self::new::<T>(CustomInner::RcStrong(StrongValueInner::Mut(Arc::new(Mutex::new(data)))), )
+    // }
+    // pub fn new_rc<T:Any+Send+Sync>(data : T, ) -> Self {
+    //     Self::new::<T>(CustomInner::RcStrong(StrongValueInner::NonMut(Arc::new(data))), )
+    // }
 
     // pub fn new_managed_mut_ext<T:GcTraversable+Send+ToString>(data : T,gc_scope : &mut GcScope) -> Self {
     //     Self::new::<T>(CustomInner::Managed(GcValue::new(data,gc_scope)))
@@ -311,9 +376,10 @@ impl Custom {
         match &self.inner {
             CustomInner::Managed(x)=>x.gc_index(),
             CustomInner::Unmanaged(_)=>Ok(None),
+            CustomInner::UnmanagedWeak(_)=>Ok(None),
             CustomInner::Empty => Ok(None),
-            CustomInner::RcStrong(_) => Ok(None),
-            CustomInner::RcWeak(_) => Ok(None),
+            // CustomInner::RcStrong(_) => Ok(None),
+            // CustomInner::RcWeak(_) => Ok(None),
             // CustomInner::UnmanagedStatic(_)=>None,
             // CustomInner::None(_)=>None,
         }
@@ -344,9 +410,10 @@ impl Custom {
                 }
             },
             CustomInner::Unmanaged (data)=>data.clone(),
+            CustomInner::UnmanagedWeak (x)=>x.upgrade(),
             CustomInner::Empty => StrongValueInner::Empty,
-            CustomInner::RcStrong(x) => x.clone(),
-            CustomInner::RcWeak(x) => x.upgrade(),
+            // CustomInner::RcStrong(x) => x.clone(),
+            // CustomInner::RcWeak(x) => x.upgrade(),
         };
 
         CustomData { data, type_info : self.type_info }
