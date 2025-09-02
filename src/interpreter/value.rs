@@ -1,6 +1,5 @@
 
 use std::any::{Any,TypeId};
-use std::str::FromStr;
 
 use super::super::common::*;
 use super::custom::*;
@@ -180,9 +179,9 @@ impl Value {
         }
     }
 
-    pub fn get_parse<T:FromStr>(&self) -> Option<T> {
-        self.get_string().and_then(|x|T::from_str(x.as_str()).ok())
-    }
+    // pub fn get_parse<T:FromStr>(&self) -> Option<T> {
+    //     self.get_string().and_then(|x|T::from_str(x.as_str()).ok())
+    // }
 
     pub fn get_custom(&self) -> Option<Custom> {
         match self {
@@ -257,9 +256,9 @@ impl Value {
         }
     }
 
-    pub fn as_parse<T:FromStr+Default>(&self) -> T {
-        self.get_parse::<T>().unwrap_or_default()
-    }
+    // pub fn as_parse<T:FromStr+Default>(&self) -> T {
+    //     self.get_parse::<T>().unwrap_or_default()
+    // }
 
     // pub fn as_string(&self,context : &mut FuncContext) -> Result<String,MachineError> {
     //     context.value_to_string(self)
