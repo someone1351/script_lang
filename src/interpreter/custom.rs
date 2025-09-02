@@ -490,16 +490,23 @@ impl Custom {
             None => Err(MachineError::new(MachineErrorType::CustomDataDead)),
         }
     }
+    pub fn get_data_clone<T:Any+Clone>(&self) -> Result<Option<T>,MachineError> {
+        match self.with_data_ref(|x: &T|Ok(x.clone())) {
+            Ok(x) => Ok(Some(x)),
+            Err(MachineError { error_type:MachineErrorType::CustomDataInvalidCast{..}, .. }) => Ok(None),
+            Err(e) => Err(e)
+        }
+    }
 
     pub fn data_clone<T:Any+Clone>(&self) -> Result<T,MachineError> {
         // Ok(self.data().get_mut::<T>()?.clone())
         Ok(self.with_data_ref(|x: &T|Ok(x.clone()))?)
     }
 
-    pub fn data_copy<T:Any+Copy>(&self) -> Result<T,MachineError> {
-        // Ok(*(self.data().get_mut::<T>()?))
-        Ok(self.with_data_ref(|x: &T|Ok(*x))?)
-    }
+    // pub fn data_copy<T:Any+Copy>(&self) -> Result<T,MachineError> {
+    //     // Ok(*(self.data().get_mut::<T>()?))
+    //     Ok(self.with_data_ref(|x: &T|Ok(*x))?)
+    // }
 
     pub fn type_info(&self) -> TypeInfo {
         self.type_info
