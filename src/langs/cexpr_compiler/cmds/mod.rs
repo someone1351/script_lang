@@ -22,6 +22,7 @@ pub mod func_cmd;
 pub mod lambda_cmd;
 pub mod call_func_cmd;
 pub mod ternary_cmd;
+pub mod dict_cmd;
 
 
 pub use while_cmd::*;
@@ -48,6 +49,7 @@ pub use func_cmd::*;
 pub use lambda_cmd::*;
 pub use call_func_cmd::*;
 pub use ternary_cmd::*;
+pub use dict_cmd::*;
 
 use super::super::builder::*;
 use super::{super::cexpr_parser::*, BuilderErrorType};
@@ -59,7 +61,7 @@ use super::{super::cexpr_parser::*, BuilderErrorType};
 pub fn get_idn<'a>(param : ParamContainer<'a>) -> Result<&'a str,BuilderError<BuilderErrorType>> {
     if let Some(symbol)=param.primitive().symbol() {
         if param.fields_num()==0 {
-            
+
             if symbol.starts_with(&['!', '@', '%', '^', '&', '~', ';', ':', '?', ',', '.', '|']) {
                 Err(BuilderError::new(param.start_loc(), BuilderErrorType::NoSymbolPrefixAllowed))
             } else {
@@ -75,9 +77,9 @@ pub fn get_idn<'a>(param : ParamContainer<'a>) -> Result<&'a str,BuilderError<Bu
 
 /*
 only use blocks for code?
-eg 
-    for i 0 10 {} 
-instead of 
+eg
+    for i 0 10 {}
+instead of
     for {i 0 10} {}
 ?
 */
@@ -128,7 +130,7 @@ instead of
 //     }
 
 //     builder.block_end();
-    
+
 //     Ok(())
 // }
 
@@ -146,18 +148,18 @@ instead of
 
 //     for i in params_start .. params_end {
 //         let x=record.param(i).unwrap();
-//         // (i,param_sexpr) record.list_iter().enumerate()   
-//         // println!("i {i}, len {}",params_sexpr.len()); 
+//         // (i,param_sexpr) record.list_iter().enumerate()
+//         // println!("i {i}, len {}",params_sexpr.len());
 //         let idn = get_symbol(x)?;
 
 //         if idn=="..." { //variadic
 //             if i!=record.params_num()-1 {
 //                 return Err(BuilderError::new(x.start_loc(), BuilderErrorType::VariadicMustBeAtEnd));
 //             }
-            
+
 //             variadic=true;
-//         } else { //param  
-//             params.push(idn);           
+//         } else { //param
+//             params.push(idn);
 //         }
 //     }
 
@@ -177,7 +179,7 @@ pub fn get_func_params<'a>(block : BlockContainer<'a>) -> Result<(Vec<&'a str>,b
     if block.primitive().param().unwrap().fields_num()!=0 {
         return Err(BuilderError::new(block.end_loc(), BuilderErrorType::NoFieldsAllowed));
     }
-    
+
     if let Some(loc)=block.records().find_map(|x|x.semi_colon_loc()) {
         return Err(BuilderError::new(loc, BuilderErrorType::NoSemiColonsAllowed));
     }
@@ -202,10 +204,10 @@ pub fn get_func_params<'a>(block : BlockContainer<'a>) -> Result<(Vec<&'a str>,b
             if param_ind!=block.params_num()-1 {
                 return Err(BuilderError::new(param.start_loc(), BuilderErrorType::VariadicMustBeAtEnd));
             }
-            
+
             variadic=true;
-        } else { //param  
-            params.push(idn);           
+        } else { //param
+            params.push(idn);
         }
     }
 
@@ -249,7 +251,7 @@ pub fn get_func_params<'a>(block : BlockContainer<'a>) -> Result<(Vec<&'a str>,b
 // //             .eval_sexprs(body_sexprs)
 // //             .block_end();
 // //     }
-    
+
 // //     builder
 // //         .func_end()
 // //         .decl_global_var(idn)

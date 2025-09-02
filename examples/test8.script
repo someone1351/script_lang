@@ -30,7 +30,8 @@ println a
 #set_test 554
 #println "get_test2 {}" {get_test}
 
-var g {array 0 1 (array 2 3 {dict "x" 11 "y" 22 "z" {array 33 44 55}})}
+var g {array 0 1 (array 2 3 {dict ["x" 11] ["y" 22 ] ["z" {array 33 44 55}] } )}
+println g
 set g.2.2.z.1 99
 println g
 println "glen {}" g.len
@@ -42,17 +43,28 @@ println "q {q0} {q1} {q2} {q3}"
 #println "{q0}"
 
 
-var v (array (dict "abc" (array )))
+var v (array (dict ["abc" (array )]))
 v.0."abc".push 99
 v.0.abc.push 100
 println v
 
-var d (dict "c" (vec4 1.0 2.0 3.0 4.0))
+var d (dict ["c" (vec4 1.0 2.0 3.0 4.0)])
 #var c (vec4 1.0 2.0 3.0 4.0)
 set d.c.rgb (vec3 5.0 6.0 7.0);
 println d
 
 
-var dd (dict 1 2 3 4 "5" 6 true 7 nil 8)
+var dd (dict  [1 2] [3 4] \
+    ["5" 6] [true 7] \
+    [nil
+        8]
+    )
+
+
+#var dd (dict {1 : 2, 3 : 4, "5" : 6, true : 7, nil : 8,} )
+#var dd : dict [1 2] [3 4] ["5" 6] [true 7] [nil 8]
+#var dd = dict [1 2] [3 4] ["5" 6] [true 7] [nil 8]
+#dd.insert :k :v
+
 println dd
 println dd.{true}

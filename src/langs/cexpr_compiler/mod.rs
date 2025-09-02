@@ -200,6 +200,7 @@ impl Compiler {
         cmd_scope.add_cmd("call", call_func_cmd);
         cmd_scope.add_cmd("?", ternary_cmd);
 
+        cmd_scope.add_cmd("dict", dict_cmd);
 
         cmd_scope
     }
