@@ -158,7 +158,16 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
     //clone(dict)
     lib_scope.method("clone", |mut context|{
-        context.param(0).as_custom().with_data_ref(|data:&Dict|Ok(Value::custom_managed_mut(Dict(data.0.clone()), context.gc_scope())))
+        // context.param(0).as_custom().with_data_ref(|data:&Dict|Ok(Value::custom_managed_mut(Dict(data.0.clone()), context.gc_scope())))
+
+        let param=context.param(0);
+        let data: Dict= param.as_custom().data_clone()?;
+
+        if param.is_mut() {
+            Ok(Value::custom_managed_mut(data, context.gc_scope()))
+        } else {
+            Ok(Value::custom_managed(data, context.gc_scope()))
+        }
     }).custom_ref::<Dict>().end();
 
     lib_scope.method("clear", |context|{

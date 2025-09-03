@@ -200,8 +200,14 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
     //clone(array)
     lib_scope.method("clone",|mut context|{
-        let data: Array= context.param(0).as_custom().data_clone()?;
-        Ok(Value::custom_managed_mut(data, context.gc_scope()))
+        let param=context.param(0);
+        let data: Array= param.as_custom().data_clone()?;
+
+        if param.is_mut() {
+            Ok(Value::custom_managed_mut(data, context.gc_scope()))
+        } else {
+            Ok(Value::custom_managed(data, context.gc_scope()))
+        }
     }).custom_ref::<Array>().end();
 
     //clear(array)

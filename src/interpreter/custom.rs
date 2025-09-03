@@ -292,22 +292,54 @@ impl Custom {
         self.inner.to_weak().map(|inner|Self { type_info: self.type_info, inner })
     }
 
+    pub fn is_unmanaged_strong(&self) -> bool {
+        match &self.inner {
+            CustomInner::Managed(_) => false,
+            CustomInner::Unmanaged(_) => true,
+            CustomInner::UnmanagedWeak(_) => false,
+            CustomInner::Empty => false,
+        }
+    }
+    pub fn is_unmanaged_weak(&self) -> bool {
+        match &self.inner {
+            CustomInner::Managed(_) => false,
+            CustomInner::Unmanaged(_) => false,
+            CustomInner::UnmanagedWeak(_) => true,
+            CustomInner::Empty => false,
+        }
+    }
+
     pub fn is_mut(&self) -> bool {
         match &self.inner {
             CustomInner::Managed(gc_value) => gc_value.data.is_mut(),
             CustomInner::Unmanaged(strong_value_inner) => strong_value_inner.is_mut(),
             CustomInner::UnmanagedWeak(weak_value_inner) => weak_value_inner.is_mut(),
-            // CustomInner::RcStrong(strong_value_inner) => strong_value_inner.is_mut(),
-            // CustomInner::RcWeak(weak_value_inner) => weak_value_inner.is_mut(),
             CustomInner::Empty => false,
         }
     }
-    pub fn to_mut(&self) -> Custom {
-        Custom::new_empty()
+    pub fn is_not_mut(&self) -> bool {
+        !self.is_mut()
     }
-    pub fn to_non_mut(&self) -> Custom {
-        Custom::new_empty()
+
+    pub fn is_managed(&self) -> bool {
+        if let CustomInner::Managed(_)=self.inner { true } else { false }
     }
+    pub fn is_unmanaged(&self) -> bool {
+        match &self.inner {
+            CustomInner::Unmanaged(_) => true,
+            CustomInner::UnmanagedWeak(_) => true,
+            _ => false,
+        }
+    }
+    pub fn is_empty(&self) -> bool {
+        if let CustomInner::Empty=self.inner { true } else { false }
+    }
+    // pub fn to_mut(&self) -> Custom {
+    //     Custom::new_empty()
+    // }
+    // pub fn to_non_mut(&self) -> Custom { //can;t, since requires sync?
+    //     Custom::new_empty()
+    // }
     fn new<T:Any>(inner:CustomInner,
         // caller : Option<Caller>
     ) -> Self {
@@ -512,6 +544,52 @@ impl Custom {
         self.type_info
     }
 
+    // pub fn make_copy<T>(&self,data:T) -> Option<Custom> {
+    //     let x=match self.inner {
+    //         CustomInner::Managed(_) => {
+    //             self.data_clone()
+
+    //         },
+    //         CustomInner::Unmanaged(a) => {
+
+    //         },
+    //         CustomInner::UnmanagedWeak(_) => None,
+    //         CustomInner::Empty => None,
+    //     };
+
+    //     None
+    // }
+
+
+    // pub fn unmanaged_copy<T:Clone+Send+Sync+'static>(&self,) -> Result<Option<Custom>,MachineError> {
+    //     //todo : have err on not unnmanaged?
+    //     let new_inner=match &self.inner {
+    //         CustomInner::Managed(_) => None,
+    //         CustomInner::Unmanaged(s) => Some(CustomInner::Unmanaged(match s {
+    //             StrongValueInner::Mut(_) => StrongValueInner::Mut(Arc::new(Mutex::new(self.data_clone::<T>()?))),
+    //             StrongValueInner::NonMut(_) => StrongValueInner::NonMut(Arc::new(self.data_clone::<T>()?)),
+    //         })),
+    //         CustomInner::UnmanagedWeak(_) => None,
+    //         CustomInner::Empty => None,
+    //     };
+
+    //     Ok(new_inner.map(|inner|Custom{ type_info: self.type_info.clone(), inner }))
+    // }
+
+
+    // pub fn managed_copy<T:Clone+Send+Sync+'static>(&self,) -> Result<Option<Custom>,MachineError> {
+    //     let new_inner=match &self.inner {
+    //         CustomInner::Managed(_) => None,
+    //         CustomInner::Unmanaged(s) => Some(CustomInner::Unmanaged(match s {
+    //             StrongValueInner::Mut(_) => StrongValueInner::Mut(Arc::new(Mutex::new(self.data_clone::<T>()?))),
+    //             StrongValueInner::NonMut(_) => StrongValueInner::NonMut(Arc::new(self.data_clone::<T>()?)),
+    //         })),
+    //         CustomInner::UnmanagedWeak(_) => None,
+    //         CustomInner::Empty => None,
+    //     };
+
+    //     Ok(new_inner.map(|inner|Custom{ type_info: self.type_info.clone(), inner }))
+    // }
 }
 
 

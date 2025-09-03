@@ -1869,4 +1869,54 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         for i in 0..a.len() {a[i]=a[i].clamp(b[i],c[i]);}
         Ok(Value::custom_unmanaged(a))
     }).custom_ref::<IVec4>().custom_ref::<IVec4>().custom_ref::<IVec4>().end();
+
+    //
+    lib_scope.method("copy", |context|{
+        let v:Vec2=context.param(0).as_custom().data_clone()?;
+        Ok(Value::custom_unmanaged_mut(v))
+    }).custom_mut_ref::<Vec2>().end();
+
+    lib_scope.method("copy", |context|{
+        let v:Vec3=context.param(0).as_custom().data_clone()?;
+        Ok(Value::custom_unmanaged_mut(v))
+    }).custom_mut_ref::<Vec3>().end();
+
+    lib_scope.method("copy", |context|{
+        //ony need to copy to mut?
+
+        let v:Vec4=context.param(0).as_custom().data_clone()?;
+        Ok(Value::custom_unmanaged_mut(v))
+
+        // let x=context.param(0);
+        // let y=x.unmanaged_copy::<Vec4>()?;
+
+
+        // let x=context.param(0).as_custom();
+        // let data:Vec4=x.data_clone()?;
+
+
+        // if x.is_mut() {
+        //     Ok(Value::custom_unmanaged_mut(data))
+        // } else {
+        //     Ok(Value::custom_unmanaged(data))
+        // }
+        // Ok(Value::Nil)
+    })
+        .custom_mut_ref::<Vec4>()
+        .end();
+
+    lib_scope.method("copy", |context|{
+        let v:IVec2=context.param(0).as_custom().data_clone()?;
+        Ok(Value::custom_unmanaged_mut(v))
+    }).custom_mut_ref::<IVec2>().end();
+
+    lib_scope.method("copy", |context|{
+        let v:IVec3=context.param(0).as_custom().data_clone()?;
+        Ok(Value::custom_unmanaged_mut(v))
+    }).custom_mut_ref::<IVec3>().end();
+
+    lib_scope.method("copy", |context|{
+        let v:IVec4=context.param(0).as_custom().data_clone()?;
+        Ok(Value::custom_unmanaged_mut(v))
+    }).custom_mut_ref::<IVec4>().end();
 }

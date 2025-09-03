@@ -1,3 +1,10 @@
+/*
+TODO:
+* add BasicValue or PrimitiveValue that only contains bool,int,float,string,nil
+* store it as an enum in value, remove dups
+* can use it as a key for dict
+* add non gc ver of array and dict for it
+*/
 
 use std::any::{Any,TypeId};
 
@@ -401,6 +408,14 @@ impl Value {
     pub fn to_weak(&self) -> Option<Self> {
         self.get_custom().and_then(|c|c.to_weak()).map(|c|Value::Custom(c))
     }
+
+    // pub fn unmanaged_copy<T:Clone+Send+Sync+'static>(&self,) -> Result<Option<Value>,super::MachineError> {
+    //     if let Some(custom)=self.get_custom() {
+    //         Ok(custom.unmanaged_copy::<T>()?.map(|custom|Self::Custom(custom)))
+    //     } else {
+    //         Ok(None)
+    //     }
+    // }
 }
 
 impl ToString for Value {
