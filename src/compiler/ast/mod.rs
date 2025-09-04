@@ -630,24 +630,24 @@ impl<'a> Ast<'a> {
 
         Ok(())
     }
-    pub fn set_field(&mut self,is_field_static:bool)-> Result<(),AstError> {
+    pub fn set_field(&mut self,is_field_symbol:bool,is_last: bool)-> Result<(),AstError> {
         if self.last_node().stack_pushed_num < 3 {
             return Err(AstError::CallNotEnoughParamsPushedOnStack);
         }
 
         // self.add_next(AstNodeType::CallMethod{name:"set_field",params_num:3});
-        self.add_next(AstNodeType::SetField{ is_field_static });
+        self.add_next(AstNodeType::SetField{ is_field_symbol,is_last });
         self.last_node_mut().stack_pushed_num-=3;
 
         Ok(())
     }
-    pub fn get_field(&mut self,is_field_static:bool)-> Result<(),AstError> {
+    pub fn get_field(&mut self,is_field_symbol:bool)-> Result<(),AstError> {
         if self.last_node().stack_pushed_num < 2 {
             return Err(AstError::CallNotEnoughParamsPushedOnStack);
         }
 
         // self.add_next(AstNodeType::CallMethod{name:"get_field",params_num:2});
-        self.add_next(AstNodeType::GetField{ is_field_static });
+        self.add_next(AstNodeType::GetField{ is_field_symbol, });
         self.last_node_mut().stack_pushed_num-=2;
 
         Ok(())
@@ -1642,12 +1642,12 @@ impl<'a> Ast<'a> {
                     }
 
                 }
-                AstNodeType::SetField { is_field_static } => {
-                    instructions.push(Instruction::SetField(is_field_static));
+                AstNodeType::SetField { is_field_symbol,is_last } => {
+                    instructions.push(Instruction::SetField{is_field_symbol,is_last});
                     // instructions.push(Instruction::CallMethod(symbol_inds.get("set_field"),3));
                 }
-                AstNodeType::GetField{ is_field_static } => {
-                    instructions.push(Instruction::GetField(is_field_static));
+                AstNodeType::GetField{ is_field_symbol } => {
+                    instructions.push(Instruction::GetField{is_field_symbol});
                     // instructions.push(Instruction::CallMethod(symbol_inds.get("get_field"),2));
                 }
             }

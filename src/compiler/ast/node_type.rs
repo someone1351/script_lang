@@ -92,7 +92,7 @@ pub enum AstNodeType<'a> {
     // ScopePop,
     //ScopeVar(&'a str), //name
 
-    SetField{is_field_static:bool},
-    GetField{is_field_static:bool},
+    SetField{is_field_symbol:bool,is_last: bool},
+    GetField{is_field_symbol:bool},
 }
 

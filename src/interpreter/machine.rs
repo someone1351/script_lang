@@ -461,7 +461,7 @@ impl<'a,X> Machine<'a,X> {
         let instr=cur_build.instructions.get(self.instr_pos).unwrap();
 
         match instr {
-            &Instruction::GetField(is_field_symbol) => {
+            &Instruction::GetField { is_field_symbol } => {
 
                 // println!("hmm {self_val:?} {field_val:?}");
 
@@ -514,7 +514,7 @@ impl<'a,X> Machine<'a,X> {
                     }
                 }
             }
-            &Instruction::SetField(is_field_symbol) => {
+            &Instruction::SetField{is_field_symbol,is_last} => {
                 let params_num =3;
                 // let symbol="set_field";
 
@@ -556,7 +556,7 @@ impl<'a,X> Machine<'a,X> {
                     {
                         self.debugger.add_func_name("field");
                         self.inner_call_bound_func(params_num, x)?;
-                    } else {
+                    } else if is_last {
                         let param_types=self.get_stack_param_types(params_num);
                         return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(param_types) ));
                     }

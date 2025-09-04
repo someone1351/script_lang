@@ -234,7 +234,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
 
         //
         // self.call_method("set_field", 3);
-        self.set_field(last_field.1);
+        self.set_field(last_field.1,true);
 
         //sometimes is unecessary to call, for things like arrays and dicts, since they hold "pointer" like values,
         //  and not copies, but for get_field's that return a copy and not a "pointer", then
@@ -269,7 +269,7 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
                 // // //todo: on try method fail, pop off unused params? don't need to, ast handles that?
 
                 // .call_method("set_field", 3)
-                .set_field(field.1)
+                .set_field(field.1,false)
                 ;
         }
 
@@ -543,18 +543,18 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         })
     }
 
-    pub fn set_field(&mut self,is_field_static:bool) -> &mut Self {
+    pub fn set_field(&mut self,is_field_symbol:bool,is_last: bool) -> &mut Self {
         self.add_node(move|ast|{
             // ast.call_method("set_field", 3).unwrap();
-            ast.set_field(is_field_static).unwrap();
+            ast.set_field(is_field_symbol,is_last).unwrap();
             Ok(())
         })
     }
 
-    pub fn get_field(&mut self,is_field_static:bool) -> &mut Self {
+    pub fn get_field(&mut self,is_field_symbol:bool) -> &mut Self {
         self.add_node(move|ast|{
             // ast.call_method("get_field", 2).unwrap();
-            ast.get_field(is_field_static).unwrap();
+            ast.get_field(is_field_symbol).unwrap();
             Ok(())
         })
     }

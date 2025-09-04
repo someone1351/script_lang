@@ -120,7 +120,7 @@ pub enum Instruction {
     // GetFields(usize), //params_num
     // SetFields(usize), //params_num
 
-    GetField(bool), //is_field_static
-    SetField(bool), //is_field_static
+    GetField{is_field_symbol:bool}, //is_field_static
+    SetField{is_field_symbol:bool,is_last:bool,}, //is_field_static
 
 }
