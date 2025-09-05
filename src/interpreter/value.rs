@@ -4,6 +4,7 @@ TODO:
 * store it as an enum in value, remove dups
 * can use it as a key for dict
 * add non gc ver of array and dict for it
+** would want to be able to have unmanaged customs for that as well
 */
 
 use std::any::{Any,TypeId};
