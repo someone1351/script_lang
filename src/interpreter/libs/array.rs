@@ -1,9 +1,9 @@
-use super::super::super::common::*;
+// use super::super::super::common::*;
 
 // use super::super::data::*;
 // use super::super::func_context::*;
 use super::super::value::*;
-use super::super::error::*;
+// use super::super::error::*;
 use super::super::lib_scope::*;
 // use super::utils::*;
 use super::super::gc_scope::*;
@@ -185,17 +185,46 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         })
     }).custom_mut_ref::<Array>().int().any().end();
 
+    //type(array)
+    lib_scope.method("type",|_|{
+        Ok(Value::string("Array"))
+    }).custom_ref::<Array>().end();
+
     //string(array)
     lib_scope.method("string",|mut context|{
-        let res=context.param(0).as_custom().with_data_mut(|data:&mut Array|{
-            Ok(data.iter().map(|x|context.value_to_string(x).unwrap_or("_".to_string())).collect::<Vec<_>>().join(","))
-        });
+        // let res=
+        context.param(0).as_custom().with_data_ref(|data:& Array|{
+            let mut output = Vec::new();
+            for v in data.iter() {
+                // let y=context.try_call_method("type", [x.clone()])?.map(|x|x.as_string()).unwrap_or(x.type_string());
 
-        match res {
-            Ok(x)=>Ok(Value::string(format!("Array({x})",))),
-            Err(MachineError{error_type:MachineErrorType::CustomDataBorrowMutError,..}) => Ok(Value::String(StringT::new("Array(_)"))),
-            Err(x)=>Err(x),
-        }
+                let y = if v.is_custom_any() {
+                    context.try_call_method("type", [v.clone()])?.map(|v|v.as_string()).unwrap_or(v.as_string())
+                } else {
+                    v.as_string()
+                };
+
+                output.push(y);
+            }
+            Ok(Value::string(format!("Array({})",output.join(","))))
+            // Ok(data.iter().map(|x|{
+
+
+            //     // if x.is_custom::<Array>() {
+            //     //     "Array(_)".to_string()
+            //     // } else {
+            //     //     context.value_to_string(x).unwrap_or("_".to_string())
+
+            //     // }
+
+            // }).collect::<Vec<_>>().join(","))
+        })
+
+        // match res {
+        //     Ok(x)=>Ok(Value::string(format!("Array({x})",))),
+        //     // Err(MachineError{error_type:MachineErrorType::CustomDataBorrowMutError,..}) => Ok(Value::String(StringT::new("Array(_)"))),
+        //     Err(x)=>Err(x),
+        // }
     }).custom_ref::<Array>().end();
 
     //clone(array)
@@ -204,9 +233,17 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let data: Array= param.as_custom().data_clone()?;
 
         if param.is_mut() {
-            Ok(Value::custom_managed_mut(data, context.gc_scope()))
+            if param.is_managed() {
+                Ok(Value::custom_managed_mut(data, context.gc_scope()))
+            } else {
+                Ok(Value::custom_unmanaged_mut(data))
+            }
         } else {
-            Ok(Value::custom_managed(data, context.gc_scope()))
+            if param.is_managed() {
+                Ok(Value::custom_managed(data, context.gc_scope()))
+            } else {
+                Ok(Value::custom_unmanaged(data))
+            }
         }
     }).custom_ref::<Array>().end();
 

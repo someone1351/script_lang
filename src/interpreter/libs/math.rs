@@ -1919,4 +1919,24 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let v:IVec4=context.param(0).as_custom().data_clone()?;
         Ok(Value::custom_unmanaged_mut(v))
     }).custom_mut_ref::<IVec4>().end();
+
+
+    lib_scope.method("type",|_|{
+        Ok(Value::string("Vec2"))
+    }).custom_ref::<Vec2>().end();
+    lib_scope.method("type",|_|{
+        Ok(Value::string("Vec3"))
+    }).custom_ref::<Vec3>().end();
+    lib_scope.method("type",|_|{
+        Ok(Value::string("Vec4"))
+    }).custom_ref::<Vec4>().end();
+    lib_scope.method("type",|_|{
+        Ok(Value::string("IVec2"))
+    }).custom_ref::<IVec2>().end();
+    lib_scope.method("type",|_|{
+        Ok(Value::string("IVec3"))
+    }).custom_ref::<IVec3>().end();
+    lib_scope.method("type",|_|{
+        Ok(Value::string("IVec4"))
+    }).custom_ref::<IVec4>().end();
 }

@@ -92,6 +92,14 @@ impl Value {
         self.get_custom().map(|c|c.is_mut()).unwrap_or_default()
     }
 
+    pub fn is_managed(&self) -> bool {
+        self.get_custom().map(|c|c.is_managed()).unwrap_or_default()
+    }
+
+    pub fn is_unmanaged(&self) -> bool {
+        self.get_custom().map(|c|c.is_unmanaged()).unwrap_or_default()
+    }
+
     pub fn float<T: TryInto<FloatT>>(x:T) -> Self {
         Self::Float(x.try_into().ok().unwrap_or(0.0))
     }

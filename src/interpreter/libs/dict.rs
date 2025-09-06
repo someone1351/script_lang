@@ -142,18 +142,27 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     lib_scope.method("string", |mut context|{
         let dict=context.param(0).as_custom();
 
-        match dict.with_data_ref(|data:&Dict|{
+        // match
+        dict.with_data_ref(|data:&Dict|{
             let mut element_strings=Vec::new();
 
             for (k,v) in data.0.iter() {
-                element_strings.push(format!("{:?}:{}",k.to_value(),context.value_to_string(v)?));
-            }
+                let y = if v.is_custom_any() {
+                    context.try_call_method("type", [v.clone()])?.map(|x|x.as_string()).unwrap_or(v.as_string())
+                } else {
+                    v.as_string()
+                };
+                // let y=context.try_call_method("type", [v.clone()])?.map(|x|"bbb".to_string()).unwrap_or("aaa".to_string());
+                // let y=v.as_string();
+                element_strings.push(format!("{}:{}",k.to_value().as_string(),y)); //context.value_to_string(v)?
+            } //v.as_string()
 
             Ok(Value::string(format!("Dict({})",element_strings.join(","))))
-        }) {
-            Err(x) if x.error_type==MachineErrorType::CustomDataBorrowMutError => Ok(Value::String(StringT::new("Dict(_)"))),
-            x=>x
-        }
+        })
+        //  {
+        //     Err(x) if x.error_type==MachineErrorType::CustomDataBorrowMutError => Ok(Value::String(StringT::new("Dict(_)"))),
+        //     x=>x
+        // }
     }).custom_ref::<Dict>().end();
 
     //clone(dict)

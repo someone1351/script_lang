@@ -39,6 +39,15 @@ impl StrongValueInner {
             // StrongValueInner::Empty => false,
         }
     }
+
+    // pub fn make_copy(&self) -> Self {
+    //     match self {
+    //         StrongValueInner::Mut(mutex) => todo!(),
+    //         StrongValueInner::NonMut(any) => {
+    //             any.d()
+    //         },
+    //     }
+    // }
 //     // pub fn get_non_mut(&self) -> Option<Arc<dyn Any+Send+Sync>> {
 //     //     match self {
 //     //         Self::NonMut(data) =>Some(data.clone()),
@@ -544,6 +553,23 @@ impl Custom {
         self.type_info
     }
 
+    // pub fn make_copy(&self,gc_scope : &mut GcScope) -> Custom {
+    //     let x=match self.inner {
+    //         CustomInner::Managed(gc_value) => {
+    //             self.data_clone()
+
+    //         },
+    //         CustomInner::Unmanaged(strong_inner_value) => {
+
+    //         },
+    //         CustomInner::UnmanagedWeak(weak_inner_value) => {
+
+    //         },
+    //         CustomInner::Empty => Self{ type_info: self.type_info.clone(), inner: CustomInner::Empty },
+    //     };
+
+    //     None
+    // }
     // pub fn make_copy<T>(&self,data:T) -> Option<Custom> {
     //     let x=match self.inner {
     //         CustomInner::Managed(_) => {
