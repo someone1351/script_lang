@@ -66,6 +66,10 @@ TODO
 TODO
 * allow garbage collecting on single val
 ** so when val is dropped, or vals are dropped, can try to gc them immediately, also can add any other vals dropped in the process to the gc'ing list
+
+TODO
+* for closures that ref each other, instead of storing as a managed (gc'd), store them together as a single unmanaged, and index into them for each func, so only all dropped after last func/closure is dropped
+** could be a problem if too many funcs all refing each other in a giant graph, but unlikely to be a situation, could also detect that and optionally not do this
 */
 
 
