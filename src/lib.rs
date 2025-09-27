@@ -70,6 +70,12 @@ TODO
 TODO
 * for closures that ref each other, instead of storing as a managed (gc'd), store them together as a single unmanaged, and index into them for each func, so only all dropped after last func/closure is dropped
 ** could be a problem if too many funcs all refing each other in a giant graph, but unlikely to be a situation, could also detect that and optionally not do this
+** problem if a global the func is being stored in is a ref type?
+*** probably not, just store a pointer to the mega closure into that global ref
+*** if megaclosure stores a ref to a global (or even a local) ref, and that global/local ref stores a ref to that func, then will be circular
+**** could make that global/local ref a part of the megaclosure,
+**** or just disallow the creation of a megaclosure under those circumstances
+***** would be nice to be able to have an option of not using a gc though
 */
 
 
