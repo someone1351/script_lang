@@ -16,6 +16,13 @@ TODO
 
 * instead of pushing missing params on stk for func calls,
 ** add instr eg Param(usize), that will return the correct val from the stk or nil if param missing
+
+TODO
+* want an error for setting a var to void
+** put checks on set global var, local var, local var deref
+** because for loop macro, stores void, and might be replaced with last val used, added allow_void to set stk instrs
+*** can't rely on result_val because it is ued to calc for loop index
+*** could push last val on stack, do ind calc, and then pop last val back onto result val? messy
 */
 
 use std::collections::HashMap;
@@ -321,6 +328,7 @@ impl<'a,X> Machine<'a,X> {
     fn push_stack_val(&mut self,v:Value) -> Result<(),MachineError> {
 
         if v.is_void() {
+            // println!("v1");
             return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
         }
 
@@ -522,6 +530,13 @@ impl<'a,X> Machine<'a,X> {
                 let field_val=self.get_stack_offset_value(1)?;
                 let self_val=self.get_stack_offset_value(0)?;
 
+                //
+                if to_val.is_void() {
+                    // println!("v2");
+                    return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
+                }
+
+                //
                 let mut done=false;
 
                 if is_field_symbol {
@@ -654,8 +669,16 @@ impl<'a,X> Machine<'a,X> {
             Instruction::StackRot => {
                 self.stack_rot()?;
             }
-            Instruction::SetStackVar(stack_offset_ind) => {
-                let v=self.copy_val(self.result_val())?;
+            Instruction::SetStackVar(stack_offset_ind,allow_void) => {
+                let result_val=self.result_val();
+
+                if !*allow_void && result_val.is_void() {
+                    // let v=self.copy_val(result_val)?.clone_root();
+                    // println!("v4 {v:?}");
+                    return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
+                }
+
+                let v=self.copy_val(result_val)?.clone_root(); //should be root, since on stack
 
                 // if v.is_void() { return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr)); }
 
@@ -673,8 +696,14 @@ impl<'a,X> Machine<'a,X> {
                 self.set_stack_offset_val(*stack_offset_ind, v2)?;
                 self.debugger.set_stack_val_offset_from_last(*stack_offset_ind);
             }
-            Instruction::SetStackVarDeref(stack_offset_ind, init) => {
-                let to_val=self.copy_val(self.result_val().clone_leaf())?;
+            Instruction::SetStackVarDeref(stack_offset_ind, init,allow_void) => {
+                let result_val=self.result_val();
+
+                if !*allow_void && result_val.is_void() {
+                    // println!("v0");
+                    return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
+                }
+                let to_val=self.copy_val(result_val.clone_leaf())?;
                 let custom=self.get_stack_offset_value(*stack_offset_ind)?.as_custom();
 
                 if custom.is_type::<GlobalAccessRef>() {

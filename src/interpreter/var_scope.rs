@@ -44,7 +44,7 @@ impl VarScope {
     pub fn new() -> Self {
         Self {
             vars: Default::default(),
-            // gc : StrongGc::new(), 
+            // gc : StrongGc::new(),
             // refvars: Default::default(),
         }
     }
@@ -70,19 +70,19 @@ impl VarScope {
         //     return None;
         // };
 
-        let var=self.vars.entry(n.to_string()).or_insert_with(||Var { 
-            // value : Value::new_custom_unmanaged(UninitVar), 
+        let var=self.vars.entry(n.to_string()).or_insert_with(||Var {
+            // value : Value::new_custom_unmanaged(UninitVar),
             value : Value::Undefined,
             is_refvar: false,
             init:false,
         });
 
-        if !var.is_refvar {                
-            let refvar=Value::custom_managed_mut(var.value.clone_leaf(), gc_scope);                
+        if !var.is_refvar {
+            let refvar=Value::custom_managed_mut(var.value.clone_leaf(), gc_scope);
             var.value=refvar.clone_root(); //as stored as global
             var.is_refvar=true;
         }
-        
+
         var.value.clone_root()
     }
 
@@ -92,8 +92,8 @@ impl VarScope {
 
     // pub fn decl(&mut self,n : &str,value:Value) -> Result<(),MachineError> {
     //     if !self.set(n, value.clone())? {
-    //         self.vars.insert(n.to_string(), Var { 
-    //             value:value.clone_root(), 
+    //         self.vars.insert(n.to_string(), Var {
+    //             value:value.clone_root(),
     //             is_refvar: false,
     //         });
     //     }
@@ -102,13 +102,13 @@ impl VarScope {
     // }
     pub fn decl(&mut self,n : &str,value:Option<Value>) -> Result<(),MachineError> { //,value:Value
         // //overwrites prev, if prev captured for closure, then it will no longer point to this global
-        // self.vars.insert(n.to_string(), Var { 
-        //     value:value.clone_root(), 
+        // self.vars.insert(n.to_string(), Var {
+        //     value:value.clone_root(),
         //     is_refvar: false,
         // });
 
         //doesn't overwrite
-        let var=self.vars.entry(n.to_string()).or_insert_with(||Var { 
+        let var=self.vars.entry(n.to_string()).or_insert_with(||Var {
             //value:Value::Float(0.5),//what?? was a test?
 			value:Value::Nil,
             is_refvar: false,
@@ -140,8 +140,12 @@ impl VarScope {
             return Ok(false);
         };
 
-        if !var.init {
+        if !var.init { //what is this for? undefined? should be an error then? ie trying to set undefined var, todo!, or is handled elsewhere?
             return Ok(false);
+        }
+
+        if value.is_void() {
+            return Err(MachineError::new(MachineErrorType::VoidNotExpr));
         }
 
         if var.is_refvar {

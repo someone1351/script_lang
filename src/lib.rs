@@ -76,6 +76,13 @@ TODO
 **** could make that global/local ref a part of the megaclosure,
 **** or just disallow the creation of a megaclosure under those circumstances
 ***** would be nice to be able to have an option of not using a gc though
+
+** problem if accessing global declared by another script, as can't check them at commpile time for circular ref
+*** could have only work with funcs stored as local vars
+**** would then need to allow local vars to be declared at root level, which are currently are globals
+**** then not do megaclosures for functions stored as globals (or if not using gc, then error)
+**** would need special var decl for globals eg "global g" instead of "var g"
+***** allow declaration inside blocks/funcs/etc?
 */
 
 

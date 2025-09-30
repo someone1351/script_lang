@@ -1592,15 +1592,17 @@ impl<'a> Ast<'a> {
                     }
                 }
                 AstNodeType::SetVar{name,var,
-                    // anon_id
-                    ..
+                    anon_id,
+                    // ..
                 } => { //copy result ?
+
                     if let Some((stack_offset,captured))=self.calc_var_stack_offset(var,cur_node.stack_size) {
+                        let allow_void=anon_id.is_some();
                         if captured {
                             let init = if let AstAccessVar::Local { .. } = var {true}else{false};
-                            instructions.push(Instruction::SetStackVarDeref(stack_offset,init));
+                            instructions.push(Instruction::SetStackVarDeref(stack_offset,init,allow_void)); //can anon be captured?
                         } else {
-                            instructions.push(Instruction::SetStackVar(stack_offset));
+                            instructions.push(Instruction::SetStackVar(stack_offset,allow_void));
                         }
                     // } else if anon_id.is_some() {
                     } else {

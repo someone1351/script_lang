@@ -17,13 +17,13 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
     let from = record.param(2).unwrap().primitive();
     let to = record.param(3).unwrap().primitive();
     let body = record.param(4).unwrap().primitive();
-    
+
     // let Some(body_block)=body.block() else {
     //     return Err(BuilderError::new(body.start_loc(), BuilderErrorType::ExpectBlock));
     // };
 
     //
-    
+
     builder
         .block_start(None)
             .decl_var_start(idn, false)
@@ -33,15 +33,15 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
                 .decl_anon_var("n", false)
                 .set_anon_var("n")
 
-                .decl_anon_var("i", false)
-                .result_void() //why set to void?? oh "i" is the value of the body's return
-                .set_anon_var("i")
+                .decl_anon_var("r", false)
+                .result_void() //why set to void?? oh "r" is the value of the body's return
+                .set_anon_var("r")
 
             .decl_var_end()
 
             .eval(from)
             .set_var(idn)
-            
+
             .block_start(Some("loop"))
                 .block_start(None)
                     .get_anon_var("n")
@@ -54,7 +54,7 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
 
                     .result_void()
                     .eval(body)
-                    .set_anon_var("i") //
+                    .set_anon_var("r") //
                 .block_end()
 
                 //incr index
@@ -69,7 +69,7 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
                 //
                 .to_block_start(JmpCond::None,0)
             .block_end()
-            .get_anon_var("i")
+            .get_anon_var("r")
         .block_end()
         ;
 

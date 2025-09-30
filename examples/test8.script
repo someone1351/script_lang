@@ -68,3 +68,8 @@ var dd (dict  [1 2] [3 4] \
 
 println dd
 println dd.{true}
+
+fn qqq(q) { println "q is {q}" }
+#fn rrr(r) {}
+#call rrr [call qqq 123]
+#var u [call qqq 123]
