@@ -327,10 +327,10 @@ impl<'a,X> Machine<'a,X> {
 
     fn push_stack_val(&mut self,v:Value) -> Result<(),MachineError> {
 
-        if v.is_void() {
-            // println!("v1");
-            return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
-        }
+        // if v.is_void() { //not necessary?
+        //     // println!("v1");
+        //     return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
+        // }
 
         if self.stack.len()+1>self.stack_limit{
             return Err(MachineError::from_machine(self, MachineErrorType::StackLimitReached(self.stack.len()+1)));
