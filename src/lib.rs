@@ -83,6 +83,10 @@ TODO
 **** then not do megaclosures for functions stored as globals (or if not using gc, then error)
 **** would need special var decl for globals eg "global g" instead of "var g"
 ***** allow declaration inside blocks/funcs/etc?
+
+TODO
+* have functions return void by default, and require return command to return a val
+** also return by itself just returns void
 */
 
 
