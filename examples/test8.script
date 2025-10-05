@@ -74,8 +74,7 @@ fn qqq(q) { println "q is {q}" }
 #call rrr [call qqq 123]
 #var u [call qqq 123]
 
-fn abc() {
-    return 1
+fn abc() { #returns void, not 2
     2
 }
 
