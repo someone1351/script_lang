@@ -73,3 +73,10 @@ fn qqq(q) { println "q is {q}" }
 #fn rrr(r) {}
 #call rrr [call qqq 123]
 #var u [call qqq 123]
+
+fn abc() {
+    return 1
+    2
+}
+
+call abc

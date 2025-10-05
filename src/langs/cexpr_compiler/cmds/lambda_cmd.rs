@@ -15,7 +15,7 @@ pub fn lambda_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
     //lambda a b c {}
     //{lambda a b c {}}
     /*
-    
+
     var a {lambda a b {
         + a b
     }}
@@ -23,19 +23,19 @@ pub fn lambda_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
     var a {fn a b {
         + a b
     }}
-    
+
     var a {fn {a b} {
         + a b
     }}
-    
-    var a {fn {a 
+
+    var a {fn {a
                b} {
         + a b
     }}
     var a {fn a b ... {
         + a b
     }}
-    
+
     var a {fn {a b ...} {
         + a b
     }}
@@ -57,7 +57,7 @@ pub fn lambda_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
 
     //params
     let params_primitive=record.param(1).unwrap().primitive();
-    
+
     let Some(params_block)=params_primitive.block() else {
         return Err(BuilderError::new(params_primitive.start_loc(), BuilderErrorType::IncorrectParamsNum));
     };
@@ -83,7 +83,8 @@ pub fn lambda_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
 
         builder
             .block_start(Some("func"))
-            .eval(body)
+                .eval(body)
+                .result_void()
             .block_end();
     // }
 

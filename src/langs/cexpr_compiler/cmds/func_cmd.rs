@@ -127,9 +127,10 @@ pub fn func_cmd<'a>(
     //
     builder
         .func_start(params,variadic)
-        .block_start(Some("func"))
-        .eval(body)
-        .block_end()
+            .block_start(Some("func"))
+                .eval(body)
+                .result_void()
+            .block_end()
         .func_end();
 
     if let Some(idn)=idn {
