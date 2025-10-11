@@ -42,7 +42,8 @@ pub enum AstNodeType<'a> {
 
     //
     StackSwap,
-    StackRot,
+    StackRotRight,
+    StackRotLeft,
     StackPush,
     StackDup,
     StackPop(usize),

@@ -157,6 +157,9 @@ impl<'a,X> Machine<'a,X> {
     pub fn set_debug_print(&mut self,enabled:bool) {
         self.debugger.set_print(enabled);
     }
+    pub fn set_debug_print_simple(&mut self,enabled:bool) {
+        self.debugger.set_print_simple(enabled);
+    }
     pub fn set_debug(&mut self,enabled:bool) {
         self.debugger.set_enabled(enabled);
     }
@@ -666,8 +669,11 @@ impl<'a,X> Machine<'a,X> {
             Instruction::StackSwap => {
                 self.stack_swap()?;
             }
-            Instruction::StackRot => {
-                self.stack_rot()?;
+            Instruction::StackRotRight => {
+                self.stack_rot_right()?;
+            }
+            Instruction::StackRotLeft => {
+                self.stack_rot_left()?;
             }
             Instruction::SetStackVar(stack_offset_ind,allow_void) => {
                 let result_val=self.result_val();
@@ -1393,12 +1399,24 @@ impl<'a,X> Machine<'a,X> {
         Ok(())
     }
 
-    fn stack_rot(&mut self) -> Result<(),MachineError> {
+    fn stack_rot_right(&mut self) -> Result<(),MachineError> {
         let stack_len = self.stack.len();
 
         if stack_len>=3 {
             self.stack[stack_len-3 ..].rotate_left(1);
-            self.debugger.stack_rot();
+            self.debugger.stack_rot_right();
+        } else {
+            return Err(MachineError::from_machine(self, MachineErrorType::InvalidStackAccess(3) ));
+        }
+
+        Ok(())
+    }
+    fn stack_rot_left(&mut self) -> Result<(),MachineError> {
+        let stack_len = self.stack.len();
+
+        if stack_len>=3 {
+            self.stack[stack_len-3 ..].rotate_right(1);
+            self.debugger.stack_rot_left();
         } else {
             return Err(MachineError::from_machine(self, MachineErrorType::InvalidStackAccess(3) ));
         }

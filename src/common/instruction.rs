@@ -97,7 +97,8 @@ pub enum Instruction {
     StackLocals(usize), //amount
     StackPop(usize), //amount
     StackSwap,
-    StackRot,
+    StackRotRight, //currently rot right, but rot left would be more useful, only need single rot for set_field instead of 2
+    StackRotLeft,
     // StackDup(usize), //stack_offset,
     StackDup,
 

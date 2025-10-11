@@ -60,6 +60,7 @@ pub struct ValOrigin {
 pub struct Debugger {
     disabled:bool,
     debug_print_disabled:bool,
+    debug_print_simple:bool,
 
     stack_traces : Vec<StackTrace>,
 
@@ -82,6 +83,12 @@ impl Debugger {
     pub fn set_print(&mut self,enabled:bool) {
         self.debug_print_disabled=!enabled;
     }
+
+    pub fn set_print_simple(&mut self,enabled:bool) {
+        self.debug_print_simple=enabled;
+    }
+
+
     pub fn set_enabled(&mut self,enabled:bool) {
         self.disabled=!enabled;
     }
@@ -99,6 +106,7 @@ impl Debugger {
             // }],
             disabled: false, // !enabled,
             debug_print_disabled: true, // !debug_print_enabled,
+            debug_print_simple:false,
             func_names : Vec::new(),
             stack_trace_been_pushed:false,
 
@@ -362,11 +370,17 @@ impl Debugger {
         self.stack_val_infos.swap(stack_len-1, stack_len-2);
     }
 
-    pub fn stack_rot(&mut self) {
+    pub fn stack_rot_right(&mut self) {
         if self.disabled {return;}
 
         let stack_len = self.stack_val_infos.len();
         self.stack_val_infos[stack_len-3 ..].rotate_left(1);
+    }
+    pub fn stack_rot_left(&mut self) {
+        if self.disabled {return;}
+
+        let stack_len = self.stack_val_infos.len();
+        self.stack_val_infos[stack_len-3 ..].rotate_right(1);
     }
     pub fn stack_insert_none(&mut self,stack_ind:usize, amount:usize) {
         if self.disabled {return;}
@@ -500,62 +514,74 @@ impl Debugger {
     pub fn debug_print_stack_result(&self, stack : &Vec<Value>,result_val:&Value) {
         if self.disabled||self.debug_print_disabled {return;}
 
-        let val=if result_val.is_custom::<Closure>() {
-            let (func_build,func_ind)=result_val.as_custom().with_data_ref(|x:&Closure|Ok((x.build.clone(),x.func_ind))).unwrap();
-            let p=func_build.path.as_ref().and_then(|p|p.to_str()).map(|p|p.to_string()+", ").unwrap_or("".to_string());
-            format!("{p}func[{func_ind}]")
-        }else{
-            // result_val.as_string()
-            String::new()
-        };
-        let val = if !val.is_empty(){" =".to_string()+val.as_str()}else{val};
-
-        if let Some(result_val_info)=&self.result_val_info {
-            let n=result_val_info.name.as_ref().map(|x|" :".to_string()+x.as_str()).unwrap_or_default();
-
-
-
-            println!("$    r:({}{}): {result_val:?}{val}{n}",
-                result_val_info.build.path.as_ref().and_then(|p|p.to_str()).map(|p|p.to_string()+", ").unwrap_or("".to_string()),
-                result_val_info.instr_pos,
-
+        if self.debug_print_simple {
+            println!("$    r: {}",result_val.to_string()); //result_val.type_string(),
+            println!("*    s: [{}]",
+                stack.iter().rev().enumerate().map(|(_i,v)|{
+                    format!("{}",v.to_string())
+                }).collect::<Vec<_>>().join(", ")
             );
+
         } else {
-            println!("$    r: {result_val:?}{val}");
-        }
 
-        for (i,x) in stack.iter().enumerate().rev() {
-            let j=stack.len()-i-1;
-
-            // let x=format!("{:?}",x);
-            // let x = x.rfind(":").map(|i|x[i+1..].to_string()).unwrap_or(x.clone());
-
-            let val=if x.is_custom::<Closure>() {
-                let (func_build,func_ind)=x.as_custom().with_data_ref(|x:& Closure|Ok((x.build.clone(),x.func_ind))).unwrap();
+            let val=if result_val.is_custom::<Closure>() {
+                let (func_build,func_ind)=result_val.as_custom().with_data_ref(|x:&Closure|Ok((x.build.clone(),x.func_ind))).unwrap();
                 let p=func_build.path.as_ref().and_then(|p|p.to_str()).map(|p|p.to_string()+", ").unwrap_or("".to_string());
                 format!("{p}func[{func_ind}]")
-            } else {
-                // x.as_string()
+            }else{
+                // result_val.as_string()
                 String::new()
             };
-
             let val = if !val.is_empty(){" =".to_string()+val.as_str()}else{val};
 
-            if let Some(stack_info)=&self.stack_val_infos[i] {
-                let n=stack_info.name.as_ref().map(|x|" :".to_string()+x.as_str()).unwrap_or_default();
+            if let Some(result_val_info)=&self.result_val_info {
+                let n=result_val_info.name.as_ref().map(|x|" :".to_string()+x.as_str()).unwrap_or_default();
 
-                println!("*    {j}:({}{}): {x:?}{val}{n}",
 
-                    stack_info.build.path.as_ref().and_then(|p|p.to_str()).map(|p|p.to_string()+", ").unwrap_or("".to_string()),
-                    stack_info.instr_pos,
+
+                println!("$    r:({}{}): {result_val:?}{val}{n}",
+                    result_val_info.build.path.as_ref().and_then(|p|p.to_str()).map(|p|p.to_string()+", ").unwrap_or("".to_string()),
+                    result_val_info.instr_pos,
 
                 );
-
             } else {
-                println!("*    {j}: {x:?}{val}");
+                println!("$    r: {result_val:?}{val}");
             }
 
+            for (i,x) in stack.iter().enumerate().rev() {
+                let j=stack.len()-i-1;
+
+                // let x=format!("{:?}",x);
+                // let x = x.rfind(":").map(|i|x[i+1..].to_string()).unwrap_or(x.clone());
+
+                let val=if x.is_custom::<Closure>() {
+                    let (func_build,func_ind)=x.as_custom().with_data_ref(|x:& Closure|Ok((x.build.clone(),x.func_ind))).unwrap();
+                    let p=func_build.path.as_ref().and_then(|p|p.to_str()).map(|p|p.to_string()+", ").unwrap_or("".to_string());
+                    format!("{p}func[{func_ind}]")
+                } else {
+                    // x.as_string()
+                    String::new()
+                };
+
+                let val = if !val.is_empty(){" =".to_string()+val.as_str()}else{val};
+
+                if let Some(stack_info)=&self.stack_val_infos[i] {
+                    let n=stack_info.name.as_ref().map(|x|" :".to_string()+x.as_str()).unwrap_or_default();
+
+                    println!("*    {j}:({}{}): {x:?}{val}{n}",
+
+                        stack_info.build.path.as_ref().and_then(|p|p.to_str()).map(|p|p.to_string()+", ").unwrap_or("".to_string()),
+                        stack_info.instr_pos,
+
+                    );
+
+                } else {
+                    println!("*    {j}: {x:?}{val}");
+                }
+
+            }
         }
+
 
     }
 

@@ -13,9 +13,9 @@
 - but will have to specify lifetimes + the generic for all context params?
 */
 
-use std::path::Path;
+use std::{collections::BTreeMap, path::Path};
 
-use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs,  Value,
+use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs, Dict, Value
 // MachineError, Value
 };
 
@@ -243,6 +243,13 @@ pub fn test_script3<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
         let mut var_scope=script_lang::VarScope::new();
         var_scope.decl("self", Some(script_lang::Value::int(4))).unwrap();
 
+        let mut e= Dict(BTreeMap::new());
+        let mut e0= Dict(BTreeMap::new());
+        e0.0.insert(script_lang::libs::dict::ValueKey::String("width".into()), Value::Nil);
+        e.0.insert(script_lang::libs::dict::ValueKey::Int(77), script_lang::Value::custom_unmanaged_mut(e0));
+        var_scope.decl("e", Some(script_lang::Value::custom_unmanaged_mut(e))).unwrap();
+
+
         // var_scope.decl("goa", Some(script_lang::Value::custom_callable_unmanaged(45 as i32,|context|{
         //     let mut x:i32=context.param(0).as_custom().data_copy()?;
         //     for i in 1 .. context.params_num() {
@@ -258,6 +265,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
 
         if debug {
             machine.set_debug_print(true);
+            machine.set_debug_print_simple(true);
         }
 
         // build.clone().unwrap().print();
@@ -411,7 +419,8 @@ fn main() {
     // // test_script2("examples/test6.script");
 
     // test_script3("examples/test7.script");
-     test_script3("examples/test8.script",false,false);
+    //test_script3("examples/test8.script",false,false);
+     test_script3("examples/test13.script",true,true);
     // test_script3("examples/test12.script",true,false);
 
     // // test_script3("examples/test9.script");

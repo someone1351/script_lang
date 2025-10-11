@@ -229,8 +229,8 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         //push to_val
         self //=> field result
             .param_push() //=> field result to_val
-            .rot() //=> result to_val field
-            .rot(); //=> to_val field result
+            .rot_right() //=> result to_val field
+            .rot_right(); //=> to_val field result
 
         //
         // self.call_method("set_field", 3);
@@ -251,8 +251,8 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         for field in fields
         {
             self
-                .rot()
-                .rot()
+                .rot_right()
+                .rot_right()
                 .swap()
 
                 //
@@ -422,16 +422,22 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         })
     }
 
-    pub fn rot(&mut self) -> &mut Self {
+    pub fn rot_right(&mut self) -> &mut Self {
         // self.param_loc_rot();
         // self.add_node(BuilderNodeType::StackRot)
 
         self.add_node(|ast|{
-            ast.stack_rot();
+            ast.stack_rot_right();
             Ok(())
         })
     }
 
+    pub fn rot_left(&mut self) -> &mut Self {
+        self.add_node(|ast|{
+            ast.stack_rot_left();
+            Ok(())
+        })
+    }
     pub fn dup(&mut self) -> &mut Self {
         // self.param_loc_dup();
         // self.add_node(BuilderNodeType::StackDup)

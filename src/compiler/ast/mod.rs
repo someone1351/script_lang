@@ -449,10 +449,15 @@ impl<'a> Ast<'a> {
         //swap two top values on stack
         self.add_next(AstNodeType::StackSwap);
     }
-    pub fn stack_rot(&mut self) {
+    pub fn stack_rot_right(&mut self) {
         //todo check stack size? return err?
 
-        self.add_next(AstNodeType::StackRot);
+        self.add_next(AstNodeType::StackRotRight);
+    }
+    pub fn stack_rot_left(&mut self) {
+        //todo check stack size? return err?
+
+        self.add_next(AstNodeType::StackRotLeft);
     }
     pub fn stack_dup(&mut self) {
         //todo check stack size? return err?
@@ -1505,8 +1510,11 @@ impl<'a> Ast<'a> {
                 AstNodeType::StackSwap => {
                     instructions.push(Instruction::StackSwap);
                 }
-                AstNodeType::StackRot => {
-                    instructions.push(Instruction::StackRot);
+                AstNodeType::StackRotRight => {
+                    instructions.push(Instruction::StackRotRight);
+                }
+                AstNodeType::StackRotLeft => {
+                    instructions.push(Instruction::StackRotLeft);
                 }
                 AstNodeType::StackPush => {
                     instructions.push(Instruction::StackPush);
