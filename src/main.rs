@@ -408,6 +408,174 @@ pub fn test_script5<P:AsRef<Path>>(path:P) {
 }
 
 
+// pub fn test_script6<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
+
+//     println!("===");
+//     let mut gc_scope= script_lang::GcScope::new();
+
+//     let path = path.as_ref();
+//     let src = std::fs::read_to_string(path).unwrap();
+
+//     let compiler=script_lang::langs::cexpr_compiler::Compiler::new();
+
+//     let build = compiler.compile(src.as_str(), 0, Some(path), true,
+//         // false
+//     );
+
+
+//     // build.clone().unwrap().print();
+
+
+//     let mut my_num:i32=123;
+
+//     let mut lib_scope=script_lang::LibScope::<
+//         // (&mut i32,)
+//         i32
+//     >::new_full();
+
+//     struct Node(i32);
+
+//     pub struct StuffResultEnv {
+//         pub by_ind : Vec<Value>, //[local_node_ind]=node
+//     }
+
+//     pub struct StuffResult {
+//         pub nodes : HashMap<usize,Value>, //[node_element_ind]=entity_val
+//         pub envs : HashMap<usize,Value>, //[element_ind]=env
+//     }
+//     struct Stuff;
+
+
+//     //
+//  //call(stuff,ind,entity)
+//     lib_scope.method("call",|mut context|{
+//         let stuff=context.param(0).as_custom();
+//         let top_entity:Entity = context.param(2).as_custom().data_clone()?;
+//         let stub_ind=context.param(1).as_int().abs() as usize;
+
+//         let world=context.core_mut();
+
+//         stuff.with_data_ref(|stuff:&Stuff|{
+//             let mut element_entity_map = HashMap::<usize,Entity>::from_iter([(0,top_entity)]);
+//             let Some(node_range)=stuff.all_stubs.get(&stub_ind).cloned() else {return Ok(Value::Nil);};
+
+//             for node_ind in node_range {
+//                 let stuff_node = stuff.all_nodes.get(node_ind).unwrap();
+//                 let names=stuff.all_names.get(stuff_node.names.clone()).unwrap();
+
+//                 let mut e=world.spawn((UiLayoutComputed::default(),));
+
+//                 //
+//                 let &parent_entity=element_entity_map.get(&stuff_node.parent_element_ind).unwrap();
+//                 // e.set_parent(parent_entity);
+//                 e.insert(ChildOf(parent_entity));
+
+//                 //
+//                 let entity=e.id();
+//                 element_entity_map.insert(stuff_node.element_ind, entity);
+
+//                 //
+//                 if !names.is_empty() {
+//                     e.insert((UixName{ names:HashSet::from_iter(names.iter().map(|x|x.clone())) },));
+//                 }
+
+//                 //
+//                 for attrib_ind in stuff_node.attribs.clone() {
+//                     let attrib=stuff.all_attribs.get(attrib_ind).unwrap().0.clone();
+//                     attrib(entity,world);
+//                 }
+
+//                 //
+//                 let parent_entity_val=self_entity_from_world(world, parent_entity);
+
+//                 // let mut pe=world.entity_mut(parent_entity);
+//                 // let mut env=pe.entry::<UixEnv>().or_default();
+
+//                 // for n in names.iter() {
+//                 //     env.get_mut().env.entry(n.clone()).or_default().push(parent_entity_val.clone());
+//                 // }
+//             }
+
+//             //
+//             let element_entity_map2: HashMap<usize, Value>=element_entity_map.iter().map(|(&k,&v)|{
+//                 let vv=self_entity_from_world(world, v);
+//                 (k,vv)
+//             }).collect();
+
+//             //
+//             let mut envs=HashMap::new();
+//             //
+//             if let Some(stub_envs)=stuff.all_envs.get(&stub_ind) {
+//                 for (&env_element_ind,stuff_env) in stub_envs {
+//                     let v=StuffResultEnv{
+//                         by_ind: stuff_env.by_ind.iter().map(|&element_ind|element_entity_map2.get(&element_ind).unwrap().clone()).collect(),
+//                         by_name: stuff_env.by_name.iter().map(|(name,named_env)|{
+//                             (name.clone(),named_env.iter().map(|&element_ind|element_entity_map2.get(&element_ind).unwrap().clone()).collect())
+//                         }).collect(),
+//                     };
+//                     let v=Value::custom_unmanaged(v);
+//                     envs.insert(env_element_ind, v);
+//                 }
+//             }
+
+
+//             //
+//             Ok(Value::custom_unmanaged(StuffResult{ nodes: element_entity_map2, envs }))
+//             // Ok(Value::custom_unmanaged(StuffResult(element_entity_map)))
+//         })
+//     }).custom_ref::<Stuff>().int().custom_ref::<Entity>().end();
+
+//     //
+
+
+//     if debug_compile && build.is_ok() {
+//         build.as_ref().unwrap().print();
+//     }
+//     if let Err(e)=&build {
+//         eprintln!("In {path:?}, {}",e.msg());
+//     } else {
+
+//         let mut var_scope=script_lang::VarScope::new();
+//         let node123=Value::custom_unmanaged(Node(123));
+//         let env123=Value::custom_unmanaged(StuffResultEnv{ by_ind: vec![node123.clone()] });
+
+//         var_scope.decl("root", Some(node123.clone())).unwrap();
+//         var_scope.decl("_stubs", Some(Value::custom_unmanaged(StuffResult{
+//             nodes: HashMap::from([(123,node123.clone())]),
+//             envs: HashMap::from([(123,env123.clone())]),
+//         }))).unwrap();
+
+
+//         let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope, &mut var_scope,  &mut
+//             // core
+//             my_num
+//         );
+
+//         if debug {
+//             machine.set_debug_print(true);
+//             machine.set_debug_print_simple(true);
+//         }
+
+//         // build.clone().unwrap().print();
+
+//         let res=machine.run_build(&build.unwrap());
+//         println!("the result is {res:?}");
+
+//         if let Err(e)=&res {
+//             e.eprint(None);
+//             machine.debug_print_stack_trace(true);
+//             machine.debug_print_stack();
+//             // machine.print_state();
+//         }
+//         // machine.debug_print_stack();
+//     }
+
+//     gc_scope.mark_and_sweep().unwrap();
+//     gc_scope.test();
+
+
+// }
+
 
 fn main() {
     println!("Hello, world!");
@@ -419,8 +587,9 @@ fn main() {
     // // test_script2("examples/test6.script");
 
     // test_script3("examples/test7.script");
-    //test_script3("examples/test8.script",false,false);
-     test_script3("examples/test13.script",true,true);
+    test_script3("examples/test8.script",false,false);
+    //  test_script3("examples/test13.script",true,true);
+    //  test_script6("examples/test14.script",true,true);
     // test_script3("examples/test12.script",true,false);
 
     // // test_script3("examples/test9.script");

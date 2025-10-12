@@ -577,6 +577,8 @@ impl<'a,X> Machine<'a,X> {
                     } else if is_last {
                         let param_types=self.get_stack_param_types(params_num);
                         return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(param_types) ));
+                    } else { //ignore fail if not last (as in set chain,)
+                        self.stack_pop_amount(params_num)?;
                     }
                 }
             }

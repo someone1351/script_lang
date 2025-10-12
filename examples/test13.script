@@ -1,5 +1,10 @@
 
 var e
-for i 3 4 {
-    set e.77.width 99
+
+fn abc (e) {
+    for i 3 4 {
+        set e.77.width 99
+    }
 }
+
+call abc e

@@ -1,0 +1,13 @@
+var root, _stubs
+var _ns [call _stubs 0 root]
+fn stub_thing (self) {
+    var _ns [call _stubs 1 self]
+    return _ns.e1
+}
+fn _n3 (self env) {
+    for i 3 4 {
+        var e (call stub_thing self)
+        set e.0.width 1.0
+    }
+}
+call _n3 _ns.n3 _ns.e3
