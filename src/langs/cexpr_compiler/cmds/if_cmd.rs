@@ -76,7 +76,10 @@ pub fn if_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primiti
             builder
                 .block_start(None)
                     .eval(cond)
-                    .to_block_end(JmpCond::False,0)
+                    .param_push()
+                    .call_method("not", 1)
+                    .to_block_end(JmpCond::True //False
+                        ,0)
                     .eval(body)
                     .to_block_end(JmpCond::None,1)
                 .block_end()
@@ -87,6 +90,6 @@ pub fn if_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primiti
     }
 
     builder.block_end();
-    
+
     Ok(())
 }

@@ -13,20 +13,23 @@ pub fn ternary_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pr
     let cond=record.param(1).unwrap().primitive();
     let x=record.param(2).unwrap().primitive();
     let y=record.param(3).unwrap().primitive();
-    
+
     //
     builder
         .block_start(None)
             .block_start(None)
                 .eval(cond)
-                .to_block_end(JmpCond::False,0)
+                .param_push()
+                .call_method("not", 1)
+                .to_block_end(JmpCond::True //False
+                    ,0)
                 .eval(x)
                 .to_block_end(JmpCond::None,1)
             .block_end()
             .eval(y)
         .block_end();
 
-    
+
     //
     Ok(())
 }

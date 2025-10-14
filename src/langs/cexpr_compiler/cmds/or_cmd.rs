@@ -9,23 +9,26 @@ pub fn or_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primiti
     if record.params_num() < 2 {
         return Err(BuilderError::new(record.last_param().unwrap().start_loc(), BuilderErrorType::IncorrectParamsNum));
     }
-    
+
     //
     builder.block_start(None);
-    
+
     //
     for i in 1 .. record.params_num() {
         let cond=record.param(i).unwrap().primitive();
 
         builder
             .eval(cond)
-            .to_block_end(JmpCond::True,0)
+            .param_push()
+            .call_method("not", 1)
+            .to_block_end(JmpCond::False //True
+                ,0)
             ;
     }
 
     //
     builder.block_end();
-    
+
     //
     Ok(())
 }

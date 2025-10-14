@@ -79,3 +79,10 @@ fn abc() { #returns void, not 2
 }
 
 call abc
+
+var k 0
+
+while (< k 5) {
+    println "k is {k}"
+    set k (+ k 1)
+}

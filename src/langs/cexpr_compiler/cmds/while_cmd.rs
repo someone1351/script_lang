@@ -26,7 +26,10 @@ pub fn while_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Prim
         // .loop_instr()
         .block_start(Some("loop"))
             .eval(cond_expr)
-            .to_block_end(JmpCond::False,0)
+            .param_push()
+            .call_method("not", 1)
+            .to_block_end(JmpCond::True //False
+                ,0)
             // .eval_sexprs(body_stmts)
             .eval(body)
             .to_block_start(JmpCond::None,0)
