@@ -11,7 +11,11 @@ pub fn and_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
     }
 
     //
-    builder.block_start(None);
+    builder
+        .decl_anon_var("x", false)
+        .block_start(None)
+
+        ;
 
     //
     for i in 1 .. record.params_num() {
@@ -19,6 +23,7 @@ pub fn and_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
 
         builder
             .eval(cond)
+            .set_anon_var("x")
             .param_push() //push result
             .call_method("not", 1)
             .to_block_end(
@@ -28,7 +33,9 @@ pub fn and_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
     }
 
     //
-    builder.block_end();
+    builder
+        .block_end()
+        .get_anon_var("x");
 
     //
     Ok(())

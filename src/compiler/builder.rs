@@ -303,7 +303,6 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
     }
     pub fn anon_scope(&mut self,anon_scope:usize) {
         self.cur_anon_id=anon_scope;
-
     }
 
     pub fn loc(&mut self, loc:Loc) -> &mut Self {
