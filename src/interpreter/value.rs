@@ -211,9 +211,11 @@ impl Value {
             Value::Nil=>false,
             // Value::Float(f) if *f==0.0 =>false,
             // Value::Int(0)=>false,
-            Value::Bool(x)=>*x,
+            &Value::Bool(x)=>x,
             // Value::String(s) if s.is_empty()=>false,
             // Value::Void => false,
+            &Value::Int(x) if x==0 => false,
+            &Value::Float(x) if x==0.0 => false,
             _=>true
         }
     }
