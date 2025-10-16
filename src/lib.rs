@@ -105,6 +105,29 @@ TODO
 
 * allow builder to declare anon array, that is converted to non array at compile time
 
+THOUGHTS
+
+* a copy should take a custom_ref, and change it to custom_mut
+** use nonmut to allow a value to be returned but not set, and the returned value once copied can be set
+** so if they do
+    n.computed.inner_rect.left=5
+*** then it will give missing method err, as rect returned is nonmut
+*** but what if left returned by rect was always mut, then that would be writable
+** no, better to use a no_setter field method
+
+* if wanted inner_rect to be writable, but not replaceable then, not have set[inner_rect](node,rect)
+** if wanted replaceable, then would return a setter
+** but what if
+    n.computed.inner_rect.left=5
+*** but wanted computed to be read only, it would allow the setter to be done, but it would do nothing
+**** could have a setter::inner_rect(node,computed), then returns a read_only err
+***** could allow setter to know if it is in a set chain, and it's position in it, eg first or not
+***** could have a special field setter, that returns a read_only err only eg
+    lib_scope.field_named_no_setter("inner_rect")
+        .custom_ref::<Entity>()
+        .custom_ref::<Rect>()
+        .end();
+
 */
 
 
