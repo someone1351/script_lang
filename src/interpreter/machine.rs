@@ -717,7 +717,7 @@ impl<'a,X> Machine<'a,X> {
                 if custom.is_type::<GlobalAccessRef>() {
                     let data=custom.data_clone::<GlobalAccessRef>()
                         .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
-                    data.var.as_custom().with_data_mut(|v:&mut Value|{
+                    data.var.as_custom().with_data_mut_ext(|v:&mut Value|{
                         //don't care about init, since this is supposed behave like a normal global_set, not a deref_set
                         if v.is_undefined() {
                             return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(data.name.to_string()) ));
@@ -730,7 +730,7 @@ impl<'a,X> Machine<'a,X> {
 
                     // if !self.var_scope.set(data.name.as_str(),val)? {}
                 } else {
-                    custom.with_data_mut(|data:&mut Value|{
+                    custom.with_data_mut_ext(|data:&mut Value|{
                         if !init && data.is_undefined() {
                             Err(MachineError::from_machine(self, MachineErrorType::SetUndefinedVar ))
                         } else {
@@ -760,7 +760,7 @@ impl<'a,X> Machine<'a,X> {
                         return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(data.name.to_string()) ));
                     }
                 } else {
-                    custom.with_data_ref(|data:& Value|{
+                    custom.with_data_ref_ext(|data:& Value|{
                         if data.is_undefined() {
                             return Err(MachineError::from_machine(self, MachineErrorType::GetUndefinedVar ));
                         }

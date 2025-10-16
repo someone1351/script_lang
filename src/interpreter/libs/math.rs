@@ -806,7 +806,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = [context.param(2).as_float()];
 
-        this.as_custom().with_data_mut(|data:&mut Vec2|{
+        this.as_custom().with_data_mut_ext(|data:&mut Vec2|{
             set_field_util(fields.as_str(), data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -819,7 +819,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = [context.param(2).as_float()];
 
-        this.as_custom().with_data_mut(|data:&mut Vec3|{
+        this.as_custom().with_data_mut_ext(|data:&mut Vec3|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -832,7 +832,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = [context.param(2).as_float()];
 
-        this.as_custom().with_data_mut(|data:&mut Vec4|{
+        this.as_custom().with_data_mut_ext(|data:&mut Vec4|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -845,7 +845,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<Vec2>()?;
 
-        this.as_custom().with_data_mut(|data:&mut Vec2|{
+        this.as_custom().with_data_mut_ext(|data:&mut Vec2|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -858,7 +858,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<Vec2>()?;
 
-        this.as_custom().with_data_mut(|data:&mut Vec3|{
+        this.as_custom().with_data_mut_ext(|data:&mut Vec3|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -871,7 +871,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<Vec3>()?;
 
-        this.as_custom().with_data_mut(|data:&mut Vec3|{
+        this.as_custom().with_data_mut_ext(|data:&mut Vec3|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -884,7 +884,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<Vec2>()?;
 
-        this.as_custom().with_data_mut(|data:&mut Vec4|{
+        this.as_custom().with_data_mut_ext(|data:&mut Vec4|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -897,7 +897,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<Vec3>()?;
 
-        this.as_custom().with_data_mut(|data:&mut Vec4|{
+        this.as_custom().with_data_mut_ext(|data:&mut Vec4|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -910,7 +910,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<Vec4>()?;
 
-        this.as_custom().with_data_mut(|data:&mut Vec4|{
+        this.as_custom().with_data_mut_ext(|data:&mut Vec4|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -923,7 +923,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = [context.param(2).as_int()];
 
-        this.as_custom().with_data_mut(|data:&mut IVec2|{
+        this.as_custom().with_data_mut_ext(|data:&mut IVec2|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -936,7 +936,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = [context.param(2).as_int()];
 
-        this.as_custom().with_data_mut(|data:&mut IVec3|{
+        this.as_custom().with_data_mut_ext(|data:&mut IVec3|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -949,7 +949,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = [context.param(2).as_int()];
 
-        this.as_custom().with_data_mut(|data:&mut IVec4|{
+        this.as_custom().with_data_mut_ext(|data:&mut IVec4|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -962,7 +962,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<IVec2>()?;
 
-        this.as_custom().with_data_mut(|data:&mut IVec2|{
+        this.as_custom().with_data_mut_ext(|data:&mut IVec2|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -974,7 +974,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<IVec2>()?;
 
-        this.as_custom().with_data_mut(|data:&mut IVec3|{
+        this.as_custom().with_data_mut_ext(|data:&mut IVec3|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -987,7 +987,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<IVec3>()?;
 
-        this.as_custom().with_data_mut(|data:&mut IVec3|{
+        this.as_custom().with_data_mut_ext(|data:&mut IVec3|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -1000,7 +1000,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<IVec2>()?;
 
-        this.as_custom().with_data_mut(|data:&mut IVec4|{
+        this.as_custom().with_data_mut_ext(|data:&mut IVec4|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -1013,7 +1013,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<IVec3>()?;
 
-        this.as_custom().with_data_mut(|data:&mut IVec4|{
+        this.as_custom().with_data_mut_ext(|data:&mut IVec4|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })
@@ -1025,7 +1025,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let fields = context.param(1).as_string();
         let to = context.param(2).as_custom().data_clone::<IVec4>()?;
 
-        this.as_custom().with_data_mut(|data:&mut IVec4|{
+        this.as_custom().with_data_mut_ext(|data:&mut IVec4|{
             set_field_util(fields.as_str(),data,&to).map_err(|e|context.error(e))?;
             Ok(Value::Void)
         })

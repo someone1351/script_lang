@@ -14,6 +14,7 @@ use std::sync::Mutex;
 use std::sync::Weak;
 // use std::sync::MutexGuard;
 
+
 use super::gc_scope::*;
 // use super::value::*;
 use super::error::*;
@@ -489,14 +490,27 @@ impl Custom {
         CustomData { data, type_info : self.type_info }
     }
 
-    pub fn with_data_mut<T:Any,R>(&self,func:impl FnOnce(&mut T)->Result<R,MachineError>) -> Result<R,MachineError> {
+    pub fn with_data_mut<T:Any>(&self,func:impl FnOnce(&mut T)) -> Result<(),MachineError> {
+        self.with_data_mut_ext(|data|{
+            func(data);
+            Ok(())
+        })
+    }
+    pub fn with_data_ref<T:Any>(&self,func:impl FnOnce(&T)) -> Result<(),MachineError> {
+        self.with_data_ref_ext(|data|{
+            func(data);
+            Ok(())
+        })
+    }
+
+    pub fn with_data_mut_ext<T:Any,R>(&self,func:impl FnOnce(&mut T)->Result<R,MachineError>) -> Result<R,MachineError> {
         // let data=self.data();
         // let mut data=data.get_mut::<T>()?;
         // func(&mut data)
         self.data().inner_with_data_mut(func)
     }
 
-    pub fn with_data_ref<T:Any,R>(&self,func:impl FnOnce(&T)->Result<R,MachineError>) -> Result<R,MachineError> {
+    pub fn with_data_ref_ext<T:Any,R>(&self,func:impl FnOnce(&T)->Result<R,MachineError>) -> Result<R,MachineError> {
         let data=self.data();
         // data.data.as_ref().and_then(|data|match data {
         //     StrongValueInner::Mut(_) => todata.inner_with_data_mut(|data|func(data)),
@@ -532,7 +546,7 @@ impl Custom {
         }
     }
     pub fn get_data_clone<T:Any+Clone>(&self) -> Result<Option<T>,MachineError> {
-        match self.with_data_ref(|x: &T|Ok(x.clone())) {
+        match self.with_data_ref_ext(|x: &T|Ok(x.clone())) {
             Ok(x) => Ok(Some(x)),
             Err(MachineError { error_type:MachineErrorType::CustomDataInvalidCast{..}, .. }) => Ok(None),
             Err(e) => Err(e)
@@ -541,7 +555,7 @@ impl Custom {
 
     pub fn data_clone<T:Any+Clone>(&self) -> Result<T,MachineError> {
         // Ok(self.data().get_mut::<T>()?.clone())
-        Ok(self.with_data_ref(|x: &T|Ok(x.clone()))?)
+        Ok(self.with_data_ref_ext(|x: &T|Ok(x.clone()))?)
     }
 
     // pub fn data_copy<T:Any+Copy>(&self) -> Result<T,MachineError> {

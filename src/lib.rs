@@ -128,6 +128,10 @@ THOUGHTS
         .custom_ref::<Rect>()
         .end();
 
+TODO
+* could have lib_scope.setter_named("myfield",|context|{}).custom_mut_ref::<MyStruct>().float().end();
+** where user provided method doesn't require a return? but still need a return for errors eg Ok(())
+
 */
 
 

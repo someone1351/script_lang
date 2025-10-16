@@ -525,7 +525,7 @@ impl Debugger {
         } else {
 
             let val=if result_val.is_custom::<Closure>() {
-                let (func_build,func_ind)=result_val.as_custom().with_data_ref(|x:&Closure|Ok((x.build.clone(),x.func_ind))).unwrap();
+                let (func_build,func_ind)=result_val.as_custom().with_data_ref_ext(|x:&Closure|Ok((x.build.clone(),x.func_ind))).unwrap();
                 let p=func_build.path.as_ref().and_then(|p|p.to_str()).map(|p|p.to_string()+", ").unwrap_or("".to_string());
                 format!("{p}func[{func_ind}]")
             }else{
@@ -555,7 +555,7 @@ impl Debugger {
                 // let x = x.rfind(":").map(|i|x[i+1..].to_string()).unwrap_or(x.clone());
 
                 let val=if x.is_custom::<Closure>() {
-                    let (func_build,func_ind)=x.as_custom().with_data_ref(|x:& Closure|Ok((x.build.clone(),x.func_ind))).unwrap();
+                    let (func_build,func_ind)=x.as_custom().with_data_ref_ext(|x:& Closure|Ok((x.build.clone(),x.func_ind))).unwrap();
                     let p=func_build.path.as_ref().and_then(|p|p.to_str()).map(|p|p.to_string()+", ").unwrap_or("".to_string());
                     format!("{p}func[{func_ind}]")
                 } else {

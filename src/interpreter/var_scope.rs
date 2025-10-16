@@ -153,7 +153,7 @@ impl VarScope {
             // let mut data=data.borrow_mut::<Value>()?;
             // *data=value.clone();
 
-            var.value.as_custom().with_data_mut(|x:&mut Value|{
+            var.value.as_custom().with_data_mut_ext(|x:&mut Value|{
                 *x=value.clone_leaf();
                 Ok(())
             })?;

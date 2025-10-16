@@ -116,7 +116,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     lib_scope.method("push",|context|{
         let v=context.param(1).clone();
 
-        context.param(0).as_custom().with_data_mut(|x:&mut Array|{
+        context.param(0).as_custom().with_data_mut_ext(|x:&mut Array|{
             x.push(v.clone());
             Ok(v)
         })
@@ -124,15 +124,15 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
     //pop(array)
     lib_scope.method("pop",|context|{
-        context.param(0).as_custom().with_data_mut(|x:&mut Array|{
+        context.param(0).as_custom().with_data_mut_ext(|x:&mut Array|{
             Ok(x.pop().map(|x|x.clone()).unwrap_or(Value::Nil))
         })
     }).custom_mut_ref::<Array>().end();
 
     //extend(array,array)
     lib_scope.method("extend",|context|{
-        let other=context.param(1).as_custom().with_data_ref(|y:&Array|{ Ok(y.clone()) })?;
-        context.param(0).as_custom().with_data_mut(move |x:&mut Array|{
+        let other=context.param(1).as_custom().with_data_ref_ext(|y:&Array|{ Ok(y.clone()) })?;
+        context.param(0).as_custom().with_data_mut_ext(move |x:&mut Array|{
             x.extend(other.iter().map(|z|z.clone()));
             Ok(Value::Void)
         })
@@ -140,18 +140,18 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
     //len(array)
     lib_scope.method("len",|context|{
-        context.param(0).as_custom().with_data_ref(|x:&Array|Ok(Value::int(x.len())))
+        context.param(0).as_custom().with_data_ref_ext(|x:&Array|Ok(Value::int(x.len())))
     }).custom_ref::<Array>().end();
 
     //is_empty(array)
     lib_scope.method("is_empty",|context|{
-        context.param(0).as_custom().with_data_ref(|x:&Array|Ok(Value::Bool(x.is_empty())))
+        context.param(0).as_custom().with_data_ref_ext(|x:&Array|Ok(Value::Bool(x.is_empty())))
     }).custom_ref::<Array>().end();
 
     //get_field(array,int)
     lib_scope.field(|context|{
 
-        context.param(0).as_custom().with_data_ref(|x:&Array|{
+        context.param(0).as_custom().with_data_ref_ext(|x:&Array|{
             let index=context.param(1).as_index(x.len());
             let v=index.map(|i|x.get(i).unwrap()).cloned().unwrap_or(Value::Nil);
             Ok(v)
@@ -166,7 +166,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let val=context.param(2);
         let array=context.param(0);
 
-        array.as_custom().with_data_mut(|x:&mut Array|{
+        array.as_custom().with_data_mut_ext(|x:&mut Array|{
             if x.len()==0 {
                 return Err(context.error(format!("Array len is 0.")));
             }
@@ -193,7 +193,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //string(array)
     lib_scope.method("string",|mut context|{
         // let res=
-        context.param(0).as_custom().with_data_ref(|data:& Array|{
+        context.param(0).as_custom().with_data_ref_ext(|data:& Array|{
             let mut output = Vec::new();
             for v in data.iter() {
                 // let y=context.try_call_method("type", [x.clone()])?.map(|x|x.as_string()).unwrap_or(x.type_string());
@@ -249,7 +249,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
     //clear(array)
     lib_scope.method("clear",|context|{
-        context.param(0).as_custom().with_data_mut(|data:&mut Array|{
+        context.param(0).as_custom().with_data_mut_ext(|data:&mut Array|{
             data.clear();
             Ok(Value::Void)
         })
