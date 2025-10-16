@@ -1874,12 +1874,12 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     lib_scope.method("copy", |context|{
         let v:Vec2=context.param(0).as_custom().data_clone()?;
         Ok(Value::custom_unmanaged_mut(v))
-    }).custom_mut_ref::<Vec2>().end();
+    }).custom_ref::<Vec2>().end();
 
     lib_scope.method("copy", |context|{
         let v:Vec3=context.param(0).as_custom().data_clone()?;
         Ok(Value::custom_unmanaged_mut(v))
-    }).custom_mut_ref::<Vec3>().end();
+    }).custom_ref::<Vec3>().end();
 
     lib_scope.method("copy", |context|{
         //ony need to copy to mut?
@@ -1902,23 +1902,23 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         // }
         // Ok(Value::Nil)
     })
-        .custom_mut_ref::<Vec4>()
+        .custom_ref::<Vec4>()
         .end();
 
     lib_scope.method("copy", |context|{
         let v:IVec2=context.param(0).as_custom().data_clone()?;
         Ok(Value::custom_unmanaged_mut(v))
-    }).custom_mut_ref::<IVec2>().end();
+    }).custom_ref::<IVec2>().end();
 
     lib_scope.method("copy", |context|{
         let v:IVec3=context.param(0).as_custom().data_clone()?;
         Ok(Value::custom_unmanaged_mut(v))
-    }).custom_mut_ref::<IVec3>().end();
+    }).custom_ref::<IVec3>().end();
 
     lib_scope.method("copy", |context|{
         let v:IVec4=context.param(0).as_custom().data_clone()?;
         Ok(Value::custom_unmanaged_mut(v))
-    }).custom_mut_ref::<IVec4>().end();
+    }).custom_ref::<IVec4>().end();
 
 
     lib_scope.method("type",|_|{

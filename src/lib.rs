@@ -87,6 +87,24 @@ TODO
 TODO
 * have functions return void by default, and require return command to return a val
 ** also return by itself just returns void
+
+TODO
+* could have when set_field returns non void, then use it to set next val in chain, or if no set chain, then the var the val is stored
+    var a
+    a.b.c.d=5
+
+    ab=a.b
+    abc=ab.c
+
+    x= abc.d=5 #set_field returns abc
+    y= ab.c=x #set_field returns ab
+    z= a.b=y #set_field returns a
+    a=z
+
+    a=a.b=ab.c=abc.d=5
+
+* allow builder to declare anon array, that is converted to non array at compile time
+
 */
 
 
