@@ -795,9 +795,7 @@ fn parse_char_symbol(
     // texts:&mut Vec<String>,
     text_map:&mut HashMap<String,usize>,
 ) -> Option<(usize,Loc,Loc)> {
-    if let Some(x)=input.has(0, ["~","!","@","%","^","&","*","-","+","=","<",">","?","/","|",
-        ",",
-    ]) {
+    if let Some(x)=input.has(0, ["~","!","@","%","^","&","*","-","+","=","<=",">=","<",">","?","/","|",",",]) {
         let start_loc=input.loc();
 
         let text_map_size=text_map.len();
