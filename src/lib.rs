@@ -132,6 +132,9 @@ TODO
 * could have lib_scope.setter_named("myfield",|context|{}).custom_mut_ref::<MyStruct>().float().end();
 ** where user provided method doesn't require a return? but still need a return for errors eg Ok(())
 
+TODO
+* replace field_named, with methods field_name(self), field_name(self,val) ?
+** anything need to be done about symbol fields?
 */
 
 
