@@ -135,6 +135,10 @@ TODO
 TODO
 * replace field_named, with methods field_name(self), field_name(self,val) ?
 ** anything need to be done about symbol fields?
+
+TODO
+* remove string copy in method get in libscope
+
 */
 
 
