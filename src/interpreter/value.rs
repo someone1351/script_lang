@@ -9,6 +9,8 @@ TODO:
 
 use std::any::{Any,TypeId};
 
+// use crate::MachineError;
+
 use super::super::common::*;
 use super::custom::*;
 // use super::error::*;
@@ -26,6 +28,66 @@ pub enum Value {
     Int(IntT),
     String(StringT),
     Custom(Custom),
+}
+
+impl Into<Value> for StringT {
+    fn into(self) -> Value {
+        Value::String(self.clone())
+    }
+}
+impl Into<Value> for String {
+    fn into(self) -> Value {
+        Value::string(self)
+    }
+}
+impl Into<Value> for &str {
+    fn into(self) -> Value {
+        Value::string(self)
+    }
+}
+
+impl Into<Value> for bool {
+    fn into(self) -> Value {
+        Value::bool(self)
+    }
+}
+
+impl Into<Value> for f32 {
+    fn into(self) -> Value {
+        Value::float(self)
+    }
+}
+
+impl Into<Value> for f64 {
+    fn into(self) -> Value {
+        Value::float(self)
+    }
+}
+
+impl Into<Value> for i32 {
+    fn into(self) -> Value {
+        Value::int(self)
+    }
+}
+impl Into<Value> for i64 {
+    fn into(self) -> Value {
+        Value::int(self)
+    }
+}
+impl Into<Value> for u32 {
+    fn into(self) -> Value {
+        Value::int(self)
+    }
+}
+impl Into<Value> for u64 {
+    fn into(self) -> Value {
+        Value::int(self)
+    }
+}
+impl Into<Value> for usize {
+    fn into(self) -> Value {
+        Value::int(self)
+    }
 }
 
 impl PartialEq for Value {
@@ -99,6 +161,13 @@ impl Value {
     pub fn is_unmanaged(&self) -> bool {
         self.get_custom().map(|c|c.is_unmanaged()).unwrap_or_default()
     }
+
+    // pub fn try_float<T: TryInto<FloatT>>(x:T) -> Result<Self,MachineError> {
+    //     x.try_into().map(|x|Self::Float(x)).map_err(MachineError::method("msg"))
+    // }
+    // pub fn try_int<T: TryInto<IntT>+Sized>(x:T) -> Self {
+    //     Self::Int(x.try_into().ok().unwrap_or(0))
+    // }
 
     pub fn float<T: TryInto<FloatT>>(x:T) -> Self {
         Self::Float(x.try_into().ok().unwrap_or(0.0))
