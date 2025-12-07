@@ -139,6 +139,10 @@ TODO
 TODO
 * remove string copy in method get in libscope
 
+TODO
+* in build, store list of method names
+** then when run with interpreter, store list of methods by those indices, instead of getting those mthods by name each time
+
 */
 
 
