@@ -16,7 +16,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     lib_scope.method("string",|context|Ok(Value::string(context.param(0).as_string())))
         .any()
         .end();
-    
+
     //error(any?)
     lib_scope.method("error", |context|{
         let msg=if context.param(0).is_nil() {
@@ -24,7 +24,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         } else {
             context.param(0).as_string()
         };
-        
+
         Err(context.error(msg))
     })
         .optional()
@@ -66,22 +66,31 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         //.bool().or_nil().or_int()
         .any()
         .end();
-    
+
     //eq(any,any)
     lib_scope.method("=",|_|Ok(Value::Bool(false)))
         .any()
         .any()
         .end();
-    
+
     //eq(nil,any)
     lib_scope.method("=",|context|Ok(Value::Bool(context.param(1).is_nil())))
         .nil()
         .any()
         .end();
-    
+
     //eq(any,nil)
     lib_scope.method("=",|context|Ok(Value::Bool(context.param(0).is_nil())))
         .any()
         .nil()
+        .end();
+
+
+    //is_gc_alive(custom)
+    lib_scope.method("is_custom_alive", |context|{
+        let x=context.param(0).as_custom();
+        Ok(x.is_alive().into())
+    })
+        .custom_any()
         .end();
 }

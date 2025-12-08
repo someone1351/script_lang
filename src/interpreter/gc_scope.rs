@@ -703,6 +703,9 @@ impl Clone for GcValue {
 }
 
 impl GcValue {
+    pub fn is_alive(&self) -> bool {
+        self.root_count.strong_count()!=0
+    }
     pub fn new<T:GcTraversable>(data : T, gc_scope: &mut GcScope) -> Self {
 
         let data=Arc::new(Mutex::new(data));

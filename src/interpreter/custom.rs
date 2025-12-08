@@ -104,6 +104,12 @@ impl WeakValueInner {
             WeakValueInner::NonMut(_) => false,
         }
     }
+    pub fn is_alive(&self) -> bool {
+        match self {
+            WeakValueInner::Mut(weak) => weak.strong_count()!=0,
+            WeakValueInner::NonMut(weak) => weak.strong_count()!=0,
+        }
+    }
     // pub fn upgrade(&self) -> Option<StrongValueInner> {
     //     match self {
     //         Self::Mut(x)=>x.upgrade().map(|x|StrongValueInner::Mut(x)),
@@ -630,6 +636,15 @@ impl Custom {
 
     //     Ok(new_inner.map(|inner|Custom{ type_info: self.type_info.clone(), inner }))
     // }
+
+    pub fn is_alive(&self) -> bool{
+        match &self.inner {
+            CustomInner::Managed(gc_value) => gc_value.is_alive(),
+            CustomInner::Unmanaged(_) => true,
+            CustomInner::UnmanagedWeak(w) => w.is_alive(),
+            CustomInner::Empty => false,
+        }
+    }
 }
 
 
