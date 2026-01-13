@@ -8,7 +8,7 @@ TODO:
 
 TODO
 * allow different types of strings, like Custom has different types
-** have an enum Str(&'static str), Rc(Arc<String>)
+** have an enum Str(&'static str), Rc(Arc<String>), RcMut(Arc<Mutex<String>>)
 */
 
 use std::any::{Any,TypeId};
