@@ -5,6 +5,9 @@ TODO:
 * can use it as a key for dict
 * add non gc ver of array and dict for it
 ** would want to be able to have unmanaged customs for that as well
+
+TODO
+* allow different types of strings, eg &'static str
 */
 
 use std::any::{Any,TypeId};
