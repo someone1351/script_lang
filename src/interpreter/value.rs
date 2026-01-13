@@ -7,7 +7,8 @@ TODO:
 ** would want to be able to have unmanaged customs for that as well
 
 TODO
-* allow different types of strings, eg &'static str
+* allow different types of strings, like Custom has different types
+** have an enum Str(&'static str), Rc(Arc<String>)
 */
 
 use std::any::{Any,TypeId};
