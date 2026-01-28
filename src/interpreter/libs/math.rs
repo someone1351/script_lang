@@ -104,15 +104,30 @@ fn set_field_util<T:Copy,const FROM_N: usize,const TO_N: usize>(fields:&str,from
 }
 
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
+
     //string(float)
-    lib_scope.method("string", |context|{
-        Ok(Value::string(format!("{:?}",context.param(0).as_float())))
+    lib_scope.method("string",|context|{
+        Ok(Value::string(context.param(0).as_float().to_string()))
     }).float().end();
 
     //string(int)
-    lib_scope.method("string", |context|{
-        Ok(Value::string(format!("{:?}",context.param(0).as_int())))
+    lib_scope.method("string",|context|{
+        Ok(Value::string(context.param(0).as_int().to_string()))
     }).int().end();
+
+    //string(bool)
+    lib_scope.method("string",|context|{
+        Ok(Value::string(context.param(0).as_bool().to_string()))
+    }).bool().end();
+    //string(float)
+    // lib_scope.method("string", |context|{
+    //     Ok(Value::string(format!("{:?}",context.param(0).as_float())))
+    // }).float().end();
+
+    // //string(int)
+    // lib_scope.method("string", |context|{
+    //     Ok(Value::string(format!("{:?}",context.param(0).as_int())))
+    // }).int().end();
 
     //float(int)
     lib_scope.method("float", |context|{

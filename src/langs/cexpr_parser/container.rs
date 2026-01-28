@@ -24,7 +24,10 @@ impl<'a> BlockContainer<'a> {
     }
     pub fn records(&self) -> RecordIter<'a> {
         let block=self.block();
-        RecordIter { start: block.records.start, end: block.records.end, parsed: self.parsed }
+        RecordIter {
+            start: block.records.start, end: block.records.end, parsed: self.parsed,
+            // len:block.records.len()
+        }
     }
     pub fn records_num(&self) -> usize {
         let block=self.block();
@@ -53,7 +56,10 @@ impl<'a> BlockContainer<'a> {
     }
     pub fn params(&self) -> ParamIter<'a> {
         let params=self.block().params.clone();
-        ParamIter { start: params.start, end: params.end, parsed: self.parsed }
+        ParamIter {
+            start: params.start, end: params.end, parsed: self.parsed,
+            // len:params.len()
+        }
     }
     pub fn params_num(&self) -> usize {
         self.block().params.len()
@@ -110,7 +116,10 @@ impl<'a> RecordContainer<'a> {
     }
     pub fn params(&self) -> ParamIter<'a> {
         let record=self.record();
-        ParamIter { start: record.params.start, end: record.params.end, parsed: self.parsed }
+        ParamIter {
+            start: record.params.start, end: record.params.end, parsed: self.parsed,
+            // len:record.params.len()
+        }
     }
     pub fn params_num(&self) -> usize {
         let record=self.record();
@@ -339,7 +348,10 @@ impl<'a> ParamContainer<'a> {
     }
     pub fn fields(&self) -> FieldIter<'a> {
         let param=self.param();
-        FieldIter { start: param.fields.start, end: param.fields.end, parsed: self.parsed }
+        FieldIter {
+            start: param.fields.start, end: param.fields.end, parsed: self.parsed,
+            // len:param.fields.len()
+        }
     }
 
     pub fn fields_range<R:RangeBounds<usize>>(&self,r:R) -> FieldIter<'a> {
@@ -359,13 +371,19 @@ impl<'a> ParamContainer<'a> {
         };
 
         if range_start>range_end {
-            return FieldIter { start: 0, end: 0, parsed: self.parsed };
+            return FieldIter {
+                start: 0, end: 0, parsed: self.parsed,
+                // len:0
+            };
         } //if range start==end will return some empty iter
 
         let x_len=range_end-range_start;
 
         if x_len>param.fields.len() {
-            return FieldIter { start: 0, end: 0, parsed: self.parsed };
+            return FieldIter {
+                start: 0, end: 0, parsed: self.parsed,
+                // len:0,
+            };
         }
 
         let x_start=param.fields.start+range_start;
@@ -375,6 +393,7 @@ impl<'a> ParamContainer<'a> {
             start: x_start,
             end: x_end,
             parsed: self.parsed,
+            // len:x_len,
         }
     }
 
@@ -423,11 +442,23 @@ impl<'a> FieldContainer<'a> {
         self.primitive().end_loc()
     }
 }
+
+impl<'a> ExactSizeIterator for RecordIter<'a> {
+    fn len(&self) -> usize {
+        // self.len
+        self.end-self.start
+    }
+
+    // fn is_empty(&self) -> bool {
+    //     self.len == 0
+    // }
+}
 #[derive(Copy,Clone)]
 pub struct RecordIter<'a> {
     pub start : usize, //if 0, then 0 hasnt been traversed yet
     pub end : usize, //if last_ind then last_ind has been traversed
     pub parsed :&'a Parsed,
+    // pub len:usize,
 }
 
 impl<'a> Iterator for RecordIter<'a> {
@@ -455,11 +486,20 @@ impl<'a> DoubleEndedIterator for RecordIter<'a> {
     }
 }
 
+
+impl<'a> ExactSizeIterator for ParamIter<'a> {
+    fn len(&self) -> usize {
+        // self.len
+        self.end-self.start
+    }
+}
+
 #[derive(Copy,Clone)]
 pub struct ParamIter<'a> {
     pub start : usize, //if 0, then 0 hasnt been traversed yet
     pub end : usize, //if last_ind then last_ind has been traversed
     pub parsed :&'a Parsed,
+    // pub len:usize,
 }
 
 impl<'a> Iterator for ParamIter<'a> {
@@ -487,11 +527,19 @@ impl<'a> DoubleEndedIterator for ParamIter<'a> {
     }
 }
 
+impl<'a> ExactSizeIterator for FieldIter<'a> {
+    fn len(&self) -> usize {
+        // self.len
+        self.end-self.start
+    }
+}
+
 #[derive(Copy,Clone)]
 pub struct FieldIter<'a> {
     pub start : usize, //if 0, then 0 hasnt been traversed yet
     pub end : usize, //if last_ind then last_ind has been traversed
     pub parsed :&'a Parsed,
+    // pub len:usize,
 }
 
 impl<'a> Iterator for FieldIter<'a> {

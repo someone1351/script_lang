@@ -71,7 +71,7 @@ pub fn get_idn<'a>(param : ParamContainer<'a>) -> Result<&'a str,BuilderError<Bu
             Err(BuilderError::new(param.field(0).unwrap().start_loc(), BuilderErrorType::NoFieldsAllowed))
         }
     } else {
-        Err(BuilderError::new(param.start_loc(), BuilderErrorType::ExpectSymbol))
+        Err(BuilderError::new(param.start_loc(), BuilderErrorType::ExpectSymbol(1)))
     }
 }
 
@@ -185,7 +185,7 @@ pub fn get_func_params<'a>(block : BlockContainer<'a>) -> Result<(Vec<&'a str>,b
     }
 
     if let Some(loc)=block.params().find_map(|x|x.primitive().symbol().is_none().then_some(x.start_loc())) {
-        return Err(BuilderError::new(loc, BuilderErrorType::ExpectSymbol));
+        return Err(BuilderError::new(loc, BuilderErrorType::ExpectSymbol(2)));
     }
 
     if let Some(loc)=block.params().find_map(|x|(x.fields_num()!=0).then(||x.field(0).unwrap().start_loc())) {

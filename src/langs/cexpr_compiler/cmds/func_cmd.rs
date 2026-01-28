@@ -66,7 +66,7 @@ pub fn func_cmd<'a>(
     let name_param=record.param(1).unwrap();
 
     if name_param.primitive().symbol().is_none() {
-        return Err(BuilderError::new(name_param.start_loc(), BuilderErrorType::ExpectSymbol));
+        return Err(BuilderError::new(name_param.start_loc(), BuilderErrorType::ExpectSymbol(0)));
     }
 
     let idn = if name_param.fields_num()==0 {Some(get_idn(name_param)?)}else{None};

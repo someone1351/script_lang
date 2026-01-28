@@ -78,7 +78,7 @@ use super::super::builder::*;
 
 #[derive(Debug,Clone)]
 pub enum BuilderErrorType {
-    ExpectSymbol,
+    ExpectSymbol(u32),
     NoSymbolPrefixAllowed,
     // ExpectList,
     ExpectString,
@@ -340,7 +340,8 @@ impl Compiler {
                                         builder.call_method(symbol, record.params_num()-1);
                                     }
                                 }
-                            } else if self.funcs_without_call && (self.get_var_prefix.is_none() || !symbol.starts_with(self.get_var_prefix.unwrap())) { //no prefix, has fields
+                            } else if self.funcs_without_call && (self.get_var_prefix.is_none() || !symbol.starts_with(self.get_var_prefix.unwrap()))
+                            { //no prefix(ie for variables, should just remove that, as not using it), has fields
                                 for i in (1 .. record.params_num()).rev() {
                                     let x=record.param(i).unwrap();
                                     // builder.param_loc(x.start_loc(),x.end_loc());
@@ -400,13 +401,16 @@ impl Compiler {
                             }
                         } else if record.params_num()==1 { //no args, first not symbol
                             builder.eval(first_param.primitive()); //not symbol, no args
+                        // } else if {
                         } else { //has args, first not symbol
-                            return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::ExpectSymbol });
+                            println!("hasnt_fields {hasnt_fields}");
+                            return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::ExpectSymbol(3) });
+                            // first_param.primitive().
+                            // builder.eval_without_fields(first_param.primitive());
+
                         }
                     }
-
                 }
-
 
                 if !hasnt_fields {
                     self.get_fields(builder,top_primitive.param().unwrap().fields())?;
@@ -585,6 +589,8 @@ impl Compiler {
         }
 
         let parsed=parsed.unwrap();
+
+        parsed.print();
 
         // println!("{:?}",parsed.root_block_primitive());
         // let mut cmd_scope= CmdScope::new_core();

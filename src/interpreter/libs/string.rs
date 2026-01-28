@@ -12,7 +12,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         Ok(Value::int(context.param(0).as_string().chars().count()))
     })
         .str().end();
-    
+
     //contains(str,str)
     lib_scope.method("contains", |context|{
         let string=context.param(0).as_string();
@@ -41,7 +41,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     })
         .str().or_any().str().end()
         .str().str().or_any().end();
-    
+
     //eq(str,str), eq(any,str), eq(str,any)
     lib_scope.method("=",|context|{
         let s0=context.param(0).as_string();
