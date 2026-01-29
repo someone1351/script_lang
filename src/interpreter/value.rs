@@ -94,6 +94,12 @@ impl Into<Value> for usize {
     }
 }
 
+impl<T:Send+Sync+'static,const N: usize> Into<Value> for [T; N] {
+    fn into(self) -> Value {
+        Value::custom_unmanaged(self)
+    }
+}
+
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
