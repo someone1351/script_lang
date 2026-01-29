@@ -14,6 +14,7 @@ TODO
 TODO
 * should implement math for all int and float types?
 ** so user can use val.into() for any type, and still have math work
+* should use vec<float>, vec<int> ?
 */
 
 use std::any::{Any,TypeId};
@@ -99,9 +100,45 @@ impl Into<Value> for usize {
     }
 }
 
-impl<T:Send+Sync+'static,const N: usize> Into<Value> for [T; N] {
+// impl<T:Send+Sync+'static,const N: usize> Into<Value> for [T; N] {
+//     fn into(self) -> Value {
+//         Value::custom_unmanaged(self)
+//     }
+// }
+
+impl<const N: usize> Into<Value> for [f32; N] {
     fn into(self) -> Value {
-        Value::custom_unmanaged(self)
+        Value::custom_unmanaged(self.map(|x|x as FloatT))
+    }
+}
+impl<const N: usize> Into<Value> for [f64; N] {
+    fn into(self) -> Value {
+        Value::custom_unmanaged(self.map(|x|x as FloatT))
+    }
+}
+impl<const N: usize> Into<Value> for [i32; N] {
+    fn into(self) -> Value {
+        Value::custom_unmanaged(self.map(|x|x as IntT))
+    }
+}
+impl<const N: usize> Into<Value> for [i64; N] {
+    fn into(self) -> Value {
+        Value::custom_unmanaged(self.map(|x|x as IntT))
+    }
+}
+impl<const N: usize> Into<Value> for [u32; N] {
+    fn into(self) -> Value {
+        Value::custom_unmanaged(self.map(|x|x as IntT))
+    }
+}
+impl<const N: usize> Into<Value> for [u64; N] {
+    fn into(self) -> Value {
+        Value::custom_unmanaged(self.map(|x|x as IntT))
+    }
+}
+impl<const N: usize> Into<Value> for [usize; N] {
+    fn into(self) -> Value {
+        Value::custom_unmanaged(self.map(|x|x as IntT))
     }
 }
 
