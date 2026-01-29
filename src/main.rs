@@ -596,7 +596,7 @@ fn main() {
 
     // // test_script5("examples/test11.script");
 
-    test_script3("examples/test15.script",false,false);
+    test_script3("examples/test15.script",true,false);
 
 }
 /*

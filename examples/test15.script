@@ -1,2 +1,4 @@
 #a.push 5
-(- 1 4).max 1
+(- 2 4).max 1
+
+len "6.max 2"
