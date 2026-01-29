@@ -38,7 +38,7 @@ pub fn set_var_cmd<'a>(
         let idn_loc=record.param(1).unwrap().start_loc();
 
         //val
-        let val_sexpr = record.param(record.params_num()-1).unwrap().primitive();
+        let val_sexpr = record.param(record.params_num()-1).unwrap().as_primitive();
 
         //
 
@@ -53,14 +53,14 @@ pub fn set_var_cmd<'a>(
     } else {
         builder.loc(name_param.start_loc());
 
-        if let Some(idn)=name_param.primitive().symbol() {
+        if let Some(idn)=name_param.as_primitive().as_symbol() {
             // let idn_loc=var_param.start_loc();
 
             builder
                 // .loc(var_param.start_loc())
                 .get_var(idn);
         } else { //a block, otherwise would be an err, due to nothing else has fields
-            builder.eval(name_param.primitive());
+            builder.eval(name_param.as_primitive());
         }
 
         //
@@ -71,11 +71,11 @@ pub fn set_var_cmd<'a>(
 
         //
         let fields=name_param.fields().map(|field|{
-            let s=field.primitive().symbol();
+            let s=field.as_primitive().as_symbol();
             let (f, is_field_symbol)=if s.is_none()||get_var_prefix.map(|x|s.unwrap().starts_with(x)).unwrap_or_default(){
-                (field.primitive(),false)
+                (field.as_primitive(),false)
             } else {
-                (field.string_primitive(),true)
+                (field.as_string_primitive(),true)
             };
 
             (f,is_field_symbol,field.start_loc())
@@ -87,7 +87,7 @@ pub fn set_var_cmd<'a>(
         //
         builder
             .loc(to_val.start_loc())
-            .eval(to_val.primitive());
+            .eval(to_val.as_primitive());
 
         //
         builder.set_fields_end(

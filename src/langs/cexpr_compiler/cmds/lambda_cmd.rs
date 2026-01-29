@@ -56,9 +56,9 @@ pub fn lambda_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
     }
 
     //params
-    let params_primitive=record.param(1).unwrap().primitive();
+    let params_primitive=record.param(1).unwrap().as_primitive();
 
-    let Some(params_block)=params_primitive.block() else {
+    let Some(params_block)=params_primitive.as_block() else {
         return Err(BuilderError::new(params_primitive.start_loc(), BuilderErrorType::IncorrectParamsNum));
     };
 
@@ -66,7 +66,7 @@ pub fn lambda_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
     let (params,variadic)=get_func_params(params_block)?;
 
     //
-    let body=record.last_param().unwrap().primitive();
+    let body=record.last_param().unwrap().as_primitive();
 
     //params
     // let (params,variadic)=get_func_params(record,1, record.primitives_num()-1)?;

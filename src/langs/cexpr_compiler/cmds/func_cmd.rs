@@ -65,7 +65,7 @@ pub fn func_cmd<'a>(
     //idn
     let name_param=record.param(1).unwrap();
 
-    if name_param.primitive().symbol().is_none() {
+    if name_param.as_primitive().as_symbol().is_none() {
         return Err(BuilderError::new(name_param.start_loc(), BuilderErrorType::ExpectSymbol(0)));
     }
 
@@ -73,12 +73,12 @@ pub fn func_cmd<'a>(
     // let idn_loc=record.primitive(1).unwrap().start_loc();
 
     //
-    let body=record.last_param().unwrap().primitive();
+    let body=record.last_param().unwrap().as_primitive();
 
     //params
-    let params_primitive=record.param(2).unwrap().primitive();
+    let params_primitive=record.param(2).unwrap().as_primitive();
 
-    let Some(params_block)=params_primitive.block() else {
+    let Some(params_block)=params_primitive.as_block() else {
         return Err(BuilderError::new(params_primitive.start_loc(), BuilderErrorType::IncorrectParamsNum));
     };
 
@@ -106,15 +106,15 @@ pub fn func_cmd<'a>(
         None
     } else { //fields
         builder.loc(name_param.start_loc());
-        builder.get_var(name_param.primitive().symbol().unwrap());
+        builder.get_var(name_param.as_primitive().as_symbol().unwrap());
 
         //
         let fields=name_param.fields().map(|field|{
-            let s=field.primitive().symbol();
+            let s=field.as_primitive().as_symbol();
             let (f,is_field_symbol)=if s.is_none()||get_var_prefix.map(|x|s.unwrap().starts_with(x)).unwrap_or_default(){
-                (field.primitive(),false)
+                (field.as_primitive(),false)
             } else {
-                (field.string_primitive(),true)
+                (field.as_string_primitive(),true)
             };
 
             (f,is_field_symbol,field.start_loc())

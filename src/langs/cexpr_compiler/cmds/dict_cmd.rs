@@ -24,7 +24,7 @@ pub fn dict_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primi
             return Err(BuilderError::new(param.start_loc(), BuilderErrorType::NoFieldsAllowed));
         }
 
-        let Some(block)=param.primitive().block() else {
+        let Some(block)=param.as_primitive().as_block() else {
             return Err(BuilderError::new(param.start_loc(), BuilderErrorType::ExpectBlock));
         };
 
@@ -41,7 +41,7 @@ pub fn dict_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primi
                 }
 
                 builder
-                    .eval(param2.primitive())
+                    .eval(param2.as_primitive())
                     .param_push()
                     ;
                 c+=1;

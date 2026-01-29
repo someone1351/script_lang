@@ -19,7 +19,7 @@ pub fn and_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
 
     //
     for i in 1 .. record.params_num() {
-        let cond=record.param(i).unwrap().primitive();
+        let cond=record.param(i).unwrap().as_primitive();
 
         builder
             .eval(cond)

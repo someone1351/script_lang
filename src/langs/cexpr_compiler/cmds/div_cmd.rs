@@ -10,7 +10,7 @@ pub fn div_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
         return Err(BuilderError::new(record.last_param().unwrap().start_loc(), BuilderErrorType::IncorrectParamsNum));
     }
 
-    builder.eval(record.last_param().unwrap().primitive());
+    builder.eval(record.last_param().unwrap().as_primitive());
     let loc = record.param(0).unwrap().start_loc();
 
     builder.loc(loc);
@@ -18,7 +18,7 @@ pub fn div_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
     for i in (1 .. record.params_num()-1).rev() {
         builder
             .param_push() //push last result
-            .eval(record.param(i).unwrap().primitive())
+            .eval(record.param(i).unwrap().as_primitive())
             .param_push()
             // .swap()
             .call_method("/",2); //,loc

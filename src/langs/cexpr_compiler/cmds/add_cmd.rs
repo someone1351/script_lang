@@ -14,18 +14,18 @@ pub fn add_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
     //+ 1
     //+ 1 2
     //{+ 1 2}
-    
+
     if record.params_num() == 1 {
         return Err(BuilderError::new(record.last_param().unwrap().start_loc(), BuilderErrorType::IncorrectParamsNum));
     }
 
     //
     builder.loc(record.param(1).unwrap().start_loc());
-    builder.eval(record.param(1).unwrap().primitive());
-    
+    builder.eval(record.param(1).unwrap().as_primitive());
+
     for i in 2 .. record.params_num() {
-        let x=record.param(i).unwrap().primitive();
-        
+        let x=record.param(i).unwrap().as_primitive();
+
         builder.loc(x.start_loc());
 
         builder

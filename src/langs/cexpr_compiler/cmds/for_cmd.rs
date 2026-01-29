@@ -14,9 +14,9 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
 
     //
     let idn = get_idn(record.param(1).unwrap())?;
-    let from = record.param(2).unwrap().primitive();
-    let to = record.param(3).unwrap().primitive();
-    let body = record.param(4).unwrap().primitive();
+    let from = record.param(2).unwrap().as_primitive();
+    let to = record.param(3).unwrap().as_primitive();
+    let body = record.param(4).unwrap().as_primitive();
 
     // let Some(body_block)=body.block() else {
     //     return Err(BuilderError::new(body.start_loc(), BuilderErrorType::ExpectBlock));

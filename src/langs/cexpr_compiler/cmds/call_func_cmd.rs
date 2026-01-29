@@ -9,11 +9,11 @@ pub fn call_func_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,
         return Err(BuilderError::new(record.start_loc(), BuilderErrorType::InvalidParam));
     }
 
-    let func=record.param(1).unwrap().primitive();
+    let func=record.param(1).unwrap().as_primitive();
 
     for i in (2..record.params_num()).rev() {
-        let param: PrimitiveContainer<'a>=record.param(i).unwrap().primitive();
-        
+        let param: PrimitiveContainer<'a>=record.param(i).unwrap().as_primitive();
+
         builder
             .loc(param.start_loc())
             .eval(param)

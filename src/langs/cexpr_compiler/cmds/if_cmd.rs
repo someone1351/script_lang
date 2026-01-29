@@ -27,22 +27,22 @@ pub fn if_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primiti
 
     //
     {
-        conds.push(record.param(1).unwrap().primitive());
-        bodies.push(record.param(2).unwrap().primitive());
+        conds.push(record.param(1).unwrap().as_primitive());
+        bodies.push(record.param(2).unwrap().as_primitive());
 
         let mut i=3;
 
         while i!=record.params_num(){
-            let if_type=record.param(i).unwrap().primitive();
+            let if_type=record.param(i).unwrap().as_primitive();
 
-            match if_type.symbol() {
+            match if_type.as_symbol() {
                 Some("elif") => {
                     if i+2>=record.params_num() {
                         return Err(BuilderError::new(if_type.end_loc(), BuilderErrorType::IncorrectParamsNum));
                     }
 
-                    let cond=record.param(i+1).unwrap().primitive();
-                    let body=record.param(i+2).unwrap().primitive();
+                    let cond=record.param(i+1).unwrap().as_primitive();
+                    let body=record.param(i+2).unwrap().as_primitive();
                     conds.push(cond);
                     bodies.push(body);
                     i+=3;
@@ -52,7 +52,7 @@ pub fn if_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primiti
                         return Err(BuilderError::new(if_type.end_loc(), BuilderErrorType::IncorrectParamsNum));
                     }
 
-                    let body=record.param(i+1).unwrap().primitive();
+                    let body=record.param(i+1).unwrap().as_primitive();
                     bodies.push(body);
                     i+=2;
 

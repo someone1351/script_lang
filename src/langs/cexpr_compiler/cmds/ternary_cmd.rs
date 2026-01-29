@@ -10,9 +10,9 @@ pub fn ternary_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pr
         return Err(BuilderError::new(record.last_param().unwrap().start_loc(), BuilderErrorType::IncorrectParamsNum));
     }
 
-    let cond=record.param(1).unwrap().primitive();
-    let x=record.param(2).unwrap().primitive();
-    let y=record.param(3).unwrap().primitive();
+    let cond=record.param(1).unwrap().as_primitive();
+    let x=record.param(2).unwrap().as_primitive();
+    let y=record.param(3).unwrap().as_primitive();
 
     //
     builder

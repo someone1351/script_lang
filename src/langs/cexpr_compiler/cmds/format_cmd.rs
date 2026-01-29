@@ -15,7 +15,7 @@ pub fn format_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
     //
     let mut j=1;
 
-    if let Some(s)=record.param(1).unwrap().primitive().string() //record.get(1).unwrap().is_string()
+    if let Some(s)=record.param(1).unwrap().as_primitive().as_string() //record.get(1).unwrap().is_string()
     {
         j+=1;
 
@@ -99,7 +99,7 @@ pub fn format_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
                     // println!("hmm {:?}",record.param(j).map(|x|x.primitive()));
 
                     if let Some(x)=record.param(j) {
-                        builder.eval(x.primitive());
+                        builder.eval(x.as_primitive());
                     } else {
                         builder.result_nil();
                     }
@@ -137,7 +137,7 @@ pub fn format_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
 
         builder
 
-            .eval(record.param(k).unwrap().primitive())
+            .eval(record.param(k).unwrap().as_primitive())
 
             .param_push()
             .call_method("string", 1)

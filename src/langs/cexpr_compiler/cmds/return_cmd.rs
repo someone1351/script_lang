@@ -12,7 +12,7 @@ pub fn return_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
     }
 
     if record.params_num()==2 {
-        builder.eval(record.param(1).unwrap().primitive());
+        builder.eval(record.param(1).unwrap().as_primitive());
     } else {
         builder.result_void();
     }

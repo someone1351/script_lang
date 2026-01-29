@@ -8,9 +8,9 @@ pub fn include_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pr
         return Err(BuilderError::new(record.last_param().unwrap().start_loc(), BuilderErrorType::IncorrectParamsNum));
     }
 
-    let v = record.param(1).unwrap().primitive();
+    let v = record.param(1).unwrap().as_primitive();
 
-    let Some(s)=v.string() else {
+    let Some(s)=v.as_string() else {
         return Err(BuilderError::new(record.last_param().unwrap().start_loc(), BuilderErrorType::ExpectString));
     };
 

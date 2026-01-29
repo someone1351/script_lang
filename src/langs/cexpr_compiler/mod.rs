@@ -228,7 +228,7 @@ impl Compiler {
         next_anon_id:&mut usize,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
         builder.loc(top_primitive.start_loc());
-        let hasnt_fields=top_primitive.param().map(|x|x.fields_num()==0).unwrap_or(true);
+        let hasnt_fields=top_primitive.as_param().map(|x|x.fields_num()==0).unwrap_or(true);
 
         match top_primitive.primitive_type() //sexpr.val()
         {
@@ -262,10 +262,10 @@ impl Compiler {
 
                     if let Some(first_param)=record.first_param() {
 
-                        if let Some(symbol)=first_param.primitive().symbol() {
+                        if let Some(symbol)=first_param.as_primitive().as_symbol() {
                             if ["true","false","nil","void"].contains(&symbol) || symbol.starts_with(":") {
                                 if record.params_num()==1 {
-                                    builder.eval(first_param.primitive());
+                                    builder.eval(first_param.as_primitive());
                                 } else {
                                     return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
                                 }
@@ -326,7 +326,7 @@ impl Compiler {
                                     for i in (1 .. record.params_num()).rev() {
                                         let x=record.param(i).unwrap();
                                         // builder.param_loc(x.start_loc(),x.end_loc());
-                                        builder.eval(x.primitive());
+                                        builder.eval(x.as_primitive());
                                         builder.param_push();
                                     }
 
@@ -345,18 +345,18 @@ impl Compiler {
                                 for i in (1 .. record.params_num()).rev() {
                                     let x=record.param(i).unwrap();
                                     // builder.param_loc(x.start_loc(),x.end_loc());
-                                    builder.eval(x.primitive());
+                                    builder.eval(x.as_primitive());
                                     builder.param_push();
                                 }
 
                                 // builder.commit_param_locs();
                                 builder.loc(first_param.start_loc());
 
-                                builder.eval(first_param.primitive());
+                                builder.eval(first_param.as_primitive());
                                 builder.call_result(record.params_num()-1);
                             } else if record.params_num()==1 { //has fields, no args
                                 if self.get_var_prefix.is_none() || symbol.starts_with(self.get_var_prefix.unwrap()) || self.optional_get_var_prefix {
-                                    builder.eval(first_param.primitive());
+                                    builder.eval(first_param.as_primitive());
                                 } else {
                                     return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::CannotCallGetVar });
                                 }
@@ -370,7 +370,7 @@ impl Compiler {
 
                                 // println!("hmm {:?}",field_iter.collect::<Vec<_>>());
 
-                                if last_field.primitive().symbol().is_none() {
+                                if last_field.as_primitive().as_symbol().is_none() {
                                     return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
 
                                 }
@@ -379,7 +379,7 @@ impl Compiler {
                                 for i in (1 .. record.params_num()).rev() {
                                     let x=record.param(i).unwrap();
                                     // builder.param_loc(x.start_loc(),x.end_loc());
-                                    builder.eval(x.primitive());
+                                    builder.eval(x.as_primitive());
                                     builder.param_push();
                                 }
 
@@ -391,31 +391,32 @@ impl Compiler {
 
                                 // builder.result_float(1.23);
                                 // builder.get_fields(field_iter.map(|field|(field.primitive(),field.primitive().symbol().is_some(),field.start_loc())));
-                                builder.get_var(first_param.primitive().symbol().unwrap());
+                                builder.get_var(first_param.as_primitive().as_symbol().unwrap());
 
                                 self.get_fields(builder, field_iter)?;
                                 // builder.result_float(2.23);
                                 builder.param_push();
-                                let symbol=last_field.primitive().symbol().unwrap();
+                                let symbol=last_field.as_primitive().as_symbol().unwrap();
                                 builder.call_method(symbol, record.params_num());
                             }
-                        } else if record.params_num()==1 { //no args, first not symbol
-                            builder.eval(first_param.primitive()); //not symbol, no args
+                        } //end if symbol
+                        else if record.params_num()==1 { //no args, first not symbol
+                            builder.eval(first_param.as_primitive()); //not symbol, no args
                         // } else if {
                         } else { //has args, first not symbol
-                            println!("hasnt_fields {hasnt_fields}");
+                            println!("hasnt_fields {hasnt_fields}, primitive_ind={}, r={}, fnum={}",top_primitive.primitive_ind,record.record_ind, first_param.fields_num());
                             return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::ExpectSymbol(3) });
                             // first_param.primitive().
                             // builder.eval_without_fields(first_param.primitive());
 
                         }
-                    }
-                }
+                    } //end first param
+                } //end for record
 
                 if !hasnt_fields {
-                    self.get_fields(builder,top_primitive.param().unwrap().fields())?;
+                    self.get_fields(builder,top_primitive.as_param().unwrap().fields())?;
                 }
-            }
+            } //end block match
             PrimitiveTypeContainer::Float(f,_) => {
                 builder.result_float(f as FloatT);
             }
@@ -490,7 +491,7 @@ impl Compiler {
                             builder.get_var(symbol);
 
                             if !hasnt_fields {
-                                self.get_fields(builder,top_primitive.param().unwrap().fields())?;
+                                self.get_fields(builder,top_primitive.as_param().unwrap().fields())?;
                             }
                         }
                     }
@@ -519,15 +520,15 @@ impl Compiler {
         // let fields=top_primitive.param().unwrap().fields();
 
         builder.get_fields(fields.map(|field|{
-            let s=field.primitive().symbol();
+            let s=field.as_primitive().as_symbol();
             let (f,is_field_symbol)=if s.is_none()||self.get_var_prefix.map(|prefix|s.unwrap().starts_with(prefix)).unwrap_or_default(){
                 //if it's not a symbol or is a symbol with a var prefix
                 //  these primitives will be evaluated, so a variable will be gotten, an expr evaluated etc?
-                (field.primitive(),false)
+                (field.as_primitive(),false)
             } else {
                 //is a symbol, symbols can be "+", "-", but also "abc"
                 //  use string primitive, so that the symbol abc will be converted to the string "abc" ?
-                (field.string_primitive(),true)
+                (field.as_string_primitive(),true)
             };
 
             (f,is_field_symbol,field.start_loc(),)

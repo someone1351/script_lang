@@ -59,7 +59,7 @@ use super::{super::cexpr_parser::*, BuilderErrorType};
 
 
 pub fn get_idn<'a>(param : ParamContainer<'a>) -> Result<&'a str,BuilderError<BuilderErrorType>> {
-    if let Some(symbol)=param.primitive().symbol() {
+    if let Some(symbol)=param.as_primitive().as_symbol() {
         if param.fields_num()==0 {
 
             if symbol.starts_with(&['!', '@', '%', '^', '&', '~', ';', ':', '?', ',', '.', '|']) {
@@ -176,7 +176,7 @@ pub fn get_func_params<'a>(block : BlockContainer<'a>) -> Result<(Vec<&'a str>,b
     let mut variadic=false;
 
     //need block.values_iter
-    if block.primitive().param().unwrap().fields_num()!=0 {
+    if block.primitive().as_param().unwrap().fields_num()!=0 {
         return Err(BuilderError::new(block.end_loc(), BuilderErrorType::NoFieldsAllowed));
     }
 
@@ -184,7 +184,7 @@ pub fn get_func_params<'a>(block : BlockContainer<'a>) -> Result<(Vec<&'a str>,b
         return Err(BuilderError::new(loc, BuilderErrorType::NoSemiColonsAllowed));
     }
 
-    if let Some(loc)=block.params().find_map(|x|x.primitive().symbol().is_none().then_some(x.start_loc())) {
+    if let Some(loc)=block.params().find_map(|x|x.as_primitive().as_symbol().is_none().then_some(x.start_loc())) {
         return Err(BuilderError::new(loc, BuilderErrorType::ExpectSymbol(2)));
     }
 

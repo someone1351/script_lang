@@ -10,20 +10,20 @@ pub fn sub_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
         return Err(BuilderError::new(record.last_param().unwrap().start_loc(), BuilderErrorType::IncorrectParamsNum));
     }
 
-    builder.eval(record.param(1).unwrap().primitive());
+    builder.eval(record.param(1).unwrap().as_primitive());
     let loc = record.param(0).unwrap().start_loc();
-    
+
     builder.loc(loc);
 
     if record.params_num()==2 {
         builder
             .param_push()
-            .call_method("-",1); //,loc       
+            .call_method("-",1); //,loc
     } else {
         for i in 2 .. record.params_num() {
             builder
                 .param_push() //push last result
-                .eval(record.param(i).unwrap().primitive())
+                .eval(record.param(i).unwrap().as_primitive())
                 .param_push()
                 .swap()
                 .call_method("-",2); //,loc

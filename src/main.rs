@@ -136,14 +136,14 @@ pub fn test_script2<P:AsRef<Path>>(path:P) {
 
                         stk.push(Traverse {
                             depth: traverse.depth+1,
-                            traverse_type: TraverseType::Primitive(p.primitive()),
+                            traverse_type: TraverseType::Primitive(p.as_primitive()),
                         });
                     }
                     TraverseType::Field(f)=>{
                         println!("{indent}Field");
                         stk.push(Traverse {
                             depth: traverse.depth+1,
-                            traverse_type: TraverseType::Primitive(f.primitive()),
+                            traverse_type: TraverseType::Primitive(f.as_primitive()),
                         });
                     }
                     TraverseType::Primitive(p)=>{

@@ -12,10 +12,10 @@ pub fn while_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Prim
         return Err(BuilderError::new(record.last_param().unwrap().start_loc(), BuilderErrorType::IncorrectParamsNum));
     }
 
-    let cond_expr = record.param(1).unwrap().primitive();
-    let body=record.param(2).unwrap().primitive();
+    let cond_expr = record.param(1).unwrap().as_primitive();
+    let body=record.param(2).unwrap().as_primitive();
 
-    if body.block().is_none() {
+    if body.as_block().is_none() {
         return Err(BuilderError::new(body.start_loc(), BuilderErrorType::ExpectBlock));
     }
 
