@@ -9,6 +9,11 @@ TODO:
 TODO
 * allow different types of strings, like Custom has different types
 ** have an enum Str(&'static str), Rc(Arc<String>), RcMut(Arc<Mutex<String>>)
+
+
+TODO
+* should implement math for all int and float types?
+** so user can use val.into() for any type, and still have math work
 */
 
 use std::any::{Any,TypeId};
