@@ -587,7 +587,6 @@ fn main() {
     // // // test_script2("examples/test6.script");
 
     // // test_script3("examples/test7.script");
-    // test_script3("examples/test8.script",false,false);
     // //  test_script3("examples/test13.script",true,true);
     // //  test_script6("examples/test14.script",true,true);
     // // test_script3("examples/test12.script",true,false);
@@ -596,7 +595,8 @@ fn main() {
 
     // // test_script5("examples/test11.script");
 
-    test_script3("examples/test15.script",true,false);
+    test_script3("examples/test8.script",false,false);
+    // test_script3("examples/test15.script",true,false);
 
 }
 /*

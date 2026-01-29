@@ -620,7 +620,7 @@ impl Compiler {
 
         let parsed=parsed.unwrap();
 
-        parsed.print();
+        // parsed.print();
 
         // println!("{:?}",parsed.root_block_primitive());
         // let mut cmd_scope= CmdScope::new_core();

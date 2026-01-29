@@ -58,6 +58,9 @@ abc
 
 * for block, add get_bracket_type -> Bracket{Curly,Parentheses,Square,}, so can use for error checking if want to force one type
 
+
+TODO
+* allow fields for strings, numbers, bools ?
 */
 
 mod input;
