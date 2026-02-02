@@ -10,6 +10,12 @@ use super::super::gc_scope::*;
 
 type Array=Vec<Value>;
 
+// impl Into<Value> for Array {
+//     fn into(self) -> Value {
+//         Value::custom_managed(data, gc_scope)
+//     }
+// }
+
 // #[derive(Clone)]
 // pub struct Array(pub Vec<Value>);
 

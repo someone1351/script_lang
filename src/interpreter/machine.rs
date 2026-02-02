@@ -521,6 +521,7 @@ impl<'a,X> Machine<'a,X> {
                         let param_types=self.get_stack_param_types(params_num);
                         return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(
                             // symbol.to_string(),
+                            field_val.as_string(),
                             param_types) ));
                     }
                 }
@@ -576,7 +577,10 @@ impl<'a,X> Machine<'a,X> {
                         self.inner_call_bound_func(params_num, x)?;
                     } else if is_last {
                         let param_types=self.get_stack_param_types(params_num);
-                        return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(param_types) ));
+                        return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(
+                            field_val.as_string(),
+                            param_types,
+                        ) ));
                     } else { //ignore fail if not last (as in set chain,)
                         self.stack_pop_amount(params_num)?;
                     }

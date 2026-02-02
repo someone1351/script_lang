@@ -59,6 +59,18 @@ impl GcTraversable for Dict {
     }
 }
 
+
+impl Into<Dict> for Vec<(&str,Value)> {
+    fn into(self) -> Dict {
+        Dict(self.iter().map(|(k,v)|(ValueKey::String((*k).into()),v.clone())).collect())
+    }
+}
+impl Into<Dict> for Vec<(String,Value)> {
+    fn into(self) -> Dict {
+        Dict(self.iter().map(|(k,v)|(ValueKey::String(k.clone().into()),v.clone())).collect())
+    }
+}
+
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //dict(any? ...)
     lib_scope.method("dict",|mut context|{
@@ -228,19 +240,19 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .end();
 
     //
-    //get_field(dict,any)
-    lib_scope.field( | context|{
-        let dict=context.param(0).as_custom();
-        let key=context.param(1).as_string();
-        dict.with_data_ref_ext(|data:&HashMap<&str,Value>|{Ok(data.get(&key.as_str()).and_then(|x|Some(x.clone())).unwrap_or(Value::Nil))})
-    }).custom_ref::<HashMap<&str,Value>>().str().end();
+    // //get_field(dict,any)
+    // lib_scope.field( | context|{
+    //     let dict=context.param(0).as_custom();
+    //     let key=context.param(1).as_string();
+    //     dict.with_data_ref_ext(|data:&HashMap<&str,Value>|{Ok(data.get(&key.as_str()).and_then(|x|Some(x.clone())).unwrap_or(Value::Nil))})
+    // }).custom_ref::<HashMap<&str,Value>>().str().end();
 
-    //get_field(dict,any)
-    lib_scope.field( | context|{
-        let dict=context.param(0).as_custom();
-        let key=context.param(1).as_string();
-        dict.with_data_ref_ext(|data:&HashMap<String,Value>|{Ok(data.get(&key).and_then(|x|Some(x.clone())).unwrap_or(Value::Nil))})
-    }).custom_ref::<HashMap<String,Value>>().str().end();
+    // //get_field(dict,any)
+    // lib_scope.field( | context|{
+    //     let dict=context.param(0).as_custom();
+    //     let key=context.param(1).as_string();
+    //     dict.with_data_ref_ext(|data:&HashMap<String,Value>|{Ok(data.get(&key).and_then(|x|Some(x.clone())).unwrap_or(Value::Nil))})
+    // }).custom_ref::<HashMap<String,Value>>().str().end();
 
     //get_field(dict,any)
     lib_scope.field( | context|{
