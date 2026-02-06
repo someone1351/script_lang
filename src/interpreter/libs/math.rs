@@ -9,13 +9,13 @@ use super::super::lib_scope::*;
 
 // use super::super::data::*;
 
-type Vec2=[FloatT;2];
-type Vec3=[FloatT;3];
-type Vec4=[FloatT;4];
+pub type Vec2=[FloatT;2];
+pub type Vec3=[FloatT;3];
+pub type Vec4=[FloatT;4];
 
-type IVec2=[IntT;2];
-type IVec3=[IntT;3];
-type IVec4=[IntT;4];
+pub type IVec2=[IntT;2];
+pub type IVec3=[IntT;3];
+pub type IVec4=[IntT;4];
 // #[derive(Clone)]
 // pub struct Vec2(pub [FloatT;2]);
 // #[derive(Clone)]
