@@ -56,7 +56,8 @@ impl JmpCond {
     }
 }
 
-#[derive(Debug,Clone)]
+// pub struct ResultCustom()
+#[derive(Debug,)]
 pub enum Instruction {
     Include(usize), //path_ind
 
@@ -72,7 +73,7 @@ pub enum Instruction {
 
     ResultInt(IntT),
     ResultFloat(FloatT),
-    // ResultCustomUnmanaged(Arc<dyn Any>),
+    // ResultCustomUnmanaged(Box<dyn Any>),
 
     ResultNil,
     ResultVoid,

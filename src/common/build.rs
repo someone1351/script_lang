@@ -24,7 +24,7 @@ pub struct BuildFunc {
 //     pub first_loc : Option<Loc>,
 // }
 
-#[derive(Clone,Default)]
+#[derive(Default)]
 pub struct Build {
     pub includes : Vec<PathBuf>,
     pub symbols : Vec<StringT>, //rc?
@@ -38,11 +38,11 @@ pub struct Build {
 
     pub instr_locs : HashMap<usize,Loc>,
     pub include_first_locs : HashMap<usize,Loc>,
-    
+
     pub instr_locs_alt : Vec<(usize,Option<Loc>)>, //[(start_instr_pos,)]
-    
+
     pub instr_stack_var_names : HashMap<usize,usize>, //instr_ind, symbol_ind
-    
+
     // pub func_names : HashMap<usize,usize>, //func_ind, symbol_ind
     // pub func_locs : HashMap<usize,Loc>, //func_ind, //can get from instr_locs[functions[i].instruct_start_pos]
 }

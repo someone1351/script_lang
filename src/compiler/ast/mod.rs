@@ -1277,7 +1277,12 @@ impl<'a> Ast<'a> {
         let mut instr_stk_inds : Vec<usize> = vec![0];
 
         //
-        instrs_stk.resize(self.funcs.len()+1, Vec::new());
+        // instrs_stk.resize(self.funcs.len()+1, Vec::new());
+        for i in instrs_stk.len() ..self.funcs.len()+1 {
+            instrs_stk.push(Vec::new());
+        }
+
+        //
         instr_locs_stk.resize(self.funcs.len()+1, Vec::new());
 
         //
@@ -1692,11 +1697,6 @@ impl<'a> Ast<'a> {
         }
 
         //
-        let instructions = instrs_stk.iter().flatten().map(|x|x.clone()).collect::<Vec<_>>();
-
-        let locs = instr_locs_stk.iter().flatten().map(|x|x.clone()).collect::<Vec<_>>();
-
-        //
         let mut build_funcs = Vec::<BuildFunc>::new();
         let main_instruct_len= instrs_stk.first().unwrap().len();
         let mut instruct_start_pos=main_instruct_len;
@@ -1709,6 +1709,12 @@ impl<'a> Ast<'a> {
 
             instruct_start_pos+=instruct_len;
         }
+
+        //
+        let instructions = instrs_stk.into_iter().flatten().collect::<Vec<_>>();
+
+        let locs = instr_locs_stk.iter().flatten().map(|x|x.clone()).collect::<Vec<_>>();
+
 
         //
         let mut instr_locs_map = HashMap::<usize,Loc>::new();

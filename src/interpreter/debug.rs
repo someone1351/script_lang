@@ -611,9 +611,10 @@ impl Debugger {
         // stack_len:usize
     ) -> String {
 
-        let cur_instr = cur_build.instructions.get(cur_instr_pos).cloned().unwrap();
+        // let cur_instr = cur_build.instructions.get(cur_instr_pos).cloned().unwrap();
+        let cur_instr=cur_build.instructions.get(cur_instr_pos).unwrap();
 
-        match &cur_instr {
+        match cur_instr {
             Instruction::CallGlobalOrMethod(symbol_ind,params_num)=>{
                 format!("CallGlobal({:?},{params_num})",cur_build.symbols.get(*symbol_ind).unwrap().to_string())
             }
