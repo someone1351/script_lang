@@ -129,6 +129,7 @@ impl WeakValueInner {
         }
     }
 }
+
 #[derive(Clone)]
 pub enum CustomInner {
     Managed(GcValue),

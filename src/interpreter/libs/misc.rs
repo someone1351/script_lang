@@ -31,10 +31,10 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .any()
         .end();
 
-    //len(nil)
-    lib_scope.method("len", |_|Ok(Value::Int(0)))
-        .nil()
-        .end();
+    // //len(nil)
+    // lib_scope.method("len", |_|Ok(Value::Int(0)))
+    //     .nil()
+    //     .end();
 
     //type(any)
     lib_scope.method("type",|context|Ok(Value::string(context.param(0).type_string())))

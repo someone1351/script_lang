@@ -15,10 +15,30 @@ TODO
 * should implement math for all int and float types?
 ** so user can use val.into() for any type, and still have math work
 * should use vec<float>, vec<int> ?
+
+TODO
+* have float be enum with (f32/f64) and int be enum with (i32,i64,u32,u64)
+
+* have types when used with each other, convert into the other
+** eg u32+i32(pos)=>u32
+** eg u32+i32(neg)=>u32
+** eg u32+u64=>u64, i32+i64=>i64
+** eg u32+i64=>i64
+** eg i32+u64=>
+** eg f32+f64=>f64
+
+
+** for instr with ints/floats, have them be a special type with (i64/f64)
+*** so when used with another type, they are converted into them
+*
 */
 
 use std::any::{Any,TypeId};
+// use std::cmp::Ordering;
 
+// // use crate::MachineError;
+
+// use crate::interpreter::error::MachineErrorType;
 // use crate::MachineError;
 
 use super::super::common::*;
@@ -36,6 +56,7 @@ pub enum Value {
     Bool(bool),
     Float(FloatT),
     Int(IntT),
+    // Int(IntValue),
     String(StringT),
     Custom(Custom),
 }
@@ -97,48 +118,6 @@ impl Into<Value> for u64 {
 impl Into<Value> for usize {
     fn into(self) -> Value {
         Value::int(self)
-    }
-}
-
-// impl<T:Send+Sync+'static,const N: usize> Into<Value> for [T; N] {
-//     fn into(self) -> Value {
-//         Value::custom_unmanaged(self)
-//     }
-// }
-
-impl<const N: usize> Into<Value> for [f32; N] {
-    fn into(self) -> Value {
-        Value::custom_unmanaged(self.map(|x|x as FloatT))
-    }
-}
-impl<const N: usize> Into<Value> for [f64; N] {
-    fn into(self) -> Value {
-        Value::custom_unmanaged(self.map(|x|x as FloatT))
-    }
-}
-impl<const N: usize> Into<Value> for [i32; N] {
-    fn into(self) -> Value {
-        Value::custom_unmanaged(self.map(|x|x as IntT))
-    }
-}
-impl<const N: usize> Into<Value> for [i64; N] {
-    fn into(self) -> Value {
-        Value::custom_unmanaged(self.map(|x|x as IntT))
-    }
-}
-impl<const N: usize> Into<Value> for [u32; N] {
-    fn into(self) -> Value {
-        Value::custom_unmanaged(self.map(|x|x as IntT))
-    }
-}
-impl<const N: usize> Into<Value> for [u64; N] {
-    fn into(self) -> Value {
-        Value::custom_unmanaged(self.map(|x|x as IntT))
-    }
-}
-impl<const N: usize> Into<Value> for [usize; N] {
-    fn into(self) -> Value {
-        Value::custom_unmanaged(self.map(|x|x as IntT))
     }
 }
 

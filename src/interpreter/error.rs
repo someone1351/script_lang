@@ -43,6 +43,8 @@ pub enum MachineErrorType{
 
     VoidNotExpr, //necessary?
     StackLimitReached(usize),
+
+    IntInto,
 }
 
 #[derive(Debug)]

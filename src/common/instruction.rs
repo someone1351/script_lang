@@ -1,4 +1,6 @@
 
+use std::{any::Any, sync::Arc};
+
 /*
 can't allow params to be set,
     if not all params provided, then there is no where to set
@@ -66,9 +68,11 @@ pub enum Instruction {
     },
 
     ResultBool(bool),
+    ResultSymbol(usize),//symbol_ind
+
     ResultInt(IntT),
     ResultFloat(FloatT),
-    ResultSymbol(usize),//symbol_ind
+    // ResultCustomUnmanaged(Arc<dyn Any>),
 
     ResultNil,
     ResultVoid,

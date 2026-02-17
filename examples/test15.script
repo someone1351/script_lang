@@ -1,4 +1,6 @@
 #a.push 5
-(- 2 4).max 1
+#(- 2 4).max 1
 
-len "6.max 2"
+#len "6.max 2"
+
+var dir (- ev.cursor thumb.computed.outer_rect.center).sign
