@@ -1278,7 +1278,7 @@ impl<'a> Ast<'a> {
 
         //
         // instrs_stk.resize(self.funcs.len()+1, Vec::new());
-        for i in instrs_stk.len() ..self.funcs.len()+1 {
+        for _ in instrs_stk.len() ..self.funcs.len()+1 {
             instrs_stk.push(Vec::new());
         }
 
