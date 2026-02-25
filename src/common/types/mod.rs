@@ -1,0 +1,170 @@
+use std::{ops::Deref, path::Path, sync::Arc};
+
+use super::{Build, Instruction};
+
+mod int;
+mod int_intos;
+mod int_froms;
+mod macros;
+mod float;
+
+// pub use int_intos::*;
+// pub use int_froms::*;
+pub use int::*;
+
+pub use float::*;
+
+
+
+#[derive(Clone,Debug,Hash,PartialEq, Eq,PartialOrd, Ord)]
+pub enum StringVal {
+    Str(&'static str),
+    String(Arc<String>),
+}
+
+impl StringVal {
+    pub fn new<S: Into<String>>(x:S) -> Self {
+        Self::String(Arc::new(x.into()))
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            StringVal::Str(s) => s,
+            StringVal::String(s) => s.as_str(),
+        }
+    }
+}
+
+
+// impl<'a> Into<&'a str> for StringVal {
+//     fn into(self) -> &'a str {
+//         self.as_str()
+//     }
+// }
+
+impl Into<String> for StringVal {
+    fn into(self) -> String {
+        self.as_str().to_string()
+    }
+}
+
+impl Into<Arc<String>> for StringVal {
+    fn into(self) -> Arc<String> {
+        match self {
+            StringVal::Str(s) => Arc::new(s.to_string()),
+            StringVal::String(s) => s.clone(),
+        }
+    }
+}
+
+impl From<String> for StringVal {
+    fn from(value: String) -> Self {
+        Self::String(Arc::new(value))
+    }
+}
+
+impl From<&'static str> for StringVal {
+    fn from(value: &'static str) -> Self {
+        Self::Str(value)
+    }
+}
+
+
+pub type FloatT = f64;
+pub type IntT = i64;
+
+#[derive(Clone,Debug,Hash,PartialEq, Eq,PartialOrd, Ord)]
+pub struct StringT(Arc<String>);
+
+impl StringT {
+    pub fn new<S: Into<String>>(s:S) -> Self { //AsRef<str>
+        Self(Arc::new(s.into()))
+    }
+}
+
+impl Deref for StringT {
+    type Target = String;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.deref()
+    }
+}
+impl std::borrow::Borrow<std::string::String> for StringT {
+    fn borrow(&self) -> &std::string::String {
+        &self.0
+    }
+}
+impl std::borrow::Borrow<str> for StringT {
+    fn borrow(&self) -> &str {
+        &self.0.as_str()
+    }
+}
+
+impl From<&str> for StringT {
+    fn from(value: &str) -> Self {
+        Self::new(value)
+    }
+}
+
+impl From<String> for StringT {
+    fn from(value: String) -> Self {
+        Self::new(value)
+    }
+}
+
+
+impl Into<String> for StringT {
+    fn into(self) -> String {
+        self.to_string()
+    }
+}
+// impl Equivalent<StringT> for String {
+
+// }
+
+// impl std::hash::Hash for StringT {
+//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+//         self.0.hash(state);
+//     }
+// }
+
+#[derive(Clone,Debug)]
+pub struct BuildT(Arc<Build>);
+
+impl BuildT {
+    pub fn new(b:Build) -> Self {
+        Self(Arc::new(b))
+    }
+
+    pub fn from_paths(paths : Vec<&Path>) -> Self {
+        let mut b = Build::default();
+
+        for (i,p) in paths.iter().enumerate() {
+            b.instructions.push(Instruction::Include(i));
+            b.includes.push(p.to_path_buf());
+        }
+
+        b.main_instruct_len=paths.len();
+
+        Self::new(b)
+    }
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Self {
+        Self::from_paths(vec![path.as_ref()])
+    }
+
+}
+
+impl Deref for BuildT {
+    type Target = Build;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.deref()
+    }
+}
+
+
+impl Default for BuildT {
+    fn default() -> Self {
+        Self(Arc::new(Build::default()))
+    }
+}

@@ -68,17 +68,17 @@ pub enum Instruction {
         debug:(usize,i64),
     },
 
-    ResultBool(bool),
     ResultSymbol(usize),//symbol_ind
+    // ResultSymbol(&'static str),
 
     ResultInt(IntT),
     ResultFloat(FloatT),
+    ResultVararg,
     // ResultCustomUnmanaged(Box<dyn Any>),
 
+    ResultBool(bool),
     ResultNil,
     ResultVoid,
-
-    ResultVararg,
 
     // ResultVararg,
     // ResultCopy,

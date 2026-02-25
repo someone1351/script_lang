@@ -15,7 +15,7 @@
 
 use std::{collections::BTreeMap, path::Path};
 
-use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs, Dict, Value
+use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs, Dict, IntVal, Value
 // MachineError, Value
 };
 
@@ -598,6 +598,40 @@ fn main() {
     test_script3("examples/test8.script",false,false);
     // test_script3("examples/test15.script",true,false);
 
+    // let v=Value::custom_unmanaged(String::new());
+    // let v=Value::custom_unmanaged("aa");
+    // trait Abc: std::any::Any+std::fmt::Debug+Send+Sync+Serialize {
+
+    // }
+    // enum Test{
+    //     Aa(Box<dyn Abc>)
+    // }
+
+    // let a:IntVal=(5 as i32).into();
+    // let b:IntVal=(5 as i32).into();
+
+    let a: i8 = -1;
+    let b: u8= 255;
+
+    let x:IntVal = a.into();
+    let y:IntVal = b.into();
+
+    println!("hash {a}={x} ({},{})=({},{})",
+        get_common_hash(a),
+        get_common_hash(b),
+        get_common_hash(x),
+        get_common_hash(y),
+
+    );
+
+}
+
+
+fn get_common_hash<T: std::hash::Hash>(t: T) -> u64 {
+    use std::hash::Hasher;
+    let mut s = std::hash::DefaultHasher::new();
+    t.hash(&mut s);
+    s.finish()
 }
 /*
 TODO
