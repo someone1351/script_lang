@@ -20,7 +20,7 @@ pub struct AstNode<'a> {
     pub stack_pushed_num : usize,
     pub last_stack_size : usize, //size before locals etc declared?
     pub stack_size : usize, //size after locals etc declared
-    
+
     pub children : Vec<usize>,
 
     pub parent : Option<usize>,

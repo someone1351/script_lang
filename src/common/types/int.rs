@@ -1,11 +1,13 @@
 use std::cmp::Ordering;
 use std::fmt::Display;
 
+use crate::impl_int_try_into;
 use crate::int_expr_double;
 use crate::int_expr_single;
 use crate::int_expr_single_else;
 use crate::int_expr_single_else_signed;
 use crate::int_expr_tripple;
+use crate::FloatVal;
 
 // use super::int_intos::*;
 // use super::int_froms::*;
@@ -200,5 +202,91 @@ impl std::hash::Hash for IntVal {
 impl Display for IntVal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         int_expr_single!(self,write!(f, "{a}"),a)
+    }
+}
+
+impl_int_try_into!(i8,i16,i32,i64,i128,isize, u8,u16,u32,u64,u128,usize);
+
+
+impl From<i8> for IntVal {
+    fn from(v: i8) -> Self {
+        Self::I8(v)
+    }
+}
+
+impl From<i16> for IntVal {
+    fn from(v: i16) -> Self {
+        Self::I16(v)
+    }
+}
+
+
+impl From<i32> for IntVal {
+    fn from(v: i32) -> Self {
+        Self::I32(v)
+    }
+}
+
+impl From<i64> for IntVal {
+    fn from(v: i64) -> Self {
+        Self::I64(v)
+    }
+}
+
+impl From<i128> for IntVal {
+    fn from(v: i128) -> Self {
+        Self::I128(v)
+    }
+}
+
+impl From<isize> for IntVal {
+    fn from(v: isize) -> Self {
+        Self::ISize(v)
+    }
+}
+
+impl From<u8> for IntVal {
+    fn from(v: u8) -> Self {
+        Self::U8(v)
+    }
+}
+
+impl From<u16> for IntVal {
+    fn from(v: u16) -> Self {
+        Self::U16(v)
+    }
+}
+
+
+impl From<u32> for IntVal {
+    fn from(v: u32) -> Self {
+        Self::U32(v)
+    }
+}
+
+impl From<u64> for IntVal {
+    fn from(v: u64) -> Self {
+        Self::U64(v)
+    }
+}
+
+impl From<u128> for IntVal {
+    fn from(v: u128) -> Self {
+        Self::U128(v)
+    }
+}
+
+impl From<usize> for IntVal {
+    fn from(v: usize) -> Self {
+        Self::USize(v)
+    }
+}
+
+impl From<FloatVal> for IntVal {
+    fn from(value: FloatVal) -> Self {
+        match value {
+            FloatVal::F32(a) => (a as i32).into(),
+            FloatVal::F64(a) => (a as i64).into(),
+        }
     }
 }

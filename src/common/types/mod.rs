@@ -3,8 +3,8 @@ use std::{ops::Deref, path::Path, sync::Arc};
 use super::{Build, Instruction};
 
 mod int;
-mod int_intos;
-mod int_froms;
+// mod int_intos;
+// mod int_froms;
 mod macros;
 mod float;
 mod string;
@@ -83,21 +83,21 @@ impl BuildT {
         Self(Arc::new(b))
     }
 
-    pub fn from_paths(paths : Vec<&Path>) -> Self {
-        let mut b = Build::default();
+    // pub fn from_paths(paths : Vec<&Path>) -> Self {
+    //     let mut b = Build::default();
 
-        for (i,p) in paths.iter().enumerate() {
-            b.instructions.push(Instruction::Include(i));
-            b.includes.push(p.to_path_buf());
-        }
+    //     for (i,p) in paths.iter().enumerate() {
+    //         b.instructions.push(Instruction::Include(i));
+    //         b.includes.push(p.to_path_buf());
+    //     }
 
-        b.main_instruct_len=paths.len();
+    //     b.main_instruct_len=paths.len();
 
-        Self::new(b)
-    }
-    pub fn from_path<P: AsRef<Path>>(path: P) -> Self {
-        Self::from_paths(vec![path.as_ref()])
-    }
+    //     Self::new(b)
+    // }
+    // pub fn from_path<P: AsRef<Path>>(path: P) -> Self {
+    //     Self::from_paths(vec![path.as_ref()])
+    // }
 
 }
 

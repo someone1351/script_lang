@@ -192,3 +192,33 @@ impl Display for FloatVal {
         }
     }
 }
+
+impl TryFrom<IntVal> for FloatVal {
+    type Error = ();
+
+    fn try_from(value: IntVal) -> Result<Self, Self::Error> {
+        match value {
+            IntVal::I8(a) => a.try_into().map(|a|FloatVal::F32(a)).or(Err(())),
+            IntVal::I16(a) => a.try_into().map(|a|FloatVal::F32(a)).or(Err(())),
+            IntVal::I32(a) => a.try_into().map(|a|FloatVal::F64(a)).or(Err(())),
+
+            IntVal::U8(a) => a.try_into().map(|a|FloatVal::F32(a)).or(Err(())),
+            IntVal::U16(a) => a.try_into().map(|a|FloatVal::F32(a)).or(Err(())),
+            IntVal::U32(a) => a.try_into().map(|a|FloatVal::F64(a)).or(Err(())),
+
+            // IntVal::I64(a) => ,
+            // IntVal::I128(a) => ,
+            // IntVal::ISize(a) => ,
+
+            // IntVal::U64(a) => ,
+            // IntVal::U128(a) => ,
+            // IntVal::USize(a) => ,
+
+            _ => {
+                let a:i32=value.try_into()?;
+                a.try_into().map(|a|FloatVal::F64(a)).or(Err(()))
+            }
+
+        }
+    }
+}
