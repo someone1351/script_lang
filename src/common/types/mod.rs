@@ -7,67 +7,14 @@ mod int_intos;
 mod int_froms;
 mod macros;
 mod float;
+mod string;
 
 // pub use int_intos::*;
 // pub use int_froms::*;
 pub use int::*;
 
 pub use float::*;
-
-
-
-#[derive(Clone,Debug,Hash,PartialEq, Eq,PartialOrd, Ord)]
-pub enum StringVal {
-    Str(&'static str),
-    String(Arc<String>),
-}
-
-impl StringVal {
-    pub fn new<S: Into<String>>(x:S) -> Self {
-        Self::String(Arc::new(x.into()))
-    }
-
-    pub fn as_str(&self) -> &str {
-        match self {
-            StringVal::Str(s) => s,
-            StringVal::String(s) => s.as_str(),
-        }
-    }
-}
-
-
-// impl<'a> Into<&'a str> for StringVal {
-//     fn into(self) -> &'a str {
-//         self.as_str()
-//     }
-// }
-
-impl Into<String> for StringVal {
-    fn into(self) -> String {
-        self.as_str().to_string()
-    }
-}
-
-impl Into<Arc<String>> for StringVal {
-    fn into(self) -> Arc<String> {
-        match self {
-            StringVal::Str(s) => Arc::new(s.to_string()),
-            StringVal::String(s) => s.clone(),
-        }
-    }
-}
-
-impl From<String> for StringVal {
-    fn from(value: String) -> Self {
-        Self::String(Arc::new(value))
-    }
-}
-
-impl From<&'static str> for StringVal {
-    fn from(value: &'static str) -> Self {
-        Self::Str(value)
-    }
-}
+pub use string::*;
 
 
 pub type FloatT = f64;

@@ -15,7 +15,7 @@
 
 use std::{collections::BTreeMap, path::Path};
 
-use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs, Dict, IntVal, Value
+use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs, Dict, IntVal, StringVal, Value
 // MachineError, Value
 };
 
@@ -616,12 +616,23 @@ fn main() {
     let x:IntVal = a.into();
     let y:IntVal = b.into();
 
+    let s1:StringVal = "abc".into();
+    let s2:StringVal = String::from("abc").into();
+
     println!("hash {a}={x} ({},{})=({},{})",
         get_common_hash(a),
         get_common_hash(b),
         get_common_hash(x),
         get_common_hash(y),
 
+    );
+
+    println!("{} {}, {:?},{:?}, {} {}",
+        get_common_hash("abc"),
+        get_common_hash(String::from("abc")),
+        &s1,&s2,
+        get_common_hash(&s1),
+        get_common_hash(&s2),
     );
 
 }
