@@ -378,8 +378,9 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         })
     }
 
-    pub fn result_int(&mut self,x:IntT) -> &mut Self {
+    pub fn result_int<Q:Into<IntVal>>(&mut self,x:Q) -> &mut Self {
         // self.add_node(BuilderNodeType::ResultInt(x))
+        let x=x.into();
 
         self.add_node(move|ast|{
             ast.result_int(x);
@@ -387,8 +388,10 @@ impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
         })
     }
 
-    pub fn result_float(&mut self,x:FloatT) -> &mut Self {
+    pub fn result_float<Q:Into<FloatVal>>(&mut self,x:Q) -> &mut Self {
         // self.add_node(BuilderNodeType::ResultFloat(x))
+        let x=x.into();
+
         self.add_node(move|ast|{
             ast.result_float(x);
             Ok(())

@@ -1,5 +1,7 @@
 use std::cmp::Ordering;
 use std::fmt::Display;
+use std::num::ParseIntError;
+use std::str::FromStr;
 
 use crate::impl_int_try_into;
 use crate::int_expr_double;
@@ -13,7 +15,7 @@ use crate::FloatVal;
 // use super::int_froms::*;
 // use super::macros::*;
 
-#[derive(Copy,Clone,Debug,Eq, )]
+#[derive(Copy,Clone,Debug,Eq, Ord )]
 pub enum IntVal {
     I8(i8),
     I16(i16),
@@ -71,7 +73,7 @@ impl IntVal {
     pub fn is_positive(self ) -> bool {
         !self.is_negative()
     }
-    pub fn to_same(self,other:Self) -> Result<Self,()> {
+    pub fn to_same(self,other:Self) -> Result<Self,IntValErr> {
         match other {
             IntVal::I8(_) => {let x:i8=self.try_into()?;Ok(x.into())},
             IntVal::I16(_) => {let x:i16=self.try_into()?;Ok(x.into())},
@@ -88,52 +90,58 @@ impl IntVal {
         }
     }
 
-    pub fn pow(self,exp:Self) -> Result<Self,()> {
-        let exp:u32=exp.try_into().or(Err(()))?;
-        int_expr_single!(self,a.checked_pow(exp).map(|x|x.into()).ok_or(()),a)
+    pub fn checked_pow(self,exp:Self) -> Result<Self,IntValErr> {
+        let exp:u32=exp.try_into().or(Err(IntValErr))?;
+        int_expr_single!(self,a.checked_pow(exp).map(|x|x.into()).ok_or(IntValErr),a)
     }
-    pub fn neg(self) -> Result<Self,()> {
-        int_expr_single_else_signed!(self.to_signed().ok_or(())?,a.checked_neg().map(|x|x.into()).ok_or(()),Err(()),a)
+    pub fn checked_neg(self) -> Result<Self,IntValErr> {
+        int_expr_single_else_signed!(self.to_signed().ok_or(IntValErr)?,a.checked_neg().map(|x|x.into()).ok_or(IntValErr),Err(IntValErr),a)
     }
-    pub fn add(self,other:Self) -> Result<Self,()> {
+    pub fn checked_add(self,other:Self) -> Result<Self,IntValErr> {
         let other=other.to_same(self)?;
-        int_expr_double!(self,other,a.checked_add(b).map(|x|x.into()).ok_or(()),a,b)
+        int_expr_double!(self,other,a.checked_add(b).map(|x|x.into()).ok_or(IntValErr),a,b)
     }
-    pub fn sub(self,other:Self) -> Result<Self,()> {
+    pub fn checked_sub(self,other:Self) -> Result<Self,IntValErr> {
         let other=other.to_same(self)?;
-        int_expr_double!(self,other,a.checked_sub(b).map(|x|x.into()).ok_or(()),a,b)
+        int_expr_double!(self,other,a.checked_sub(b).map(|x|x.into()).ok_or(IntValErr),a,b)
     }
-    pub fn mul(self,other:Self) -> Result<Self,()> {
+    pub fn checked_mul(self,other:Self) -> Result<Self,IntValErr> {
         let other=other.to_same(self)?;
-        int_expr_double!(self,other,a.checked_mul(b).map(|x|x.into()).ok_or(()),a,b)
+        int_expr_double!(self,other,a.checked_mul(b).map(|x|x.into()).ok_or(IntValErr),a,b)
     }
-    pub fn div(self,other:Self) -> Result<Self,()> {
+    pub fn checked_div(self,other:Self) -> Result<Self,IntValErr> {
         let other=other.to_same(self)?;
-        int_expr_double!(self,other,a.checked_div(b).map(|x|x.into()).ok_or(()),a,b)
+        int_expr_double!(self,other,a.checked_div(b).map(|x|x.into()).ok_or(IntValErr),a,b)
     }
-    pub fn rem(self,other:Self) -> Result<Self,()> {
+    pub fn checked_rem(self,other:Self) -> Result<Self,IntValErr> {
         let other=other.to_same(self)?;
-        int_expr_double!(self,other,a.checked_rem(b).map(|x|x.into()).ok_or(()),a,b)
+        int_expr_double!(self,other,a.checked_rem(b).map(|x|x.into()).ok_or(IntValErr),a,b)
     }
     pub fn is_zero(self) -> bool {
         int_expr_single!(self,a==0,a)
     }
+    pub fn is_one(self) -> bool {
+        int_expr_single!(self,a==1,a)
+    }
+    // pub fn is_neg_one(self) -> bool {
+    //     int_expr_single!(self,a==1,a)
+    // }
 
-    pub fn min(self,other:Self) -> Result<Self,()> {
+    pub fn checked_min(self,other:Self) -> Result<Self,IntValErr> {
         let other=other.to_same(self)?;
         int_expr_double!(self,other,Ok(a.min(b).into()),a,b)
     }
-    pub fn max(self,other:Self) -> Result<Self,()> {
+    pub fn checked_max(self,other:Self) -> Result<Self,IntValErr> {
         let other=other.to_same(self)?;
         int_expr_double!(self,other,Ok(a.max(b).into()),a,b)
     }
-    pub fn clamp(self,min:Self,max:Self) -> Result<Self,()> {
+    pub fn checked_clamp(self,min:Self,max:Self) -> Result<Self,IntValErr> {
         let min=min.to_same(self)?;
         let max=max.to_same(self)?;
 
         //
         if int_expr_double!(min,max,b>c,b,c) {
-            return Err(());
+            return Err(IntValErr);
         }
 
         //
@@ -288,5 +296,28 @@ impl From<FloatVal> for IntVal {
             FloatVal::F32(a) => (a as i32).into(),
             FloatVal::F64(a) => (a as i64).into(),
         }
+    }
+}
+
+impl FromStr for IntVal {
+    type Err = ParseIntError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        s.parse::<i64>().map(|x|x.into())
+    }
+}
+
+impl Default for IntVal {
+    fn default() -> Self {
+        Self::I64(0)
+    }
+}
+
+#[derive(Debug)]
+pub struct IntValErr;
+
+impl Display for IntValErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "IntValErr")
     }
 }

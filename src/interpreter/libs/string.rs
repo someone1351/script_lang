@@ -60,20 +60,23 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //repeat(str,int)
     lib_scope.method("repeat",|context|{
         let s=context.param(0).as_string();
-        let r=context.param(1).as_int() as usize;
+        let r: usize=context.param(1).as_int().try_into()?;
         Ok(Value::string(s.repeat(r)))
-    })
-        .str().int().end();
+    }).str().int().end();
 
     //substr(str,int,int?)
     lib_scope.method("substr",|context|{
         let string=context.param(0).as_string();
 
-        let start=context.param(1).as_int().max(0) as usize;
+        let start: usize=context.param(1).as_int().try_into()?;
         let start=start.min(string.len());
 
-        let end=if context.params_num()==2{string.len()}else{context.param(2).as_int().max(0) as usize};
-        let end=end.min(string.len());
+        let end: usize=if context.params_num()==2{
+            string.len()
+        }else{
+            context.param(2).as_int().try_into()?
+        }.min(string.len());
+
 
         Ok(Value::string(if start>=end { "" } else { &string[start..end] }))
     })

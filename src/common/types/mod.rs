@@ -17,8 +17,8 @@ pub use float::*;
 pub use string::*;
 
 
-pub type FloatT = f64;
-pub type IntT = i64;
+// pub type FloatT = f64;
+// pub type IntT = i64;
 
 #[derive(Clone,Debug,Hash,PartialEq, Eq,PartialOrd, Ord)]
 pub struct StringT(Arc<String>);

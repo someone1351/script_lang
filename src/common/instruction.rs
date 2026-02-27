@@ -71,8 +71,8 @@ pub enum Instruction {
     ResultSymbol(usize),//symbol_ind
     // ResultSymbol(&'static str),
 
-    ResultInt(IntT),
-    ResultFloat(FloatT),
+    ResultInt(IntVal),
+    ResultFloat(FloatVal),
     ResultVararg,
     // ResultCustomUnmanaged(Box<dyn Any>),
 

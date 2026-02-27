@@ -22,7 +22,7 @@ pub enum ValueKey {
     // Void,
     Bool(bool),
     // Float(FloatT),
-    Int(IntT),
+    Int(IntVal),
     String(StringT),
     // Custom(Custom),
 }

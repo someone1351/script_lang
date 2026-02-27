@@ -486,10 +486,10 @@ impl<'a> Ast<'a> {
     pub fn result_bool(&mut self,v: bool) {
         self.add_next(AstNodeType::ResultBool(v));
     }
-    pub fn result_int(&mut self,v: IntT) {
+    pub fn result_int(&mut self,v: IntVal) {
         self.add_next(AstNodeType::ResultInt(v));
     }
-    pub fn result_float(&mut self,v: FloatT) {
+    pub fn result_float(&mut self,v: FloatVal) {
         self.add_next(AstNodeType::ResultFloat(v));
     }
     pub fn result_void(&mut self) {

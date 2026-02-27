@@ -54,8 +54,8 @@ pub enum Value {
     Nil,
     Void,
     Bool(bool),
-    Float(FloatT),
-    Int(IntT),
+    Float(FloatVal),
+    Int(IntVal),
     // Int(IntValue),
     String(StringT),
     Custom(Custom),
@@ -83,43 +83,43 @@ impl Into<Value> for bool {
     }
 }
 
-impl Into<Value> for f32 {
-    fn into(self) -> Value {
-        Value::float(self)
-    }
-}
+// impl Into<Value> for f32 {
+//     fn into(self) -> Value {
+//         Value::float(self)
+//     }
+// }
 
-impl Into<Value> for f64 {
-    fn into(self) -> Value {
-        Value::float(self)
-    }
-}
+// impl Into<Value> for f64 {
+//     fn into(self) -> Value {
+//         Value::float(self)
+//     }
+// }
 
-impl Into<Value> for i32 {
-    fn into(self) -> Value {
-        Value::int(self)
-    }
-}
-impl Into<Value> for i64 {
-    fn into(self) -> Value {
-        Value::int(self)
-    }
-}
-impl Into<Value> for u32 {
-    fn into(self) -> Value {
-        Value::int(self)
-    }
-}
-impl Into<Value> for u64 {
-    fn into(self) -> Value {
-        Value::int(self)
-    }
-}
-impl Into<Value> for usize {
-    fn into(self) -> Value {
-        Value::int(self)
-    }
-}
+// impl Into<Value> for i32 {
+//     fn into(self) -> Value {
+//         Value::int(self)
+//     }
+// }
+// impl Into<Value> for i64 {
+//     fn into(self) -> Value {
+//         Value::int(self)
+//     }
+// }
+// impl Into<Value> for u32 {
+//     fn into(self) -> Value {
+//         Value::int(self)
+//     }
+// }
+// impl Into<Value> for u64 {
+//     fn into(self) -> Value {
+//         Value::int(self)
+//     }
+// }
+// impl Into<Value> for usize {
+//     fn into(self) -> Value {
+//         Value::int(self)
+//     }
+// }
 
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
@@ -200,15 +200,27 @@ impl Value {
     //     Self::Int(x.try_into().ok().unwrap_or(0))
     // }
 
-    pub fn float<T: TryInto<FloatT>>(x:T) -> Self {
-        Self::Float(x.try_into().ok().unwrap_or(0.0))
+    // pub fn float<T: TryInto<FloatT>>(x:T) -> Self {
+    //     Self::Float(x.try_into().ok().unwrap_or(0.0))
+    // }
+    // pub fn int<T: TryInto<IntT>+Sized>(x:T) -> Self {
+    //     Self::Int(x.try_into().ok().unwrap_or(0))
+    // }
+    // pub fn bool<T: TryInto<bool>+Sized>(x:T) -> Self {
+    //     Self::Bool(x.try_into().ok().unwrap_or(false))
+    // }
+
+
+    pub fn float<T: Into<FloatVal>>(x:T) -> Self {
+        x.into().into()
     }
-    pub fn int<T: TryInto<IntT>+Sized>(x:T) -> Self {
-        Self::Int(x.try_into().ok().unwrap_or(0))
+    pub fn int<T: Into<IntVal>+Sized>(x:T) -> Self {
+        x.into().into()
     }
-    pub fn bool<T: TryInto<bool>+Sized>(x:T) -> Self {
-        Self::Bool(x.try_into().ok().unwrap_or(false))
+    pub fn bool<T: Into<bool>+Sized>(x:T) -> Self {
+        Self::Bool(x.into())
     }
+
     pub fn string<S: Into<String>>(x:S) -> Self {
         Self::String(StringT::new(x.into()))
     }
@@ -275,13 +287,13 @@ impl Value {
             _=>None
         }
     }
-    pub fn get_int(&self) -> Option<IntT> {
+    pub fn get_int(&self) -> Option<IntVal> {
         match self {
             Value::Int(x)=>Some(*x),
             _=>None,
         }
     }
-    pub fn get_float(&self) -> Option<FloatT> {
+    pub fn get_float(&self) -> Option<FloatVal> {
         match self {
             Value::Float(x)=>Some(*x),
             _=>None,
@@ -314,42 +326,45 @@ impl Value {
             &Value::Bool(x)=>x,
             // Value::String(s) if s.is_empty()=>false,
             // Value::Void => false,
-            &Value::Int(x) if x==0 => false,
-            &Value::Float(x) if x==0.0 => false,
+            &Value::Int(x) => !x.is_zero(),
+            &Value::Float(x) => !x.is_zero(),
             _=>true
         }
     }
 
-    pub fn as_int(&self) -> IntT {
-        match self {
-            Value::Int(x)=>*x,
-            Value::Float(x)=>*x as IntT,
-            Value::Bool(true) => 1,
-            Value::String(x)=>x.parse::<IntT>().unwrap_or(0),
-            _=>0,
+    pub fn as_int(&self) -> IntVal {
+        match self.clone() {
+            Value::Int(x)=>x,
+            Value::Float(x)=>x.into(),
+            Value::Bool(true) => 1.into(),
+            Value::String(x)=>x.parse::<IntVal>().unwrap_or(0.into()),
+            _=>0.into(),
         }
     }
 
     pub fn as_index(&self,len:usize) -> Option<usize> {
         let Some(len ) = len.try_into().ok() else {return None;};
 
-        let ind=self.as_int();
+        let Some(ind):Option<isize>=self.as_int().try_into().ok() else {
+            return None;
+        };
 
         if ind >= len || (ind < 0 && ind.abs() > len) {
             None
         } else {
             let ind = if ind<0 {len+ind} else {ind};
-            Some(ind.try_into().unwrap_or_default())
+            // Some(ind.try_into().unwrap_or_default())
+            Some(ind as usize)
         }
     }
 
-    pub fn as_float(&self) -> FloatT {
-        match self {
-            Value::Int(x)=>*x as FloatT,
-            Value::Float(x)=>*x,
-            Value::Bool(true) => 1.0,
-            Value::String(x)=>x.parse::<FloatT>().unwrap_or(0.0),
-            _=>0.0,
+    pub fn as_float(&self) -> FloatVal {
+        match self.clone() {
+            Value::Int(x)=>x.try_into().unwrap_or_default(),
+            Value::Float(x)=>x,
+            Value::Bool(true) => 1.0.into(),
+            Value::String(x)=>x.parse::<FloatVal>().unwrap_or_default(),
+            _=>0.0.into(),
         }
     }
 
@@ -549,3 +564,105 @@ impl ToString for Value {
 //         write!(f, "{}", self.as_string())
 //     }
 // }
+
+
+
+
+
+impl From<f32> for Value {
+    fn from(v: f32) -> Self {
+        Self::Float(v.into())
+    }
+}
+impl From<f64> for Value {
+    fn from(v: f64) -> Self {
+        Self::Float(v.into())
+    }
+}
+
+
+impl From<i8> for Value {
+    fn from(v: i8) -> Self {
+        Self::Int(v.into())
+    }
+}
+
+impl From<i16> for Value {
+    fn from(v: i16) -> Self {
+        Self::Int(v.into())
+    }
+}
+
+
+impl From<i32> for Value {
+    fn from(v: i32) -> Self {
+        Self::Int(v.into())
+    }
+}
+
+impl From<i64> for Value {
+    fn from(v: i64) -> Self {
+        Self::Int(v.into())
+    }
+}
+
+impl From<i128> for Value {
+    fn from(v: i128) -> Self {
+        Self::Int(v.into())
+    }
+}
+
+impl From<isize> for Value {
+    fn from(v: isize) -> Self {
+        Self::Int(v.into())
+    }
+}
+
+impl From<u8> for Value {
+    fn from(v: u8) -> Self {
+        Self::Int(v.into())
+    }
+}
+
+impl From<u16> for Value {
+    fn from(v: u16) -> Self {
+        Self::Int(v.into())
+    }
+}
+
+
+impl From<u32> for Value {
+    fn from(v: u32) -> Self {
+        Self::Int(v.into())
+    }
+}
+
+impl From<u64> for Value {
+    fn from(v: u64) -> Self {
+        Self::Int(v.into())
+    }
+}
+
+impl From<u128> for Value {
+    fn from(v: u128) -> Self {
+        Self::Int(v.into())
+    }
+}
+
+impl From<usize> for Value {
+    fn from(v: usize) -> Self {
+        Self::Int(v.into())
+    }
+}
+
+
+impl From<FloatVal> for Value {
+    fn from(v: FloatVal) -> Self {
+        Self::Float(v)
+    }
+}
+impl From<IntVal> for Value {
+    fn from(v: IntVal) -> Self {
+        Self::Int(v)
+    }
+}

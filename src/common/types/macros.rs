@@ -118,22 +118,22 @@ macro_rules! impl_int_try_into {
         // Repeat the implementation for each matched type
         $(
             impl TryInto<$ty> for IntVal {
-                type Error = ();
+                type Error = IntValErr;
 
                 fn try_into(self) -> Result<$ty, Self::Error> {
                     match self {
-                        IntVal::I8(i) => i.try_into().or(Err(())),
-                        IntVal::I16(i) => i.try_into().or(Err(())),
-                        IntVal::I32(i) => i.try_into().or(Err(())),
-                        IntVal::I64(i) => i.try_into().or(Err(())),
-                        IntVal::I128(i) => i.try_into().or(Err(())),
-                        IntVal::ISize(i) => i.try_into().or(Err(())),
-                        IntVal::U8(i) => i.try_into().or(Err(())),
-                        IntVal::U16(i) => i.try_into().or(Err(())),
-                        IntVal::U32(i) => i.try_into().or(Err(())),
-                        IntVal::U64(i) => i.try_into().or(Err(())),
-                        IntVal::U128(i) => i.try_into().or(Err(())),
-                        IntVal::USize(i) => i.try_into().or(Err(())),
+                        IntVal::I8(i) => i.try_into().or(Err(IntValErr)),
+                        IntVal::I16(i) => i.try_into().or(Err(IntValErr)),
+                        IntVal::I32(i) => i.try_into().or(Err(IntValErr)),
+                        IntVal::I64(i) => i.try_into().or(Err(IntValErr)),
+                        IntVal::I128(i) => i.try_into().or(Err(IntValErr)),
+                        IntVal::ISize(i) => i.try_into().or(Err(IntValErr)),
+                        IntVal::U8(i) => i.try_into().or(Err(IntValErr)),
+                        IntVal::U16(i) => i.try_into().or(Err(IntValErr)),
+                        IntVal::U32(i) => i.try_into().or(Err(IntValErr)),
+                        IntVal::U64(i) => i.try_into().or(Err(IntValErr)),
+                        IntVal::U128(i) => i.try_into().or(Err(IntValErr)),
+                        IntVal::USize(i) => i.try_into().or(Err(IntValErr)),
                     }
                 }
             }

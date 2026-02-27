@@ -1,3 +1,4 @@
+use std::num::TryFromIntError;
 use std::path::PathBuf;
 
 
@@ -45,6 +46,27 @@ pub enum MachineErrorType{
     StackLimitReached(usize),
 
     IntInto,
+    FloatInto,
+
+
+
+}
+
+impl From<TryFromIntError> for MachineError {
+    fn from(_value: TryFromIntError) -> Self {
+        MachineError::new(MachineErrorType::IntInto)
+    }
+}
+impl From<IntValErr> for MachineError {
+    fn from(_value: IntValErr) -> Self {
+        MachineError::new(MachineErrorType::IntInto)
+    }
+}
+
+impl From<FloatValErr> for MachineError {
+    fn from(_value: FloatValErr) -> Self {
+        MachineError::new(MachineErrorType::FloatInto)
+    }
 }
 
 #[derive(Debug)]

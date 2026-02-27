@@ -33,8 +33,8 @@ pub enum AstNodeType<'a> {
 
     ResultNil,
     ResultVoid,
-    ResultFloat(FloatT),
-    ResultInt(IntT),
+    ResultFloat(FloatVal),
+    ResultInt(IntVal),
     ResultBool(bool),
     ResultString(&'a str),
     ResultVararg,

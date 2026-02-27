@@ -23,6 +23,11 @@ use super::data::*;
 /*
 * have option to use method as get_field or not ?
 
+TODO
+* add num() ?
+* allow specific float/int types eg .int_type::<i32>()
+
+* allow i32 custom to be read as int param
 */
 
 

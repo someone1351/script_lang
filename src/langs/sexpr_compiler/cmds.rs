@@ -126,7 +126,7 @@ pub fn for_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
                     .set_anon_var("r")
                 .block_end()
 
-                .result_int(1)
+                .result_int(1 as i64)
                 .param_push()
                 .get_var(idn)
                 .param_push()

@@ -444,10 +444,10 @@ impl Compiler {
                 }
             } //end block match
             PrimitiveTypeContainer::Float(f,_) => {
-                builder.result_float(f as FloatT);
+                builder.result_float(f);
             }
             PrimitiveTypeContainer::Int(i,_) => {
-                builder.result_int(i as IntT);
+                builder.result_int(i);
             }
             PrimitiveTypeContainer::String(s) => {
                 builder.result_string(s);

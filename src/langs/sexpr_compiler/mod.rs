@@ -269,10 +269,10 @@ impl Compiler {
                 builder.result_bool(x);
             }
             SExprValContainer::Int(x)=>{
-                builder.result_int(x as IntT);
+                builder.result_int(x);
             }
             SExprValContainer::Float(x)=> {
-                builder.result_float(x as FloatT);
+                builder.result_float(x);
             }
             SExprValContainer::String(x)=>{
                 builder.result_string(x);

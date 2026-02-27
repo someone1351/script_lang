@@ -214,11 +214,11 @@ pub fn test_script3<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
 
     lib_scope.method("get_test", |context|{
         // Ok(script_lang::Value::Int(*context.core().0 as script_lang::IntT))
-        Ok(script_lang::Value::Int(*context.core() as script_lang::IntT))
+        Ok((*context.core()).into())
     }).end();
     lib_scope.method("set_test", |mut context|{
         // *context.core_mut().0=context.param(0).as_int() as i32;
-        *context.core_mut()=context.param(0).as_int() as i32;
+        *context.core_mut()=context.param(0).as_int().try_into()?;
         Ok(script_lang::Value::Void)
     }).int().end();
 
@@ -246,7 +246,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
         let mut e= Dict(BTreeMap::new());
         let mut e0= Dict(BTreeMap::new());
         e0.0.insert(script_lang::libs::dict::ValueKey::String("width".into()), Value::Nil);
-        e.0.insert(script_lang::libs::dict::ValueKey::Int(77), script_lang::Value::custom_unmanaged_mut(e0));
+        e.0.insert(script_lang::libs::dict::ValueKey::Int(77.into()), script_lang::Value::custom_unmanaged_mut(e0));
         var_scope.decl("e", Some(script_lang::Value::custom_unmanaged_mut(e))).unwrap();
 
 

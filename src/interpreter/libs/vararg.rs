@@ -1,4 +1,4 @@
-use super::super::super::common::*;
+// use super::super::super::common::*;
 
 // use super::super::func_context::*;
 use super::super::value::*;
@@ -28,12 +28,15 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
             return Ok(Value::Nil);
         }; //err instead?
 
-        let n=stack_frame.stack_params_num-stack_frame.func_params_num;
-        let i=context.param(1).as_int();
-        let x = (((i % (n as IntT)) + if i<0{n as IntT}else{0}) % (n as IntT)) as usize;
+        let n=(stack_frame.stack_params_num-stack_frame.func_params_num).try_into()?;
+        let i:isize =context.param(1).as_int().try_into()?;
 
+        let q=if i<0{n}else{0};
+        let x = ((i % n) + q) % n;
+
+        let stack_params_start:isize=stack_frame.stack_params_start.try_into()?;
         //
-        let stack_ind = stack_frame.stack_params_start+n-x-1;
+        let stack_ind: usize = (stack_params_start+n-x-1).try_into()?;
         let val=context.stack_val(stack_ind)?;
 
         //
