@@ -3,7 +3,7 @@ use std::{any::Any, sync::{Arc, Mutex, Weak} };
 
 // use parking_lot::Mutex;
 
-use crate::{interpreter::{custom::WeakValueInner, gc_scope::GcDropper}, Custom, GcScope};
+use crate::{interpreter::{custom::WeakValueInner, }, Custom, GcScope};
 
 // use super::value::*;
 // use super::error::*;
@@ -221,8 +221,8 @@ pub struct GcValue {
     pub gc_index:GcWeakIndex,
     pub root_count:GcRootCount,
     pub root:bool,
-    // pub dropper : Option<GcDropper>, //always set unless an empty ... are empties necessary?
-    pub dropper : GcDropper,
+    // // pub dropper : Option<GcDropper>, //always set unless an empty ... are empties necessary?
+    // pub dropper : GcDropper,
 }
 
 impl Drop for GcValue {
@@ -231,9 +231,9 @@ impl Drop for GcValue {
             self.root_count.decr().unwrap();
         }
 
-        if self.gc_index.weak_count() == 1 {
-            let _=self.dropper.add(self.gc_index.clone());
-        }
+        // if self.gc_index.weak_count() == 1 {
+        //     let _=self.dropper.add(self.gc_index.clone());
+        // }
         // // self.root=false;
 
         //renable below
@@ -266,17 +266,22 @@ impl Clone for GcValue {
     }
 }
 
+pub struct GcValueNew {
+    pub val_index:GcWeakIndex,
+    pub root_count:GcRootCount,
+}
+
 impl GcValue {
     pub fn is_alive(&self) -> bool {
         self.root_count.strong_count()!=0
     }
-    pub fn new<T:GcTraversable>(data : T, gc_scope: &mut GcScope) -> Self {
+    pub fn new_mut<T:GcTraversable>(data : T, gc_scope: &mut GcScope) -> Self {
 
         let data=Arc::new(Mutex::new(data));
 
         // let type_name=std::any::type_name::<T>();
 
-        let (val_index, root_count)=gc_scope.new_other(
+        let gc_val_new=gc_scope.new_other(
             GcManagedInner::Mut(Arc::clone(&data) as _),
             // type_name
             TypeInfo::new::<T>()
@@ -286,10 +291,10 @@ impl GcValue {
         Self {
             data: WeakValueInner::Mut(Arc::downgrade(&data) as _), //Arc::downgrade(&data) as _,
             root: false,//true,
-            gc_index: val_index,
-            root_count,
-            // dropper : Some(gc_scope.get_dropper()),
-            dropper : gc_scope.get_dropper(),
+            gc_index: gc_val_new.val_index,
+            root_count:gc_val_new.root_count,
+            // // dropper : Some(gc_scope.get_dropper()),
+            // dropper : gc_scope.get_dropper(),
         }
     }
 
@@ -297,7 +302,7 @@ impl GcValue {
     pub fn new_non_mut<T:GcTraversable+Sync>(data : T, gc_scope: &mut GcScope) -> Self {
         let data=Arc::new(data);
 
-        let (val_index, root_count)=gc_scope.new_other(
+        let gc_val_new=gc_scope.new_other(
             GcManagedInner::NonMut(Arc::clone(&data) as _),
             TypeInfo::new::<T>()
         );
@@ -305,10 +310,10 @@ impl GcValue {
         Self {
             data: WeakValueInner::NonMut(Arc::downgrade(&data) as _), //Arc::downgrade(&data) as _,
             root: false,//true,
-            gc_index: val_index,
-            root_count,
-            // dropper : Some(gc_scope.get_dropper()),
-            dropper : gc_scope.get_dropper(),
+            gc_index: gc_val_new.val_index,
+            root_count:gc_val_new.root_count,
+            // // dropper : Some(gc_scope.get_dropper()),
+            // dropper : gc_scope.get_dropper(),
         }
     }
 
@@ -402,7 +407,7 @@ impl GcValue {
             gc_index:self.gc_index.clone(),
             root_count:self.root_count.clone(),
             root:true,
-            dropper:self.dropper.clone(),
+            // dropper:self.dropper.clone(),
         }
     }
 
@@ -416,7 +421,7 @@ impl GcValue {
             gc_index:self.gc_index.clone(),
             root_count:self.root_count.clone(),
             root:self.root,
-            dropper:self.dropper.clone(),
+            // dropper:self.dropper.clone(),
         }
     }
     pub fn clone_leaf(&self) -> Self {
@@ -425,7 +430,7 @@ impl GcValue {
             gc_index:self.gc_index.clone(),
             root_count:self.root_count.clone(),
             root:false,
-            dropper:self.dropper.clone(),
+            // dropper:self.dropper.clone(),
         }
     }
     // pub fn data(&self) -> Option<GcValueTyping2> //Option<Arc<Mutex<dyn Any+Send >>>

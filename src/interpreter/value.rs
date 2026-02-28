@@ -41,6 +41,7 @@ use std::any::{Any,TypeId};
 // use crate::interpreter::error::MachineErrorType;
 // use crate::MachineError;
 
+// use crate::interpreter::gc::GcValue;
 use crate::GcTraversable;
 
 use super::super::common::*;
@@ -424,9 +425,17 @@ impl Value {
     // }
 
     //
+    // pub fn new_managed_mut<T:GcTraversable+Send>(data : T,gc_scope : &mut GcScope) -> Self {
+    //
+    // }
 
+    // pub fn new_managed<T:GcTraversable+Send+Sync>(data : T, gc_scope : &mut GcScope) -> Self {
+    //     Custom::new::<T>(CustomInner::Managed(GcValue::new_non_mut(data,gc_scope)))
+    // }
     pub fn custom_managed_mut<T:GcTraversable+Send>(data : T,gc_scope : &mut GcScope) -> Self {
         Self::Custom(Custom::new_managed_mut(data, gc_scope))
+        // Self::Custom(Custom::new::<T>(CustomInner::Managed(GcValue::new(data,gc_scope))))
+
     }
 
     pub fn custom_managed<T:GcTraversable+Send+Sync>(data : T,gc_scope : &mut GcScope) -> Self {

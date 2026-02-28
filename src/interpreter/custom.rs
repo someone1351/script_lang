@@ -226,23 +226,32 @@ impl Custom {
         if let CustomInner::Empty=self.inner { true } else { false }
     }
 
-    fn new<T:Any>(inner:CustomInner) -> Self {
+    pub fn new<T:Any>(inner:CustomInner) -> Self {
         Self {
             type_info:TypeInfo::new::<T>(),
             inner,
         }
     }
 
-    pub fn new_managed_mut<T:GcTraversable+Send>(data : T,gc_scope : &mut GcScope) -> Self {
-        Self::new::<T>(CustomInner::Managed(GcValue::new(data,gc_scope)))
-    }
 
-    pub fn new_unmanaged_mut<T:Any+Send>(data : T) -> Self {
-        Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::Mut(Arc::new(Mutex::new(data)))))
+    // pub fn new_managed_mut2<T:GcTraversable+Send>(data : T,mut gc_new : impl FnMut(T)->GcValue) -> Self {
+    //     Self::new::<T>(CustomInner::Managed(gc_new(data)))
+    // }
+
+    // pub fn new_managed2<T:GcTraversable+Send+Sync>(data : T,mut gc_new : impl FnMut(T)->GcValue) -> Self {
+    //     Self::new::<T>(CustomInner::Managed(GcValue::new_non_mut(data,gc_scope)))
+    // }
+
+    pub fn new_managed_mut<T:GcTraversable+Send>(data : T,gc_scope : &mut GcScope) -> Self {
+        Self::new::<T>(CustomInner::Managed(GcValue::new_mut(data,gc_scope)))
     }
 
     pub fn new_managed<T:GcTraversable+Send+Sync>(data : T, gc_scope : &mut GcScope) -> Self {
         Self::new::<T>(CustomInner::Managed(GcValue::new_non_mut(data,gc_scope)))
+    }
+
+    pub fn new_unmanaged_mut<T:Any+Send>(data : T) -> Self {
+        Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::Mut(Arc::new(Mutex::new(data)))))
     }
 
     pub fn new_unmanaged<T:Any+Send+Sync>(data : T) -> Self {

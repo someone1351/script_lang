@@ -11,7 +11,7 @@ TODO 2
 
 #![allow(dead_code)]
 
-use std::sync::{Arc, Mutex};
+// use std::sync::{Arc, Mutex};
 
 // use parking_lot::Mutex;
 
@@ -21,7 +21,7 @@ use super::gc::*;
 
 pub struct GcScope {
     manageds : Vec<GcManaged>,
-    dropper : GcDropper, //drop managed inds
+    // dropper : GcDropper, //drop managed inds
     // stk : Vec<usize>,
 }
 
@@ -36,9 +36,9 @@ impl GcScope {
     pub fn new() -> Self {
         Self {
             manageds : Vec::new(),
-            // dropper : Arc::new(Mutex::new(Vec::new())),
-            dropper : GcDropper::default(),
-            // stk : Vec::new(),
+            // // dropper : Arc::new(Mutex::new(Vec::new())),
+            // dropper : GcDropper::default(),
+            // // stk : Vec::new(),
         }
     }
 
@@ -46,7 +46,7 @@ impl GcScope {
         data:GcManagedInner, //Arc<Mutex<dyn GcTraversable>>,
         type_info:TypeInfo, //unused?
         // type_name:&'static str
-    ) -> (GcWeakIndex,GcRootCount) {
+    ) -> GcValueNew {
         let val_index=GcIndex::new(self.manageds.len());
         let val_weak_index= val_index.to_weak();
         let root_count=GcRootCount::new();
@@ -64,13 +64,13 @@ impl GcScope {
             marked:false,
         });
 
-        (val_weak_index,root_count)
+        GcValueNew { val_index:val_weak_index, root_count }
     }
 
-    pub fn get_dropper(&self) -> GcDropper {
-        // Arc::downgrade(&self.droppeds)
-        self.dropper.clone()
-    }
+    // pub fn get_dropper(&self) -> GcDropper {
+    //     // Arc::downgrade(&self.droppeds)
+    //     self.dropper.clone()
+    // }
 
 
     pub fn test(&self) {
@@ -357,8 +357,8 @@ impl GcScope {
 
         // // println!(":{:?}",self.manageds.iter().map(|x|(x.managed_index.get(),x.marked,x.root_count.get())).collect::<Vec<_>>());
 
-        // // self.dropper.clear();
-        let _=self.dropper.clear();
+        // // // self.dropper.clear();
+        // let _=self.dropper.clear();
 
         Ok(())
     }
@@ -420,29 +420,29 @@ impl GcScope {
 }
 
 
-#[derive(Default,Clone)]
-pub struct GcDropper {
-    pub droppeds : Arc<Mutex<Vec<GcWeakIndex>>>,
-}
-impl GcDropper {
-    // pub fn new() -> Self {
-    //     Self {
-    //         droppeds : Arc::new(Mutex::new(Vec::new())),
-    //     }
-    // }
-    pub fn add(&mut self,gc_index:GcWeakIndex) -> Result<(),()> {
-        let Ok(mut droppeds)=self.droppeds.try_lock() else {return Err(());};
-        droppeds.push(gc_index);
-        Ok(())
-    }
-    pub fn clear(&mut self) -> Result<(),()> {
-        let Ok(mut droppeds)=self.droppeds.lock() else {return Err(());};
-        droppeds.clear();
-        Ok(())
-    }
-    pub fn drain(&mut self) -> Result<Vec<GcWeakIndex>,()> {
-        let Ok(mut droppeds)=self.droppeds.lock() else {return Err(());};
-        Ok(droppeds.drain(0 ..).collect())
-    }
-}
+// #[derive(Default,Clone)]
+// pub struct GcDropper {
+//     pub droppeds : Arc<Mutex<Vec<GcWeakIndex>>>,
+// }
+// impl GcDropper {
+//     // pub fn new() -> Self {
+//     //     Self {
+//     //         droppeds : Arc::new(Mutex::new(Vec::new())),
+//     //     }
+//     // }
+//     pub fn add(&mut self,gc_index:GcWeakIndex) -> Result<(),()> {
+//         let Ok(mut droppeds)=self.droppeds.try_lock() else {return Err(());};
+//         droppeds.push(gc_index);
+//         Ok(())
+//     }
+//     pub fn clear(&mut self) -> Result<(),()> {
+//         let Ok(mut droppeds)=self.droppeds.lock() else {return Err(());};
+//         droppeds.clear();
+//         Ok(())
+//     }
+//     pub fn drain(&mut self) -> Result<Vec<GcWeakIndex>,()> {
+//         let Ok(mut droppeds)=self.droppeds.lock() else {return Err(());};
+//         Ok(droppeds.drain(0 ..).collect())
+//     }
+// }
 
