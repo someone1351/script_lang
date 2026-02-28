@@ -17,8 +17,10 @@ use std::marker::PhantomData;
 
 // use error::AstError;
 
+use crate::primitive_types::{IntVal,FloatVal};
+
 // use super::super::common::{*,instruction::JmpCond};
-use super::super::common::*;
+use super::super::build::*;
 // use super::parser::*;
 use super::super::ast::*;
 // use error::*;

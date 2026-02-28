@@ -1,8 +1,9 @@
 
 
 // use super::super::super::common::{*,instruction::JmpCond};
-use super::super::super::common::*;
+use super::super::super::build::*;
 use super::misc::*;
+use crate::primitive_types::{IntVal,FloatVal};
 
 #[derive(Debug,Clone,Copy)]
 pub enum AstNodeType<'a> {

@@ -44,12 +44,13 @@ use std::any::{Any,TypeId};
 // use crate::interpreter::gc::GcValue;
 // use crate::GcTraversable;
 
-use super::super::common::*;
+// use super::super::common::*;
 // use super::custom::*;
 // // use super::error::*;
 // use super::gc_scope::*;
 // // use super::FuncContext;
-pub use crate::custom_data::*;
+pub use crate::custom_type::*;
+use crate::{FloatVal, IntVal, StringT};
 
 #[derive(Debug,Clone)]
 // #[derive(Debug,)]

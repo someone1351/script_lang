@@ -1,7 +1,7 @@
 
 use std::ops::{Bound, RangeBounds};
 
-use super::super::super::super::common::Loc;
+use super::super::super::super::build::Loc;
 use super::super::{ Param, Parsed };
 use super::{FieldContainer,PrimitiveContainer,FieldIter};
 

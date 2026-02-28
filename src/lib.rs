@@ -147,9 +147,10 @@ TODO
 
 
 pub mod compiler;
-pub mod common;
+pub mod build;
 pub mod interpreter;
-pub mod custom_data;
+pub mod custom_type;
+pub mod primitive_types;
 // pub mod sexpr_parser;
 // pub mod sexpr_compiler;
 
@@ -157,7 +158,7 @@ pub mod custom_data;
 
 
 pub mod langs;
-pub use common::*;
+pub use build::*;
 // pub use sexpr_lang::sexpr_parser::*;
 // pub use sexpr_lang::sexpr_compiler::*;
 pub use interpreter::*;
@@ -166,4 +167,5 @@ pub use compiler::*;
 
 
 pub use langs::*;
-pub use custom_data::*;
+pub use custom_type::*;
+pub use primitive_types::*;

@@ -1,4 +1,4 @@
-use super::super::super::common::Loc;
+use super::super::super::build::Loc;
 
 
 #[derive(Debug,Clone)]
@@ -41,7 +41,7 @@ pub enum AstVarErrorType {
 pub struct AstVarError {
     pub loc:Loc,
     pub error_type:AstVarErrorType,
-    
+
 }
 
 

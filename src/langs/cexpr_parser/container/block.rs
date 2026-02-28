@@ -1,5 +1,5 @@
 
-use super::super::super::super::common::Loc;
+use super::super::super::super::build::Loc;
 use super::super::{ Block, Parsed };
 use super::{RecordIter,ParamIter,ParamContainer,RecordContainer,PrimitiveContainer};
 

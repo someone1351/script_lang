@@ -6,6 +6,9 @@ mod node_type;
 mod symbol_manager;
 mod include_manager;
 mod misc;
+
+use crate::{primitive_types::{FloatVal, IntVal}, StringT};
+
 // pub use super::common;
 
 // pub use ast::*;
@@ -136,7 +139,7 @@ TODO
 use std::{collections::{HashMap,  HashSet},  path::Path};
 
 // use super::super::common::{*,instruction::JmpCond};
-use super::super::common::*;
+use super::super::build::*;
 
 use include_manager::*;
 use symbol_manager::*;

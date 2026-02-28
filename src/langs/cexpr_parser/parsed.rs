@@ -5,7 +5,7 @@ use crate::cexpr_parser::{FieldContainer, ParamContainer, PrimitiveTypeContainer
 
 use super::container::BlockContainer;
 
-use super::super::super::common::Loc;
+use super::super::super::build::Loc;
 use super::PrimitiveContainer;
 
 #[derive(Debug,Clone)]

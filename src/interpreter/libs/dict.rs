@@ -6,9 +6,11 @@ use std::hash::Hash;
 
 // use crate::Custom;
 // use crate::GcTraversable;
-pub use crate::custom_data::*;
+pub use crate::custom_type::*;
+use crate::IntVal;
+use crate::StringT;
 
-use super::super::super::common::*;
+// use super::super::super::common::*;
 
 // use super::super::func_context::*;
 use super::super::value::*;

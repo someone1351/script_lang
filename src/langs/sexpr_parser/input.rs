@@ -1,7 +1,7 @@
 // use super::loc::*;
 // use super::Loc;
 
-use super::super::super::common::Loc;
+use super::super::super::build::Loc;
 
 #[derive(Debug,Clone)]
 pub struct InputItem<'a> {
@@ -22,12 +22,12 @@ impl<'a> Input<'a> {
     pub fn new(chrs :std::str::Chars<'a>) -> Input<'a> {
         Self {
             stk : vec![InputItem{
-                chrs : chrs.clone(), 
+                chrs : chrs.clone(),
                 buf : String::new(),
                 loc : Loc::one(),
 
             }]
-            // chrs : chrs.clone(), 
+            // chrs : chrs.clone(),
             // buf : String::new(),
             // loc : Loc::default(),
         }
@@ -42,10 +42,10 @@ impl<'a> Input<'a> {
     //     if self.stk.len()==1 {
     //         panic!("chars input, pop discard on empty stack");
     //     }
-        
+
     //     self.stk.remove(self.stk.len()-2);
     // }
-    
+
     // pub fn pop_discard(&mut self) {
     //     if self.stk.len()==1 {
     //         panic!("chars input, pop discard on empty stack");
@@ -108,7 +108,7 @@ impl<'a> Input<'a> {
 
         None
     }
-    
+
     pub fn hasnt<const N:usize>(&mut self, i:usize,xs: [&'static str;N]) -> bool {
         // println!("b {} {}",!self.is_end(),self.has(i, xs).is_none());
         !self.get(i,1).is_none() && self.has(i, xs).is_none()
@@ -129,7 +129,7 @@ impl<'a> Input<'a> {
 
     //     None
     // }
-    
+
 
     // pub fn predicates<const N:usize>(&mut self, i:usize,xs: [fn(char)->bool;N]) -> Option<char> {
     //     if let Some(c)=self.getc(i) {
@@ -139,7 +139,7 @@ impl<'a> Input<'a> {
     //             }
     //         }
     //     }
-        
+
     //     None
     // }
 
@@ -159,7 +159,7 @@ impl<'a> Input<'a> {
     //                 loc.col+=1;
     //             }
     //         }
-        
+
     //         // cur.loc = loc;
     //     }
 
@@ -187,7 +187,7 @@ impl<'a> Input<'a> {
                     loc.col+=1;
                 }
             }
-        
+
             loc.byte_pos+=v.len();
             // self.loc = loc;
 

@@ -1,7 +1,7 @@
 use super::super::builder::*;
 use super::super::super::cexpr_parser::*;
 use super::super::BuilderErrorType;
-use super::super::super::super::common::JmpCond;
+use super::super::super::super::build::JmpCond;
 
 use super::get_idn;
 

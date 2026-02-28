@@ -2,7 +2,7 @@ use std::path::{PathBuf, Path};
 
 // use super::loc::*;
 // use super::Loc;
-use super::super::super::common::Loc;
+use super::super::super::build::Loc;
 
 
 #[derive(Debug,Clone)]

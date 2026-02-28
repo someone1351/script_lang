@@ -1,5 +1,5 @@
 
-use super::super::super::common::Loc;
+use super::super::super::build::Loc;
 
 use super::error::*;
 use super::input::Input;
@@ -85,15 +85,15 @@ impl<'a> Lexer<'a> {
         // [\][t] => '\t'
         // [\][r] => '\r'
         // [\][n] => '\n'
-        // [\][\n] => ' ' 
+        // [\][\n] => ' '
         // [\][\r][\n] =>' '
-        // [\]. => '.' 
-        // 
+        // [\]. => '.'
+        //
 
         let quote_start_loc = self.input.loc();
 
         if let Some('"')=self.input.getc(0) {
-            self.input.next(1);                    
+            self.input.next(1);
         } else {
             return Ok(None);
         }
@@ -113,14 +113,14 @@ impl<'a> Lexer<'a> {
 
                 let c=match x {
                     "\\b" => '\u{8}',
-                    
+
                     "\\s" => ' ',
                     "\\t" => '\t',
                     "\\r" => '\r',
                     "\\n" => '\n',
                     "\\\r\n" => ' ',
                     "\\\n" => ' ',
-                    
+
                     _=> '\\', //self.input.getc(0).unwrap()
                 };
 
@@ -146,7 +146,7 @@ impl<'a> Lexer<'a> {
         if let Some('"')=self.input.getc(0) {
             let end_loc = self.input.loc();
             self.input.next(1);
-            
+
             Ok(Some(Token{start_loc,end_loc,token_type:TokenType::String(s)}))
         } else {
             Err(ParserError { loc: quote_start_loc, error_type: ParserErrorType::ExpectedClosingDoubleQuote })
@@ -184,7 +184,7 @@ impl<'a> Lexer<'a> {
         //     let start_loc = self.input.loc();
         //     self.input.next(i);
         //     let end_loc = self.input.loc();
-            
+
         //     Ok(Some(Token{start_loc,end_loc,token_type:TokenType::Symbol(symbol)}))
         // } else {
         //     Ok(None)
@@ -265,12 +265,12 @@ impl<'a> Lexer<'a> {
             // self.sep_prev=true;
         }
 
-        if let Some(token) = self.bracket()? {            
+        if let Some(token) = self.bracket()? {
             // self.sep_prev=true;
             return Ok(Some(token));
         }
 
-        if let Some(token) = self.string()? {            
+        if let Some(token) = self.string()? {
             // self.sep_prev=true;
             return Ok(Some(token));
         }
@@ -292,7 +292,7 @@ impl<'a> Lexer<'a> {
         let i = symbol_len.max(num_len);
 
         if i >0 {
-            
+
             let start_loc = self.input.loc();
             let s = self.input.get(0, i).unwrap().to_string();
             self.input.next(i);
@@ -303,7 +303,7 @@ impl<'a> Lexer<'a> {
             } else {
                 if num_type=='f' {
                     Ok(Some(Token{start_loc,end_loc,token_type:TokenType::Float(s)}))
-        
+
                 } else if num_type =='i' {
                     Ok(Some(Token{start_loc,end_loc,token_type:TokenType::Int(s)}))
                 } else {

@@ -1,6 +1,6 @@
 use std::str::Chars;
 
-use super::super::super::common::*;
+use super::super::super::build::*;
 
 #[derive(Debug,Clone)]
 pub struct Input<'a> {
@@ -71,7 +71,7 @@ impl<'a> Input<'a> {
                     loc.col+=1;
                 }
             }
-        
+
             loc.byte_pos+=v.len();
             // self.prev_loc=self.loc;
             self.loc = loc;
@@ -98,10 +98,10 @@ impl<'a> Input<'a> {
     //     self.prev_loc
     // }
 
-    
+
     pub fn has<'b,const N:usize>(&mut self, i:usize,xs: [&'b str;N]) -> Option<&'b str> {
         let mut res=None;
-        
+
         for &x in xs.iter() {
             if Some(x)==self.get(i, x.chars().count()) {
                 res=Some(x);

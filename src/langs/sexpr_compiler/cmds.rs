@@ -7,7 +7,7 @@ use super::super::builder::*;
 use super::SexprBuilderErrorType;
 
 use super::super::sexpr_parser::*;
-use super::super::super::common::JmpCond;
+use super::super::super::build::JmpCond;
 
 pub fn get_symbol<'a>(sexpr : SExprContainer<'a>) -> Result<&'a str,BuilderError<SexprBuilderErrorType>> {
     if let Some(symbol)=sexpr.symbol() {

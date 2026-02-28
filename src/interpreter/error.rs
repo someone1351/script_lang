@@ -3,9 +3,9 @@ use std::path::PathBuf;
 
 
 // use crate::interpreter::custom::CustomError;
-use crate::custom_data::*;
+use crate::{custom_type::*, FloatValErr, IntValErr};
 
-use super::super::common::*;
+use super::super::build::*;
 use super::machine::*;
 
 

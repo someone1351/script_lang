@@ -1,7 +1,7 @@
 
 
 
-use super::super::super::common::Loc;
+use super::super::super::build::Loc;
 
 #[derive(Debug,Clone)]
 pub enum  ParserErrorType {

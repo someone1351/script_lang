@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use super::super::super::common::*;
+use crate::StringT;
+
+// use super::super::super::common::*;
+// use crate::primitive_data::{IntVal,FloatVal};
 
 pub struct SymbolManager {
     inds : HashMap::<String,usize>,

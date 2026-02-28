@@ -4,7 +4,7 @@
 
 // use super::super::common::*;
 
-use crate::custom_data::GcScope;
+use crate::custom_type::GcScope;
 
 // use super::debug::*;
 // use super::gc_scope::*;

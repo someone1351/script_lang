@@ -1,6 +1,6 @@
 
 
-use super::super::super::super::common::Loc;
+use super::super::super::super::build::Loc;
 use super::super::{ Parsed, Record };
 use super::{ParamIter,ParamContainer};
 

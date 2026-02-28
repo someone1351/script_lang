@@ -1,5 +1,5 @@
 
-use super::super::super::super::common::Loc;
+use super::super::super::super::build::Loc;
 use super::super::{ Parsed, Primitive, PrimitiveType };
 use super::{ParamContainer,FieldContainer,PrimitiveTypeContainer,BlockContainer};
 

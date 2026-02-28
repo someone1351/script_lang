@@ -70,7 +70,7 @@ mod parsed;
 
 
 use std::collections::HashMap;
-use super::super::common::Loc;
+use super::super::build::Loc;
 use input::*;
 pub use error::*;
 pub use container::*;

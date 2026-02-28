@@ -3,7 +3,7 @@
 // use crate::Custom;
 // use crate::GcTraversable;
 
-pub use crate::custom_data::*;
+pub use crate::custom_type::*;
 // use super::super::data::*;
 // use super::super::func_context::*;
 use super::super::value::*;

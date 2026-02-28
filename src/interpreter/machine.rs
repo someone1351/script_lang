@@ -29,7 +29,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::path::PathBuf;
 
-use super::super::common::*;
+use super::super::build::*;
 // use super::custom::*;
 // use super::gc_scope::*;
 use super::value::*;
@@ -40,7 +40,8 @@ use super::var_scope::*;
 use super::func_context::*;
 use super::debug::*;
 
-pub use crate::custom_data::*;
+pub use crate::custom_type::*;
+use crate::StringT;
 
 #[derive(Debug,Clone)]
 pub struct StackFrame {
