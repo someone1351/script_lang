@@ -206,12 +206,14 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //extend(dict,dict)
     lib_scope.method("extend", |context|{
         let dict=context.param(0).as_custom();
-        let other=context.param(1).as_custom().with_data_ref_ext(|data2:&Dict|{ Ok(data2.clone()) })?;
+        // let other=context.param(1).as_custom().with_data_ref_ext(|data2:&Dict|{ data2.clone() })?;
+        let other:Dict=context.param(1).as_custom().data_clone()?;
 
-        dict.with_data_mut_ext(|data:&mut Dict|{
+        dict.with_data_mut(|data:&mut Dict|{
             data.0.extend(other.0.iter().map(|(k,v)|(k.clone(),v.clone())));
-            Ok(Value::Void)
-        })
+        })?;
+
+        Ok(Value::Void)
     })
         .custom_mut_ref::<Dict>()
         .custom_ref::<Dict>()

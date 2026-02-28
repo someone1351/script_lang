@@ -720,7 +720,8 @@ impl<'a,X> Machine<'a,X> {
 
                 if custom.is_type::<GlobalAccessRef>() {
                     let data=custom.data_clone::<GlobalAccessRef>()
-                        .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
+                        .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
+
                     data.var.as_custom().with_data_mut_ext(|v:&mut Value|{
                         //don't care about init, since this is supposed behave like a normal global_set, not a deref_set
                         if v.is_undefined() {
@@ -752,9 +753,9 @@ impl<'a,X> Machine<'a,X> {
 
                 if custom.is_type::<GlobalAccessRef>() {
                     let data=custom.data_clone::<GlobalAccessRef>()
-                        .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
+                        .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
                     let var_data=data.var.as_custom().data_clone::<Value>()
-                        .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
+                        .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
 
                     if !var_data.is_undefined() {
                         self.set_result_val(var_data);
@@ -786,9 +787,9 @@ impl<'a,X> Machine<'a,X> {
 
                 if custom.is_type::<GlobalAccessRef>() {
                     let data=custom.data_clone::<GlobalAccessRef>()
-                        .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
+                        .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
                     let var_data=data.var.as_custom().data_clone::<Value>()
-                        .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
+                        .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
 
                     if !var_data.is_undefined() {
 
@@ -817,7 +818,7 @@ impl<'a,X> Machine<'a,X> {
                     }
                 } else {
                     let data=custom.data_clone::<Value>()
-                        .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
+                        .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
 
                     if data.is_undefined() {
                         return Err(MachineError::from_machine(self, MachineErrorType::GetUndefinedVar ));

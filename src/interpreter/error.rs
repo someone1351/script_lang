@@ -58,6 +58,11 @@ pub enum MachineErrorType{
 
 }
 
+impl From<CustomError> for MachineErrorType {
+    fn from(value: CustomError) -> Self {
+        MachineErrorType::Custom(value)
+    }
+}
 
 impl From<CustomError> for MachineError {
     fn from(value: CustomError) -> Self {

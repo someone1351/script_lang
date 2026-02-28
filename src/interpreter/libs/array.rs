@@ -140,7 +140,9 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
 
     //extend(array,array)
     lib_scope.method("extend",|context|{
-        let other=context.param(1).as_custom().with_data_ref_ext(|y:&Array|{ Ok(y.clone()) })?;
+        // let other=context.param(1).as_custom().with_data_ref_ret(|y:&Array|y.clone())?;
+        let other:Array = context.param(1).as_custom().data_clone()?;
+
         context.param(0).as_custom().with_data_mut_ext(move |x:&mut Array|{
             x.extend(other.iter().map(|z|z.clone()));
             Ok(Value::Void)

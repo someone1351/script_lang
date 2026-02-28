@@ -21,9 +21,8 @@ use crate::GcTraversable;
 
 use super::gc_scope::*;
 // use super::value::*;
-use super::error::*;
+// use super::error::*;
 
-// pub type Caller = fn(super::FuncContext)->Result<super::Value,MachineError>;
 
 #[derive(Clone)]
 pub enum StrongValueInner {
@@ -40,51 +39,9 @@ impl StrongValueInner {
         match self {
             StrongValueInner::Mut(_) => true,
             StrongValueInner::NonMut(_) => false,
-            // StrongValueInner::Dead => false,
-            // StrongValueInner::Empty => false,
         }
     }
 
-    // pub fn make_copy(&self) -> Self {
-    //     match self {
-    //         StrongValueInner::Mut(mutex) => todo!(),
-    //         StrongValueInner::NonMut(any) => {
-    //             any.d()
-    //         },
-    //     }
-    // }
-//     // pub fn get_non_mut(&self) -> Option<Arc<dyn Any+Send+Sync>> {
-//     //     match self {
-//     //         Self::NonMut(data) =>Some(data.clone()),
-//     //         Self::NonMutExt(data) =>Some(),
-//     //         _ => None,
-//     //     }
-//     // }
-//     // pub fn get_string(&self) -> Option<String> {
-//     //     match self {
-//     //         Self::Mut(_) => None,
-//     //         Self::NonMut(_) => None,
-//     //         // Self::MutExt(x) => x.try_lock().map(|y|y.to_string()),
-//     //         // Self::NonMutExt(x)=>Some(x.to_string()),
-//     //         Self
-//     //     }
-//     // }
-    // pub fn downgrade(&self) -> WeakValueInner {
-    //     match self {
-    //         Self::Mut(x) => WeakValueInner::Mut(Arc::downgrade(x)),
-    //         Self::NonMut(x) => WeakValueInner::NonMut(Arc::downgrade(x)),
-    //         Self::Dead =>  Self::Dead,
-    //         Self::Empty => Self::Empty,
-    //     }
-    // }
-    // pub fn downgrade(&self) -> Option<WeakValueInner> {
-    //     match self {
-    //         Self::Mut(x) => Some(WeakValueInner::Mut(Arc::downgrade(x))),
-    //         Self::NonMut(x) => Some(WeakValueInner::NonMut(Arc::downgrade(x))),
-    //         // Self::Dead => None,
-    //         // Self::Empty => None,
-    //     }
-    // }
     pub fn downgrade(&self) -> WeakValueInner {
         match self {
             Self::Mut(x) => WeakValueInner::Mut(Arc::downgrade(x)),
@@ -97,8 +54,6 @@ impl StrongValueInner {
 pub enum WeakValueInner {
     Mut(Weak<Mutex<dyn Any+Send>>),
     NonMut(Weak<dyn Any+Send+Sync>),
-    // MutExt(Weak<Mutex<dyn ToString+Send>>),
-    // NonMutExt(Weak<dyn ToString+Send+Sync>),
 }
 
 impl WeakValueInner {
@@ -114,18 +69,6 @@ impl WeakValueInner {
             WeakValueInner::NonMut(weak) => weak.strong_count()!=0,
         }
     }
-    // pub fn upgrade(&self) -> Option<StrongValueInner> {
-    //     match self {
-    //         Self::Mut(x)=>x.upgrade().map(|x|StrongValueInner::Mut(x)),
-    //         Self::NonMut(x)=>x.upgrade().map(|x|StrongValueInner::NonMut(x)),
-    //     }
-    // }
-    // pub fn upgrade(&self) -> StrongValueInner {
-    //     match self {
-    //         Self::Mut(x)=>x.upgrade().map(|x|StrongValueInner::Mut(x)).unwrap_or(StrongValueInner::Dead),
-    //         Self::NonMut(x)=>x.upgrade().map(|x|StrongValueInner::NonMut(x)).unwrap_or(StrongValueInner::Dead),
-    //     }
-    // }
     pub fn upgrade(&self) -> Option<StrongValueInner> {
         match self {
             Self::Mut(x)=>x.upgrade().map(|x|StrongValueInner::Mut(x)),
@@ -137,19 +80,12 @@ impl WeakValueInner {
 #[derive(Clone)]
 pub enum CustomInner {
     Managed(GcValue),
-    // Unmanaged(Arc<Mutex<dyn Any+Send>>),
     Unmanaged(StrongValueInner),
     UnmanagedWeak(WeakValueInner),
-    // UnmanagedStatic(Arc<dyn Any+Send>),
-    // None(&'static str),
-    // Rc(),
-    // RcStrong(StrongValueInner),
-    // RcWeak(WeakValueInner),
     Empty,
 }
 
 impl CustomInner {
-
     pub fn to_strong(&self) -> Option<Self> {
         match self {
             Self::Managed(_) => None,
@@ -168,34 +104,12 @@ impl CustomInner {
         }
     }
 
-    // pub fn to_root(&self) -> Option<Self> {
-    //     match self {
-    //         Self::Managed(x)=>Some(Self::Managed(x.clone_root())),
-    //         Self::Unmanaged(_)=>None,
-    //         Self::UnmanagedWeak(_) => None,
-    //         Self::Empty => None,
-    //     }
-    // }
-    // pub fn to_leaf(&self) -> Option<Self> {
-    //     match self {
-    //         Self::Managed(x)=>Some(Self::Managed(x.clone_leaf())),
-    //         Self::Unmanaged(_)=>None,
-    //         Self::UnmanagedWeak(_) => None,
-    //         Self::Empty => None,
-    //     }
-    // }
-
     pub fn clone_root(&self) -> Self {
         match self {
             Self::Managed(x)=>Self::Managed(x.clone_root()),
             Self::Unmanaged(x)=>Self::Unmanaged(x.clone()),
             Self::UnmanagedWeak(x) => Self::UnmanagedWeak(x.clone()),
-            // Self::UnmanagedStatic(x) => Self::UnmanagedStatic(x.clone()),
-            // Self::None(x) => Self::None(*x),
             Self::Empty => Self::Empty,
-
-            // Self::RcStrong(x)=>Self::RcStrong(x.clone()),
-            // Self::RcWeak(x)=>Self::RcStrong(x.upgrade()),
         }
     }
     pub fn clone_as_is(&self) -> Self {
@@ -203,11 +117,7 @@ impl CustomInner {
             Self::Managed(x)=>Self::Managed(x.clone_as_is()),
             Self::Unmanaged(x)=>Self::Unmanaged(x.clone()),
             Self::UnmanagedWeak(x) => Self::UnmanagedWeak(x.clone()),
-            // Self::UnmanagedStatic(x) => Self::UnmanagedStatic(x.clone()),
             Self::Empty => Self::Empty,
-
-            // Self::RcStrong(x)=>Self::RcStrong(x.clone()),
-            // Self::RcWeak(x)=>Self::RcWeak(x.clone()),
         }
     }
     pub fn clone_leaf(&self) -> Self {
@@ -216,10 +126,6 @@ impl CustomInner {
             Self::Unmanaged(x)=>Self::Unmanaged(x.clone()),
             Self::UnmanagedWeak(x) => Self::UnmanagedWeak(x.clone()),
             Self::Empty => Self::Empty,
-            // Self::UnmanagedStatic(x) => Self::UnmanagedStatic(x.clone()),
-
-            // Self::RcStrong(x)=>Self::RcWeak(x.downgrade().unwrap()),
-            // Self::RcWeak(x)=>Self::RcWeak(x.clone()),
         }
     }
 }
@@ -227,17 +133,13 @@ impl CustomInner {
 #[derive(Clone)]
 
 pub struct Custom {
-    // type_id : std::any::TypeId,
-    // type_name : &'static str,
     type_info:TypeInfo,
     inner : CustomInner,
-    // caller : Option<Caller>,
 }
 
 
 impl std::string::ToString for Custom {
     fn to_string(&self) -> String {
-        // self.data().get_string().unwrap_or_else(||self.type_info.short_name())
         self.type_info.short_name()
     }
 }
@@ -268,39 +170,7 @@ impl std::fmt::Debug for Custom {
             CustomInner::Empty => {
                 write!(f, "Empty")
             }
-            // CustomInner::RcStrong(_) => {
-            //     write!(f, "RcStrong:({})",self.type_info.short_name())
-            // },
-            // CustomInner::RcWeak(_) => {
-            //     write!(f, "RcWeak:({})",self.type_info.short_name())
-            // },
         }
-        // match (&self.inner,self.gc_index()) {
-        //     (CustomInner::Managed(_),Ok(Some(gc_index)))=>write!(f, "Managed:{gc_index}({})",self.type_info.short_name()),
-        //     (CustomInner::Managed(_),Err(()))=>write!(f, "Managed:(Locked)({})",self.type_info.short_name()),
-        //     (CustomInner::Managed(_),Ok(None))=>write!(f, "Managed:(Dead)({})",self.type_info.short_name()),
-        //     (CustomInner::Unmanaged(_),_)=>write!(f, "Unmanaged({})",self.type_info.short_name()),
-        //     (CustomInner::Empty,_)=>
-        // }
-        // match &self.inner {
-        //     CustomInner::Managed(_) => {
-        //         match self.gc_index() {
-        //             Ok(Some(gc_index))=> {
-        //                 write!(f, "Managed:{gc_index}({})",self.type_info.short_name())
-        //             }
-        //             Err(())=> {
-        //                 write!(f, "Managed:(Locked)({})",self.type_info.short_name())
-        //             }
-        //             Ok(None) => {
-        //                 write!(f, "Managed:(Dead)({})",self.type_info.short_name())
-        //             }
-        //         }
-        //     }
-        //     CustomInner::Unmanaged(_) => {
-        //         write!(f, "Unmanaged({})",self.type_info.short_name())
-        //     }
-        // }
-
     }
 }
 
@@ -355,82 +225,33 @@ impl Custom {
     pub fn is_empty(&self) -> bool {
         if let CustomInner::Empty=self.inner { true } else { false }
     }
-    // pub fn to_mut(&self) -> Custom {
-    //     Custom::new_empty()
-    // }
-    // pub fn to_non_mut(&self) -> Custom { //can;t, since requires sync?
-    //     Custom::new_empty()
-    // }
-    fn new<T:Any>(inner:CustomInner,
-        // caller : Option<Caller>
-    ) -> Self {
+
+    fn new<T:Any>(inner:CustomInner) -> Self {
         Self {
             type_info:TypeInfo::new::<T>(),
             inner,
-            // caller,
         }
     }
 
-    pub fn new_managed_mut<T:GcTraversable+Send>(data : T,
-        // caller:Option<Caller>,
-        gc_scope : &mut GcScope) -> Self
-    {
-        Self::new::<T>(CustomInner::Managed(GcValue::new(data,gc_scope)),
-            // caller
-        )
+    pub fn new_managed_mut<T:GcTraversable+Send>(data : T,gc_scope : &mut GcScope) -> Self {
+        Self::new::<T>(CustomInner::Managed(GcValue::new(data,gc_scope)))
     }
 
-    pub fn new_unmanaged_mut<T:Any+Send>(data : T, //caller:Option<Caller>
-        ) -> Self {
-        // Self::new::<T>(CustomInner::Unmanaged(Arc::new(Mutex::new(data))))
-
-        Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::Mut(Arc::new(Mutex::new(data)))),//caller
-            )
-
+    pub fn new_unmanaged_mut<T:Any+Send>(data : T) -> Self {
+        Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::Mut(Arc::new(Mutex::new(data)))))
     }
 
-    pub fn new_managed<T:GcTraversable+Send+Sync>(data : T, //caller:Option<Caller>,
-        gc_scope : &mut GcScope) -> Self {
-        Self::new::<T>(CustomInner::Managed(GcValue::new_non_mut(data,gc_scope)),//caller
-        )
+    pub fn new_managed<T:GcTraversable+Send+Sync>(data : T, gc_scope : &mut GcScope) -> Self {
+        Self::new::<T>(CustomInner::Managed(GcValue::new_non_mut(data,gc_scope)))
     }
 
-    pub fn new_unmanaged<T:Any+Send+Sync>(data : T, //caller:Option<Caller>
-        ) -> Self {
-        Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::NonMut(Arc::new(data))),//caller
-        )
+    pub fn new_unmanaged<T:Any+Send+Sync>(data : T) -> Self {
+        Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::NonMut(Arc::new(data))))
     }
 
     pub fn new_empty() -> Self {
         Self { type_info: TypeInfo::new::<()>(), inner: CustomInner::Empty }
     }
-
-    // pub fn new_rc_mut<T:Any+Send>(data : T,) -> Self {
-    //     Self::new::<T>(CustomInner::RcStrong(StrongValueInner::Mut(Arc::new(Mutex::new(data)))), )
-    // }
-    // pub fn new_rc<T:Any+Send+Sync>(data : T, ) -> Self {
-    //     Self::new::<T>(CustomInner::RcStrong(StrongValueInner::NonMut(Arc::new(data))), )
-    // }
-
-    // pub fn new_managed_mut_ext<T:GcTraversable+Send+ToString>(data : T,gc_scope : &mut GcScope) -> Self {
-    //     Self::new::<T>(CustomInner::Managed(GcValue::new(data,gc_scope)))
-    // }
-
-    // pub fn new_unmanaged_mut_ext<T:Any+Send+ToString>(data : T) -> Self {
-    //     Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::MutExt(Arc::new(Mutex::new(data)))))
-    // }
-
-    // pub fn new_managed_non_mut_ext<T:GcTraversableExt+Send+Sync>(data : T,gc_scope : &mut GcScope) -> Self {
-    //     Self::new::<T>(CustomInner::Managed(GcValue::new_non_mut_ext(data,gc_scope)))
-    // }
-
-    // pub fn new_unmanaged_non_mut_ext<T:Any+ToString+Send+Sync>(data : T) -> Self {
-    //     Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::NonMutExt(Arc::new(data))))
-    // }
-
-    // pub fn get_caller(&self) -> Option<Caller> {
-    //     return self.caller
-    // }
 
     pub fn clone_root(&self) -> Self {
         Self {
@@ -459,10 +280,6 @@ impl Custom {
             CustomInner::Unmanaged(_)=>Ok(None),
             CustomInner::UnmanagedWeak(_)=>Ok(None),
             CustomInner::Empty => Ok(None),
-            // CustomInner::RcStrong(_) => Ok(None),
-            // CustomInner::RcWeak(_) => Ok(None),
-            // CustomInner::UnmanagedStatic(_)=>None,
-            // CustomInner::None(_)=>None,
         }
     }
 
@@ -471,8 +288,6 @@ impl Custom {
     }
 
     pub fn data(&self) ->CustomData {
-        // self
-        // self.inner
         let data: Option<StrongValueInner>=match &self.inner {
             CustomInner::Managed (x)=>{
                 match &x.data {
@@ -482,165 +297,69 @@ impl Custom {
                     WeakValueInner::NonMut(x) => {
                         x.upgrade().map(|x|StrongValueInner::NonMut(x)) //.unwrap_or(StrongValueInner::Dead)
                     }
-                    // WeakValueInner::MutExt(x) => {
-                    //     x.upgrade().map(|x|StrongValueInner::MutExt(x))
-                    // }
-                    // WeakValueInner::NonMutExt(x) => {
-                    //     x.upgrade().map(|x|StrongValueInner::NonMutExt(x))
-                    // }
                 }
             },
             CustomInner::Unmanaged (data)=>Some(data.clone()),
             CustomInner::UnmanagedWeak (x)=>x.upgrade(),
-            // CustomInner::Empty => StrongValueInner::Empty,
             CustomInner::Empty => None, //StrongValueInner::Dead,
-            // CustomInner::RcStrong(x) => x.clone(),
-            // CustomInner::RcWeak(x) => x.upgrade(),
         };
 
         CustomData { data, type_info : self.type_info }
     }
 
-    pub fn with_data_mut<T:Any>(&self,func:impl FnOnce(&mut T)) -> Result<(),MachineError> {
+    pub fn with_data_mut<T:Any>(&self,func:impl FnOnce(&mut T)) -> Result<(),CustomError> {
         self.with_data_mut_ext(|data|{
             func(data);
             Ok(())
         })
     }
-    pub fn with_data_ref<T:Any>(&self,func:impl FnOnce(&T)) -> Result<(),MachineError> {
+    pub fn with_data_ref<T:Any>(&self,func:impl FnOnce(&T)) -> Result<(),CustomError> {
         self.with_data_ref_ext(|data|{
             func(data);
             Ok(())
         })
     }
 
-    pub fn with_data_mut_ext<T:Any,R>(&self,func:impl FnOnce(&mut T)->Result<R,MachineError>) -> Result<R,MachineError> {
-        // let data=self.data();
-        // let mut data=data.get_mut::<T>()?;
-        // func(&mut data)
+    // pub fn with_data_mut_ret<T:Any,R>(&self,func:impl FnOnce(&mut T)->R) -> Result<R,CustomError> {
+    //     self.with_data_mut_ext(|data|{
+    //         Ok(func(data))
+    //     })
+    // }
+    pub fn with_data_ref_ret<T:Any,R>(&self,func:impl FnOnce(&T)->R) -> Result<R,CustomError> {
+        self.with_data_ref_ext(|data|{
+            Ok(func(data))
+        })
+    }
+
+    pub fn with_data_mut_ext<T:Any,R,E:From<CustomError>>(&self,func:impl FnOnce(&mut T)->Result<R,E>) -> Result<R,E> {
         self.data().inner_with_data_mut(func)
     }
 
-    pub fn with_data_ref_ext<T:Any,R>(&self,func:impl FnOnce(&T)->Result<R,MachineError>) -> Result<R,MachineError> {
+    pub fn with_data_ref_ext<T:Any,R,E:From<CustomError>>(&self,func:impl FnOnce(&T)->Result<R,E>) -> Result<R,E> {
         let data=self.data();
-        // data.data.as_ref().and_then(|data|match data {
-        //     StrongValueInner::Mut(_) => todata.inner_with_data_mut(|data|func(data)),
-        //     StrongValueInner::NonMut(_) => func(data.get_non_mut()?),
-        // })
-
 
         match &data.data {
             Some(StrongValueInner::Mut(_))=>data.inner_with_data_mut(|data|func(data)),
-            // {
-            //     // let data2=data.get_mut::<T>()?;
-            //     // func(& data2)
-
-
-            // }
-            Some(StrongValueInner::NonMut(_))=>func(data.get_non_mut()?),
-            // {
-            //     // let data2=data.get_non_mut()?;
-            //     // func(& data2)
-
-            // }
-            // Some(StrongValueInner::MutExt(_))=>{
-            //     let data2=data.get_mut::<T>()?;
-            //     func(& data2)
-            // }
-            // Some(StrongValueInner::NonMutExt(_))=>{
-            //     let data2=data.get_non_mut()?;
-            //     func(& data2)
-            // }
-            // StrongValueInner::Empty => Err(MachineError::new(MachineErrorType::CustomDataEmpty)),
-            // StrongValueInner::Dead => Err(MachineError::new(MachineErrorType::CustomDataDead)),
-            None => Err(MachineError::new(MachineErrorType::CustomDataDead)),
+            Some(StrongValueInner::NonMut(_))=>func(data.get_non_mut::<T>()?),
+            None => Err(CustomError::CustomDataDead.into()),
         }
     }
-    pub fn get_data_clone<T:Any+Clone>(&self) -> Result<Option<T>,MachineError> {
+    pub fn get_data_clone<T:Any+Clone>(&self) -> Result<Option<T>,CustomError> {
         match self.with_data_ref_ext(|x: &T|Ok(x.clone())) {
             Ok(x) => Ok(Some(x)),
-            Err(MachineError { error_type:MachineErrorType::CustomDataInvalidCast{..}, .. }) => Ok(None),
+            Err(CustomError::CustomDataInvalidCast{..}) => Ok(None),
             Err(e) => Err(e)
         }
     }
 
-    pub fn data_clone<T:Any+Clone>(&self) -> Result<T,MachineError> {
+    pub fn data_clone<T:Any+Clone>(&self) -> Result<T,CustomError> {
         // Ok(self.data().get_mut::<T>()?.clone())
         Ok(self.with_data_ref_ext(|x: &T|Ok(x.clone()))?)
     }
 
-    // pub fn data_copy<T:Any+Copy>(&self) -> Result<T,MachineError> {
-    //     // Ok(*(self.data().get_mut::<T>()?))
-    //     Ok(self.with_data_ref(|x: &T|Ok(*x))?)
-    // }
-
     pub fn type_info(&self) -> TypeInfo {
         self.type_info
     }
-
-    // pub fn make_copy(&self,gc_scope : &mut GcScope) -> Custom {
-    //     let x=match self.inner {
-    //         CustomInner::Managed(gc_value) => {
-    //             self.data_clone()
-
-    //         },
-    //         CustomInner::Unmanaged(strong_inner_value) => {
-
-    //         },
-    //         CustomInner::UnmanagedWeak(weak_inner_value) => {
-
-    //         },
-    //         CustomInner::Empty => Self{ type_info: self.type_info.clone(), inner: CustomInner::Empty },
-    //     };
-
-    //     None
-    // }
-    // pub fn make_copy<T>(&self,data:T) -> Option<Custom> {
-    //     let x=match self.inner {
-    //         CustomInner::Managed(_) => {
-    //             self.data_clone()
-
-    //         },
-    //         CustomInner::Unmanaged(a) => {
-
-    //         },
-    //         CustomInner::UnmanagedWeak(_) => None,
-    //         CustomInner::Empty => None,
-    //     };
-
-    //     None
-    // }
-
-
-    // pub fn unmanaged_copy<T:Clone+Send+Sync+'static>(&self,) -> Result<Option<Custom>,MachineError> {
-    //     //todo : have err on not unnmanaged?
-    //     let new_inner=match &self.inner {
-    //         CustomInner::Managed(_) => None,
-    //         CustomInner::Unmanaged(s) => Some(CustomInner::Unmanaged(match s {
-    //             StrongValueInner::Mut(_) => StrongValueInner::Mut(Arc::new(Mutex::new(self.data_clone::<T>()?))),
-    //             StrongValueInner::NonMut(_) => StrongValueInner::NonMut(Arc::new(self.data_clone::<T>()?)),
-    //         })),
-    //         CustomInner::UnmanagedWeak(_) => None,
-    //         CustomInner::Empty => None,
-    //     };
-
-    //     Ok(new_inner.map(|inner|Custom{ type_info: self.type_info.clone(), inner }))
-    // }
-
-
-    // pub fn managed_copy<T:Clone+Send+Sync+'static>(&self,) -> Result<Option<Custom>,MachineError> {
-    //     let new_inner=match &self.inner {
-    //         CustomInner::Managed(_) => None,
-    //         CustomInner::Unmanaged(s) => Some(CustomInner::Unmanaged(match s {
-    //             StrongValueInner::Mut(_) => StrongValueInner::Mut(Arc::new(Mutex::new(self.data_clone::<T>()?))),
-    //             StrongValueInner::NonMut(_) => StrongValueInner::NonMut(Arc::new(self.data_clone::<T>()?)),
-    //         })),
-    //         CustomInner::UnmanagedWeak(_) => None,
-    //         CustomInner::Empty => None,
-    //     };
-
-    //     Ok(new_inner.map(|inner|Custom{ type_info: self.type_info.clone(), inner }))
-    // }
 
     pub fn is_alive(&self) -> bool{
         match &self.inner {
@@ -653,10 +372,6 @@ impl Custom {
 }
 
 
-// pub enum CustomDataValue {
-//     Dynamic(),
-//     Static(),
-// }
 // #[derive(Clone)]
 pub struct CustomData {
     // data: StrongValueInner, //Option<>,//Option<Arc<Mutex<dyn Any+Send>>>,
@@ -666,123 +381,45 @@ pub struct CustomData {
 }
 
 impl CustomData {
-    // pub fn get_string(&self) -> Option<String> {
-    //     self.data.as_ref().and_then(|x|x.get_string())
-    //     self.data.g
-    // }
-    pub fn get_non_mut<T:std::any::Any>(&self) -> Result<&T,MachineError> {
-        // if self.data.is_none() {
-        //     return Err(MachineError::new(MachineErrorType::CustomDataEmpty));
-        // }
-
-        // let x = match &self.data {
-        //     StrongValueInner::NonMut(data) =>Some(data),
-        //     StrongValueInner::NonMutExt(data) =>Some(),
-        //     _ => None,
-        // };
-        // let Some(StrongValueInner::NonMut(data))=&self.data else {
-        //     return Err(MachineError::new(MachineErrorType::CustomDataNotNonMut));
-        // };
-
-
-        // let Some(data)=data.as_ref().downcast_ref() else {
-        //     return Err(MachineError::new(MachineErrorType::CustomDataInvalidCast{
-        //         expecting_type:TypeInfo::new::<T>().short_name(),
-        //         given_type:self.type_info.short_name(),
-        //     }));
-        // };
-
-        // Ok(data)
-
+    pub fn get_non_mut<T:std::any::Any>(&self) -> Result<&T,CustomError> {
         match &self.data {
-            Some(StrongValueInner::Mut(_)) => Err(MachineError::new(MachineErrorType::CustomDataNotNonMut)),
+            Some(StrongValueInner::Mut(_)) => Err(CustomError::CustomDataNotNonMut),
             Some(StrongValueInner::NonMut(data2)) => {
                 if let Some(data)=data2.as_ref().downcast_ref() {
-
                     Ok(data)
                 } else {
-                    Err(MachineError::new(MachineErrorType::CustomDataInvalidCast{
+                    Err(CustomError::CustomDataInvalidCast{
                         expecting_type:TypeInfo::new::<T>().short_name(),
                         given_type:self.type_info.short_name(),
-                    }))
+                    })
                 }
             },
-            // StrongValueInner::Dead => Err(MachineError::new(MachineErrorType::CustomDataDead)),
-            // StrongValueInner::Empty => Err(MachineError::new(MachineErrorType::CustomDataEmpty)),
-            None => Err(MachineError::new(MachineErrorType::CustomDataDead)),
+            None => Err(CustomError::CustomDataDead),
         }
 
     }
 
-    fn inner_with_data_mut<T:Any,R>(&self,func:impl FnOnce(&mut T)->Result<R,MachineError>) -> Result<R,MachineError> {
-
-        // let Some(data)=&self.data else {
-        //     return Err(MachineError::new(MachineErrorType::CustomDataEmpty));
-        // };
-
-        // let StrongValueInner::Mut(data)=data else {
-        //     return Err(MachineError::new(MachineErrorType::CustomDataNotMut));
-        // };
-
-        // let Ok(mut b) = data.try_lock() else {
-        //     return Err(MachineError::new(MachineErrorType::CustomDataBorrowMutError));
-        // };
-
-        // let Some(b)=b.downcast_mut::<T>() else {
-        //     return Err(MachineError::new(MachineErrorType::CustomDataInvalidCast{
-        //         expecting_type:TypeInfo::new::<T>().short_name(),
-        //         given_type:self.type_info.short_name(),
-        //     }));
-        // };
-
-        // func(b)
-
+    fn inner_with_data_mut<T:Any,R,E:From<CustomError>>(&self,func:impl FnOnce(&mut T)->Result<R,E>) -> Result<R,E> {
         match &self.data {
             Some(StrongValueInner::Mut(data2)) => {
                 if let Ok(mut b) = data2.try_lock() {
                     if let Some(b)=b.downcast_mut::<T>() {
                         func(b)
                     } else {
-                        return Err(MachineError::new(MachineErrorType::CustomDataInvalidCast{
+                        return Err(CustomError::CustomDataInvalidCast{
                             expecting_type:TypeInfo::new::<T>().short_name(),
                             given_type:self.type_info.short_name(),
-                        }));
+                        }.into());
                     }
                 } else {
-                    return Err(MachineError::new(MachineErrorType::CustomDataBorrowMutError));
+                    return Err(CustomError::CustomDataBorrowMutError.into());
                 }
             },
-            Some(StrongValueInner::NonMut(_)) => Err(MachineError::new(MachineErrorType::CustomDataNotMut)),
-            // StrongValueInner::Dead => Err(MachineError::new(MachineErrorType::CustomDataDead)),
-            // StrongValueInner::Empty => Err(MachineError::new(MachineErrorType::CustomDataEmpty)),
-            None => Err(MachineError::new(MachineErrorType::CustomDataDead)),
+            Some(StrongValueInner::NonMut(_)) => Err(CustomError::CustomDataNotMut.into()),
+            None => Err(CustomError::CustomDataDead.into()),
         }
     }
 
-    // pub fn get_mut<T:std::any::Any>(&self) -> Result<MappedMutexGuard<'_, T>,MachineError> {
-    //     let Some(data)=&self.data else {
-    //         return Err(MachineError::new(MachineErrorType::CustomDataEmpty));
-    //     };
-
-    //     let StrongValueInner::Mut(data)=data else {
-    //         return Err(MachineError::new(MachineErrorType::CustomDataNotMut));
-    //     };
-
-    //     let Ok(b) = data.try_lock() else {
-    //         return Err(MachineError::new(MachineErrorType::CustomDataBorrowMutError));
-    //     };
-
-    //     let Ok(m)=MutexGuard::try_map(b, |x|{
-    //         x.downcast_mut::<T>()
-    //     }) else {
-    //         return Err(MachineError::new(MachineErrorType::CustomDataInvalidCast{
-    //             expecting_type:TypeInfo::new::<T>().short_name(),
-    //             given_type:self.type_info.short_name(),
-    //         }));
-    //     };
-
-    //     Ok(m)
-    // }
 }
 
 #[derive(Debug,Eq,PartialEq)]
@@ -804,8 +441,6 @@ pub enum CustomError {
 
 impl std::fmt::Display for CustomError{
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        // write!(f,"At {} : {:?}",self.loc, self.error_type)
-        // write!(f,"At {:?}",self.error_type)
         write!(f,"{self}",)
     }
 }
