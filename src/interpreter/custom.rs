@@ -17,9 +17,10 @@ use std::sync::Weak;
 
 use crate::interpreter::gc::GcValue;
 use crate::interpreter::gc::TypeInfo;
+use crate::GcScope;
 use crate::GcTraversable;
 
-use super::gc_scope::*;
+// use super::gc_scope::*;
 // use super::value::*;
 // use super::error::*;
 
@@ -30,8 +31,7 @@ pub enum StrongValueInner {
     NonMut(Arc<dyn Any+Send+Sync>),
     // Dead, //for manageds, when using get (strong) data, also used for rc_weak => rc_strong
     // Empty, //used for when getting data from something that isn't a custom, instead of failing, return empty data ?
-    // MutExt(Arc<Mutex<dyn ToString+Send>>),
-    // NonMutExt(Arc<dyn ToString+Send+Sync>),
+
 }
 
 impl StrongValueInner {
@@ -243,12 +243,18 @@ impl Custom {
     // }
 
     pub fn new_managed_mut<T:GcTraversable+Send>(data : T,gc_scope : &mut GcScope) -> Self {
-        Self::new::<T>(CustomInner::Managed(GcValue::new_mut(data,gc_scope)))
+        // Self::new::<T>(CustomInner::Managed(GcValue::new_mut(data,gc_scope)))
+        // Self::new::<T>(CustomInner::Managed(GcValue::new(gc_scope.new_mut(data))))
+        Self::new::<T>(CustomInner::Managed(gc_scope.new_mut(data)))
     }
 
     pub fn new_managed<T:GcTraversable+Send+Sync>(data : T, gc_scope : &mut GcScope) -> Self {
-        Self::new::<T>(CustomInner::Managed(GcValue::new_non_mut(data,gc_scope)))
+        // Self::new::<T>(CustomInner::Managed(GcValue::new_non_mut(data,gc_scope)))
+        // Self::new::<T>(CustomInner::Managed(GcValue::new(gc_scope.new_non_mut(data))))
+        Self::new::<T>(CustomInner::Managed(gc_scope.new_non_mut(data)))
     }
+
+    // pub fn new_managed()
 
     pub fn new_unmanaged_mut<T:Any+Send>(data : T) -> Self {
         Self::new::<T>(CustomInner::Unmanaged(StrongValueInner::Mut(Arc::new(Mutex::new(data)))))

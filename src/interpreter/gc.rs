@@ -3,7 +3,7 @@ use std::{any::Any, sync::{Arc, Mutex, Weak} };
 
 // use parking_lot::Mutex;
 
-use crate::{interpreter::{custom::WeakValueInner, }, Custom, GcScope};
+use crate::{interpreter::{custom::WeakValueInner, }, Custom};
 
 // use super::value::*;
 // use super::error::*;
@@ -139,82 +139,12 @@ impl GcRootCount {
     pub fn strong_count(&self)->usize { Arc::strong_count(&self.0) }
 }
 
-#[derive(Clone)]
-pub enum GcManagedInner {
-    Mut(Arc<Mutex<dyn GcTraversable>>),
-    NonMut(Arc<dyn GcTraversable + Sync>),
-    // MutExt(Arc<Mutex<dyn GcTraversableExt>>),
-    // NonMutExt(Arc<dyn GcTraversableExt + Sync>),
-}
 
-// #[derive(Debug)]
-pub struct GcManaged {
-    // data : Arc<Mutex<Box<dyn Any + Send>>>,
-    // traverser:Box<dyn TraverserTrait+Send>,
-
-    pub data : GcManagedInner, //Arc<Mutex<dyn GcTraversable>>,
-    // // type_name : &'static str,
-    // // type_info:TypeInfo, //unused?
-    // pub type_info:TypeInfo,
-
-
-    pub managed_index:GcIndex,
-    pub root_count:GcRootCount,
-
-
-    pub marked : bool,
-}
-
-impl GcManaged {
-    // pub fn new()
-    pub fn with_data(&self, func:impl FnOnce(&dyn GcTraversable) ->Result<(),()>)->Result<(),()> {
-        match &self.data {
-            GcManagedInner::Mut(x) => {
-                if let Ok(x)=x.try_lock() {
-                    func(&*x)
-                } else {
-                    Err(())
-                }
-            }
-            GcManagedInner::NonMut(x) => {
-                func(x.as_ref())
-            }
-        }
-    }
-    pub fn _get(&self) -> Result<&dyn GcTraversable,()> {
-        match &self.data {
-            GcManagedInner::Mut(x) => {
-                // let x=x.as_ref().lock().unwrap();
-
-                if let Ok(_x)=x.try_lock() {
-
-
-
-
-
-                    // let x=&x;
-                    // x.
-                    // let Ok(x)=std::sync::MutexGuard::try_map(x, |x|{
-                    //     &x
-                    // }) else {
-                    //     return  Err(());
-                    // };
-                    // Ok(x.traverser())
-                    // Err(())
-                    // Ok(x.into())
-                    Err(())
-                } else {
-                    return  Err(());
-                }
-            }
-            GcManagedInner::NonMut(x) => {
-                Ok(x.as_ref())
-
-            }
-        }
-    }
-}
-
+// pub struct GcValueNew {
+//     pub val_index:GcWeakIndex,
+//     pub root_count:GcRootCount,
+//     pub weak_data:WeakValueInner,
+// }
 
 pub struct GcValue {
     pub data:WeakValueInner, //Weak<Mutex<dyn Any+Send>>,
@@ -266,56 +196,65 @@ impl Clone for GcValue {
     }
 }
 
-pub struct GcValueNew {
-    pub val_index:GcWeakIndex,
-    pub root_count:GcRootCount,
-}
 
 impl GcValue {
     pub fn is_alive(&self) -> bool {
         self.root_count.strong_count()!=0
     }
-    pub fn new_mut<T:GcTraversable>(data : T, gc_scope: &mut GcScope) -> Self {
 
-        let data=Arc::new(Mutex::new(data));
+    // pub fn new(gc_val_new:GcValueNew) -> Self {
+    //     Self {
+    //         data:gc_val_new.weak_data,
+    //         root: false,
+    //         gc_index: gc_val_new.val_index,
+    //         root_count:gc_val_new.root_count,
+    //     }
+    // }
 
-        // let type_name=std::any::type_name::<T>();
-
-        let gc_val_new=gc_scope.new_other(
-            GcManagedInner::Mut(Arc::clone(&data) as _),
-            // // type_name
-            // TypeInfo::new::<T>()
-        );
-        // root_count.incr();
-
+    pub fn new(val_index:GcWeakIndex, root_count:GcRootCount, weak_data:WeakValueInner) -> Self {
         Self {
-            data: WeakValueInner::Mut(Arc::downgrade(&data) as _), //Arc::downgrade(&data) as _,
-            root: false,//true,
-            gc_index: gc_val_new.val_index,
-            root_count:gc_val_new.root_count,
-            // // dropper : Some(gc_scope.get_dropper()),
-            // dropper : gc_scope.get_dropper(),
+            gc_index: val_index,
+            root_count:root_count,
+            data:weak_data,
+            root: false,
         }
     }
 
+    // pub fn new_mut<T:GcTraversable>(data : T, gc_scope: &mut GcScope) -> Self {
 
-    pub fn new_non_mut<T:GcTraversable+Sync>(data : T, gc_scope: &mut GcScope) -> Self {
-        let data=Arc::new(data);
+    //     let strong_data=Arc::new(Mutex::new(data));
+    //     // let weak_data=Arc::downgrade(&strong_data);
 
-        let gc_val_new=gc_scope.new_other(
-            GcManagedInner::NonMut(Arc::clone(&data) as _),
-            // TypeInfo::new::<T>()
-        );
+    //     // let gc_val_new=gc_scope.new_other(GcManagedInner::Mut(strong_data));
+    //     let gc_val_new=gc_scope.new_mut(strong_data);
 
-        Self {
-            data: WeakValueInner::NonMut(Arc::downgrade(&data) as _), //Arc::downgrade(&data) as _,
-            root: false,//true,
-            gc_index: gc_val_new.val_index,
-            root_count:gc_val_new.root_count,
-            // // dropper : Some(gc_scope.get_dropper()),
-            // dropper : gc_scope.get_dropper(),
-        }
-    }
+    //     // root_count.incr();
+
+    //     Self {
+    //         // data: WeakValueInner::Mut(weak_data), // as _
+    //         data:gc_val_new.weak_data,
+    //         root: false, //true,
+    //         gc_index: gc_val_new.val_index,
+    //         root_count:gc_val_new.root_count,
+    //     }
+    // }
+
+
+    // pub fn new_non_mut<T:GcTraversable+Sync>(data : T, gc_scope: &mut GcScope) -> Self {
+    //     let strong_data=Arc::new(data);
+    //     // let weak_data=Arc::downgrade(&strong_data);
+
+    //     // let gc_val_new=gc_scope.new_other(GcManagedInner::NonMut(strong_data));
+    //     let gc_val_new=gc_scope.new_non_mut(strong_data);
+
+    //     Self {
+    //         // data: WeakValueInner::NonMut(weak_data),
+    //         data:gc_val_new.weak_data,
+    //         root: false,
+    //         gc_index: gc_val_new.val_index,
+    //         root_count:gc_val_new.root_count,
+    //     }
+    // }
 
     //
 
