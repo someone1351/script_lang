@@ -44,8 +44,8 @@ impl GcScope {
 
     pub fn new_other(&mut self,
         data:GcManagedInner, //Arc<Mutex<dyn GcTraversable>>,
-        type_info:TypeInfo, //unused?
-        // type_name:&'static str
+        // type_info:TypeInfo, //unused?
+        // // type_name:&'static str
     ) -> GcValueNew {
         let val_index=GcIndex::new(self.manageds.len());
         let val_weak_index= val_index.to_weak();
@@ -55,7 +55,7 @@ impl GcScope {
         self.manageds.push(GcManaged {
             // inner : GcManagedInner::Other { data, },
             data,
-            type_info, //unused?
+            // type_info, //unused?
 
             managed_index : val_index,
             root_count:root_count.clone(),
@@ -117,7 +117,8 @@ impl GcScope {
 
             let gc_index=managed.managed_index.get().unwrap();
             let root_count=managed.root_count.get().unwrap();
-            let name=managed.type_info.short_name();
+            // let name=managed.type_info.short_name();
+            let name="".to_string();
             let mut children=Vec::new();
 
             managed.with_data(|data|{

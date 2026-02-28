@@ -153,9 +153,9 @@ pub struct GcManaged {
     // traverser:Box<dyn TraverserTrait+Send>,
 
     pub data : GcManagedInner, //Arc<Mutex<dyn GcTraversable>>,
-    // type_name : &'static str,
-    // type_info:TypeInfo, //unused?
-    pub type_info:TypeInfo,
+    // // type_name : &'static str,
+    // // type_info:TypeInfo, //unused?
+    // pub type_info:TypeInfo,
 
 
     pub managed_index:GcIndex,
@@ -283,8 +283,8 @@ impl GcValue {
 
         let gc_val_new=gc_scope.new_other(
             GcManagedInner::Mut(Arc::clone(&data) as _),
-            // type_name
-            TypeInfo::new::<T>()
+            // // type_name
+            // TypeInfo::new::<T>()
         );
         // root_count.incr();
 
@@ -304,7 +304,7 @@ impl GcValue {
 
         let gc_val_new=gc_scope.new_other(
             GcManagedInner::NonMut(Arc::clone(&data) as _),
-            TypeInfo::new::<T>()
+            // TypeInfo::new::<T>()
         );
 
         Self {
