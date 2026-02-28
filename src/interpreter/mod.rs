@@ -13,6 +13,7 @@ mod data;
 
 mod func_context;
 // mod mem_scope;
+mod gc;
 
 pub mod libs;
 
@@ -27,7 +28,8 @@ pub use custom::Custom;
 
 pub use var_scope::VarScope;
 pub use lib_scope::LibScope;
-pub use gc_scope::{GcScope,GcTraversable,Traverser};
+pub use gc_scope::GcScope;
+pub use gc::{GcTraversable,Traverser};
 
 pub use func_context::FuncContext;
 

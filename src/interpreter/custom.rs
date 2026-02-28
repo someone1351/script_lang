@@ -15,6 +15,9 @@ use std::sync::Weak;
 // use std::sync::MutexGuard;
 
 
+use crate::interpreter::gc::TypeInfo;
+use crate::GcTraversable;
+
 use super::gc_scope::*;
 // use super::value::*;
 use super::error::*;

@@ -2,15 +2,17 @@
 // use std::any::{Any,TypeId};
 // use std::collections::BTreeMap;
 
+use crate::GcTraversable;
+
 use super::super::common::*;
 // use super::custom::*;
 // use super::error::*;
 use super::value::*;
-use super::gc_scope::*;
+// use super::gc_scope::*;
 
 pub struct Vararg;
 
-#[derive(Clone)] 
+#[derive(Clone)]
 pub struct GlobalAccessRef{
     pub name:StringT,
     pub var:Value,

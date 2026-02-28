@@ -4,6 +4,8 @@ use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::hash::Hash;
 
+use crate::GcTraversable;
+
 use super::super::super::common::*;
 
 // use super::super::func_context::*;
@@ -11,7 +13,7 @@ use super::super::value::*;
 use super::super::error::*;
 use super::super::lib_scope::*;
 // use super::super::data::*;
-use super::super::gc_scope::*;
+// use super::super::gc_scope::*;
 // use super::array::Array;
 
 #[derive(Debug,Clone,PartialEq, Eq,Hash,PartialOrd, Ord)]

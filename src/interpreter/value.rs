@@ -41,6 +41,8 @@ use std::any::{Any,TypeId};
 // use crate::interpreter::error::MachineErrorType;
 // use crate::MachineError;
 
+use crate::GcTraversable;
+
 use super::super::common::*;
 use super::custom::*;
 // use super::error::*;

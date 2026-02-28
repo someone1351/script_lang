@@ -1,12 +1,14 @@
 // use super::super::super::common::*;
 
+use crate::GcTraversable;
+
 // use super::super::data::*;
 // use super::super::func_context::*;
 use super::super::value::*;
 // use super::super::error::*;
 use super::super::lib_scope::*;
 // use super::utils::*;
-use super::super::gc_scope::*;
+// use super::super::gc_scope::*;
 
 type Array=Vec<Value>;
 
