@@ -520,13 +520,13 @@ impl Value {
             self.clone()
         }
     }
-    pub fn gc_index(&self) -> Result<Option<usize>,()> {
-        if let Value::Custom(x)=self {
-            x.gc_index()
-        } else {
-            Ok(None)
-        }
-    }
+    // pub fn gc_index(&self) -> Result<Option<usize>,()> {
+    //     if let Value::Custom(x)=self {
+    //         x.gc_index()
+    //     } else {
+    //         Ok(None)
+    //     }
+    // }
 
 
     pub fn to_strong(&self) -> Option<Self> {

@@ -1,5 +1,6 @@
 // use super::super::super::common::*;
 
+use crate::Custom;
 use crate::GcTraversable;
 
 // use super::super::data::*;
@@ -22,8 +23,8 @@ type Array=Vec<Value>;
 // pub struct Array(pub Vec<Value>);
 
 impl GcTraversable for Array {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
-        Box::new(self.iter())
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=Custom>+'a> {
+        Box::new(self.iter().filter_map(|v|v.get_custom()))
     }
 }
 

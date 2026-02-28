@@ -2,7 +2,7 @@
 // use std::any::{Any,TypeId};
 // use std::collections::BTreeMap;
 
-use crate::GcTraversable;
+use crate::{Custom, GcTraversable};
 
 use super::super::common::*;
 // use super::custom::*;
@@ -19,8 +19,8 @@ pub struct GlobalAccessRef{
 }
 
 impl GcTraversable for GlobalAccessRef {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
-        Box::new([&self.var].into_iter())
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=Custom>+'a> {
+        Box::new([&self.var].into_iter().filter_map(|v|v.get_custom()))
     }
 }
 //??? todo make fields read only, because sometimes used as unmanaged, and dont want things being added to it??
@@ -34,14 +34,14 @@ pub struct Closure {
 }
 
 impl GcTraversable for Closure {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
-        Box::new(self.captures.iter())
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=Custom>+'a> {
+        Box::new(self.captures.iter().filter_map(|v|v.get_custom()))
     }
 }
 
 impl GcTraversable for Value {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
-        Box::new([self].into_iter())
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=Custom>+'a> {
+        Box::new([self].into_iter().filter_map(|v|v.get_custom()))
     }
 }
 

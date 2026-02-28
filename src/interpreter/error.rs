@@ -2,6 +2,8 @@ use std::num::TryFromIntError;
 use std::path::PathBuf;
 
 
+use crate::interpreter::custom::CustomError;
+
 use super::super::common::*;
 use super::machine::*;
 
@@ -38,6 +40,10 @@ pub enum MachineErrorType{
     CustomDataNotMut,
     CustomDataNotNonMut,
     CustomDataInvalidCast{given_type:String,expecting_type:String,},
+
+
+    Custom(CustomError),
+
     FuncBorrowMutError,
     GetUndefinedVar,
     SetUndefinedVar,
@@ -50,6 +56,13 @@ pub enum MachineErrorType{
 
 
 
+}
+
+
+impl From<CustomError> for MachineError {
+    fn from(value: CustomError) -> Self {
+        MachineError::new(MachineErrorType::Custom(value))
+    }
 }
 
 impl From<TryFromIntError> for MachineError {

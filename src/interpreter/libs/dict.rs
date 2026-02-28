@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::hash::Hash;
 
+use crate::Custom;
 use crate::GcTraversable;
 
 use super::super::super::common::*;
@@ -56,8 +57,8 @@ impl ValueKey {
 pub struct Dict(pub BTreeMap<ValueKey,Value>);
 
 impl GcTraversable for Dict {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=&'a Value>+'a> {
-        Box::new(self.0.values())
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=Custom>+'a> {
+        Box::new(self.0.values().filter_map(|v|v.get_custom()))
     }
 }
 
