@@ -2,7 +2,8 @@ use std::num::TryFromIntError;
 use std::path::PathBuf;
 
 
-use crate::interpreter::custom::CustomError;
+// use crate::interpreter::custom::CustomError;
+use crate::custom_data::*;
 
 use super::super::common::*;
 use super::machine::*;

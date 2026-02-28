@@ -4,8 +4,9 @@ use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::hash::Hash;
 
-use crate::Custom;
-use crate::GcTraversable;
+// use crate::Custom;
+// use crate::GcTraversable;
+pub use crate::custom_data::*;
 
 use super::super::super::common::*;
 

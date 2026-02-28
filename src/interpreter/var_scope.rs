@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 // use super::custom::*;
 use super::error::*;
-use super::gc_scope::*;
+// use super::gc_scope::*;
 use super::value::*;
 
 #[derive(Debug)]

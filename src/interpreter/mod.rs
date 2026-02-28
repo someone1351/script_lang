@@ -3,17 +3,17 @@ mod error;
 mod debug;
 mod machine;
 
-mod gc_scope;
+// mod gc_scope;
 mod var_scope;
 mod lib_scope;
 
 mod value;
-mod custom;
+// mod custom;
 mod data;
 
 mod func_context;
 // mod mem_scope;
-mod gc;
+// mod gc;
 
 pub mod libs;
 
@@ -24,12 +24,12 @@ pub use error::MachineError;
 pub use machine::Machine;
 
 pub use value::Value;
-pub use custom::Custom;
-
+// pub use custom::Custom;
+// pub use gc_scope::GcScope;
+// pub use gc::{GcTraversable,Traverser};
 pub use var_scope::VarScope;
 pub use lib_scope::LibScope;
-pub use gc_scope::GcScope;
-pub use gc::{GcTraversable,Traverser};
+
 
 pub use func_context::FuncContext;
 

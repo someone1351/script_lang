@@ -3,10 +3,11 @@ use std::{any::Any, sync::{Arc, Mutex, Weak} };
 
 // use parking_lot::Mutex;
 
-use crate::{interpreter::{custom::WeakValueInner, }, Custom};
+// use crate::{interpreter::{custom::WeakValueInner, }, Custom};
 
 // use super::value::*;
 // use super::error::*;
+use super::custom::*;
 
 
 #[derive(Copy,Clone)]

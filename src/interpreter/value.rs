@@ -42,13 +42,14 @@ use std::any::{Any,TypeId};
 // use crate::MachineError;
 
 // use crate::interpreter::gc::GcValue;
-use crate::GcTraversable;
+// use crate::GcTraversable;
 
 use super::super::common::*;
-use super::custom::*;
-// use super::error::*;
-use super::gc_scope::*;
-// use super::FuncContext;
+// use super::custom::*;
+// // use super::error::*;
+// use super::gc_scope::*;
+// // use super::FuncContext;
+pub use crate::custom_data::*;
 
 #[derive(Debug,Clone)]
 // #[derive(Debug,)]

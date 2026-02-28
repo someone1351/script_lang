@@ -1,11 +1,13 @@
 // use std::any::Any;
 // use std::collections::HashMap;
 // use std::fmt::Debug;
- 
+
 // use super::super::common::*;
 
+use crate::custom_data::GcScope;
+
 // use super::debug::*;
-use super::gc_scope::*;
+// use super::gc_scope::*;
 use super::value::*;
 use super::error::*;
 use super::machine::*;
@@ -26,7 +28,7 @@ todo:
 * * have method_ext(method), that takes dif func signature ()->Continuable
 * * * Continuable {Return(Value),Call(Value)}
 * * * need way to store information from last call, either store in return or use context eg context.store_continue<T>(name,val)
-* * * * 
+* * * *
 
 * * could allow inserting instructions or manipulating (or adding to) the stack?
 */
@@ -35,10 +37,10 @@ pub struct FuncContext<'q,'a,X> { //,'b
     machine:&'q mut Machine<'a, X>, //,'b
     params_start : usize,
     params_num : usize,
-    
+
 }
 
-// impl<'q,'a,X> FuncContext<'q,'a,&mut X> { 
+// impl<'q,'a,X> FuncContext<'q,'a,&mut X> {
 //     pub fn core_mut(&mut self) -> &mut X {
 //         self.machine.core_mut()
 //     }
@@ -47,7 +49,7 @@ pub struct FuncContext<'q,'a,X> { //,'b
 //     }
 // }
 
-// impl<'q,'a,X> FuncContext<'q,'a,&X> { 
+// impl<'q,'a,X> FuncContext<'q,'a,&X> {
 //     pub fn core(&self) -> &X {
 //         self.machine.core()
 //     }
@@ -61,7 +63,7 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,X> { //,'b //,'b
     // pub fn get_core(& self) -> &X {
     //     self.machine.get_core()
     // }
-    
+
     pub fn core_mut(&mut self) -> &mut X {
         self.machine.core_mut()
     }
@@ -77,7 +79,7 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,X> { //,'b //,'b
             params_start : stack_len-params_num,
         }
     }
-    
+
 
     pub fn params_num(&self) -> usize {
         self.params_num
@@ -110,7 +112,7 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,X> { //,'b //,'b
 
     pub fn stack_frame(&self) -> Option<StackFrame> {
         self.machine.stack_frames().last().cloned()
-    }    
+    }
     pub fn stack_val(&self,stack_ind:usize) -> Result<Value,MachineError> {
         self.machine.get_stack_val(stack_ind)
     }
@@ -137,7 +139,7 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,X> { //,'b //,'b
     pub fn try_call_method<I:AsRef<[Value]>>(&mut self,name:&str,params : I)->Result<Option<Value>,MachineError> {
         self.machine.try_call_method(name, &params.as_ref().to_vec())
     }
-    
+
     pub fn global_decl(&mut self,name:&str,to_value:Option<Value>) -> Result<(),MachineError> {
         self.machine.global_decl(name, to_value)
     }
@@ -147,7 +149,7 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,X> { //,'b //,'b
     pub fn global_get<T:AsRef<[Value]>>(&mut self,name:&str,fields:T) -> Result<Value,MachineError> {
         self.machine.global_get(name, &fields.as_ref().to_vec())
     }
-    pub fn value_set<T:AsRef<[Value]>>(&mut self,value:Value,fields:T,to_value:Value) -> Result<(),MachineError> {        
+    pub fn value_set<T:AsRef<[Value]>>(&mut self,value:Value,fields:T,to_value:Value) -> Result<(),MachineError> {
         self.machine.value_set(value, &fields.as_ref().to_vec(), to_value)
     }
     pub fn value_get<T:AsRef<[Value]>>(&mut self,value:Value,fields:T) -> Result<Value,MachineError> {
@@ -158,7 +160,7 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,X> { //,'b //,'b
     }
 
 }
- 
+
 // fn ordinal(i:usize)->String {
 //     match i.to_string().chars().last().unwrap() {
 //         '1' => format!("{i}st"),

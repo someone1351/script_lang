@@ -31,7 +31,7 @@ use std::path::PathBuf;
 
 use super::super::common::*;
 // use super::custom::*;
-use super::gc_scope::*;
+// use super::gc_scope::*;
 use super::value::*;
 use super::data::*;
 use super::error::*;
@@ -39,6 +39,8 @@ use super::lib_scope::*;
 use super::var_scope::*;
 use super::func_context::*;
 use super::debug::*;
+
+pub use crate::custom_data::*;
 
 #[derive(Debug,Clone)]
 pub struct StackFrame {
