@@ -619,35 +619,35 @@ impl Debugger {
 
         match cur_instr {
             Instruction::CallGlobalOrMethod(symbol_ind,params_num)=>{
-                format!("CallGlobal({:?},{params_num})",cur_build.symbols.get(*symbol_ind).unwrap().to_string())
+                format!("CallGlobal({:?},{params_num})",symbol_ind.to_string())
             }
             Instruction::CallMethod(symbol_ind,params_num)=>{
-                format!("CallMethod({:?},{params_num})",cur_build.symbols.get(*symbol_ind).unwrap().to_string())
+                format!("CallMethod({:?},{params_num})",symbol_ind.to_string())
             }
             Instruction::TryCallMethod(symbol_ind,params_num)=>{
-                format!("TryCallMethod({:?},{params_num})",cur_build.symbols.get(*symbol_ind).unwrap().to_string())
+                format!("TryCallMethod({:?},{params_num})",symbol_ind.to_string())
             }
             Instruction::DeclGlobalVar(symbol_ind)=>{
-                format!("DeclGlobalVar({:?})",cur_build.symbols.get(*symbol_ind).unwrap().to_string())
+                format!("DeclGlobalVar({:?})",symbol_ind.to_string())
             }
             Instruction::SetGlobalVar(symbol_ind)=>{
-                format!("SetGlobalVar({:?})",cur_build.symbols.get(*symbol_ind).unwrap().to_string())
+                format!("SetGlobalVar({:?})",symbol_ind.to_string())
             }
             Instruction::GetGlobalVarOrConst(symbol_ind,..)=>{
-                format!("GetGlobalVar({:?})",cur_build.symbols.get(*symbol_ind).unwrap().to_string())
+                format!("GetGlobalVar({:?})",symbol_ind.to_string())
             }
             Instruction::GetGlobalVarRef(symbol_ind)=>{
-                format!("GetGlobalVarRef({:?})",cur_build.symbols.get(*symbol_ind).unwrap().to_string())
+                format!("GetGlobalVarRef({:?})",symbol_ind.to_string())
             }
             Instruction::GetGlobalAccessRef(symbol_ind)=>{
-                format!("GetGlobalAccessRef({:?})",cur_build.symbols.get(*symbol_ind).unwrap().to_string())
+                format!("GetGlobalAccessRef({:?})",symbol_ind.to_string())
             }
 
             Instruction::Include(path_ind)=>{
                 format!("Include({:?})",cur_build.includes.get(*path_ind).unwrap())
             }
             Instruction::ResultSymbol(symbol_ind)=>{
-                format!("ResultSymbol({:?})",cur_build.symbols.get(*symbol_ind).unwrap().to_string())
+                format!("ResultSymbol({:?})",symbol_ind.to_string())
             }
             // Instruction::GetStackVar(offset)=>{
             //     // format!("GetStackVar({offset}):@[{}]",stack_len-1-offset)

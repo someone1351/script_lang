@@ -1739,7 +1739,7 @@ impl<'a> Ast<'a> {
         //
         Build {
             includes : include_inds.to_paths(),
-            symbols : symbol_inds.to_vec(),
+            // symbols : symbol_inds.to_vec(),
             instructions,
             functions: build_funcs,
             main_instruct_len,

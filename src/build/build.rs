@@ -28,7 +28,7 @@ pub struct BuildFunc {
 #[derive(Default)]
 pub struct Build {
     pub includes : Vec<PathBuf>,
-    pub symbols : Vec<StringT>, //rc?
+    // pub symbols : Vec<StringT>, //rc?
     pub instructions : Vec<Instruction>,
     pub functions : Vec<BuildFunc>,
     pub main_instruct_len : usize,
@@ -68,11 +68,11 @@ impl Build {
         }
 
         //
-        println!("    symbols");
+        // println!("    symbols");
 
-        for (i,symbol) in self.symbols.iter().enumerate() {
-            println!("        {i}:{symbol:?}");
-        }
+        // for (i,symbol) in self.symbols.iter().enumerate() {
+        //     println!("        {i}:{symbol:?}");
+        // }
 
         //
         println!("    functions");

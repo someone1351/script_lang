@@ -6,7 +6,8 @@ use crate::StringT;
 // use crate::primitive_data::{IntVal,FloatVal};
 
 pub struct SymbolManager {
-    inds : HashMap::<String,usize>,
+    // inds : HashMap::<String,usize>,
+    inds : HashMap::<String,StringT>,
 }
 
 impl SymbolManager {
@@ -15,18 +16,21 @@ impl SymbolManager {
             inds:HashMap::new(),
         }
     }
-    pub fn get(&mut self, symbol : &str) -> usize {
-        let num = self.inds.len();
-        *self.inds.entry(symbol.to_string()).or_insert(num)
+    // pub fn get(&mut self, symbol : &str) -> usize {
+    //     let num = self.inds.len();
+    //     *self.inds.entry(symbol.to_string()).or_insert(num)
+    // }
+    pub fn get(&mut self, symbol : &str) -> StringT {
+        self.inds.entry(symbol.to_string()).or_insert_with(||StringT::new(symbol)).clone()
     }
-    pub fn to_vec(&self) -> Vec<StringT> {
-        let mut symbols = Vec::<String>::new();
-        symbols.resize(self.inds.len(), String::new());
+    // pub fn to_vec(&self) -> Vec<StringT> {
+    //     let mut symbols = Vec::<String>::new();
+    //     symbols.resize(self.inds.len(), String::new());
 
-        for (s,&i) in self.inds.iter() {
-            *symbols.get_mut(i).unwrap()=s.clone();
-        }
+    //     for (s,&i) in self.inds.iter() {
+    //         *symbols.get_mut(i).unwrap()=s.clone();
+    //     }
 
-        symbols.iter().map(|x|StringT::new(x.clone())).collect::<_>()
-    }
+    //     symbols.iter().map(|x|StringT::new(x.clone())).collect::<_>()
+    // }
 }

@@ -278,14 +278,14 @@ impl<'a,X> Machine<'a,X> {
             Ok(())
         }
     }
-    fn get_symbol(&self,symbol_ind:usize) -> Result<StringT,MachineError> {
-        //src,path
-        if let Some(symbol) = self.cur_build.as_ref().unwrap().symbols.get(symbol_ind) {
-            Ok(symbol.clone())
-        } else {
-             Err(MachineError::from_machine(self, MachineErrorType::MissingSymbol(symbol_ind) ))
-        }
-    }
+    // fn get_symbol(&self,symbol_ind:usize) -> Result<StringT,MachineError> {
+    //     //src,path
+    //     if let Some(symbol) = self.cur_build.as_ref().unwrap().symbols.get(symbol_ind) {
+    //         Ok(symbol.clone())
+    //     } else {
+    //          Err(MachineError::from_machine(self, MachineErrorType::MissingSymbol(symbol_ind) ))
+    //     }
+    // }
 
     fn set_result_val(&mut self, v:Value) {
         self.result_val=v.clone_root();
@@ -635,7 +635,7 @@ impl<'a,X> Machine<'a,X> {
                 self.set_result_val(Value::Nil);
             }
             Instruction::ResultSymbol(symbol_ind)  => {
-                self.set_result_val(Value::String(self.get_symbol( *symbol_ind)?));
+                self.set_result_val(Value::String(symbol_ind.clone()));
             }
             Instruction::ResultVararg => {
                 self.set_result_val(Value::custom_unmanaged(Vararg));
@@ -838,45 +838,38 @@ impl<'a,X> Machine<'a,X> {
 
             }
             Instruction::DeclGlobalVar(symbol_ind) => {
-                let symbol=self.get_symbol( *symbol_ind)?;
-                self.var_scope.decl(symbol.as_str(),None).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
+                self.var_scope.decl(symbol_ind.as_str(),None).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
             }
 
             Instruction::SetGlobalVar(symbol_ind) => {
-                let symbol=self.get_symbol( *symbol_ind)?;
                 // let v=self.result_val.clone_root();
                 let v=self.copy_val(self.result_val())?;
 
-                if !self.var_scope.set(&symbol,v).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
-                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol.to_string()) ));
+                if !self.var_scope.set(&symbol_ind,v).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
+                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol_ind.to_string()) ));
                 }
             }
             Instruction::GetGlobalVarOrConst(symbol_ind, get_global) => {
-                let symbol=self.get_symbol( *symbol_ind)?;
-
-                if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
+                if let Some(v)=self.inner_global_get(symbol_ind.as_str(),*get_global)? {
                     self.set_result_val(v);
-                } else if let Some(v)=self.constant_get(&symbol) {
+                } else if let Some(v)=self.constant_get(&symbol_ind) {
                     self.set_result_val(v);
                 } else {
-                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol.to_string()) ));
+                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol_ind.to_string()) ));
                 }
             }
 
-            &Instruction::GetGlobalVarRef(symbol_ind,  ) => {
-                let symbol=self.get_symbol(symbol_ind)?;
-
-                let refvar=self.var_scope.get_ref(&symbol,self.gc_scope);
+            Instruction::GetGlobalVarRef(symbol_ind,  ) => {
+                let refvar=self.var_scope.get_ref(&symbol_ind,self.gc_scope);
                 self.set_result_val(refvar);
             }
 
-            &Instruction::GetGlobalAccessRef(symbol_ind,  ) => {
-                let symbol=self.get_symbol(symbol_ind)?;
+            Instruction::GetGlobalAccessRef(symbol_ind,  ) => {
 
-                let refvar=self.var_scope.get_ref(&symbol,self.gc_scope);
+                let refvar=self.var_scope.get_ref(&symbol_ind,self.gc_scope);
 
                 let val=Value::custom_managed_mut(GlobalAccessRef{
-                    name:symbol,
+                    name:symbol_ind.clone(),
                     var: refvar,
                 },self.gc_scope);
 
@@ -917,43 +910,39 @@ impl<'a,X> Machine<'a,X> {
 
             //
             Instruction::GetGlobalOrConstOrCallMethod(symbol_ind,get_global) => {
-                let symbol=self.get_symbol( *symbol_ind)?;
-
                 // self.var_scope.get(&n).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))
 
 
-                if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
+                if let Some(v)=self.inner_global_get(symbol_ind.as_str(),*get_global)? {
                     self.set_result_val(v);
-                } else if let Some(v)=self.constant_get(&symbol) { //self.lib_scope.get_constant(&symbol)
+                } else if let Some(v)=self.constant_get(&symbol_ind) { //self.lib_scope.get_constant(&symbol)
                     self.set_result_val(v);
-                } else if let Some(x)=self.get_method(symbol.as_str(), 0) {
-                    self.debugger.add_func_name(&symbol.as_str());
+                } else if let Some(x)=self.get_method(symbol_ind.as_str(), 0) {
+                    self.debugger.add_func_name(&symbol_ind.as_str());
                     self.inner_call_bound_func(0, x)?;
                 } else {
-                    return Err(MachineError::from_machine(self, MachineErrorType::MethodOrGlobalVarNotFound(symbol.to_string()) ));
+                    return Err(MachineError::from_machine(self, MachineErrorType::MethodOrGlobalVarNotFound(symbol_ind.to_string()) ));
                 }
 
             }
 
             Instruction::CallMethod(symbol_ind, params_num) => {
                 let params_num =*params_num;
-                let symbol=self.get_symbol( *symbol_ind)?;
 
-                if let Some(x)=self.get_method(symbol.as_str(), params_num) {
-                    self.debugger.add_func_name(&symbol.as_str());
+                if let Some(x)=self.get_method(symbol_ind.as_str(), params_num) {
+                    self.debugger.add_func_name(symbol_ind.as_str());
                     self.inner_call_bound_func(params_num, x)?;
                 } else {
                     let param_types=self.get_stack_param_types(params_num);
-                    return Err(MachineError::from_machine(self, MachineErrorType::MethodNotFound(symbol.to_string(),param_types) ));
+                    return Err(MachineError::from_machine(self, MachineErrorType::MethodNotFound(symbol_ind.to_string(),param_types) ));
                 }
             }
 
             Instruction::TryCallMethod(symbol_ind, params_num) => {
                 let params_num =*params_num;
-                let symbol=self.get_symbol( *symbol_ind)?;
 
-                if let Some(x)=self.get_method(symbol.as_str(), params_num) {
-                    self.debugger.add_func_name(&symbol.as_str());
+                if let Some(x)=self.get_method(symbol_ind.as_str(), params_num) {
+                    self.debugger.add_func_name(symbol_ind.as_str());
                     self.inner_call_bound_func(params_num, x)?;
                 } else {
                     self.stack_pop_amount(params_num)?;
@@ -962,22 +951,21 @@ impl<'a,X> Machine<'a,X> {
 
             Instruction::CallGlobalOrMethod(symbol_ind, params_num)  => {
                 let params_num =*params_num;
-                let symbol=self.get_symbol(*symbol_ind)?;
 
-                if let Some(v)=self.var_scope.get(&symbol).or_else(|e: MachineError|Err(MachineError::from_machine(&self, e.error_type)))?
+                if let Some(v)=self.var_scope.get(&symbol_ind).or_else(|e: MachineError|Err(MachineError::from_machine(&self, e.error_type)))?
                 {
-                    self.debugger.add_func_name(symbol.as_str());
+                    self.debugger.add_func_name(symbol_ind.as_str());
 
                     if self.inner_call_value(params_num,v,false)? {
                         return Ok(()); //continue;
                     }
-                } else if let Some(x)=self.get_method(symbol.as_str(), params_num) {
-                    self.debugger.add_func_name(symbol.as_str());
+                } else if let Some(x)=self.get_method(symbol_ind.as_str(), params_num) {
+                    self.debugger.add_func_name(symbol_ind.as_str());
                     self.inner_call_bound_func(params_num, x)?; //,symbol.clone()
                 } else {
 
                     let param_types=self.get_stack_param_types(params_num);
-                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalFuncOrMethodNotFound(symbol.to_string(),param_types) ));
+                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalFuncOrMethodNotFound(symbol_ind.to_string(),param_types) ));
                 }
             }
 
