@@ -634,8 +634,8 @@ impl<'a,X> Machine<'a,X> {
             Instruction::ResultNil => {
                 self.set_result_val(Value::Nil);
             }
-            Instruction::ResultSymbol(symbol_ind)  => {
-                self.set_result_val(Value::String(symbol_ind.clone()));
+            Instruction::ResultSymbol(symbol)  => {
+                self.set_result_val(Value::String(symbol.clone()));
             }
             Instruction::ResultVararg => {
                 self.set_result_val(Value::custom_unmanaged(Vararg));
@@ -837,39 +837,39 @@ impl<'a,X> Machine<'a,X> {
                 }
 
             }
-            Instruction::DeclGlobalVar(symbol_ind) => {
-                self.var_scope.decl(symbol_ind.as_str(),None).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
+            Instruction::DeclGlobalVar(symbol) => {
+                self.var_scope.decl(symbol.as_str(),None).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
             }
 
-            Instruction::SetGlobalVar(symbol_ind) => {
+            Instruction::SetGlobalVar(symbol) => {
                 // let v=self.result_val.clone_root();
                 let v=self.copy_val(self.result_val())?;
 
-                if !self.var_scope.set(&symbol_ind,v).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
-                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol_ind.to_string()) ));
+                if !self.var_scope.set(&symbol,v).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
+                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol.to_string()) ));
                 }
             }
-            Instruction::GetGlobalVarOrConst(symbol_ind, get_global) => {
-                if let Some(v)=self.inner_global_get(symbol_ind.as_str(),*get_global)? {
+            Instruction::GetGlobalVarOrConst(symbol, get_global) => {
+                if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
                     self.set_result_val(v);
-                } else if let Some(v)=self.constant_get(&symbol_ind) {
+                } else if let Some(v)=self.constant_get(&symbol) {
                     self.set_result_val(v);
                 } else {
-                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol_ind.to_string()) ));
+                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol.to_string()) ));
                 }
             }
 
-            Instruction::GetGlobalVarRef(symbol_ind,  ) => {
-                let refvar=self.var_scope.get_ref(&symbol_ind,self.gc_scope);
+            Instruction::GetGlobalVarRef(symbol,  ) => {
+                let refvar=self.var_scope.get_ref(&symbol,self.gc_scope);
                 self.set_result_val(refvar);
             }
 
-            Instruction::GetGlobalAccessRef(symbol_ind,  ) => {
+            Instruction::GetGlobalAccessRef(symbol,  ) => {
 
-                let refvar=self.var_scope.get_ref(&symbol_ind,self.gc_scope);
+                let refvar=self.var_scope.get_ref(&symbol,self.gc_scope);
 
                 let val=Value::custom_managed_mut(GlobalAccessRef{
-                    name:symbol_ind.clone(),
+                    name:symbol.clone(),
                     var: refvar,
                 },self.gc_scope);
 
@@ -909,63 +909,63 @@ impl<'a,X> Machine<'a,X> {
             }
 
             //
-            Instruction::GetGlobalOrConstOrCallMethod(symbol_ind,get_global) => {
+            Instruction::GetGlobalOrConstOrCallMethod(symbol,get_global) => {
                 // self.var_scope.get(&n).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))
 
 
-                if let Some(v)=self.inner_global_get(symbol_ind.as_str(),*get_global)? {
+                if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
                     self.set_result_val(v);
-                } else if let Some(v)=self.constant_get(&symbol_ind) { //self.lib_scope.get_constant(&symbol)
+                } else if let Some(v)=self.constant_get(&symbol) { //self.lib_scope.get_constant(&symbol)
                     self.set_result_val(v);
-                } else if let Some(x)=self.get_method(symbol_ind.as_str(), 0) {
-                    self.debugger.add_func_name(&symbol_ind.as_str());
+                } else if let Some(x)=self.get_method(symbol.as_str(), 0) {
+                    self.debugger.add_func_name(&symbol.as_str());
                     self.inner_call_bound_func(0, x)?;
                 } else {
-                    return Err(MachineError::from_machine(self, MachineErrorType::MethodOrGlobalVarNotFound(symbol_ind.to_string()) ));
+                    return Err(MachineError::from_machine(self, MachineErrorType::MethodOrGlobalVarNotFound(symbol.to_string()) ));
                 }
 
             }
 
-            Instruction::CallMethod(symbol_ind, params_num) => {
+            Instruction::CallMethod(symbol, params_num) => {
                 let params_num =*params_num;
 
-                if let Some(x)=self.get_method(symbol_ind.as_str(), params_num) {
-                    self.debugger.add_func_name(symbol_ind.as_str());
+                if let Some(x)=self.get_method(symbol.as_str(), params_num) {
+                    self.debugger.add_func_name(symbol.as_str());
                     self.inner_call_bound_func(params_num, x)?;
                 } else {
                     let param_types=self.get_stack_param_types(params_num);
-                    return Err(MachineError::from_machine(self, MachineErrorType::MethodNotFound(symbol_ind.to_string(),param_types) ));
+                    return Err(MachineError::from_machine(self, MachineErrorType::MethodNotFound(symbol.to_string(),param_types) ));
                 }
             }
 
-            Instruction::TryCallMethod(symbol_ind, params_num) => {
+            Instruction::TryCallMethod(symbol, params_num) => {
                 let params_num =*params_num;
 
-                if let Some(x)=self.get_method(symbol_ind.as_str(), params_num) {
-                    self.debugger.add_func_name(symbol_ind.as_str());
+                if let Some(x)=self.get_method(symbol.as_str(), params_num) {
+                    self.debugger.add_func_name(symbol.as_str());
                     self.inner_call_bound_func(params_num, x)?;
                 } else {
                     self.stack_pop_amount(params_num)?;
                 }
             }
 
-            Instruction::CallGlobalOrMethod(symbol_ind, params_num)  => {
+            Instruction::CallGlobalOrMethod(symbol, params_num)  => {
                 let params_num =*params_num;
 
-                if let Some(v)=self.var_scope.get(&symbol_ind).or_else(|e: MachineError|Err(MachineError::from_machine(&self, e.error_type)))?
+                if let Some(v)=self.var_scope.get(&symbol).or_else(|e: MachineError|Err(MachineError::from_machine(&self, e.error_type)))?
                 {
-                    self.debugger.add_func_name(symbol_ind.as_str());
+                    self.debugger.add_func_name(symbol.as_str());
 
                     if self.inner_call_value(params_num,v,false)? {
                         return Ok(()); //continue;
                     }
-                } else if let Some(x)=self.get_method(symbol_ind.as_str(), params_num) {
-                    self.debugger.add_func_name(symbol_ind.as_str());
+                } else if let Some(x)=self.get_method(symbol.as_str(), params_num) {
+                    self.debugger.add_func_name(symbol.as_str());
                     self.inner_call_bound_func(params_num, x)?; //,symbol.clone()
                 } else {
 
                     let param_types=self.get_stack_param_types(params_num);
-                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalFuncOrMethodNotFound(symbol_ind.to_string(),param_types) ));
+                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalFuncOrMethodNotFound(symbol.to_string(),param_types) ));
                 }
             }
 
