@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
-use crate::StringT;
+use crate::StringVal;
 
 // use super::super::super::common::*;
 // use crate::primitive_data::{IntVal,FloatVal};
 
 pub struct SymbolManager {
     // inds : HashMap::<String,usize>,
-    inds : HashMap::<String,StringT>,
+    inds : HashMap::<String,StringVal>,
 }
 
 impl SymbolManager {
@@ -20,8 +20,8 @@ impl SymbolManager {
     //     let num = self.inds.len();
     //     *self.inds.entry(symbol.to_string()).or_insert(num)
     // }
-    pub fn get(&mut self, symbol : &str) -> StringT {
-        self.inds.entry(symbol.to_string()).or_insert_with(||StringT::new(symbol)).clone()
+    pub fn get(&mut self, symbol : &str) -> StringVal {
+        self.inds.entry(symbol.to_string()).or_insert_with(||StringVal::new(symbol)).clone()
     }
     // pub fn to_vec(&self) -> Vec<StringT> {
     //     let mut symbols = Vec::<String>::new();

@@ -1,4 +1,4 @@
-use std::{hash::Hash, sync::Arc};
+use std::{hash::Hash,  sync::Arc};
 
 
 #[derive(Clone,Debug,Eq,Ord)]
@@ -77,4 +77,29 @@ impl PartialOrd for StringVal {
         Some(self.as_str().cmp(&other.as_str()))
     }
 }
+
+// impl ToString for StringVal {
+//     fn to_string(&self) -> String {
+//         self.as_str().to_string()
+//     }
+// }
+
+impl std::borrow::Borrow<str> for StringVal {
+    fn borrow(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl std::fmt::Display for StringVal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+// impl Join for StringVal {
+//     type Output;
+
+//     fn join(slice: &Self, sep: Separator) -> Self::Output {
+//         todo!()
+//     }
+// }
 //Hash,PartialEq, Eq,PartialOrd, Ord

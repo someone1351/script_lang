@@ -1,4 +1,4 @@
-use std::{ops::Deref, sync::Arc};
+
 
 // use super::Build;
 
@@ -20,57 +20,57 @@ pub use string::*;
 // pub type FloatT = f64;
 // pub type IntT = i64;
 
-#[derive(Clone,Debug,Hash,PartialEq, Eq,PartialOrd, Ord)]
-pub struct StringT(Arc<String>);
+// #[derive(Clone,Debug,Hash,PartialEq, Eq,PartialOrd, Ord)]
+// pub struct StringT(Arc<String>);
 
-impl StringT {
-    pub fn new<S: Into<String>>(s:S) -> Self { //AsRef<str>
-        Self(Arc::new(s.into()))
-    }
-}
-
-impl Deref for StringT {
-    type Target = String;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.deref()
-    }
-}
-impl std::borrow::Borrow<std::string::String> for StringT {
-    fn borrow(&self) -> &std::string::String {
-        &self.0
-    }
-}
-impl std::borrow::Borrow<str> for StringT {
-    fn borrow(&self) -> &str {
-        &self.0.as_str()
-    }
-}
-
-impl From<&str> for StringT {
-    fn from(value: &str) -> Self {
-        Self::new(value)
-    }
-}
-
-impl From<String> for StringT {
-    fn from(value: String) -> Self {
-        Self::new(value)
-    }
-}
-
-
-impl Into<String> for StringT {
-    fn into(self) -> String {
-        self.to_string()
-    }
-}
-// impl Equivalent<StringT> for String {
-
-// }
-
-// impl std::hash::Hash for StringT {
-//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-//         self.0.hash(state);
+// impl StringT {
+//     pub fn new<S: Into<String>>(s:S) -> Self { //AsRef<str>
+//         Self(Arc::new(s.into()))
 //     }
 // }
+
+// impl Deref for StringT {
+//     type Target = String;
+
+//     fn deref(&self) -> &Self::Target {
+//         self.0.deref()
+//     }
+// }
+// impl std::borrow::Borrow<std::string::String> for StringT {
+//     fn borrow(&self) -> &std::string::String {
+//         &self.0
+//     }
+// }
+// impl std::borrow::Borrow<str> for StringT {
+//     fn borrow(&self) -> &str {
+//         &self.0.as_str()
+//     }
+// }
+
+// impl From<&str> for StringT {
+//     fn from(value: &str) -> Self {
+//         Self::new(value)
+//     }
+// }
+
+// impl From<String> for StringT {
+//     fn from(value: String) -> Self {
+//         Self::new(value)
+//     }
+// }
+
+
+// impl Into<String> for StringT {
+//     fn into(self) -> String {
+//         self.to_string()
+//     }
+// }
+// // impl Equivalent<StringT> for String {
+
+// // }
+
+// // impl std::hash::Hash for StringT {
+// //     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+// //         self.0.hash(state);
+// //     }
+// // }

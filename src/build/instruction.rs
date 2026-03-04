@@ -71,7 +71,7 @@ pub enum Instruction {
         debug:(usize,i64),
     },
 
-    ResultSymbol(StringT),//symbol_ind
+    ResultSymbol(StringVal),//symbol_ind
     // ResultSymbol(&'static str),
 
     ResultInt(IntVal),
@@ -110,22 +110,22 @@ pub enum Instruction {
     // StackDup(usize), //stack_offset,
     StackDup,
 
-    GetGlobalVarRef(StringT), //symbol_ind, read,write,call //readonly
-    GetGlobalAccessRef(StringT), //symbol_ind
+    GetGlobalVarRef(StringVal), //symbol_ind, read,write,call //readonly
+    GetGlobalAccessRef(StringVal), //symbol_ind
 
-    DeclGlobalVar(StringT), //symbol_ind ////, store
-    SetGlobalVar(StringT), //symbol_ind
+    DeclGlobalVar(StringVal), //symbol_ind ////, store
+    SetGlobalVar(StringVal), //symbol_ind
 
-    GetGlobalVarOrConst(StringT,bool), //symbol_ind, get_global
+    GetGlobalVarOrConst(StringVal,bool), //symbol_ind, get_global
 
-    CallGlobalOrMethod(StringT,usize), //symbol_ind, params_num
+    CallGlobalOrMethod(StringVal,usize), //symbol_ind, params_num
 
-    CallMethod(StringT,usize), //symbol_ind, params_num
-    TryCallMethod(StringT,usize), //symbol_ind, params_num
+    CallMethod(StringVal,usize), //symbol_ind, params_num
+    TryCallMethod(StringVal,usize), //symbol_ind, params_num
     // HasMethod(usize), //symbol_ind,
     CallResult(usize), //params_num
 
-    GetGlobalOrConstOrCallMethod(StringT,bool), //symbol_ind, get_global
+    GetGlobalOrConstOrCallMethod(StringVal,bool), //symbol_ind, get_global
     // GetFields(usize), //params_num
     // SetFields(usize), //params_num
 

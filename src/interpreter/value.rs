@@ -50,7 +50,7 @@ use std::any::{Any,TypeId};
 // use super::gc_scope::*;
 // // use super::FuncContext;
 pub use crate::custom_type::*;
-use crate::{FloatVal, IntVal, StringT};
+use crate::{FloatVal, IntVal, StringVal};
 
 #[derive(Debug,Clone)]
 // #[derive(Debug,)]
@@ -62,11 +62,11 @@ pub enum Value {
     Float(FloatVal),
     Int(IntVal),
     // Int(IntValue),
-    String(StringT),
+    String(StringVal),
     Custom(Custom),
 }
 
-impl Into<Value> for StringT {
+impl Into<Value> for StringVal {
     fn into(self) -> Value {
         Value::String(self.clone())
     }
@@ -227,7 +227,7 @@ impl Value {
     }
 
     pub fn string<S: Into<String>>(x:S) -> Self {
-        Self::String(StringT::new(x.into()))
+        Self::String(StringVal::new(x.into()))
     }
 
 
@@ -305,7 +305,7 @@ impl Value {
         }
     }
 
-    pub fn get_string(&self) -> Option<StringT> {
+    pub fn get_string(&self) -> Option<StringVal> {
         match self {
             Value::String(x)=>Some(x.clone()),
             _=>None,
@@ -342,7 +342,7 @@ impl Value {
             Value::Int(x)=>x,
             Value::Float(x)=>x.into(),
             Value::Bool(true) => 1.into(),
-            Value::String(x)=>x.parse::<IntVal>().unwrap_or(0.into()),
+            Value::String(x)=>x.as_str().parse::<IntVal>().unwrap_or(0.into()),
             _=>0.into(),
         }
     }
@@ -368,17 +368,17 @@ impl Value {
             Value::Int(x)=>x.try_into().unwrap_or_default(),
             Value::Float(x)=>x,
             Value::Bool(true) => 1.0.into(),
-            Value::String(x)=>x.parse::<FloatVal>().unwrap_or_default(),
+            Value::String(x)=>x.as_str().parse::<FloatVal>().unwrap_or_default(),
             _=>0.0.into(),
         }
     }
 
-    pub fn as_string(&self) -> String {
+    pub fn as_string(&self) -> StringVal {
         match self {
-            Value::Int(x)=>x.to_string(),
-            Value::Float(x)=>x.to_string(),
-            Value::Bool(x) => x.to_string(),
-            Value::String(x)=>x.to_string(),
+            Value::Int(x)=>x.to_string().into(),
+            Value::Float(x)=>x.to_string().into(),
+            Value::Bool(x) => x.to_string().into(),
+            Value::String(x)=>x.clone(),
             Value::Custom(c)=>
                 // format!(
                 //     "{}",
@@ -386,10 +386,10 @@ impl Value {
                 //     c.type_info().short_name(),
                 //     // c.type_name(),
                 // )
-                c.to_string(),
-            Value::Nil => "nil".to_string(),
-            Value::Undefined => "undefined".to_string(),
-            Value::Void => "void".to_string(),
+                c.to_string().into(),
+            Value::Nil => "nil".into(),
+            Value::Undefined => "undefined".into(),
+            Value::Void => "void".into(),
             // _=>String::new(),
         }
     }
@@ -563,7 +563,7 @@ impl ToString for Value {
             Value::Int(x)=>x.to_string(),
             Value::Float(x)=>x.to_string(),
             Value::Bool(x) => x.to_string(),
-            Value::String(x)=>x.to_string(),
+            Value::String(x)=>x.as_str().to_string(),
             Value::Custom(c)=>c.type_info().short_name().to_string(),
             Value::Nil => "nil".to_string(),
             Value::Undefined => "undefined".to_string(),

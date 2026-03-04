@@ -7,7 +7,7 @@ use super::value::*;
 
 // use crate::primitive_data::{IntVal,FloatVal};
 use crate::BuildT;
-use crate::StringT;
+use crate::StringVal;
 
 #[derive(Debug)]
 pub enum StackTrace {
@@ -57,7 +57,7 @@ pub enum StackTrace {
 pub struct ValOrigin {
     build : BuildT,
     instr_pos : usize,
-    name : Option<StringT>,
+    name : Option<StringVal>,
 }
 
 pub struct Debugger {
@@ -619,35 +619,35 @@ impl Debugger {
 
         match cur_instr {
             Instruction::CallGlobalOrMethod(symbol_ind,params_num)=>{
-                format!("CallGlobal({:?},{params_num})",symbol_ind.to_string())
+                format!("CallGlobal({:?},{params_num})",symbol_ind.as_str())
             }
             Instruction::CallMethod(symbol_ind,params_num)=>{
-                format!("CallMethod({:?},{params_num})",symbol_ind.to_string())
+                format!("CallMethod({:?},{params_num})",symbol_ind.as_str())
             }
             Instruction::TryCallMethod(symbol_ind,params_num)=>{
-                format!("TryCallMethod({:?},{params_num})",symbol_ind.to_string())
+                format!("TryCallMethod({:?},{params_num})",symbol_ind.as_str())
             }
             Instruction::DeclGlobalVar(symbol_ind)=>{
-                format!("DeclGlobalVar({:?})",symbol_ind.to_string())
+                format!("DeclGlobalVar({:?})",symbol_ind.as_str())
             }
             Instruction::SetGlobalVar(symbol_ind)=>{
-                format!("SetGlobalVar({:?})",symbol_ind.to_string())
+                format!("SetGlobalVar({:?})",symbol_ind.as_str())
             }
             Instruction::GetGlobalVarOrConst(symbol_ind,..)=>{
-                format!("GetGlobalVar({:?})",symbol_ind.to_string())
+                format!("GetGlobalVar({:?})",symbol_ind.as_str())
             }
             Instruction::GetGlobalVarRef(symbol_ind)=>{
-                format!("GetGlobalVarRef({:?})",symbol_ind.to_string())
+                format!("GetGlobalVarRef({:?})",symbol_ind.as_str())
             }
             Instruction::GetGlobalAccessRef(symbol_ind)=>{
-                format!("GetGlobalAccessRef({:?})",symbol_ind.to_string())
+                format!("GetGlobalAccessRef({:?})",symbol_ind.as_str())
             }
 
             Instruction::Include(path_ind)=>{
                 format!("Include({:?})",path_ind)
             }
             Instruction::ResultSymbol(symbol_ind)=>{
-                format!("ResultSymbol({:?})",symbol_ind.to_string())
+                format!("ResultSymbol({:?})",symbol_ind.as_str())
             }
             // Instruction::GetStackVar(offset)=>{
             //     // format!("GetStackVar({offset}):@[{}]",stack_len-1-offset)

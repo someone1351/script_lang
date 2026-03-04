@@ -6,7 +6,7 @@
 
 // use crate::custom_data::*;
 
-use crate::{BuildT, StringT};
+use crate::{BuildT, StringVal};
 
 // use super::super::common::*;
 // use super::custom::*;
@@ -18,7 +18,7 @@ pub struct Vararg;
 
 #[derive(Clone)]
 pub struct GlobalAccessRef{
-    pub name:StringT,
+    pub name:StringVal,
     pub var:Value,
 }
 

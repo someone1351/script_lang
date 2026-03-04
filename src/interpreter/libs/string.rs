@@ -9,7 +9,7 @@ use super::super::lib_scope::*;
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //len(str)
     lib_scope.method("len", |context|{
-        Ok(Value::int(context.param(0).as_string().chars().count()))
+        Ok(Value::int(context.param(0).as_string().as_str().chars().count()))
     })
         .str().end();
 
@@ -17,7 +17,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     lib_scope.method("contains", |context|{
         let string=context.param(0).as_string();
         let val=context.param(1).as_string();
-        Ok(Value::Bool(string.contains(&val)))
+        Ok(Value::Bool(string.as_str().contains(&val.as_str())))
     })
         .str().str().end();
 
@@ -61,24 +61,25 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     lib_scope.method("repeat",|context|{
         let s=context.param(0).as_string();
         let r: usize=context.param(1).as_int().try_into()?;
-        Ok(Value::string(s.repeat(r)))
+        Ok(Value::string(s.as_str().repeat(r)))
     }).str().int().end();
 
     //substr(str,int,int?)
     lib_scope.method("substr",|context|{
         let string=context.param(0).as_string();
+        let str_len=string.as_str().chars().count();
 
         let start: usize=context.param(1).as_int().try_into()?;
-        let start=start.min(string.len());
+        let start=start.min(str_len);
 
         let end: usize=if context.params_num()==2{
-            string.len()
+            str_len
         }else{
             context.param(2).as_int().try_into()?
-        }.min(string.len());
+        }.min(str_len);
 
 
-        Ok(Value::string(if start>=end { "" } else { &string[start..end] }))
+        Ok(Value::string(if start>=end { "" } else { &string.as_str()[start..end] }))
     })
         .str().int().optional().int().end();
 

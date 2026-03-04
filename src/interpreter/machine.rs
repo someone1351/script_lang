@@ -41,7 +41,7 @@ use super::func_context::*;
 use super::debug::*;
 
 pub use crate::custom_type::*;
-use crate::StringT;
+use crate::StringVal;
 
 #[derive(Debug,Clone)]
 pub struct StackFrame {
@@ -423,7 +423,7 @@ impl<'a,X> Machine<'a,X> {
 
         // if let Some(x)=self.lib_scope.get_method(name,params.into_iter(),self.var_scope)
         if let Some(x)=self.get_method(name, params_num) {
-            let symbol = StringT::new(name);
+            let symbol = StringVal::new(name);
             self.debugger.add_func_name(&symbol.as_str());
             self.inner_call_bound_func(params_num, x)?; //,symbol.clone()
             Ok(Some(self.result_val()))
@@ -524,7 +524,7 @@ impl<'a,X> Machine<'a,X> {
                         let param_types=self.get_stack_param_types(params_num);
                         return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(
                             // symbol.to_string(),
-                            field_val.as_string(),
+                            field_val.as_string().to_string(),
                             param_types) ));
                     }
                 }
@@ -581,7 +581,7 @@ impl<'a,X> Machine<'a,X> {
                     } else if is_last {
                         let param_types=self.get_stack_param_types(params_num);
                         return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(
-                            field_val.as_string(),
+                            field_val.as_string().to_string(),
                             param_types,
                         ) ));
                     } else { //ignore fail if not last (as in set chain,)
@@ -762,7 +762,7 @@ impl<'a,X> Machine<'a,X> {
 
                     if !var_data.is_undefined() {
                         self.set_result_val(var_data);
-                    } else if let Some(v)=self.constant_get(&data.name) {
+                    } else if let Some(v)=self.constant_get(data.name.as_str()) {
                         self.set_result_val(v);
                     } else {
                         return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(data.name.to_string()) ));
@@ -801,7 +801,7 @@ impl<'a,X> Machine<'a,X> {
                         if self.inner_call_value(params_num,var_data,false)? {
                             return Ok(()); //continue;
                         }
-                    } else if let Some(v)=self.constant_get(&data.name)  //not needed for deref? there was the option  for globals (and constants) being captured
+                    } else if let Some(v)=self.constant_get(data.name.as_str())  //not needed for deref? there was the option  for globals (and constants) being captured
 
                     {
                         //call v
@@ -845,14 +845,14 @@ impl<'a,X> Machine<'a,X> {
                 // let v=self.result_val.clone_root();
                 let v=self.copy_val(self.result_val())?;
 
-                if !self.var_scope.set(&symbol,v).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
+                if !self.var_scope.set(symbol.as_str(),v).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
                     return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol.to_string()) ));
                 }
             }
             Instruction::GetGlobalVarOrConst(symbol, get_global) => {
                 if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
                     self.set_result_val(v);
-                } else if let Some(v)=self.constant_get(&symbol) {
+                } else if let Some(v)=self.constant_get(symbol.as_str()) {
                     self.set_result_val(v);
                 } else {
                     return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol.to_string()) ));
@@ -860,13 +860,13 @@ impl<'a,X> Machine<'a,X> {
             }
 
             Instruction::GetGlobalVarRef(symbol,  ) => {
-                let refvar=self.var_scope.get_ref(&symbol,self.gc_scope);
+                let refvar=self.var_scope.get_ref(symbol.as_str(),self.gc_scope);
                 self.set_result_val(refvar);
             }
 
             Instruction::GetGlobalAccessRef(symbol,  ) => {
 
-                let refvar=self.var_scope.get_ref(&symbol,self.gc_scope);
+                let refvar=self.var_scope.get_ref(symbol.as_str(),self.gc_scope);
 
                 let val=Value::custom_managed_mut(GlobalAccessRef{
                     name:symbol.clone(),
@@ -918,7 +918,7 @@ impl<'a,X> Machine<'a,X> {
 
                 if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
                     self.set_result_val(v);
-                } else if let Some(v)=self.constant_get(&symbol) { //self.lib_scope.get_constant(&symbol)
+                } else if let Some(v)=self.constant_get(symbol.as_str()) { //self.lib_scope.get_constant(&symbol)
                     self.set_result_val(v);
                 } else if let Some(x)=self.get_method(symbol.as_str(), 0) {
                     self.debugger.add_func_name(&symbol.as_str());
@@ -955,7 +955,7 @@ impl<'a,X> Machine<'a,X> {
             Instruction::CallGlobalOrMethod(symbol, params_num)  => {
                 let params_num =*params_num;
 
-                if let Some(v)=self.var_scope.get(&symbol).or_else(|e: MachineError|Err(MachineError::from_machine(&self, e.error_type)))?
+                if let Some(v)=self.var_scope.get(symbol.as_str()).or_else(|e: MachineError|Err(MachineError::from_machine(&self, e.error_type)))?
                 {
                     self.debugger.add_func_name(symbol.as_str());
 

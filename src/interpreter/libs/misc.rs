@@ -22,7 +22,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let msg=if context.param(0).is_nil() {
             String::new()
         } else {
-            context.param(0).as_string()
+            context.param(0).as_string().to_string()
         };
 
         Err(context.error(msg))

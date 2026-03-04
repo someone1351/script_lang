@@ -35,7 +35,7 @@ pub struct Build {
 
     pub path:Option<PathBuf>,
     pub version:usize,
-    pub src:Option<StringT>,
+    pub src:Option<StringVal>,
 
     pub instr_locs : HashMap<usize,Loc>,
     // pub include_first_locs : HashMap<usize,Loc>,

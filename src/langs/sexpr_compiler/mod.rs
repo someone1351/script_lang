@@ -31,7 +31,7 @@ use std::path::{Path, PathBuf};
 use builder::{Builder, BuilderError};
 use cmds::*;
 
-use crate::StringT;
+use crate::StringVal;
 
 use super::super::build::*;
 use super::sexpr_parser::{self, SExprContainer, SExprValContainer};
@@ -49,7 +49,7 @@ pub enum CompileErrorType {
 
 #[derive(Debug,Clone)]
 pub struct CompileError {
-    pub src : StringT,
+    pub src : StringVal,
     pub path : Option<PathBuf>,
     pub error_type : CompileErrorType,
     pub loc : Loc,
@@ -287,7 +287,7 @@ impl Compiler {
 
     pub fn compile(&self,src : &str, version:usize, path : Option<&Path>, keep_src : bool, print_ast:bool) -> Result<BuildT,CompileError> {
         let mut next_anon_id=1;
-        let src= StringT::new(src);
+        let src= StringVal::new(src);
         let pathbuf=path.map(|x|x.to_path_buf());
 
         match sexpr_parser::parse(src.as_str(), false, path) {

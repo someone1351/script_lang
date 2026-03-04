@@ -7,7 +7,7 @@ mod symbol_manager;
 mod include_manager;
 mod misc;
 
-use crate::{primitive_types::{FloatVal, IntVal}, StringT};
+use crate::{primitive_types::{FloatVal, IntVal}, StringVal};
 
 // pub use super::common;
 
@@ -1260,7 +1260,7 @@ impl<'a> Ast<'a> {
         }
     }
 
-    pub fn compile(&self, version:usize, path : Option<&Path>, src : Option<StringT>,
+    pub fn compile(&self, version:usize, path : Option<&Path>, src : Option<StringVal>,
         _store_instr_locs : bool,
         _store_stack_names : bool,
     ) -> Build {

@@ -8,7 +8,7 @@ use std::hash::Hash;
 // use crate::GcTraversable;
 pub use crate::custom_type::*;
 use crate::IntVal;
-use crate::StringT;
+use crate::StringVal;
 
 // use super::super::super::common::*;
 
@@ -29,7 +29,7 @@ pub enum ValueKey {
     Bool(bool),
     // Float(FloatT),
     Int(IntVal),
-    String(StringT),
+    String(StringVal),
     // Custom(Custom),
 }
 
@@ -68,7 +68,7 @@ impl GcTraversable for Dict {
 
 impl Into<Dict> for Vec<(&str,Value)> {
     fn into(self) -> Dict {
-        Dict(self.iter().map(|(k,v)|(ValueKey::String((*k).into()),v.clone())).collect())
+        Dict(self.iter().map(|(k,v)|(ValueKey::String(StringVal::new(*k)),v.clone())).collect())
     }
 }
 impl Into<Dict> for Vec<(String,Value)> {
@@ -266,8 +266,8 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     lib_scope.field( | context|{
         let dict=context.param(0).as_custom();
         let key=context.param(1).as_string();
-        dict.with_data_ref_ext(|data:&HashMap<StringT,Value>|{Ok(data.get(&key).and_then(|x|Some(x.clone())).unwrap_or(Value::Nil))})
-    }).custom_ref::<HashMap<StringT,Value>>().str().end();
+        dict.with_data_ref_ext(|data:&HashMap<StringVal,Value>|{Ok(data.get(&key).and_then(|x|Some(x.clone())).unwrap_or(Value::Nil))})
+    }).custom_ref::<HashMap<StringVal,Value>>().str().end();
 
 }
 

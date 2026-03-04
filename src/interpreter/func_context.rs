@@ -5,6 +5,7 @@
 // use super::super::common::*;
 
 use crate::custom_type::GcScope;
+use crate::StringVal;
 
 // use super::debug::*;
 // use super::gc_scope::*;
@@ -123,11 +124,11 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,X> { //,'b //,'b
         self.machine.gc_scope()
     }
 
-    pub fn value_to_string(&mut self,value: &Value) -> Result<String,MachineError> {
-        Ok(self.machine.try_call_method("string", &vec![value.clone_root()])?
+    pub fn value_to_string(&mut self,value: &Value) -> Result<StringVal,MachineError> {
+        let a=self.machine.try_call_method("string", &vec![value.clone_root()])?
             .and_then(|x|Some(x.as_string()))
-            .unwrap_or_else(||value.as_string())
-        )
+            .unwrap_or_else(||value.as_string());
+        Ok(a)
     }
 
     // pub fn call_value<I:AsRef<[Value]>>(&mut self,value:&Value,params : I) -> Result<Value,MachineError> {
