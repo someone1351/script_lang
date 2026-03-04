@@ -644,7 +644,7 @@ impl Debugger {
             }
 
             Instruction::Include(path_ind)=>{
-                format!("Include({:?})",cur_build.includes.get(*path_ind).unwrap())
+                format!("Include({:?})",path_ind)
             }
             Instruction::ResultSymbol(symbol_ind)=>{
                 format!("ResultSymbol({:?})",symbol_ind.to_string())

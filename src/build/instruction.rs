@@ -1,6 +1,8 @@
 
 // use std::{any::Any, sync::Arc};
 
+use std::{path::PathBuf, sync::Arc};
+
 /*
 can't allow params to be set,
     if not all params provided, then there is no where to set
@@ -60,7 +62,7 @@ impl JmpCond {
 // pub struct ResultCustom()
 #[derive(Debug,)]
 pub enum Instruction {
-    Include(usize), //path_ind
+    Include(Arc<PathBuf>), //path_ind
 
     Jmp{
         // cond:Option<bool>,

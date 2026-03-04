@@ -1576,7 +1576,7 @@ impl<'a> Ast<'a> {
                     instructions.push(Instruction::CallResult(params_num));
                 }
                 AstNodeType::Include(name) => {
-                    instructions.push(Instruction::Include(include_inds.get(name,cur_node.loc)));
+                    instructions.push(Instruction::Include(include_inds.get(name,cur_node.loc.unwrap_or_default())));
                 }
                 AstNodeType::DeclVarStart { name, decl, anon_id,} => {
                     if anon_id.is_none() { //anon_id vars are local
@@ -1738,7 +1738,7 @@ impl<'a> Ast<'a> {
 
         //
         Build {
-            includes : include_inds.to_paths(),
+            includes : include_inds.to_map().into_iter().collect(),
             // symbols : symbol_inds.to_vec(),
             instructions,
             functions: build_funcs,
@@ -1747,7 +1747,7 @@ impl<'a> Ast<'a> {
             src,
             version,
             instr_locs : instr_locs_map,
-            include_first_locs : include_inds.to_locs(),
+            // include_first_locs : include_inds.to_locs(),
             instr_stack_var_names,
             instr_locs_alt,
             // func_names,

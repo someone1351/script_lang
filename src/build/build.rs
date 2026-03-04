@@ -1,4 +1,4 @@
-use std::{path::{PathBuf, Path}, collections::HashMap};
+use std::{collections::HashMap, path::{Path, PathBuf}, sync::Arc};
 
 // use crate::script_lang::common::build;
 
@@ -27,7 +27,7 @@ pub struct BuildFunc {
 
 #[derive(Default)]
 pub struct Build {
-    pub includes : Vec<PathBuf>,
+    pub includes : HashMap<Arc<PathBuf>,Loc>,
     // pub symbols : Vec<StringT>, //rc?
     pub instructions : Vec<Instruction>,
     pub functions : Vec<BuildFunc>,
@@ -38,7 +38,7 @@ pub struct Build {
     pub src:Option<StringT>,
 
     pub instr_locs : HashMap<usize,Loc>,
-    pub include_first_locs : HashMap<usize,Loc>,
+    // pub include_first_locs : HashMap<usize,Loc>,
 
     pub instr_locs_alt : Vec<(usize,Option<Loc>)>, //[(start_instr_pos,)]
 

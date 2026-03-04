@@ -877,12 +877,15 @@ impl<'a,X> Machine<'a,X> {
             }
             Instruction::Include(include_ind) => {
                 //todo check circular includes
+                //todo have limit option for updir eg ../../
+                //todo don't allow absolute paths? or limit it
 
-                let include_path = self.cur_build.as_ref().unwrap().includes.get(*include_ind).unwrap();
+                // let include_path = self.cur_build.as_ref().unwrap().includes.get(*include_ind).unwrap();
+                let include_path=include_ind.clone();
 
                 let mut path=self.cur_build.as_ref().unwrap().path.clone().unwrap_or(PathBuf::new());
                 path.pop();
-                path.push(include_path);
+                path.push(include_path.as_path());
 
                 let Some(include_build) = self.includer.as_mut().and_then(|x|x(path.as_path())) //(*self.includer)(path.as_path())
                 else {

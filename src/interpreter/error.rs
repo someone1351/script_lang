@@ -1,5 +1,6 @@
 use std::num::TryFromIntError;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 
 // use crate::interpreter::custom::CustomError;
@@ -30,7 +31,7 @@ pub enum MachineErrorType{
     MethodOrGlobalVarNotFound(String),
     MethodRunError(String), //msg //Option<String>, Option<Vec<String>>,
     // InvalidFunctionParamsNum(usize), //req params num
-    IncludeResolveError(PathBuf),
+    IncludeResolveError(Arc<PathBuf>),
     // CustomDataBorrowError,
     CustomDataBorrowMutError,
     // CustomInstanceEmpty,
