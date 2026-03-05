@@ -276,6 +276,23 @@ impl PartialOrd for FloatVal {
     }
 }
 
+impl Into<f32> for FloatVal {
+    fn into(self) -> f32 {
+        match self {
+            FloatVal::F32(a) => a,
+            FloatVal::F64(a) => a as f32,
+        }
+    }
+}
+impl Into<f64> for FloatVal {
+    fn into(self) -> f64 {
+        match self {
+            FloatVal::F32(a) => a as f64,
+            FloatVal::F64(a) => a,
+        }
+    }
+}
+
 impl From<f32> for FloatVal {
     fn from(value: f32) -> Self {
         Self::F32(value)
