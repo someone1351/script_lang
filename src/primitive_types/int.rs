@@ -215,6 +215,17 @@ impl Display for IntVal {
 
 impl_int_try_into!(i8,i16,i32,i64,i128,isize, u8,u16,u32,u64,u128,usize);
 
+// impl<const N: usize> core::convert::TryInto<i32> for [IntVal; N] {
+//     type Error=IntValErr;
+
+//     fn try_into(self) -> core::result::Result<i32, Self::Error> {
+//         let mut out =[0;N];
+//         for a in self {
+//             out=a.try_into()?;
+//         }
+//         Ok(out)
+//     }
+// }
 
 impl From<i8> for IntVal {
     fn from(v: i8) -> Self {

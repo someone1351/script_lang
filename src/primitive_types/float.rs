@@ -11,9 +11,15 @@ pub enum FloatVal {
 
 impl FloatVal {
     pub fn to_same(self,other:Self) -> Self {
+        // match (other,self) {
+        //     (FloatVal::F32(_), FloatVal::F64(a)) => (a as f32).into(),
+        //     (FloatVal::F64(_), FloatVal::F32(a)) => (a as f64).into(),
+        //     _ => self
+        // }
+
         match other {
-            Self::F32(_) => self.into(),
-            Self::F64(_) => self.into(),
+            FloatVal::F32(_) => {let x:f32=self.into();x.into()},
+            FloatVal::F64(_) => {let x:f64=self.into();x.into()},
         }
     }
 
@@ -102,7 +108,7 @@ impl FloatVal {
         match (self,other.to_same(self)) {
             (Self::F32(a), Self::F32(b)) => a.min(b).into(),
             (Self::F64(a), Self::F64(b)) => a.min(b).into(),
-            _ => panic!("never reached"),
+            (a,b) => panic!("never reached"),
         }
     }
     pub fn max(self,other:Self) -> Self {

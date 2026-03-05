@@ -11,8 +11,8 @@ mod string;
 
 // pub use int_intos::*;
 // pub use int_froms::*;
-pub use int::*;
 
+pub use int::*;
 pub use float::*;
 pub use string::*;
 
