@@ -6,7 +6,7 @@ use std::hash::Hash;
 
 // use crate::Custom;
 // use crate::GcTraversable;
-pub use crate::custom_type::*;
+// pub use crate::custom_type::*;
 use crate::IntVal;
 use crate::StringVal;
 
