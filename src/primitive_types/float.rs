@@ -108,7 +108,7 @@ impl FloatVal {
         match (self,other.to_same(self)) {
             (Self::F32(a), Self::F32(b)) => a.min(b).into(),
             (Self::F64(a), Self::F64(b)) => a.min(b).into(),
-            (a,b) => panic!("never reached"),
+            _ => panic!("never reached"),
         }
     }
     pub fn max(self,other:Self) -> Self {
