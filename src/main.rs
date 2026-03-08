@@ -15,7 +15,7 @@
 
 use std::{collections::BTreeMap, path::Path};
 
-use script_lang::{cexpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs, Dict, IntVal, StringVal, Value
+use script_lang::{texpr_parser::{BlockContainer, FieldContainer, ParamContainer, PrimitiveContainer, PrimitiveTypeContainer, RecordContainer}, error_msg, langs, Dict, IntVal, StringVal, Value
 // MachineError, Value
 };
 
@@ -83,7 +83,7 @@ pub fn test_script2<P:AsRef<Path>>(path:P) {
     let path = path.as_ref();
     let src = std::fs::read_to_string(path).unwrap();
 
-    let res=langs::cexpr_parser::parse(src.as_str());
+    let res=langs::texpr_parser::parse(src.as_str());
 
     match res {
         Ok(parsed)=>{
@@ -195,7 +195,7 @@ pub fn test_script3<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
     let path = path.as_ref();
     let src = std::fs::read_to_string(path).unwrap();
 
-    let compiler=script_lang::langs::cexpr_compiler::Compiler::new();
+    let compiler=script_lang::langs::texpr_compiler::Compiler::new();
 
     let build = compiler.compile(src.as_str(), 0, Some(path), true,
         // false
@@ -356,7 +356,7 @@ pub fn test_script5<P:AsRef<Path>>(path:P) {
     let path = path.as_ref();
     let src = std::fs::read_to_string(path).unwrap();
 
-    let compiler=script_lang::langs::cexpr_compiler::Compiler::new();
+    let compiler=script_lang::langs::texpr_compiler::Compiler::new();
 
     let build = compiler.compile(src.as_str(), 0, Some(path), true,
         // false

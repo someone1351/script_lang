@@ -18,11 +18,7 @@ pub enum  ParserErrorType {
 
 
 #[derive(Debug,Clone)]
-pub struct ParseError { //<'a>
-    // pub src:Option<&'a str>,
-    // pub src:&'a str,
-    // pub path:Option<&'a Path>,
-    // pub path:Option<PathBuf>,
+pub struct ParseError {
     pub loc : Loc,
     pub error_type : ParserErrorType,
 }
