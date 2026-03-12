@@ -600,6 +600,14 @@ fn main() {
 
     // let parser=CExpr::parse();
 
+    let path=Path::new("examples/test16.script");
+    let src = std::fs::read_to_string(path).unwrap();
+    let compiler=script_lang::langs::cexpr_compiler::Compiler::new();
+    let res=compiler.compile(src.as_str(), 0, Some(path), true);
+    if let Err(e)=res {
+        println!("{e}");
+    }
+
     // let v=Value::custom_unmanaged(String::new());
     // let v=Value::custom_unmanaged("aa");
     // trait Abc: std::any::Any+std::fmt::Debug+Send+Sync+Serialize {

@@ -55,7 +55,8 @@ impl Compiler {
             return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CexprCompileErrorType::CexprParser(e.error_type)});
         }
 
-        // let parsed=parsed.unwrap();
+        let parsed=parsed.unwrap();
+        parsed.print();
 
         // let mut builder = builder::Builder::new();
 

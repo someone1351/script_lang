@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fmt::Debug, path::PathBuf};
 
 use crate::{ast, cexpr_parser::ParserErrorType, error_msg, Loc, StringVal};
 
@@ -50,7 +50,7 @@ pub enum CexprCompileErrorType {
 
 
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub struct CompileError {
     pub src : StringVal,
     pub path : Option<PathBuf>,
@@ -76,3 +76,13 @@ impl std::error::Error for CompileError {
     }
 }
 
+impl Debug for CompileError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CompileError")
+            // .field("src", &self.src)
+            .field("path", &self.path)
+            .field("error_type", &self.error_type)
+            .field("loc", &self.loc)
+            .finish()
+    }
+}

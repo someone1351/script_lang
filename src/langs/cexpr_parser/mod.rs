@@ -31,6 +31,8 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
     let mut block_primitives : Vec<Vec<Primitive>> = vec![Vec::new()];
     let mut block_stk: Vec<(usize,BlockBracket,Loc)> = vec![]; //(0,None,Loc::one())
 
+    let mut some=false;
+
     //
     loop {
         let cur_block_ind=block_stk.last().map(|x|x.0).unwrap_or(0);
@@ -40,17 +42,23 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
         //
         if let Some(primitive)=parse_ws(&mut input)? {
             cur_block_primitives.push(primitive); //end
+            some=true; // println!("yes1");
+
         }
 
         //
         if let Some(primitive)=parse_string(&mut input,&mut text_map)? {
             cur_block_primitives.push(primitive);
+            some=true; // println!("yes2");
         } else if let Some(primitive)=parse_number(&mut input, true, &mut text_map) {
             cur_block_primitives.push(primitive);
+            some=true; // println!("yes3");
         } else if let Some(primitive)=parse_char_symbol(&mut input, &mut text_map) {
             cur_block_primitives.push(primitive);
+            some=true; // println!("yes4");
         } else if let Some(primitive)=parse_ident_symbol(&mut input, &mut text_map) {
             cur_block_primitives.push(primitive);
+            some=true; // println!("yes5");
         } else if let Some((bracket,start_loc,_end_loc))=parse_block_begin(&mut input) {
             // let cur_block_primitives=block_primitives.get_mut(cur_block_ind).unwrap();
 
@@ -59,6 +67,7 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
 
             block_stk.push((block_primitives.len(),bracket,start_loc));
             block_primitives.push(Vec::new());
+            some=true; // println!("yes6");
 
         } else if let Some((bracket,start_loc,end_loc))=parse_block_end(&mut input) {
             //
@@ -107,18 +116,26 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
             };
 
             //
-            let start_loc=block_stk.last().unwrap().2;
+            let start_loc=block_stk.last().map(|x|x.2).unwrap_or(Loc::one());
 
             //
-            let cur_block_ind=block_stk.last().unwrap().0;
+            let cur_block_ind=block_stk.last().map(|x|x.0).unwrap_or(0);
             let cur_block_primitives=block_primitives.get_mut(cur_block_ind).unwrap();
 
             cur_block_primitives.push(Primitive { primitive_type, start_loc, end_loc });
+            some=true; // println!("yes7");
+        }
+
+        if !some && !input.is_end() {
+            return Err(ParseError { loc: input.loc(), error_type: ParserErrorType::Unknown });
         }
 
         if input.is_end() {
             break;
         }
+
+        // println!("loc {}, {some}",input.loc());
+        some=false;
     }
 
     //
@@ -127,7 +144,6 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
     for (s,i) in text_map {
         out_texts[i]=s;
     }
-
 
     //
     let mut out_primitives = vec![Primitive{
@@ -465,12 +481,14 @@ fn parse_space(input:&mut Input) -> bool {
 
 fn parse_ws(input:&mut Input) -> Result<Option<Primitive>,ParseError> {
     let mut first_end : Option<Primitive> = None;
-    let mut found=false;
+    let mut found=true;
 
-    while !found && input.is_end() {
+    while found && !input.is_end() {
         found=false;
 
         if parse_cmnt(input)? || parse_space(input) {
+            found=true;
+        } else if parse_space(input) {
             found=true;
         } else if let Some(x)=parse_eol(input) {
             found=true;
@@ -483,6 +501,7 @@ fn parse_ws(input:&mut Input) -> Result<Option<Primitive>,ParseError> {
                 first_end=Some(Primitive { primitive_type: PrimitiveType::End, start_loc: input.loc(), end_loc: input.loc() });
             }
         }
+
     }
 
     Ok(first_end)
