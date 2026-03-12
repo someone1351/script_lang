@@ -1,4 +1,7 @@
-use std::str::Chars;
+
+#![allow(unused)]
+
+use std::{ops::RangeInclusive, str::Chars};
 
 use super::super::super::build::*;
 
@@ -8,7 +11,7 @@ pub struct Input<'a> {
     // chrs:CharIndices<'a>,
     buf : String,
     loc : Loc,
-    // prev_loc : Loc,
+    prev_loc : Loc,
 }
 
 impl<'a> Input<'a> {
@@ -17,7 +20,7 @@ impl<'a> Input<'a> {
             chrs:src.chars(),
             buf : String::new(),
             loc : Loc::one(),
-            // prev_loc : Loc::one(),
+            prev_loc : Loc::one(),
         }
     }
 
@@ -57,6 +60,7 @@ impl<'a> Input<'a> {
             None
         }
     }
+
     fn calc_loc(&mut self, n : usize) {
         let mut loc = self.loc;
 
@@ -73,7 +77,7 @@ impl<'a> Input<'a> {
             }
 
             loc.byte_pos+=v.len();
-            // self.prev_loc=self.loc;
+            self.prev_loc=self.loc;
             self.loc = loc;
         }
     }
@@ -94,10 +98,35 @@ impl<'a> Input<'a> {
         self.loc
     }
 
-    // pub fn prev_loc(&self) -> Loc {
-    //     self.prev_loc
-    // }
+    pub fn prev_loc(&self) -> Loc {
+        self.prev_loc
+    }
 
+
+    pub fn hasc<
+        const NC:usize,
+        const NR:usize,
+    >(
+        &mut self, i:usize,
+        cs: [char;NC],
+        rs: [RangeInclusive<char>;NR],
+    ) -> Option<char> {
+        if let Some(g)=self.getc(i) {
+            for c in cs {
+                if g==c {
+                    return Some(g);
+                }
+            }
+
+            for r in rs {
+                if r.contains(&g) {
+                    return Some(g);
+                }
+            }
+        }
+
+        None
+    }
 
     pub fn has<'b,const N:usize>(&mut self, i:usize,xs: [&'b str;N]) -> Option<&'b str> {
         let mut res=None;

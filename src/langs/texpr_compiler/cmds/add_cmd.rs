@@ -4,7 +4,7 @@
 // use super::super::error::*;
 
 use super::super::builder::*;
-use super::super::BuilderErrorType;
+use super::super::error::BuilderErrorType;
 
 use super::super::super::texpr_parser::*;
 

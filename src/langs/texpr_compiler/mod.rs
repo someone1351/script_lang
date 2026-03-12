@@ -57,10 +57,9 @@ TODO
 // pub mod texpr_parser;
 // pub mod cmd_scope;
 pub mod cmds;
+pub mod error;
 
 
-
-use std::path::PathBuf;
 use crate::StringVal;
 
 use super::super::build::*;
@@ -73,81 +72,10 @@ use std::path::Path;
 use super::texpr_parser::*;
 use super::{ast, builder,  };
 use cmds::*;
+pub use error::*;
 
 
 use super::super::builder::*;
-
-
-#[derive(Debug,Clone)]
-pub enum BuilderErrorType {
-    ExpectSymbol(u32),
-    NoSymbolPrefixAllowed,
-    // ExpectList,
-    ExpectString,
-    IncorrectParamsNum,
-    NoParamsAllowed,
-    InvalidParam,
-    // ExpectExpr,
-    // DeclFuncNotRoot,
-    // ExpectValue,
-    // ExpectParamName,
-    VariadicMustBeAtEnd,
-    // EmptySExpr, //
-    // // BuilderAst(BuilderAstError),
-
-
-    ContinueNotInLoop,
-    BreakNotInLoop,
-    ReturnNotInMethodOrLambda,
-
-    ExpectBlock,
-    NoSemiColonsAllowed, //only used within func param decl
-    NoBlocksAllowed,
-    NoFieldsAllowed,
-    InvalidStringSymbol,
-    InvalidSymbol,
-    // NoCmdFound,
-    // NoArgsAllowed,
-    CannotCallGetVar,
-}
-
-
-
-
-
-#[derive(Debug,Clone)]
-pub enum CexprCompileErrorType {
-    CexprBuilder(BuilderErrorType),
-    CexprParser(texpr_parser::ParserErrorType),
-    AstVar(ast::error::AstVarErrorType),
-}
-
-#[derive(Debug,Clone)]
-pub struct CompileError {
-    pub src : StringVal,
-    pub path : Option<PathBuf>,
-    pub error_type : CexprCompileErrorType,
-    pub loc : Loc,
-}
-
-impl CompileError {
-    pub fn msg(&self) -> String {
-        error_msg(&self.error_type, self.loc, Some(self.src.as_str()), self.path.as_ref().map(|p|p.as_path()))
-    }
-}
-
-impl std::fmt::Display for CompileError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f,"{}",error_msg(&self.error_type,self.loc,Some(self.src.as_str()),self.path.as_ref().map(|p|p.as_path())))
-    }
-}
-
-impl std::error::Error for CompileError {
-    fn description(&self) -> &str {
-        "scriptlang compile error"
-    }
-}
-
 
 
 
@@ -617,7 +545,7 @@ impl Compiler {
         let parsed=texpr_parser::parse(src.as_str(),  );
 
         if let Err(e)=parsed {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CexprCompileErrorType::CexprParser(e.error_type)});
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:TexprCompileErrorType::TexprParser(e.error_type)});
         }
 
         let parsed=parsed.unwrap();
@@ -635,11 +563,11 @@ impl Compiler {
         if let Err(e)=builder.generate_ast(&mut ast,|builder,primitive|{
             self.run(builder, primitive,&mut next_anon_id)
         }) {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CexprCompileErrorType::CexprBuilder(e.error_type)});
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:TexprCompileErrorType::TexprBuilder(e.error_type)});
         }
 
         if let Err(e)=ast.calc_vars(false) {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CexprCompileErrorType::AstVar(e.error_type)});
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:TexprCompileErrorType::AstVar(e.error_type)});
         }
 
         // ast.calc_vars(false,true);

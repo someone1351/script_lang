@@ -580,23 +580,25 @@ pub fn test_script5<P:AsRef<Path>>(path:P) {
 fn main() {
     println!("Hello, world!");
 
-    // // // test_script("examples/test.script");
-    // // // test_script3("examples/test5.script");
-    // // // test_script4("examples/test8.script");
+    // // // // test_script("examples/test.script");
+    // // // // test_script3("examples/test5.script");
+    // // // // test_script4("examples/test8.script");
 
-    // // // test_script2("examples/test6.script");
+    // // // // test_script2("examples/test6.script");
 
-    // // test_script3("examples/test7.script");
-    // //  test_script3("examples/test13.script",true,true);
-    // //  test_script6("examples/test14.script",true,true);
-    // // test_script3("examples/test12.script",true,false);
+    // // // test_script3("examples/test7.script");
+    // // //  test_script3("examples/test13.script",true,true);
+    // // //  test_script6("examples/test14.script",true,true);
+    // // // test_script3("examples/test12.script",true,false);
 
-    // // // test_script3("examples/test9.script");
+    // // // // test_script3("examples/test9.script");
 
-    // // test_script5("examples/test11.script");
+    // // // test_script5("examples/test11.script");
 
-    test_script3("examples/test8.script",false,false);
-    // test_script3("examples/test15.script",true,false);
+    // // test_script3("examples/test15.script",true,false);
+    // test_script3("examples/test8.script",false,false);
+
+    // let parser=CExpr::parse();
 
     // let v=Value::custom_unmanaged(String::new());
     // let v=Value::custom_unmanaged("aa");

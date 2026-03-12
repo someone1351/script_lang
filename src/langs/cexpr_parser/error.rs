@@ -8,12 +8,13 @@ pub enum  ParserErrorType {
     Unknown,
     ClosingQuoteExpected(&'static str),
     UnexpectedChar,
-    ClosingBlockExpected,
-    UnmatchedClosingBlock,
-    ExpectedField,
-    ExpectingClosingCurlyBracket,
-    ExpectingClosingSquareBracket,
-    ExpectingClosingParentheses,
+    ClosingBracketExpected(&'static str),
+    NoMatchingOpeningBracket(&'static str),
+    ClosingCommentExpected,
+
+    // ExpectingClosingCurlyBracket,
+    // ExpectingClosingSquareBracket,
+    // ExpectingClosingParentheses,
 }
 
 
