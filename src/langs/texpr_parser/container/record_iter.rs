@@ -12,6 +12,7 @@ impl<'a> ExactSizeIterator for RecordIter<'a> {
     //     self.len == 0
     // }
 }
+
 #[derive(Copy,Clone)]
 pub struct RecordIter<'a> {
     pub start : usize, //if 0, then 0 hasnt been traversed yet

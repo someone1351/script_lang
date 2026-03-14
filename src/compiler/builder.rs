@@ -4,7 +4,7 @@
 // mod node;
 
 
-use std::fmt::Debug;
+// use std::fmt::Debug;
 use std::marker::PhantomData;
 
 
@@ -55,14 +55,14 @@ todo
 // }
 
 
-#[derive(Debug,Clone)]
-pub struct BuilderError<E:Clone+Debug> {
+#[derive(Clone)]
+pub struct BuilderError<E:Clone> {
     // pub path:Option<PathBuf>,
     pub loc : Loc,
     pub error_type : E,
 }
 
-impl<E:Clone+Debug> BuilderError<E> {
+impl<E:Clone> BuilderError<E> {
     pub fn new(loc : Loc, error_type : E) -> Self {
         Self{loc,error_type}
     }
@@ -73,7 +73,7 @@ impl<E:Clone+Debug> BuilderError<E> {
 // use super::super::parser::*;
 
 // #[derive(Debug,Clone)]
-pub enum BuilderNodeType<'a,T:Clone+Debug+'a,E:Clone+Debug> {
+pub enum BuilderNodeType<'a,T:Clone+'a,E:Clone> {
     EvalPrimitive(
         // PrimitiveContainer<'a>
         T
@@ -85,13 +85,13 @@ pub enum BuilderNodeType<'a,T:Clone+Debug+'a,E:Clone+Debug> {
 
 
 // #[derive(Debug)]
-pub struct BuilderNode<'a,T:Clone+Debug+'a,E:Clone+Debug> {
+pub struct BuilderNode<'a,T:Clone+'a,E:Clone> {
     pub node_type:BuilderNodeType<'a,T,E>,
     pub loc : Option<Loc>,
 }
 
 
-pub struct Builder<'a,T:Clone+Debug+'a,E:Clone+Debug> {
+pub struct Builder<'a,T:Clone+'a,E:Clone> {
     phantom_data:PhantomData<E>,
     temp_stk : Vec<BuilderNode<'a,T,E>>,
     cur_loc:Option<Loc>,
@@ -119,7 +119,7 @@ pub struct Builder<'a,T:Clone+Debug+'a,E:Clone+Debug> {
 //     Eval(T),
 // }
 
-impl<'a,T:Clone+Debug+'a,E:Clone+Debug+'a> Builder<'a,T,E> {
+impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
     pub fn get_fields<F>(&mut self, fields : F) -> &mut Self
     where
         // F : IntoIterator<Item = (BuilderField<'a,T>,Loc)>,

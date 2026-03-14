@@ -4,6 +4,8 @@
 
 use std::ops::Range;
 
+use crate::cexpr_parser::container::PrimitiveContainer;
+
 use super::super::super::build::Loc;
 
 #[derive(Debug,Clone)]
@@ -63,9 +65,9 @@ impl Parsed {
 //     pub fn root_block(&'_ self) -> BlockContainer<'_> {
 //         BlockContainer { parsed: self, block_ind: 0, fieldless:false, }
 //     }
-//     pub fn root_block_primitive(&self) -> PrimitiveContainer<'_> {
-//         PrimitiveContainer { parsed: self, primitive_ind: 0, to_string:false, fieldless: false,}
-//     }
+    pub fn root_block_primitive(&self) -> PrimitiveContainer<'_> {
+        PrimitiveContainer { parsed: self, primitive_ind: 0, }
+    }
 //     // pub fn src(&self)->&'a str {
 //     //     self.src
 //     // }
@@ -120,55 +122,5 @@ impl Parsed {
                 }
             }
         }
-//         enum Work<'a> {
-//             Primitive(PrimitiveContainer<'a>),
-//             Record(RecordContainer<'a>,usize),
-//             Param(ParamContainer<'a>,usize),
-//             Field(FieldContainer<'a>,usize),
-//         }
-//         let mut stk=vec![(0,Work::Primitive(self.root_block_primitive()))];
-
-//         while let Some((depth,cur))=stk.pop() {
-//             let indent="    ".repeat(depth);
-
-//             match cur {
-//                 Work::Primitive(p) => {
-//                     let hasnt_fields=p.as_param().map(|x|x.fields_num()==0).unwrap_or(true);
-//                     match p.primitive_type() {
-//                         PrimitiveTypeContainer::Block(b) => {
-//                             println!("{indent}block [b{}] hasnt_fields={hasnt_fields}",b.block_ind,
-//                             // p.as_param().is_some()
-//                         );
-//                             stk.extend(b.records().enumerate().rev().map(|(j,r)|(depth+1,Work::Record(r,j))));
-//                         }
-//                         PrimitiveTypeContainer::Float(v, b) => {
-//                             println!("{indent}float {v} {b}");
-//                         }
-//                         PrimitiveTypeContainer::Int(v, b) => {
-//                             println!("{indent}int {v} {b}");
-//                         }
-//                         PrimitiveTypeContainer::String(v) => {
-//                             println!("{indent}string {v:?}");
-//                         }
-//                         PrimitiveTypeContainer::Symbol(v) => {
-//                             println!("{indent}symbol {v:?}");
-//                         }
-//                     }
-//                 }
-//                 Work::Record(r,i) => {
-//                     println!("{indent}record{i} [r{}]",r.record_ind);
-//                     stk.extend(r.params().enumerate().rev().map(|(j,p)|(depth+1,Work::Param(p,j))));
-//                 }
-//                 Work::Param(p,i) => {
-//                     println!("{indent}param{i} [p{}], {}",p.param_ind, p.fields_num()!=0);
-//                     stk.push((depth+1,Work::Primitive(p.as_primitive())));
-//                     stk.extend(p.fields().enumerate().rev().map(|(j,f)|(depth+1,Work::Field(f,j))));
-//                 }
-//                 Work::Field(f,i) => {
-//                     println!("{indent}field{i} [f{}]",f.field_ind);
-//                     stk.push((depth+1,Work::Primitive(f.as_primitive())));
-//                 }
-//             }
-//         }
     }
 }
