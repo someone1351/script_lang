@@ -95,6 +95,52 @@ impl Compiler {
     ) -> Result<(),BuilderError<BuilderErrorType>> {
         builder.loc(top_primitive.start_loc());
 
+        match top_primitive.primitive_type()
+        {
+            PrimitiveTypeContainer::Root(b) => { //root
+
+            }
+            PrimitiveTypeContainer::CurlyBlock(b) => { //code block
+
+            }
+            PrimitiveTypeContainer::SquareBlock(b) => { //array or dict
+                let is_dict=b.primitives().find(|p|p.get_symbol().map(|s|s.eq(":")).unwrap_or(false)).is_some();
+
+
+            }
+            PrimitiveTypeContainer::ParenthesesBlock(b) => {} //expr
+
+            PrimitiveTypeContainer::Float(x) => { //float
+                builder.result_float(x);
+            }
+            PrimitiveTypeContainer::Int(x) => { //int
+                builder.result_int(x);
+            }
+            PrimitiveTypeContainer::String(x) => { //string
+                builder.result_string(x);
+            }
+            PrimitiveTypeContainer::Symbol(x) => { //cmd or idn
+                match x {
+                    "true" => {
+                        builder.result_bool(true);
+                    }
+                    "false" => {
+                        builder.result_bool(false);
+                    }
+                    "nil" => {
+                        builder.result_nil();
+                    }
+                    "void" => {
+                        builder.result_void();
+                    }
+                    _ => {
+                        builder.get_var(x);
+                    }
+                }
+            }
+            PrimitiveTypeContainer::End => {} //eol or eof //ignore
+        }
+
         Ok(())
     }
 

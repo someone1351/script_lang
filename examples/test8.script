@@ -80,3 +80,7 @@ while (< k 5) {
 }
 
 (or false 1 3 5)
+
+while {break;true} { #breaks out of while,
+    println "a"
+}

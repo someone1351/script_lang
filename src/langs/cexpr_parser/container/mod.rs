@@ -5,6 +5,19 @@ use crate::{cexpr_parser::data::{Parsed, Primitive, PrimitiveType}, Loc};
 
 
 #[derive(Clone,Copy)]
+pub enum PrimitiveTypeContainer<'a> {
+    Root(BlockContainer<'a>),
+    CurlyBlock(BlockContainer<'a>),
+    SquareBlock(BlockContainer<'a>),
+    ParenthesesBlock(BlockContainer<'a>),
+    Float(f64),
+    Int(i64),
+    String(&'a str),
+    Symbol(&'a str),
+    End,
+}
+
+#[derive(Clone,Copy)]
 pub struct PrimitiveContainer<'a> {
     pub parsed:&'a Parsed,
     pub primitive_ind:usize,
@@ -28,6 +41,20 @@ impl<'a> PrimitiveContainer<'a> {
     }
     pub fn end_loc(&self) -> Loc {
         self.primitive().end_loc
+    }
+
+    pub fn primitive_type(&self) -> PrimitiveTypeContainer<'a> {
+        match self.primitive().primitive_type {
+            PrimitiveType::Root(_) => PrimitiveTypeContainer::Root(self.get_block().unwrap()),
+            PrimitiveType::CurlyBlock(_) => PrimitiveTypeContainer::CurlyBlock(self.get_block().unwrap()),
+            PrimitiveType::SquareBlock(_) => PrimitiveTypeContainer::SquareBlock(self.get_block().unwrap()),
+            PrimitiveType::ParenthesesBlock(_) => PrimitiveTypeContainer::ParenthesesBlock(self.get_block().unwrap()),
+            PrimitiveType::Float(x, _) => PrimitiveTypeContainer::Float(x),
+            PrimitiveType::Int(x, _) => PrimitiveTypeContainer::Int(x),
+            PrimitiveType::String(_) => PrimitiveTypeContainer::String(self.get_string().unwrap()),
+            PrimitiveType::Symbol(_) => PrimitiveTypeContainer::Symbol(self.get_symbol().unwrap()),
+            PrimitiveType::End => PrimitiveTypeContainer::End,
+        }
     }
 
     pub fn get_float(&self) -> Option<f64> {

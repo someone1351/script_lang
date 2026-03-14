@@ -87,3 +87,5 @@ e.add_event_listener("aaa", fn(){
 
 {var i=1}+5
 {var i=1;i}+5
+
+if if i>5 {true}else{false} {1} {2}
