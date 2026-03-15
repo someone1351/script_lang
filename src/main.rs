@@ -598,52 +598,50 @@ fn main() {
     // // test_script3("examples/test15.script",true,false);
     test_script3("examples/test8.script",false,false);
 
-    // let parser=CExpr::parse();
-
-    let path=Path::new("examples/test16.script");
-    let src = std::fs::read_to_string(path).unwrap();
-    let compiler=script_lang::langs::cexpr_compiler::Compiler::new();
-    let res=compiler.compile(src.as_str(), 0, Some(path), true);
-    if let Err(e)=res {
-        println!("{e}");
-    }
-
-    // let v=Value::custom_unmanaged(String::new());
-    // let v=Value::custom_unmanaged("aa");
-    // trait Abc: std::any::Any+std::fmt::Debug+Send+Sync+Serialize {
-
-    // }
-    // enum Test{
-    //     Aa(Box<dyn Abc>)
+    // let path=Path::new("examples/test16.script");
+    // let src = std::fs::read_to_string(path).unwrap();
+    // let compiler=script_lang::langs::cexpr_compiler::Compiler::new();
+    // let res=compiler.compile(src.as_str(), 0, Some(path), true);
+    // if let Err(e)=res {
+    //     println!("{e}");
     // }
 
-    // let a:IntVal=(5 as i32).into();
-    // let b:IntVal=(5 as i32).into();
+    // // let v=Value::custom_unmanaged(String::new());
+    // // let v=Value::custom_unmanaged("aa");
+    // // trait Abc: std::any::Any+std::fmt::Debug+Send+Sync+Serialize {
 
-    let a: i8 = -1;
-    let b: u8= 255;
+    // // }
+    // // enum Test{
+    // //     Aa(Box<dyn Abc>)
+    // // }
 
-    let x:IntVal = a.into();
-    let y:IntVal = b.into();
+    // // let a:IntVal=(5 as i32).into();
+    // // let b:IntVal=(5 as i32).into();
 
-    let s1:StringVal = "abc".into();
-    let s2:StringVal = String::from("abc").into();
+    // let a: i8 = -1;
+    // let b: u8= 255;
 
-    println!("hash {a}={x} ({},{})=({},{})",
-        get_common_hash(a),
-        get_common_hash(b),
-        get_common_hash(x),
-        get_common_hash(y),
+    // let x:IntVal = a.into();
+    // let y:IntVal = b.into();
 
-    );
+    // let s1:StringVal = "abc".into();
+    // let s2:StringVal = String::from("abc").into();
 
-    println!("{} {}, {:?},{:?}, {} {}",
-        get_common_hash("abc"),
-        get_common_hash(String::from("abc")),
-        &s1,&s2,
-        get_common_hash(&s1),
-        get_common_hash(&s2),
-    );
+    // println!("hash {a}={x} ({},{})=({},{})",
+    //     get_common_hash(a),
+    //     get_common_hash(b),
+    //     get_common_hash(x),
+    //     get_common_hash(y),
+
+    // );
+
+    // println!("{} {}, {:?},{:?}, {} {}",
+    //     get_common_hash("abc"),
+    //     get_common_hash(String::from("abc")),
+    //     &s1,&s2,
+    //     get_common_hash(&s1),
+    //     get_common_hash(&s2),
+    // );
 
 }
 

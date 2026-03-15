@@ -84,3 +84,18 @@ while (< k 5) {
 while {break;true} { #breaks out of while,
     println "a"
 }
+println "==="
+var k 0;
+println "k is {k}!"
+
+while true {
+    set k (+ k 1)
+    println "k is {k}"
+
+    if (< k 5) {
+        continue;
+    }
+
+    println "end"
+    break
+}

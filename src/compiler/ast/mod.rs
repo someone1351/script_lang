@@ -411,7 +411,7 @@ impl<'a> Ast<'a> {
         while let AstNodeType::Block{label} = self.nodes.get(cur_node_ind).unwrap().node_type {
             if let Some(label)=label {
                 if block_label==label {
-                    self.add_next(AstNodeType::ToBlockEnd{cond,block_node_ind:cur_node_ind});
+                    self.add_next(AstNodeType::ToBlockStart{cond,block_node_ind:cur_node_ind});
                     return Ok(true);
                 }
             }
@@ -503,7 +503,7 @@ impl<'a> Ast<'a> {
     }
 
     pub fn decl_var_start(&mut self,name:&'a str, init_nil:bool, anon_id:Option<usize>) {
-        if self.body_node().depth==0 && anon_id.is_none() {
+        if self.body_node().depth==0 && anon_id.is_none() { //global
             let decl=AstDeclVar::Global;
 
             self.add_next(AstNodeType::DeclVarStart { name, decl, anon_id:None,});
@@ -513,7 +513,7 @@ impl<'a> Ast<'a> {
                 self.decls_starts.push((name,decl,false));
             }
         } else {
-            let func_and_param_ind=if self.reuse_local_decls {
+            let func_and_param_ind=if self.reuse_local_decls { //reuse vars, so they take up param with same name
                 if let AstNodeType::Function { func_ind }=self.body_node().node_type {
                     self.funcs.get(func_ind)
                         .and_then(|func|func.params.iter().position(|param|param.name==name))
@@ -525,12 +525,12 @@ impl<'a> Ast<'a> {
                 None
             };
 
-            if let Some((func_ind,param_ind))=func_and_param_ind {
+            if let Some((func_ind,param_ind))=func_and_param_ind { //reuse vars, so they take up param with same name
                 let decl=AstDeclVar::Param { func_ind, param_ind, };
                 self.add_next(AstNodeType::DeclVarStart { name, decl, anon_id, });
                 self.add_next(AstNodeType::DeclVarEnd { name, decl, anon_id, });
             } else {
-                let existing_local_ind= if self.reuse_local_decls {
+                let existing_local_ind= if self.reuse_local_decls { //reuse vars
                     self.body_node().local_decls.iter().position(|local_decl|{local_decl.name==VarName{name,anon_id}})
                 } else {
                     None
@@ -538,7 +538,7 @@ impl<'a> Ast<'a> {
 
                 let is_first_decl = existing_local_ind.is_none();
 
-                let local_ind=if let Some(local_ind)=existing_local_ind {
+                let local_ind=if let Some(local_ind)=existing_local_ind { //reuse vars
                     local_ind
                 } else {
                     let local_ind=self.body_node().local_decls.len();
@@ -710,6 +710,13 @@ impl<'a> Ast<'a> {
 
     pub fn include(&mut self,name:&'a str) {
         self.add_next(AstNodeType::Include(name));
+    }
+
+    pub fn label(&mut self,name:&'a str,anon:bool) {
+
+    }
+    pub fn goto(&mut self,label:&'a str,anon:bool) {
+        self.add_next(AstNodeType::Goto{label,anon});
     }
 
     //////////////////
@@ -1667,6 +1674,16 @@ impl<'a> Ast<'a> {
                 AstNodeType::GetField{ is_field_symbol } => {
                     instructions.push(Instruction::GetField{is_field_symbol});
                     // instructions.push(Instruction::CallMethod(symbol_inds.get("get_field"),2));
+                }
+
+                AstNodeType::GotoVar => {
+
+                }
+                AstNodeType::Goto { .. } => {
+
+                }
+                AstNodeType::Label { .. } =>  {
+
                 }
             }
 

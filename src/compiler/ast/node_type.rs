@@ -32,6 +32,10 @@ pub enum AstNodeType<'a> {
         block_node_ind:usize,
     },
 
+    GotoVar,
+    Goto{label:&'a str,anon:bool,},
+    Label{label:&'a str,anon:bool,},
+
     ResultNil,
     ResultVoid,
     ResultFloat(FloatVal),

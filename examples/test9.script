@@ -1,4 +1,13 @@
+var k 0;
 
-var goa;
+while true {
+    set k (+ k 1)
+    println "k is {k}"
 
-goa ; #1 2 77
+    if (< k 5) {
+        continue;
+    }
+
+    println "end"
+    break
+}
