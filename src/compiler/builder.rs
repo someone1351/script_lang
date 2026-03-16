@@ -4,6 +4,8 @@
 // mod node;
 
 
+use std::any::Any;
+use std::collections::HashMap;
 // use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -74,10 +76,10 @@ impl<E:Clone> BuilderError<E> {
 
 // #[derive(Debug,Clone)]
 pub enum BuilderNodeType<'a,T:Clone+'a,E:Clone> {
-    EvalPrimitive(
-        // PrimitiveContainer<'a>
-        T
-    ),
+    EvalPrimitive{
+        primitive:T, // PrimitiveContainer<'a>
+        data:HashMap<&'a str,Box<dyn Any>>,
+    },
 
     Ast(Box<dyn Fn(&mut Ast<'a>)->Result<(),BuilderError<E>>+'a>),
 
@@ -110,6 +112,8 @@ pub struct Builder<'a,T:Clone+'a,E:Clone> {
 
     temp_last_loc:Option<Loc>,
     temp_stk_last_len : usize,
+
+    cur_data:HashMap<&'a str,Box<dyn Any>>,
 }
 
 // pub enum BuilderField<'a,T> {
@@ -120,6 +124,12 @@ pub struct Builder<'a,T:Clone+'a,E:Clone> {
 // }
 
 impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
+
+    pub fn data<D:Any>(&self,n:&str) -> Option<& D> {
+        self.cur_data.get(n).and_then(|d|d.downcast_ref::<D>())
+    }
+
+
     pub fn get_fields<F>(&mut self, fields : F) -> &mut Self
     where
         // F : IntoIterator<Item = (BuilderField<'a,T>,Loc)>,
@@ -301,6 +311,8 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
 
             temp_last_loc:None,
             temp_stk_last_len : 0,
+
+            cur_data:Default::default(),
         }
     }
     pub fn anon_scope(&mut self,anon_scope:usize) {
@@ -641,11 +653,11 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         })
     }
 
-    pub fn to_block_start_label(&mut self,cond:JmpCond,label:&'a str, err : Option<BuilderError<E>>) -> &mut Self {
+    pub fn to_block_start_label(&mut self,cond:JmpCond,label:&'a str, skip:usize, err : Option<BuilderError<E>>) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToStartLabel(cond,label,err))
 
         self.add_node(move|ast|{
-            match ast.to_label_block_start(cond, label) {
+            match ast.to_label_block_start(cond, label,skip) {
                 Ok(x) => {
                     if !x {
                         if let Some(err)=err.clone() {
@@ -661,12 +673,12 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         })
     }
 
-    pub fn to_block_end_label(&mut self,cond:JmpCond,label:&'a str, err : Option<BuilderError<E>>) -> &mut Self {
+    pub fn to_block_end_label(&mut self,cond:JmpCond,label:&'a str, skip:usize, err : Option<BuilderError<E>>) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToEndLabel(cond,label,err))
 
 
         self.add_node(move|ast|{
-            match ast.to_label_block_end(cond, label) {
+            match ast.to_label_block_end(cond, label,skip) {
                 Ok(x) => {
                     if !x {
                         if let Some(err)=err.clone() {
@@ -739,8 +751,16 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         })
     }
 
-    pub fn eval(&mut self, sexpr : T) -> &mut Self {
-        self.temp_stk.push(BuilderNode{node_type:BuilderNodeType::EvalPrimitive(sexpr),loc:self.cur_loc});
+
+    pub fn eval(&mut self, primitive : T) -> &mut Self {
+        self.eval_with_data(primitive, [])
+    }
+    pub fn eval_with_data<D>(&mut self, primitive : T,data:D) -> &mut Self
+    where
+        D: IntoIterator<Item=(&'a str,Box<dyn Any>)>,
+    {
+        let data= data.into_iter().collect();
+        self.temp_stk.push(BuilderNode{node_type:BuilderNodeType::EvalPrimitive{primitive,data},loc:self.cur_loc});
         self
     }
 
@@ -784,8 +804,10 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
 
         while let Some(node)=working_stk.pop() {
             match node.node_type {
-                BuilderNodeType::EvalPrimitive(primitive)=> {
+                BuilderNodeType::EvalPrimitive{ primitive, data }=> {
+                    self.cur_data=data;
                     callback(self,primitive)?;
+                    self.cur_data.clear();
                 }
 				BuilderNodeType::Ast(x)=>{
                     self.nodes.push((x,node.loc));

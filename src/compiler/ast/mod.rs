@@ -397,7 +397,7 @@ impl<'a> Ast<'a> {
         Err(AstError::BlockOffsetNotFound(block_offset))
     }
 
-    pub fn to_label_block_start(&mut self, cond:JmpCond, block_label:&'a str) -> Result<bool,AstError> {
+    pub fn to_label_block_start(&mut self, cond:JmpCond, block_label:&'a str, skip:usize) -> Result<bool,AstError> {
         let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
 
         if stack_pushed_num!=0 {
@@ -407,22 +407,31 @@ impl<'a> Ast<'a> {
         //
         // let mut cur_node_ind = self.body_node().parent.unwrap();
         let mut cur_node_ind = self.body_node_ind;
+        let mut i=0;
 
         while let AstNodeType::Block{label} = self.nodes.get(cur_node_ind).unwrap().node_type {
             if let Some(label)=label {
                 if block_label==label {
-                    self.add_next(AstNodeType::ToBlockStart{cond,block_node_ind:cur_node_ind});
-                    return Ok(true);
+                    if i==skip {
+                        self.add_next(AstNodeType::ToBlockStart{cond,block_node_ind:cur_node_ind});
+                        return Ok(true);
+                    }
+
+                    i+=1;
                 }
             }
 
             cur_node_ind=self.nodes.get(cur_node_ind).unwrap().parent.unwrap();
         }
 
+        // //should ret err on block not found?
+        // return Err(AstError::BlockLabelNotFound(block_label.to_string(), skip));
+
+        //false so custom err can be used
         Ok(false)
     }
 
-    pub fn to_label_block_end(&mut self, cond:JmpCond, block_label:&'a str) -> Result<bool,AstError> {
+    pub fn to_label_block_end(&mut self, cond:JmpCond, block_label:&'a str, skip:usize) -> Result<bool,AstError> {
         let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
 
         if stack_pushed_num!=0 {
@@ -431,18 +440,27 @@ impl<'a> Ast<'a> {
 
         //
         let mut cur_node_ind = self.body_node_ind;
+        let mut i=0;
 
         while let AstNodeType::Block{label} = self.nodes.get(cur_node_ind).unwrap().node_type {
             if let Some(label)=label {
                 if block_label==label {
-                    self.add_next(AstNodeType::ToBlockEnd{cond,block_node_ind:cur_node_ind});
-                    return Ok(true);
+                    if i==skip {
+                        self.add_next(AstNodeType::ToBlockEnd{cond,block_node_ind:cur_node_ind});
+                        return Ok(true);
+                    }
+
+                    i+=1;
                 }
             }
 
             cur_node_ind=self.nodes.get(cur_node_ind).unwrap().parent.unwrap();
         }
 
+        // //should ret err on block not found?
+        // return Err(AstError::BlockLabelNotFound(block_label.to_string(), skip));
+
+        //false so custom err can be used
         Ok(false)
     }
 
@@ -712,11 +730,14 @@ impl<'a> Ast<'a> {
         self.add_next(AstNodeType::Include(name));
     }
 
-    pub fn label(&mut self,name:&'a str,anon:bool) {
-
+    pub fn label(&mut self,label:&'a str,anon:bool) {
+        self.add_next(AstNodeType::Label{label,anon});
     }
     pub fn goto(&mut self,label:&'a str,anon:bool) {
         self.add_next(AstNodeType::Goto{label,anon});
+    }
+    pub fn goto_var(&mut self,label:&'a str,anon:bool) {
+        self.add_next(AstNodeType::GotoVar{anon, go_var_ind: 0 });
     }
 
     //////////////////
@@ -790,6 +811,24 @@ impl<'a> Ast<'a> {
 
             func.captures.clear(); //
         }
+    }
+
+    pub fn check_label_conflicts(&self) -> Result<(),AstVarError> {
+        //should allow conficts? and only check for them on gotos?
+        //  only if they are in the same block? ones outside the block, the closer one is taken
+        //  for goto_var, ie get_label, have it do the check then
+
+        let mut node_stk = vec![0];
+
+        while let Some(cur_node_ind)=node_stk.pop() {
+            node_stk.extend(self.get_node(cur_node_ind).children.iter().rev());
+
+            if let AstNodeType::Label { label, anon }=self.get_node(cur_node_ind).node_type {
+
+            }
+        }
+
+        Ok(())
     }
 
     pub fn calc_vars(&mut self, capture_undecl_globals:bool
@@ -1676,10 +1715,17 @@ impl<'a> Ast<'a> {
                     // instructions.push(Instruction::CallMethod(symbol_inds.get("get_field"),2));
                 }
 
-                AstNodeType::GotoVar => {
+                AstNodeType::GotoVar {..}=> {
 
                 }
                 AstNodeType::Goto { .. } => {
+
+                }
+
+                AstNodeType::GotoUp { .. } => {
+
+                }
+                AstNodeType::GotoDown { .. } => {
 
                 }
                 AstNodeType::Label { .. } =>  {

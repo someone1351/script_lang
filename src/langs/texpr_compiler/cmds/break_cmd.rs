@@ -10,7 +10,9 @@ pub fn break_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Prim
     }
 
     let e = BuilderError::new(record.start_loc(), BuilderErrorType::BreakNotInLoop);
-    builder.to_block_end_label(JmpCond::None,"loop",Some(e));
+    let skip=builder.data::<bool>("in_loop_cond").cloned().unwrap_or(false);
+    let skip = if skip {1} else {0};
+    builder.to_block_end_label(JmpCond::None,"loop",skip,Some(e));
 
     Ok(())
 }

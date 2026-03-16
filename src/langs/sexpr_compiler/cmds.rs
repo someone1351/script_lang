@@ -152,7 +152,11 @@ pub fn continue_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SEx
     // builder.continue_instr();
 
     let e = BuilderError::new(sexpr.start_loc(), SexprBuilderErrorType::ContinueNotInLoop);
-    builder.to_block_start_label(JmpCond::None,"loop",Some(e));
+
+    let skip=builder.data::<bool>("in_loop_cond").cloned().unwrap_or(false);
+    let skip = if skip {1} else {0};
+
+    builder.to_block_start_label(JmpCond::None,"loop",skip,Some(e));
 
     Ok(())
 }
@@ -165,7 +169,10 @@ pub fn break_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprC
 
     // builder.break_instr();
     let e = BuilderError::new(sexpr.start_loc(), SexprBuilderErrorType::BreakNotInLoop);
-    builder.to_block_end_label(JmpCond::None,"loop",Some(e));
+
+    let skip=builder.data::<bool>("in_loop_cond").cloned().unwrap_or(false);
+    let skip = if skip {1} else {0};
+    builder.to_block_end_label(JmpCond::None,"loop",skip,Some(e));
 
     Ok(())
 }
@@ -183,7 +190,7 @@ pub fn return_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
     }
 
     let e = BuilderError::new(sexpr.start_loc(), SexprBuilderErrorType::ReturnNotInMethodOrLambda);
-    builder.to_block_end_label(JmpCond::None, "func",Some(e));
+    builder.to_block_end_label(JmpCond::None, "func",0,Some(e));
 
     Ok(())
 }

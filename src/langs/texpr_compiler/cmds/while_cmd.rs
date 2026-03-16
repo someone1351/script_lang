@@ -1,4 +1,6 @@
 
+use std::any::Any;
+
 use super::super::builder::*;
 use super::super::super::texpr_parser::*;
 use super::super::BuilderErrorType;
@@ -25,7 +27,7 @@ pub fn while_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Prim
     builder
         // .loop_instr()
         .block_start(Some("loop"))
-            .eval(cond_expr)
+            .eval_with_data(cond_expr,[("in_loop_cond",Box::new(true) as Box<dyn Any>)])
             .param_push()
             .call_method("not", 1)
             .to_block_end(JmpCond::True //False

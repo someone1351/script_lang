@@ -10,6 +10,7 @@ pub enum AstError {
     ClosingFunctionNotMatching,
     ClosingBlockNotMatching,
     BlockOffsetNotFound(usize),
+    // BlockLabelNotFound(String,usize),
     LocalPushValuesNotZero(usize),
     // ToBlockNotFound,
     FuncParamsZeroAndVariadic,
