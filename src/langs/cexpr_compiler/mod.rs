@@ -1,3 +1,6 @@
+
+#![allow(unused_variables)]
+
 mod error;
 
 
