@@ -174,7 +174,7 @@ impl Compiler {
                         // let temp_stk_last_len = builder.temp_stk.len();
                         // builder.in_cmd=true;
                         builder.temp_mark();
-                        builder.anon_scope(self.next_anon_id);
+                        builder.set_anon_scope(self.next_anon_id);
 
                         for cmd in cmds {
                             //
@@ -194,7 +194,7 @@ impl Compiler {
 
                         //
                         // builder.in_cmd=false;
-                        builder.anon_scope(0);
+                        builder.set_anon_scope(0);
 
                         //
                         if errors.len()>0 {
@@ -315,6 +315,9 @@ impl Compiler {
                             });
                         }
 
+                        if let Err(e)=ast.calc_labels_gotos() {
+                            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
+                        }
                         if print_ast {
                             ast.print();
                         }

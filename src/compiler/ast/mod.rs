@@ -136,6 +136,13 @@ TODO
 
 */
 
+/*
+* do optimisations when it comes to local var stack alloc
+** check where vars no longer used and pop
+** arrange vals on the stack by their lifetime, so lower lifetime ones can be popped first
+
+*/
+
 use std::{collections::{HashMap,  HashSet},  path::Path};
 
 // use super::super::common::{*,instruction::JmpCond};
@@ -730,15 +737,15 @@ impl<'a> Ast<'a> {
         self.add_next(AstNodeType::Include(name));
     }
 
-    pub fn label(&mut self,label:&'a str,anon:bool) {
-        self.add_next(AstNodeType::Label{label,anon});
+    pub fn label(&mut self,label:&'a str,anon_id:Option<usize>) {
+        self.add_next(AstNodeType::Label{label,anon_id});
     }
-    pub fn goto(&mut self,label:&'a str,anon:bool) {
-        self.add_next(AstNodeType::Goto{label,anon});
+    pub fn goto(&mut self,cond: JmpCond, label:&'a str,anon_id:Option<usize>, ) {
+        self.add_next(AstNodeType::Goto{label,anon_id,label_node_ind:None, cond, });
     }
-    pub fn goto_var(&mut self,label:&'a str,anon:bool) {
-        self.add_next(AstNodeType::GotoVar{anon, go_var_ind: 0 });
-    }
+    // pub fn goto_var(&mut self,label:&'a str,anon:bool) {
+    //     self.add_next(AstNodeType::GotoVar{anon, go_var_ind: 0 });
+    // }
 
     //////////////////
 
@@ -813,18 +820,102 @@ impl<'a> Ast<'a> {
         }
     }
 
-    pub fn check_label_conflicts(&self) -> Result<(),AstVarError> {
+    pub fn calc_labels_gotos(&mut self) -> Result<(),AstVarError> {
         //should allow conficts? and only check for them on gotos?
         //  only if they are in the same block? ones outside the block, the closer one is taken
         //  for goto_var, ie get_label, have it do the check then
 
-        let mut node_stk = vec![0];
+        //when jmp down, and skipping a bunch of decls
+        //  they should be init to undefined
+        //  could check which vars are used after that point,
+        //  and only init those ones
 
-        while let Some(cur_node_ind)=node_stk.pop() {
-            node_stk.extend(self.get_node(cur_node_ind).children.iter().rev());
+        /*
 
-            if let AstNodeType::Label { label, anon }=self.get_node(cur_node_ind).node_type {
+            var i=false
 
+            label A
+                if (i==true) { goto B }
+                var x=4
+
+            label B
+                println("{i} {x}") // "false 4" and then "true nil" //for this need to set stack values to undefined, and the refvars too
+                if (i==false) { i=true; goto A }
+
+         */
+
+        //if want uninit vars to be undefined, would need to set it
+        //  could set at goto loc, but can't use with goto_var
+        //  could have area to init them, jmp there first, then use go_var to jump to the correct place
+        //  could have private ast.gotos that don't do that, and public one that does
+
+        //goto var,
+        //  could store as inds, have map for goto_vars that list avail jump labels,
+        //  and access labels by ind instead of name, need to store names as well for debug
+
+
+        let mut before_block_labels: Vec<HashMap<(&'a str,Option<usize>),usize>> = vec![]; //[block_depth][(label,anon)]=label_node_ind
+        let mut after_block_labels: Vec<HashMap<(&'a str,Option<usize>),usize>> = vec![]; //[block_depth][(label,anon)]=label_node_ind
+
+        let mut node_stk = vec![(0,0)];
+
+        while let Some((cur_node_ind,cur_depth))=node_stk.pop() {
+            node_stk.extend(self.get_node(cur_node_ind).children.iter().rev().map(|x|(*x,cur_depth+1)));
+
+            if cur_depth!=0 {
+                //
+                before_block_labels.resize_with(cur_depth, ||Default::default());
+                after_block_labels.resize_with(cur_depth, ||Default::default());
+
+                //
+                let before_labels=&mut before_block_labels[cur_depth-1];
+                let after_labels=&mut after_block_labels[cur_depth-1];
+
+                //since after first non root node visited, will have before/after_block_labels of len>=1
+                before_labels.clear();
+                after_labels.clear();
+
+                //
+                let cur_node=self.get_node(cur_node_ind);
+                let parent_node_ind= self.get_node(cur_node_ind).parent.unwrap();
+                let parent_node=self.get_node(parent_node_ind);
+                let child_ind=cur_node.child_ind;
+
+                //before
+                for i in (0..child_ind).rev() {
+                    let child_node_ind=parent_node.children[i];
+                    let child_node=self.get_node(child_node_ind);
+
+                    if let AstNodeType::Label { label, anon_id: anon }=child_node.node_type {
+                        before_labels.insert((label,anon), child_node_ind);
+                    }
+                }
+
+                //after
+                for i in child_ind+1 .. parent_node.children.len() {
+                    let child_node_ind=parent_node.children[i];
+                    let child_node=self.get_node(child_node_ind);
+
+                    if let AstNodeType::Label { label, anon_id }=child_node.node_type {
+                        after_labels.insert((label,anon_id), child_node_ind);
+                    }
+                }
+            }
+
+            //depth>0
+            let cur_node=self.get_node_mut(cur_node_ind);
+
+            if let AstNodeType::Goto { label, anon_id: anon, label_node_ind, .. } = &mut cur_node.node_type {
+
+                for i in 0..cur_depth {
+                    let before_labels=&before_block_labels[cur_depth-1-i];
+                    let after_labels=&after_block_labels[cur_depth-1-i];
+
+                    if let Some(found_label_node_ind)=before_labels.get(&(label,*anon)).or_else(||after_labels.get(&(label,*anon))).cloned() {
+                        *label_node_ind=Some(found_label_node_ind);
+                        break;
+                    }
+                }
             }
         }
 
@@ -1315,14 +1406,19 @@ impl<'a> Ast<'a> {
         let mut symbol_inds = SymbolManager::new();
 
         let mut block_start_instr_inds = HashMap::<usize,usize>::new();
-        let mut block_to_ends = HashMap::<usize,Vec<usize>>::new();
+        let mut block_to_ends = HashMap::<usize,Vec<usize>>::new(); //[block_node_ind]=to_block_end_node_inds
+
+
+        let mut label_start_instr_inds = HashMap::<usize,usize>::new();
+        let mut label_to_ends = HashMap::<usize,Vec<usize>>::new(); //[label_node_ind]=to_label_end_node_inds
+
 
         let //mut
             instr_stack_var_names=HashMap::new();
 
         //instructions are stored main first, then functions in order after that
         let mut instrs_stk : Vec<Vec<Instruction>> = Vec::new();
-        let mut instr_locs_stk : Vec<Vec<Option<Loc>>> = vec![Vec::new()];
+        let mut instr_locs_stk : Vec<Vec<Option<Loc>>> = vec![Vec::new()]; //[root/func_ind][instr_ind]=loc ??
         let mut instr_stk_inds : Vec<usize> = vec![0];
 
         //
@@ -1404,8 +1500,8 @@ impl<'a> Ast<'a> {
                     node_stk.push((cur_node_ind,true)); //block exit
                     node_stk.extend(cur_node.children.iter().rev().map(|&x|(x,false)));
 
-                    //
-                    block_start_instr_inds.insert(cur_node_ind, instructions.len());
+                    // //if block start is here, doesn't ooping keep pushing vals onto the stack?
+                    // block_start_instr_inds.insert(cur_node_ind, instructions.len());
 
                     //push locals
                     if cur_node.local_decls.len()>0 {
@@ -1421,7 +1517,23 @@ impl<'a> Ast<'a> {
                     }
 
                     //
-                    // block_start_instr_inds.insert(cur_node_ind, instructions.len());
+                    block_start_instr_inds.insert(cur_node_ind, instructions.len());
+
+                    // not needed, if use to_block_start, shouldn't expect local vars to be reset to undefined
+
+                    // //need to set values to undefined, for to_block_Start jmp
+                    // if true { // todo use bool to check if to_block_Start was ever used on this block
+                    //     for local_decl in cur_node.local_decls.iter() {
+                    //         let stack_offset = cur_node.stack_size-local_decl.stack_ind-1;
+                    //         instructions.push(Instruction::ResultUndefined);
+
+                    //         if local_decl.captured {
+                    //             instructions.push(Instruction::SetStackVarDeref(stack_offset,true,false));
+                    //         } else {
+                    //             instructions.push(Instruction::SetStackVar(stack_offset,false));
+                    //         }
+                    //     }
+                    // }
                 }
                 AstNodeType::Function{func_ind,..} if exited => { //on exit
                     // let params_num=self.funcs.get(func_ind).unwrap().params.len();//non_variadic_params_num;
@@ -1499,6 +1611,8 @@ impl<'a> Ast<'a> {
                     let to_node=self.get_node(block_node_ind);
                     // let to_stack_size = to_node.stack_size;
                     let to_stack_size = to_node.last_stack_size;
+
+                    //assuming cur stack size will always be larger or eq
                     let dif_stack_size=cur_node.stack_size - to_stack_size;
 
                     if dif_stack_size>0 {
@@ -1532,6 +1646,8 @@ impl<'a> Ast<'a> {
                     let to_node=self.get_node(block_node_ind);
                     let to_node_parent=self.get_node(to_node.parent.unwrap());
                     let to_stack_size = to_node_parent.stack_size+to_node.stack_pushed_num;
+
+                    //assuming cur stack size will always be larger or eq
                     let dif_stack_size=cur_node.stack_size - to_stack_size;
 
                     if dif_stack_size>0 {
@@ -1718,18 +1834,72 @@ impl<'a> Ast<'a> {
                 AstNodeType::GotoVar {..}=> {
 
                 }
-                AstNodeType::Goto { .. } => {
+                AstNodeType::Goto { cond, label_node_ind , .. } => {
+                    let label_node_ind=label_node_ind.unwrap();
+	                let to_node=self.get_node(label_node_ind);
+                    let to_stack_size = to_node.last_stack_size;
 
+                    //
+                    if cond!=JmpCond::None {
+                        instructions.push(Instruction::Jmp {
+                            cond: cond.not(),
+                            instr_pos: instructions.len()+3,
+                            debug:(15,0),
+                        });
+                    }
+
+                    //
+                    if cur_node.stack_size>to_stack_size {
+                        let dif_stack_size=cur_node.stack_size - to_stack_size;
+		                instructions.push(Instruction::StackPop(dif_stack_size));
+                    } else { //not used due to way the code/instructions are currently organised
+                        let dif_stack_size=to_stack_size-cur_node.stack_size;
+                        instructions.push(Instruction::StackLocals(dif_stack_size));
+                    };
+
+                    //
+                    let jmp_instr_ind = if cur_node_ind>label_node_ind { //up
+                        *label_start_instr_inds.get(&label_node_ind).unwrap()
+                    } else { //down
+                        label_to_ends.entry(label_node_ind).or_default().push(instructions.len());
+                        0 //done later
+                    };
+
+                    let _instr_offset= if cur_node_ind>label_node_ind { //up
+                        let _instr_offset_up: usize = instructions.len()- jmp_instr_ind;
+                        -(_instr_offset_up as i64)
+                    } else { //down
+                        0
+                    };
+
+                    instructions.push(Instruction::Jmp {
+                        cond,
+                        instr_pos: jmp_instr_ind,
+                        debug:(5,_instr_offset),
+                    });
                 }
 
-                AstNodeType::GotoUp { .. } => {
-
-                }
-                AstNodeType::GotoDown { .. } => {
-
-                }
+                // AstNodeType::GotoUp { .. } => {}
+                // AstNodeType::GotoDown { .. } => {}
                 AstNodeType::Label { .. } =>  {
+                    label_start_instr_inds.insert(cur_node_ind, instructions.len());
 
+                    //
+                    if let Some(to_end_instr_inds)=label_to_ends.get(&cur_node_ind) {
+                        let cur_instr_ind = instructions.len();
+
+                        for &to_end_instr_ind in to_end_instr_inds.iter() {
+                            let _instr_offset_down: usize=cur_instr_ind-to_end_instr_ind;
+
+                            let Instruction::Jmp {instr_pos ,debug,..} = instructions.get_mut(to_end_instr_ind).unwrap() else {
+                                panic!("scriptlang,builder,ast, expected Jmp instr");
+                            };
+
+                            *instr_pos=cur_instr_ind; //ok2
+
+                            *debug=(14,_instr_offset_down as i64);
+                        }
+                    }
                 }
             }
 
@@ -1744,6 +1914,7 @@ impl<'a> Ast<'a> {
                 }
             }
         } //end while
+
 
         //instr jmp pos's are local to the function, so need to offset
         {

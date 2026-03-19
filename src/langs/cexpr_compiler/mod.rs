@@ -52,7 +52,7 @@ impl Compiler {
         let parsed=parse(src.as_str(),  );
 
         if let Err(e)=parsed {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CexprCompileErrorType::CexprParser(e.error_type)});
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::CexprParser(e.error_type)});
         }
 
         let parsed=parsed.unwrap();
@@ -69,11 +69,15 @@ impl Compiler {
         if let Err(e)=builder.generate_ast(&mut ast,|builder,primitive|{
             self.run(builder, primitive,&mut next_anon_id)
         }) {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CexprCompileErrorType::CexprBuilder(e.error_type)});
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::CexprBuilder(e.error_type)});
         }
 
         if let Err(e)=ast.calc_vars(false) {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CexprCompileErrorType::AstVar(e.error_type)});
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
+        }
+
+        if let Err(e)=ast.calc_labels_gotos() {
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
         }
 
         // if print_ast { ast.print(); }

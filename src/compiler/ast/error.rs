@@ -1,6 +1,6 @@
 use super::super::super::build::Loc;
 
-
+//for errors made by builder (eg macros)
 #[derive(Debug,Clone)]
 pub enum AstError {
     // LocalVarDeclPushSizeNotZero,
@@ -35,9 +35,11 @@ impl std::error::Error for AstError {
 #[derive(Debug,Clone)]
 pub enum AstVarErrorType {
     GlobalNotDecl(String),
+    LabelDupl(String),
 }
 
 
+//compile errors, need better name
 #[derive(Debug,Clone)]
 pub struct AstVarError {
     pub loc:Loc,

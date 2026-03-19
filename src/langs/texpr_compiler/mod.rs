@@ -131,6 +131,8 @@ impl Compiler {
         cmd_scope.add_cmd("?", ternary_cmd);
 
         cmd_scope.add_cmd("dict", dict_cmd);
+        cmd_scope.add_cmd("label", label_cmd);
+        cmd_scope.add_cmd("goto", goto_cmd);
 
         cmd_scope
     }
@@ -210,7 +212,7 @@ impl Compiler {
                                     builder.temp_mark();
 
                                     // builder.in_cmd=true;
-                                    builder.anon_scope(*next_anon_id);
+                                    builder.set_anon_scope(*next_anon_id);
 
                                     for cmd in cmds {
                                         //
@@ -231,7 +233,7 @@ impl Compiler {
 
                                     //
                                     // builder.in_cmd=false;
-                                    builder.anon_scope(0);
+                                    builder.set_anon_scope(0);
 
                                     //
                                     if errors.len()>0 {
@@ -545,7 +547,7 @@ impl Compiler {
         let parsed=texpr_parser::parse(src.as_str(),  );
 
         if let Err(e)=parsed {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:TexprCompileErrorType::TexprParser(e.error_type)});
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::TexprParser(e.error_type)});
         }
 
         let parsed=parsed.unwrap();
@@ -563,13 +565,16 @@ impl Compiler {
         if let Err(e)=builder.generate_ast(&mut ast,|builder,primitive|{
             self.run(builder, primitive,&mut next_anon_id)
         }) {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:TexprCompileErrorType::TexprBuilder(e.error_type)});
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::TexprBuilder(e.error_type)});
         }
 
         if let Err(e)=ast.calc_vars(false) {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:TexprCompileErrorType::AstVar(e.error_type)});
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
         }
 
+        if let Err(e)=ast.calc_labels_gotos() {
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
+        }
         // ast.calc_vars(false,true);
 
         // if print_ast {

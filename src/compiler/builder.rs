@@ -4,7 +4,6 @@
 // mod node;
 
 
-use std::any::Any;
 use std::collections::HashMap;
 // use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -78,7 +77,7 @@ impl<E:Clone> BuilderError<E> {
 pub enum BuilderNodeType<'a,T:Clone+'a,E:Clone> {
     EvalPrimitive{
         primitive:T, // PrimitiveContainer<'a>
-        data:HashMap<&'a str,Box<dyn Any>>,
+        data:HashMap<&'a str,usize>,
     },
 
     Ast(Box<dyn Fn(&mut Ast<'a>)->Result<(),BuilderError<E>>+'a>),
@@ -113,7 +112,7 @@ pub struct Builder<'a,T:Clone+'a,E:Clone> {
     temp_last_loc:Option<Loc>,
     temp_stk_last_len : usize,
 
-    cur_data:HashMap<&'a str,Box<dyn Any>>,
+    cur_flags:HashMap<&'a str,usize>,
 }
 
 // pub enum BuilderField<'a,T> {
@@ -125,8 +124,8 @@ pub struct Builder<'a,T:Clone+'a,E:Clone> {
 
 impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
 
-    pub fn data<D:Any>(&self,n:&str) -> Option<& D> {
-        self.cur_data.get(n).and_then(|d|d.downcast_ref::<D>())
+    pub fn get_flag(&self,n:&str) -> Option<usize> {
+        self.cur_flags.get(n).cloned()
     }
 
 
@@ -312,13 +311,15 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
             temp_last_loc:None,
             temp_stk_last_len : 0,
 
-            cur_data:Default::default(),
+            cur_flags:Default::default(),
         }
     }
-    pub fn anon_scope(&mut self,anon_scope:usize) {
+    pub fn set_anon_scope(&mut self,anon_scope:usize) {
         self.cur_anon_id=anon_scope;
     }
-
+    pub fn get_anon_scope(&self) -> usize {
+        self.cur_anon_id
+    }
     pub fn loc(&mut self, loc:Loc) -> &mut Self {
         self.cur_loc=Some(loc);
         self
@@ -633,7 +634,34 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
     }
 
 
+    pub fn label(&mut self,label:&'a str,) -> &mut Self {
+        self.add_node(move|ast|{
+            ast.label(label,None);
+            Ok(())
+        })
+    }
+    pub fn anon_label(&mut self,label:&'a str,) -> &mut Self {
+        // let anon_id=Some(anon.unwrap_or(self.cur_anon_id));
+        let anon_id=Some(self.cur_anon_id);
 
+        self.add_node(move|ast|{
+            ast.label(label,anon_id);
+            Ok(())
+        })
+    }
+    pub fn goto(&mut self,cond:JmpCond,label:&'a str) -> &mut Self {
+        self.add_node(move|ast|{
+            ast.goto(cond, label,None);
+            Ok(())
+        })
+    }
+    pub fn anon_jmp(&mut self,cond:JmpCond,label:&'a str,anon:Option<usize>,) -> &mut Self {
+        let anon_id=Some(anon.unwrap_or(self.cur_anon_id));
+        self.add_node(move|ast|{
+            ast.goto(cond, label,anon_id);
+            Ok(())
+        })
+    }
 
     pub fn to_block_start(&mut self,cond:JmpCond,block_offset:usize) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToStart(cond,block_offset))
@@ -753,14 +781,14 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
 
 
     pub fn eval(&mut self, primitive : T) -> &mut Self {
-        self.eval_with_data(primitive, [])
+        self.eval_with_flags(primitive, [])
     }
-    pub fn eval_with_data<D>(&mut self, primitive : T,data:D) -> &mut Self
+    pub fn eval_with_flags<F>(&mut self, primitive : T,flags:F) -> &mut Self
     where
-        D: IntoIterator<Item=(&'a str,Box<dyn Any>)>,
+        F: IntoIterator<Item=(&'a str,usize)>,
     {
-        let data= data.into_iter().collect();
-        self.temp_stk.push(BuilderNode{node_type:BuilderNodeType::EvalPrimitive{primitive,data},loc:self.cur_loc});
+        let flags= flags.into_iter().collect();
+        self.temp_stk.push(BuilderNode{node_type:BuilderNodeType::EvalPrimitive{primitive,data: flags},loc:self.cur_loc});
         self
     }
 
@@ -805,9 +833,9 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         while let Some(node)=working_stk.pop() {
             match node.node_type {
                 BuilderNodeType::EvalPrimitive{ primitive, data }=> {
-                    self.cur_data=data;
+                    self.cur_flags=data;
                     callback(self,primitive)?;
-                    self.cur_data.clear();
+                    self.cur_flags.clear();
                 }
 				BuilderNodeType::Ast(x)=>{
                     self.nodes.push((x,node.loc));

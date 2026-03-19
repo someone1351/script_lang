@@ -50,7 +50,7 @@ pub enum BuilderErrorType {
 
 
 #[derive(Debug,Clone)]
-pub enum TexprCompileErrorType {
+pub enum CompileErrorType {
     TexprBuilder(BuilderErrorType),
     TexprParser(texpr_parser::ParserErrorType),
     AstVar(ast::error::AstVarErrorType),
@@ -60,7 +60,7 @@ pub enum TexprCompileErrorType {
 pub struct CompileError {
     pub src : StringVal,
     pub path : Option<PathBuf>,
-    pub error_type : TexprCompileErrorType,
+    pub error_type : CompileErrorType,
     pub loc : Loc,
 }
 

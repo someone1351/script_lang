@@ -24,6 +24,8 @@ pub mod call_func_cmd;
 pub mod ternary_cmd;
 pub mod dict_cmd;
 
+pub mod label_cmd;
+pub mod goto_cmd;
 
 pub use while_cmd::*;
 pub use for_cmd::*;
@@ -50,6 +52,9 @@ pub use lambda_cmd::*;
 pub use call_func_cmd::*;
 pub use ternary_cmd::*;
 pub use dict_cmd::*;
+
+pub use label_cmd::*;
+pub use goto_cmd::*;
 
 use super::super::builder::*;
 use super::{super::texpr_parser::*, BuilderErrorType};

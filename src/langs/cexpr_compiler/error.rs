@@ -42,7 +42,7 @@ pub enum BuilderErrorType {
 
 
 #[derive(Debug,Clone)]
-pub enum CexprCompileErrorType {
+pub enum CompileErrorType {
     CexprBuilder(BuilderErrorType),
     CexprParser(ParserErrorType),
     AstVar(ast::error::AstVarErrorType),
@@ -54,7 +54,7 @@ pub enum CexprCompileErrorType {
 pub struct CompileError {
     pub src : StringVal,
     pub path : Option<PathBuf>,
-    pub error_type : CexprCompileErrorType,
+    pub error_type : CompileErrorType,
     pub loc : Loc,
 }
 

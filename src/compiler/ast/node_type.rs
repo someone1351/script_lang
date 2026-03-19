@@ -32,11 +32,11 @@ pub enum AstNodeType<'a> {
         block_node_ind:usize,
     },
 
-    GotoVar{go_var_ind:usize,anon:bool},
-    Goto{label:&'a str,anon:bool,},
-    GotoUp{label:&'a str,anon:bool,},
-    GotoDown{label:&'a str,anon:bool,},
-    Label{label:&'a str,anon:bool,},
+    GotoVar{go_var_ind:usize,anon_id:Option<usize>},
+    Goto{label:&'a str,anon_id:Option<usize>, cond:JmpCond,label_node_ind:Option<usize>,},
+    // GotoUp{label:&'a str,anon:bool,},
+    // GotoDown{label:&'a str,anon:bool,},
+    Label{label:&'a str,anon_id:Option<usize>,},
 
     ResultNil,
     ResultVoid,

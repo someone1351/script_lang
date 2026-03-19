@@ -102,3 +102,18 @@ while true {
     println "end"
     break
 }
+
+var t 0
+label ABC
+    println "t is {t}"
+    set t (+ t 1)
+
+    if (< t 5) {
+        goto ABC
+    } else {
+        goto DEF
+    }
+    println "shouldn't get here"
+
+label DEF
+    println "t end"

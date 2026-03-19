@@ -646,12 +646,12 @@ fn main() {
 }
 
 
-fn get_common_hash<T: std::hash::Hash>(t: T) -> u64 {
-    use std::hash::Hasher;
-    let mut s = std::hash::DefaultHasher::new();
-    t.hash(&mut s);
-    s.finish()
-}
+// fn get_common_hash<T: std::hash::Hash>(t: T) -> u64 {
+//     use std::hash::Hasher;
+//     let mut s = std::hash::DefaultHasher::new();
+//     t.hash(&mut s);
+//     s.finish()
+// }
 /*
 TODO
 * fix gc

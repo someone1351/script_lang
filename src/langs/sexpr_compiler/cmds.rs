@@ -153,7 +153,7 @@ pub fn continue_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SEx
 
     let e = BuilderError::new(sexpr.start_loc(), SexprBuilderErrorType::ContinueNotInLoop);
 
-    let skip=builder.data::<bool>("in_loop_cond").cloned().unwrap_or(false);
+    let skip=builder.get_flag("in_loop_cond").is_some();
     let skip = if skip {1} else {0};
 
     builder.to_block_start_label(JmpCond::None,"loop",skip,Some(e));
@@ -170,7 +170,7 @@ pub fn break_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprC
     // builder.break_instr();
     let e = BuilderError::new(sexpr.start_loc(), SexprBuilderErrorType::BreakNotInLoop);
 
-    let skip=builder.data::<bool>("in_loop_cond").cloned().unwrap_or(false);
+    let skip=builder.get_flag("in_loop_cond").is_some();
     let skip = if skip {1} else {0};
     builder.to_block_end_label(JmpCond::None,"loop",skip,Some(e));
 
