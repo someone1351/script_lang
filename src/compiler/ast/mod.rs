@@ -134,12 +134,15 @@ TODO
 * have way to try method calls, and handle if failed
 * check if pushed params but not used in call are popped when leaving a block, have a feeling it is set panic.
 
-*/
-
-/*
+TODO
 * do optimisations when it comes to local var stack alloc
 ** check where vars no longer used and pop
 ** arrange vals on the stack by their lifetime, so lower lifetime ones can be popped first
+
+TODO
+* check label/goto code implemented properly
+* when jumping past a local var decl, set their values to undefined (includes value inside refvals)
+* implement goto_var
 
 */
 
