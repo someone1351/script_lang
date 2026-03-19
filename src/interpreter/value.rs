@@ -539,6 +539,13 @@ impl Value {
     //     }
     // }
 
+    pub fn gc_value(&self) -> Option<GcValue> {
+        if let Value::Custom(c)=self {
+            c.gc_value()
+        } else {
+            None
+        }
+    }
 
     pub fn to_strong(&self) -> Option<Self> {
         self.get_custom().and_then(|c|c.to_strong()).map(|c|Value::Custom(c))

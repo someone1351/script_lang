@@ -138,9 +138,11 @@ impl GcScope {
         #[derive(Debug)]
         struct Child {
             gc_index:Result<Option<usize>, ()>,
-            name:String,
+            // name:String,
         }
+
         let mut test=Vec::new();
+
         for (managed_index,managed) in self.manageds.iter().enumerate() {
 
             let gc_index=managed.managed_index.get().unwrap();
@@ -151,7 +153,10 @@ impl GcScope {
 
             managed.with_data(|data|{
                 for x in data.traverser() {
-                    children.push(Child{gc_index:x.gc_index(),name:x.type_info().short_name()});
+                    children.push(Child{
+                        gc_index:x.gc_index(),
+                        // name:x.type_info().short_name(),
+                    });
                 }
                 Ok(())
             }).unwrap();
@@ -236,9 +241,9 @@ impl GcScope {
             let managed=self.manageds.get(managed_ind).unwrap();
 
             managed.with_data(|data|{
-                for child_val in data.traverser() {
-                    if let Some(gc_index)=child_val.gc_index()? {
-                        if self.manageds.get(gc_index).unwrap().marked { //not done yet
+                for child_gc_val in data.traverser() {
+                    if let Some(gc_index)=child_gc_val.gc_index()? {
+                        if self.manageds.get(gc_index).unwrap().marked { //means not done yet
                             stk.push(gc_index);
 
                             // println!("stk push {gc_index}");

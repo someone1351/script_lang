@@ -1,6 +1,7 @@
 mod custom;
 mod gc_scope;
 mod gc;
+mod type_info;
 
 // pub use custom::*;
 // pub use gc_scope::*;
@@ -9,4 +10,4 @@ mod gc;
 pub use custom::Custom;
 pub use custom::CustomError;
 pub use gc_scope::GcScope;
-pub use gc::{GcTraversable,Traverser};
+pub use gc::{GcTraversable,Traverser,GcValue};

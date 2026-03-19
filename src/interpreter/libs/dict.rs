@@ -60,8 +60,8 @@ impl ValueKey {
 pub struct Dict(pub BTreeMap<ValueKey,Value>);
 
 impl GcTraversable for Dict {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=Custom>+'a> {
-        Box::new(self.0.values().filter_map(|v|v.get_custom()))
+    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=GcValue>+'a> {
+        Box::new(self.0.values().filter_map(|v|v.gc_value()))
     }
 }
 

@@ -15,6 +15,8 @@ use std::sync::Weak;
 // use std::sync::MutexGuard;
 
 
+use super::type_info::TypeInfo;
+
 use super::gc::*;
 // use super::custom::*;
 use super::gc_scope::GcScope;
@@ -294,6 +296,15 @@ impl Custom {
             CustomInner::Unmanaged(_)=>Ok(None),
             CustomInner::UnmanagedWeak(_)=>Ok(None),
             CustomInner::Empty => Ok(None),
+        }
+    }
+
+    pub fn gc_value(&self) -> Option<GcValue> {
+        match &self.inner {
+            CustomInner::Managed(x)=>Some(x.clone()),
+            CustomInner::Unmanaged(_)=>None,
+            CustomInner::UnmanagedWeak(_)=>None,
+            CustomInner::Empty => None,
         }
     }
 
