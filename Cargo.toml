@@ -6,3 +6,16 @@ edition = "2021"
 [dependencies]
 
 #parking_lot = "0.12.1"
+
+
+[[example]]
+name = "sexpr_test"
+path = "examples/sexpr_test.rs"
+
+[[example]]
+name = "texpr_test"
+path = "examples/texpr_test.rs"
+
+[[example]]
+name = "cexpr_test"
+path = "examples/cexpr_test.rs"

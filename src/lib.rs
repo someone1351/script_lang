@@ -146,6 +146,46 @@ TODO
 */
 
 
+/*
+TODO
+* want to add machine::new(.., &mut some_val)
+- but methods context needs to know the type
+- could add generic to all methods? and have the libscope also have the generic and fill it
+- but will have to specify lifetimes + the generic for all context params?
+
+TODO
+* fix gc
+* replace value clone in machine with value.clone_leaf()
+** make values returned from func_context, var_scope, lib_scope, machine be leaves
+** make all values used in working roots?
+** if custom dropped, and weak count==0, can remove it without mark and sweep
+*** iterate children, check their weak counts?
+
+* allow method decl from script?
+* make dict keys accept non strings
+** make value's hashable? for customs based on type id
+* add matrices to lib
+* remove unnecessary debug code
+* add c like syntax
+
+* add limits for running, memory usage,
+** limit size of strings? at both compile time and runtime
+*** at add/remove/init?
+** limit size of file willing to compile?
+** limit size of arrays/dicts?
+*** at push/pop/init ?
+** either limit loops (ie to_block_start/end, includeding nested loops) or limit number of instructs run
+** limit number of variables declared?
+*** globals?
+*** manageds?
+*** rest?
+
+
+* use call for function calls
+** if used not on a func, then call method "call"
+** disable $ prefix
+*/
+
 pub mod compiler;
 pub mod build;
 pub mod interpreter;
