@@ -58,6 +58,7 @@ pub struct StackFrame {
     // pub ret_stack_size : usize,
 }
 
+
 pub struct Machine<'a,X> { //,'b
     cur_build : Option<BuildT>,
     instr_pos : usize,
@@ -73,6 +74,7 @@ pub struct Machine<'a,X> { //,'b
     includer : Option<Box<dyn FnMut(&Path) -> Option<BuildT> + 'a>>, //can use lifetime a for some reason?
     const_scope:HashMap<&'a str,Value>,
     core_val : &'a mut X, //&'a mut
+
     // core_empty : (), //&'a mut
 
     stack_limit:usize,

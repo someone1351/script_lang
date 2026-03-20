@@ -5,7 +5,7 @@ use std::{collections::BTreeMap, path::Path};
 use script_lang::{Dict, Value};
 
 
-pub fn test_script3<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
+pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
 
     let mut gc_scope= script_lang::GcScope::new();
 
@@ -106,70 +106,10 @@ pub fn test_script3<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
 }
 
 
-pub fn test_script5<P:AsRef<Path>>(path:P) {
-
-    println!("===");
-    let mut gc_scope= script_lang::GcScope::new();
-
-    let path = path.as_ref();
-    let src = std::fs::read_to_string(path).unwrap();
-
-    let compiler=script_lang::langs::texpr_compiler::Compiler::new();
-
-    let build = compiler.compile(src.as_str(), 0, Some(path), true,
-        // false
-    );
-
-    build.clone().unwrap().print();
-
-    let mut lib_scope=script_lang::LibScope::<Vec<Value>>::new_full();
-
-    lib_scope.method("add_event_listener",|mut context|{
-        let listener=context.param(2);
-        let listeners=context.core_mut();
-        listeners.push(listener.clone_root());
-        Ok(Value::Void)
-    }).any().str().func().end();
-
-    let mut myval: Vec<Value>=vec![];
-    let mut var_scope=script_lang::VarScope::new();
-
-    if let Err(e)=&build {
-        eprintln!("In {path:?}, {}",e.msg());
-    } else {
-
-        // let mut core=();
-        let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope, &mut var_scope,  &mut myval);
-        machine.set_debug_print(true);
-
-        // build.clone().unwrap().print();
-
-        let res=machine.run_build(&build.unwrap());
-        println!("the result is {res:?}");
-
-        if let Err(e)=&res {
-            e.eprint(None);
-            machine.debug_print_stack_trace(true);
-            machine.debug_print_stack();
-            // machine.print_state();
-        }
-        // machine.debug_print_stack();
-    }
-
-    gc_scope.test();
-    gc_scope.mark_and_sweep().unwrap();
-    gc_scope.test();
-
-    println!("abs is {:?}",myval);
-
-
-}
-
-
 
 fn main() {
     // // test_script3("examples/texpr/test15.script",true,false);
-    test_script3("scripts/texpr/test8.script",false,false);
+    test_script("scripts/texpr/test8.script",false,false);
 
 
 }
