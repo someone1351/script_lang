@@ -33,7 +33,11 @@ pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
 
     if let Err(e)=&build {
         eprintln!("In {path:?}, {}",e.msg());
-    } else {
+        return;
+    }
+
+    //
+    {
         let mut var_scope=script_lang::VarScope::new();
 
         let mut core_val =();
@@ -61,8 +65,6 @@ pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
 
     gc_scope.mark_and_sweep().unwrap();
     gc_scope.test();
-
-
 }
 
 pub fn test_compile<P:AsRef<Path>>(path:P) {
