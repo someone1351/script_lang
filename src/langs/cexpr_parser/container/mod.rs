@@ -14,7 +14,8 @@ pub enum PrimitiveTypeContainer<'a> {
     Int(i64),
     String(&'a str),
     Symbol(&'a str),
-    End,
+    // End,
+    Eol,Eob,
 }
 
 #[derive(Clone,Copy)]
@@ -53,7 +54,9 @@ impl<'a> PrimitiveContainer<'a> {
             PrimitiveType::Int(x, _) => PrimitiveTypeContainer::Int(x),
             PrimitiveType::String(_) => PrimitiveTypeContainer::String(self.get_string().unwrap()),
             PrimitiveType::Symbol(_) => PrimitiveTypeContainer::Symbol(self.get_symbol().unwrap()),
-            PrimitiveType::End => PrimitiveTypeContainer::End,
+            // PrimitiveType::End => PrimitiveTypeContainer::End,
+            PrimitiveType::Eol => PrimitiveTypeContainer::Eol,
+            PrimitiveType::Eob => PrimitiveTypeContainer::Eob,
         }
     }
 
@@ -85,11 +88,34 @@ impl<'a> PrimitiveContainer<'a> {
             None
         }
     }
-    pub fn get_end(&self) -> bool {
-        if let PrimitiveType::End=self.primitive().primitive_type {
+    // pub fn get_end(&self) -> bool {
+    //     if let PrimitiveType::End=self.primitive().primitive_type {
+    //         true
+    //     } else {
+    //         false
+    //     }
+    // }
+
+    pub fn is_eol(&self) -> bool {
+        if let PrimitiveType::Eol=self.primitive().primitive_type {
             true
         } else {
             false
+        }
+    }
+    pub fn is_eob(&self) -> bool {
+        if let PrimitiveType::Eob=self.primitive().primitive_type {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_end(&self) -> bool {
+        match self.primitive().primitive_type {
+            PrimitiveType::Eob => true,
+            PrimitiveType::Eol => true,
+            _ => false,
+
         }
     }
     pub fn get_block(&self) -> Option<BlockContainer<'a>> {

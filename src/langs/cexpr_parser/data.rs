@@ -28,8 +28,9 @@ pub enum PrimitiveType {
 
     // End(bool), //is_semicolon
     // Eof,
-    // Eol,
-    End, //eof,eol, eob (end of block)
+    Eol,
+    Eob,
+    // End, //eof,eol, eob (end of block)
     // Semicolon,
 }
 
@@ -117,8 +118,14 @@ impl Parsed {
                 PrimitiveType::Symbol(s) => {
                     println!("{indent}symbol({})",self.texts[s]);
                 }
-                PrimitiveType::End => {
-                    println!("{indent}end");
+                // PrimitiveType::End => {
+                //     println!("{indent}end");
+                // }
+                PrimitiveType::Eol => {
+                    println!("{indent}eol");
+                }
+                PrimitiveType::Eob => {
+                    println!("{indent}eob");
                 }
             }
         }

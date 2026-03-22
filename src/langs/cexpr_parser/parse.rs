@@ -92,12 +92,15 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
                 return Err(ParseError { loc: start_loc, error_type });
             }
 
+            // //
+            // if let Some(PrimitiveType::End)=cur_block_primitives.last().map(|p|p.primitive_type.clone()) {
+            //     //
+            // } else {
+            //     cur_block_primitives.push(Primitive { primitive_type: PrimitiveType::End, start_loc, end_loc: start_loc });
+            // }
+
             //
-            if let Some(PrimitiveType::End)=cur_block_primitives.last().map(|p|p.primitive_type.clone()) {
-                //
-            } else {
-                cur_block_primitives.push(Primitive { primitive_type: PrimitiveType::End, start_loc, end_loc: start_loc });
-            }
+            cur_block_primitives.push(Primitive { primitive_type: PrimitiveType::Eob, start_loc, end_loc: start_loc });
 
             //
             block_stk.pop();
@@ -122,11 +125,24 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
             cur_block_primitives.push(Primitive { primitive_type, start_loc, end_loc });
             some=true; // println!("yes7");
         } else if input.is_end() {
-            if let Some(PrimitiveType::End)=cur_block_primitives.last().map(|p|p.primitive_type.clone()) {
-                //
-            } else {
-                cur_block_primitives.push(Primitive { primitive_type: PrimitiveType::End, start_loc:input.loc(), end_loc: input.loc() });
-            }
+            // match cur_block_primitives.last().map(|p|p.primitive_type.clone()) {
+            //     Some(PrimitiveType::Eob) => {
+
+            //     }
+            //     Some(PrimitiveType::Eol) => {
+            //         cur_block_primitives.push(Primitive { primitive_type: PrimitiveType::Eob, start_loc:input.loc(), end_loc: input.loc() });
+            //     }
+            //     _ => {
+            //         cur_block_primitives.push(Primitive { primitive_type: PrimitiveType::Eob, start_loc:input.loc(), end_loc: input.loc() });
+            //     }
+            // }
+            // // if let Some(PrimitiveType::End)=cur_block_primitives.last().map(|p|p.primitive_type.clone()) {
+            // //     //
+            // // } else {
+            // //     cur_block_primitives.push(Primitive { primitive_type: PrimitiveType::End, start_loc:input.loc(), end_loc: input.loc() });
+            // // }
+
+            cur_block_primitives.push(Primitive { primitive_type: PrimitiveType::Eob, start_loc:input.loc(), end_loc: input.loc() });
 
             break;
         }
@@ -411,7 +427,7 @@ fn parse_block_end(input:&mut Input) -> Option<(BlockBracket,Loc,Loc)> {
 fn parse_eol(input:&mut Input) -> Option<Primitive> {
     if let Some(x)=input.has(0, ["\r\n","\n"]) {
         input.next(x.len());
-        let primitive_type=PrimitiveType::End;
+        let primitive_type=PrimitiveType::Eol;
         Some(Primitive { primitive_type, start_loc: input.prev_loc(), end_loc: input.loc() })
     } else {
         None
@@ -500,7 +516,7 @@ fn parse_ws(input:&mut Input) -> Result<Option<Primitive>,ParseError> {
             }
         } else if input.is_end() {
             if first_end.is_none() {
-                first_end=Some(Primitive { primitive_type: PrimitiveType::End, start_loc: input.loc(), end_loc: input.loc() });
+                first_end=Some(Primitive { primitive_type: PrimitiveType::Eob, start_loc: input.loc(), end_loc: input.loc() });
             }
         }
 

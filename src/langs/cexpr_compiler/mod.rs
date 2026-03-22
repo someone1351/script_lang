@@ -30,7 +30,7 @@
 
 * could treat cmds like prefixes
 
-* instead of jusb end, have eol eof eob
+* instead of just end, have eol eof eob
 
 
 */
@@ -247,7 +247,9 @@ impl Compiler {
                     }
                 }
             }
-            PrimitiveTypeContainer::End => {} //eol or eof //ignore
+            // PrimitiveTypeContainer::End => {} //eol or eof //ignore
+            PrimitiveTypeContainer::Eol => {}
+            PrimitiveTypeContainer::Eob => {}
         }
 
         Ok(())
