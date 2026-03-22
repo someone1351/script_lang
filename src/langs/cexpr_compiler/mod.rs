@@ -32,6 +32,7 @@
 
 * could convert whole thing into sexprs, and run the builder on that instead
 
+* when "if" is used as a stmt, needs "end" before another stmt can be used, but not if used as expr
 
 */
 #![allow(unused_variables)]
