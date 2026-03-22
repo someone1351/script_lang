@@ -6,6 +6,10 @@ use crate::{ast, cexpr_parser::ParserErrorType, error_msg, Loc, StringVal};
 
 #[derive(Debug,Clone)]
 pub enum BuilderErrorType {
+    ExpectedParenthesis,
+    ExpectedCurlyBraces,
+    ExpectedString,
+
     ExpectSymbol(u32),
     NoSymbolPrefixAllowed,
     // ExpectList,

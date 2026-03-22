@@ -30,7 +30,7 @@
 
 * could treat cmds like prefixes
 
-* instead of just end, have eol eof eob
+* could convert whole thing into sexprs, and run the builder on that instead
 
 
 */
@@ -56,7 +56,7 @@ use super::super::builder::*;
 
 use cmds::*;
 
-pub type Cmd = for<'a> fn(PrimitiveIterContainer<'a>, &mut Builder<'a,PrimitiveIterContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>>;
+pub type Cmd = for<'a> fn(&mut PrimitiveIterContainer<'a>, &mut Builder<'a,PrimitiveIterContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>>;
 
 /*
 
@@ -100,7 +100,7 @@ impl Compiler {
         cmds.insert("break", vec![break_cmd]);
         cmds.insert("continue", vec![continue_cmd]);
         cmds.insert("for", vec![for_cmd]);
-        cmds.insert("format", vec![format_cmd]);
+        cmds.insert("format", vec![format_cmd,]);
         cmds.insert("fn", vec![func_cmd, lambda_cmd]);
         cmds.insert("if", vec![if_cmd]);
         cmds.insert("include", vec![include_cmd]);
@@ -206,7 +206,8 @@ impl Compiler {
             }
             PrimitiveTypeContainer::Symbol(x) => { //cmd or idn
                 if let Some(cmds)=self.cmds.get(x) {
-                    let params=top_primitive_iter.get_range(1..);
+                    // let params=top_primitive_iter.get_range(1..);
+                    let mut primitives=top_primitive_iter.clone();
 	                let mut errors=Vec::<BuilderError<BuilderErrorType>>::new();
 
                     //
@@ -215,7 +216,7 @@ impl Compiler {
 
                     //
                     for cmd in cmds {
-                        if let Err(e)=cmd(params,builder) {
+                        if let Err(e)=cmd(&mut primitives,builder) {
                             errors.push(e);
                             builder.temp_clear();
                         } else { //ok

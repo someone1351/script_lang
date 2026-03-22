@@ -81,6 +81,7 @@ impl<'a> PrimitiveContainer<'a> {
             None
         }
     }
+
     pub fn get_symbol(&self) -> Option<&'a str> {
         if let PrimitiveType::Symbol(x)=self.primitive().primitive_type {
             Some(self.parsed.texts[x].as_str())
@@ -95,6 +96,19 @@ impl<'a> PrimitiveContainer<'a> {
     //         false
     //     }
     // }
+
+    pub fn get_block(&self) -> Option<BlockContainer<'a>> {
+        match self.primitive().primitive_type {
+            PrimitiveType::Root(_)|
+            PrimitiveType::CurlyBlock(_)|
+            PrimitiveType::SquareBlock(_)|
+            PrimitiveType::ParenthesesBlock(_)
+            => Some(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind }),
+            _ => None,
+        }
+    }
+
+
 
     pub fn is_eol(&self) -> bool {
         if let PrimitiveType::Eol=self.primitive().primitive_type {
@@ -118,14 +132,57 @@ impl<'a> PrimitiveContainer<'a> {
 
         }
     }
-    pub fn get_block(&self) -> Option<BlockContainer<'a>> {
-        match self.primitive().primitive_type {
-            PrimitiveType::Root(_)|
-            PrimitiveType::CurlyBlock(_)|
-            PrimitiveType::SquareBlock(_)|
-            PrimitiveType::ParenthesesBlock(_)
-            => Some(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind }),
-            _ => None,
+
+    pub fn is_parentheses(&self) -> bool {
+        if let PrimitiveType::ParenthesesBlock(_)=self.primitive().primitive_type {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_square(&self) -> bool {
+        if let PrimitiveType::SquareBlock(_)=self.primitive().primitive_type {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn is_curly(&self) -> bool {
+        if let PrimitiveType::CurlyBlock(_)=self.primitive().primitive_type {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn is_string(&self) -> bool {
+        if let PrimitiveType::String(_)=self.primitive().primitive_type {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn is_symbol(&self) -> bool {
+        if let PrimitiveType::Symbol(_)=self.primitive().primitive_type {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_float(&self) -> bool {
+        if let PrimitiveType::Float(..)=self.primitive().primitive_type {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_int(&self) -> bool {
+        if let PrimitiveType::Int(..)=self.primitive().primitive_type {
+            true
+        } else {
+            false
         }
     }
 }
