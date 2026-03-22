@@ -1,0 +1,7 @@
+use super::super::super::cexpr_parser::*;
+use super::super::super::super::compiler::builder::*;
+use super::super::error::*;
+
+pub fn while_cmd<'a>(primitives : PrimitiveIterContainer<'a>, builder :&mut Builder<'a,PrimitiveIterContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> {
+    Ok(())
+}

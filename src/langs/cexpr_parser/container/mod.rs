@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::ops::{Bound, Range, RangeBounds};
 
 use crate::{cexpr_parser::data::{Parsed, Primitive, PrimitiveType}, Loc};
 
@@ -6,7 +6,7 @@ use crate::{cexpr_parser::data::{Parsed, Primitive, PrimitiveType}, Loc};
 
 #[derive(Clone,Copy)]
 pub enum PrimitiveTypeContainer<'a> {
-    Root(BlockContainer<'a>),
+    // Root(BlockContainer<'a>),
     CurlyBlock(BlockContainer<'a>),
     SquareBlock(BlockContainer<'a>),
     ParenthesesBlock(BlockContainer<'a>),
@@ -45,7 +45,7 @@ impl<'a> PrimitiveContainer<'a> {
 
     pub fn primitive_type(&self) -> PrimitiveTypeContainer<'a> {
         match self.primitive().primitive_type {
-            PrimitiveType::Root(_) => PrimitiveTypeContainer::Root(self.get_block().unwrap()),
+            PrimitiveType::Root(_) => panic!("shouldn't be able to get"),
             PrimitiveType::CurlyBlock(_) => PrimitiveTypeContainer::CurlyBlock(self.get_block().unwrap()),
             PrimitiveType::SquareBlock(_) => PrimitiveTypeContainer::SquareBlock(self.get_block().unwrap()),
             PrimitiveType::ParenthesesBlock(_) => PrimitiveTypeContainer::ParenthesesBlock(self.get_block().unwrap()),
@@ -157,22 +157,121 @@ impl<'a> BlockContainer<'a> {
     pub fn size(&self) -> usize {
         self.block_range().len()
     }
-    pub fn primitives(&self) -> PrimitiveIter<'a> {
+    pub fn primitives(&self) -> PrimitiveIterContainer<'a> {
         let r=self.block_range();
-        PrimitiveIter { start: r.start, end: r.end, parsed: self.parsed }
+        PrimitiveIterContainer { start: r.start, end: r.end, parsed: self.parsed }
     }
 
 }
 
 
 #[derive(Copy,Clone)]
-pub struct PrimitiveIter<'a> {
+pub struct PrimitiveIterContainer<'a> {
     pub start : usize, //if 0, then 0 hasnt been traversed yet
     pub end : usize, //if last_ind then last_ind has been traversed
     pub parsed :&'a Parsed,
 }
 
-impl<'a> Iterator for PrimitiveIter<'a> {
+impl<'a> PrimitiveIterContainer<'a> {
+    pub fn pop_front(&mut self) -> Option<PrimitiveContainer<'a>> {
+        if self.start < self.end {
+            let primitive_ind=self.start;
+            self.start+=1;
+            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind})
+        } else {
+            None
+        }
+    }
+    pub fn pop_back(&mut self) -> Option<PrimitiveContainer<'a>> {
+        if self.start < self.end {
+            self.end-=1;
+            let primitive_ind=self.end;
+            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind})
+        } else {
+            None
+        }
+    }
+
+    pub fn pop_front_amount(&mut self,amount:usize) -> Option<PrimitiveIterContainer<'a>> {
+        if self.start+amount < self.end {
+            let x=self.start;
+            self.start+=amount;
+            Some(PrimitiveIterContainer{ start: x, end: self.start, parsed: self.parsed })
+        } else {
+            None
+        }
+    }
+    pub fn pop_back_amount(&mut self,amount:usize) -> Option<PrimitiveIterContainer<'a>> {
+        if self.start+amount < self.end {
+            self.end+=amount;
+            Some(PrimitiveIterContainer{ start: self.end-amount, end: self.end, parsed: self.parsed })
+        } else {
+            None
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.end-self.start
+    }
+
+    pub fn get(&self, ind:usize) -> Option<PrimitiveContainer<'a>> {
+        let primitive_ind= self.start+ind;
+
+        if primitive_ind < self.end {
+            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind})
+        } else {
+            None
+        }
+    }
+
+    pub fn get_range<R:RangeBounds<usize>>(&self,r:R) -> PrimitiveIterContainer<'a> {
+
+        let range_start=match r.start_bound() {
+            Bound::Included(x)=>*x,
+            Bound::Excluded(_)=>panic!(""),
+            Bound:: Unbounded=>0,
+        };
+
+        let range_end=match r.start_bound() {
+            Bound::Included(x)=>*x+1,
+            Bound::Excluded(x)=>*x,
+            Bound::Unbounded=>self.len(),
+        };
+
+        if range_start>range_end { //if range start==end is same as empty iter
+            return PrimitiveIterContainer {start: 0, end: 0, parsed: self.parsed};
+        }
+
+        let x_len=range_end-range_start;
+
+        if x_len>self.len() {
+            return PrimitiveIterContainer {start: 0, end: 0, parsed: self.parsed};
+        }
+
+        let x_start=self.start+range_start;
+        let x_end = x_start+x_len;
+
+        PrimitiveIterContainer {start: x_start, end: x_end, parsed: self.parsed}
+    }
+
+    pub fn first(&self) -> Option<PrimitiveContainer<'a>> {
+        if self.start < self.end {
+            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind:self.start})
+        } else {
+            None
+        }
+    }
+    pub fn last(&self) -> Option<PrimitiveContainer<'a>> {
+        if self.start < self.end {
+            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind:self.end-1})
+        } else {
+            None
+        }
+    }
+
+}
+
+impl<'a> Iterator for PrimitiveIterContainer<'a> {
     type Item = PrimitiveContainer<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -186,7 +285,7 @@ impl<'a> Iterator for PrimitiveIter<'a> {
     }
 }
 
-impl<'a> DoubleEndedIterator for PrimitiveIter<'a> {
+impl<'a> DoubleEndedIterator for PrimitiveIterContainer<'a> {
     fn next_back(&mut self) -> Option<PrimitiveContainer<'a>> {
         if self.end > self.start {
             self.end-=1;

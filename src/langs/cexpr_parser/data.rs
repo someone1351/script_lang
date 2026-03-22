@@ -4,7 +4,7 @@
 
 use std::ops::Range;
 
-use crate::cexpr_parser::container::PrimitiveContainer;
+use crate::cexpr_parser::PrimitiveIterContainer;
 
 use super::super::super::build::Loc;
 
@@ -65,8 +65,12 @@ impl Parsed {
 //     pub fn root_block(&'_ self) -> BlockContainer<'_> {
 //         BlockContainer { parsed: self, block_ind: 0, fieldless:false, }
 //     }
-    pub fn root_block_primitive(&self) -> PrimitiveContainer<'_> {
-        PrimitiveContainer { parsed: self, primitive_ind: 0, }
+    // pub fn root_block_primitive(&self) -> PrimitiveContainer<'_> {
+    //     PrimitiveContainer { parsed: self, primitive_ind: 0, }
+    // }
+    pub fn root_primitives(&self) -> PrimitiveIterContainer<'_> {
+        let r=&self.blocks[0].primitives;
+        PrimitiveIterContainer { start: r.start, end: r.end, parsed: self }
     }
 //     // pub fn src(&self)->&'a str {
 //     //     self.src
@@ -76,6 +80,8 @@ impl Parsed {
 //     // }
 
     pub fn print(&self) {
+        // let mut work: Vec<(usize, usize)> = self.blocks[0].primitives.clone().map(|i|(i,0)).collect();
+
         let mut work = vec![(0,0)];
 
         while let Some((cur,depth))=work.pop() {
@@ -90,7 +96,6 @@ impl Parsed {
                 PrimitiveType::CurlyBlock(b) => {
                     println!("{indent}curly_block");
                     for i in self.blocks[b].primitives.clone().rev() { work.push((i,depth+1)); }
-
                 }
                 PrimitiveType::SquareBlock(b) => {
                     println!("{indent}square_block");
@@ -99,23 +104,18 @@ impl Parsed {
                 PrimitiveType::ParenthesesBlock(b) => {
                     println!("{indent}parenth_block");
                     for i in self.blocks[b].primitives.clone().rev() { work.push((i,depth+1)); }
-
                 }
                 PrimitiveType::Float(_, s) => {
                     println!("{indent}float({})",self.texts[s]);
-
                 }
                 PrimitiveType::Int(_, s) => {
                     println!("{indent}int({})",self.texts[s]);
-
                 }
                 PrimitiveType::String(s) => {
                     println!("{indent}string({})",self.texts[s]);
-
                 }
                 PrimitiveType::Symbol(s) => {
                     println!("{indent}symbol({})",self.texts[s]);
-
                 }
                 PrimitiveType::End => {
                     println!("{indent}end");

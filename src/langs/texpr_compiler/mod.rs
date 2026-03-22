@@ -145,7 +145,7 @@ impl Compiler {
         self.cmds.entry(k.to_string()).or_insert_with(Default::default).push(Box::new(cmd));
     }
 
-    fn get(&self,k:&str) -> Option<std::slice::Iter<'_, Cmd>> {
+    fn get_cmds(&self,k:&str) -> Option<std::slice::Iter<'_, Cmd>> {
         if let Some(v)=self.cmds.get(k) {
             // let it: std::slice::Iter<Cmd>=;
             Some(v.iter())
@@ -204,7 +204,7 @@ impl Compiler {
                             } else if [","].contains(&symbol) {
                                 return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
                             } else if first_param.fields_num()==0 { //no fields
-                                if let Some(cmds)=self.get(symbol) {  //command
+                                if let Some(cmds)=self.get_cmds(symbol) {  //command
                                     let mut errors=Vec::<BuilderError<BuilderErrorType>>::new();
 
                                     // let last_loc=builder.cur_loc;
