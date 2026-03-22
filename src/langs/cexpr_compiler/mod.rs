@@ -242,7 +242,7 @@ impl Compiler {
                             builder.result_void();
                         }
                         _ => {
-                            builder.get_var(x);
+                            // builder.get_var(x);
                         }
                     }
                 }
