@@ -22,6 +22,7 @@ pub enum PrimitiveTypeContainer<'a> {
 pub struct PrimitiveContainer<'a> {
     pub parsed:&'a Parsed,
     pub primitive_ind:usize,
+    pub last_loc:Loc,
 }
 
 
@@ -262,7 +263,7 @@ impl<'a> PrimitiveIterContainer<'a> {
         if self.start < self.end {
             let primitive_ind=self.start;
             self.start+=1;
-            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind})
+            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc:self.last_loc,})
         } else {
             None
         }
@@ -271,7 +272,14 @@ impl<'a> PrimitiveIterContainer<'a> {
         if self.start < self.end {
             self.end-=1;
             let primitive_ind=self.end;
-            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind})
+
+            let last_loc=if self.start==self.end {
+                self.last_loc
+            } else {
+                self.parsed.primitives[self.end-1].end_loc
+            };
+
+            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc})
         } else {
             None
         }
@@ -314,7 +322,13 @@ impl<'a> PrimitiveIterContainer<'a> {
         let primitive_ind= self.start+ind;
 
         if primitive_ind < self.end {
-            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind})
+            let last_loc=if ind==0 {
+                self.last_loc
+            } else {
+                self.parsed.primitives[primitive_ind-1].end_loc
+            };
+
+            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc})
         } else {
             None
         }
@@ -358,14 +372,22 @@ impl<'a> PrimitiveIterContainer<'a> {
 
     pub fn first(&self) -> Option<PrimitiveContainer<'a>> {
         if self.start < self.end {
-            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind:self.start})
+            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind:self.start,last_loc:self.last_loc})
         } else {
             None
         }
     }
     pub fn last(&self) -> Option<PrimitiveContainer<'a>> {
         if self.start < self.end {
-            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind:self.end-1})
+            let primitive_ind=self.end-1;
+
+            let last_loc=if self.len()==1 {
+                self.last_loc
+            } else {
+                self.parsed.primitives[primitive_ind-1].end_loc
+            };
+
+            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc})
         } else {
             None
         }
@@ -378,9 +400,10 @@ impl<'a> Iterator for PrimitiveIterContainer<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
+            let last_loc2=self.last_loc;
             self.last_loc=self.parsed.primitives[self.start].end_loc;
 
-            let x=PrimitiveContainer {primitive_ind: self.start,parsed: self.parsed,};
+            let x=PrimitiveContainer {primitive_ind: self.start,parsed: self.parsed,last_loc:last_loc2};
             self.start+=1;
 
             Some(x)
@@ -394,7 +417,14 @@ impl<'a> DoubleEndedIterator for PrimitiveIterContainer<'a> {
     fn next_back(&mut self) -> Option<PrimitiveContainer<'a>> {
         if self.end > self.start {
             self.end-=1;
-            Some(PrimitiveContainer {primitive_ind: self.end,parsed: self.parsed,})
+            let primitive_ind=self.end;
+
+            let last_loc=if self.len()==1 {
+                self.last_loc
+            } else {
+                self.parsed.primitives[primitive_ind-1].end_loc
+            };
+            Some(PrimitiveContainer {primitive_ind,parsed: self.parsed,last_loc})
         } else {
             None
         }
