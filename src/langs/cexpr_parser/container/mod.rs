@@ -63,40 +63,40 @@ impl<'a> PrimitiveContainer<'a> {
         }
     }
 
-    pub fn get_float(&self) -> Option<f64> {
+    pub fn get_float(&self) -> Result<f64,Loc> {
         if let PrimitiveType::Float(x, _)=self.primitive().primitive_type {
-            Some(x)
+            Ok(x)
         } else {
-            None
+            Err(self.start_loc())
         }
     }
-    pub fn get_int(&self) -> Option<i64> {
+    pub fn get_int(&self) -> Result<i64,Loc> {
         if let PrimitiveType::Int(x, _)=self.primitive().primitive_type {
-            Some(x)
+            Ok(x)
         } else {
-            None
+            Err(self.start_loc())
         }
     }
-    pub fn get_string(&self) -> Option<&'a str> {
+    pub fn get_string(&self) -> Result<&'a str,Loc> {
         if let PrimitiveType::String(x)=self.primitive().primitive_type {
-            Some(self.parsed.texts[x].as_str())
+            Ok(self.parsed.texts[x].as_str())
         } else {
-            None
+            Err(self.start_loc())
         }
     }
 
-    pub fn get_symbol(&self) -> Option<&'a str> {
+    pub fn get_symbol(&self) -> Result<&'a str,Loc> {
         if let PrimitiveType::Symbol(x)=self.primitive().primitive_type {
-            Some(self.parsed.texts[x].as_str())
+            Ok(self.parsed.texts[x].as_str())
         } else {
-            None
+            Err(self.start_loc())
         }
     }
-    pub fn get_identifier(&self) -> Option<&'a str> {
+    pub fn get_identifier(&self) -> Result<&'a str,Loc> {
         if let PrimitiveType::Identifier(x)=self.primitive().primitive_type {
-            Some(self.parsed.texts[x].as_str())
+            Ok(self.parsed.texts[x].as_str())
         } else {
-            None
+            Err(self.start_loc())
         }
     }
     // pub fn get_end(&self) -> bool {
@@ -109,7 +109,7 @@ impl<'a> PrimitiveContainer<'a> {
 
     pub fn get_block(&self) -> Option<BlockContainer<'a>> {
         match self.primitive().primitive_type {
-            PrimitiveType::Root(_)|
+            PrimitiveType::Root(_)| //primtive not provided for root?
             PrimitiveType::CurlyBlock(_)|
             PrimitiveType::SquareBlock(_)|
             PrimitiveType::ParenthesesBlock(_)
@@ -118,7 +118,29 @@ impl<'a> PrimitiveContainer<'a> {
         }
     }
 
+    pub fn get_curly(&self) -> Result<BlockContainer<'a>,Loc> {
+        if let PrimitiveType::CurlyBlock(_)=self.primitive().primitive_type {
+            Ok(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind })
+        } else {
+            Err(self.start_loc())
+        }
+    }
 
+    pub fn get_parenthesis(&self) -> Result<BlockContainer<'a>,Loc> {
+        if let PrimitiveType::ParenthesesBlock(_)=self.primitive().primitive_type {
+            Ok(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind })
+        } else {
+            Err(self.start_loc())
+        }
+    }
+
+    pub fn get_square(&self) -> Result<BlockContainer<'a>,Loc> {
+        if let PrimitiveType::SquareBlock(_)=self.primitive().primitive_type {
+            Ok(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind })
+        } else {
+            Err(self.start_loc())
+        }
+    }
 
     pub fn is_eol(&self) -> bool {
         if let PrimitiveType::Eol=self.primitive().primitive_type {
@@ -181,6 +203,13 @@ impl<'a> PrimitiveContainer<'a> {
             false
         }
     }
+    pub fn is_identifier(&self) -> bool {
+        if let PrimitiveType::Identifier(_)=self.primitive().primitive_type {
+            true
+        } else {
+            false
+        }
+    }
     pub fn is_float(&self) -> bool {
         if let PrimitiveType::Float(..)=self.primitive().primitive_type {
             true
@@ -195,6 +224,30 @@ impl<'a> PrimitiveContainer<'a> {
             false
         }
     }
+    // pub fn expect_int(&self) -> Result<i64,Loc> {
+    //     self.get_int().ok_or_else(||self.start_loc())
+    // }
+    // pub fn expect_float(&self) -> Result<f64,Loc> {
+    //     self.get_float().ok_or_else(||self.start_loc())
+    // }
+    // pub fn expect_string(&self) -> Result<&'a str,Loc> {
+    //     self.get_string().ok_or_else(||self.start_loc())
+    // }
+    // pub fn expect_symbol(&self) -> Result<&'a str,Loc> {
+    //     self.get_symbol().ok_or_else(||self.start_loc())
+    // }
+    // pub fn expect_identifier(&self) -> Result<&'a str,Loc> {
+    //     self.get_identifier().ok_or_else(||self.start_loc())
+    // }
+    // pub fn expect_curly(&self) -> Result<BlockContainer<'a>,Loc> {
+    //     self.get_curly().ok_or_else(||self.start_loc())
+    // }
+    // pub fn expect_parenthesis(&self) -> Result<BlockContainer<'a>,Loc> {
+    //     self.get_parenthesis().ok_or_else(||self.start_loc())
+    // }
+    // pub fn expect_square(&self) -> Result<BlockContainer<'a>,Loc> {
+    //     self.get_square().ok_or_else(||self.start_loc())
+    // }
 }
 
 impl<'a> BlockContainer<'a> {
@@ -268,16 +321,20 @@ pub struct PrimitiveIterContainer<'a> {
 }
 
 impl<'a> PrimitiveIterContainer<'a> {
-    pub fn pop_front(&mut self) -> Option<PrimitiveContainer<'a>> {
+    pub fn last_loc(&self) -> Loc {
+        self.last_loc
+    }
+
+    pub fn pop_front(&mut self) -> Result<PrimitiveContainer<'a>,Loc> {
         if self.start < self.end {
             let primitive_ind=self.start;
             self.start+=1;
-            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc:self.last_loc,})
+            Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc:self.last_loc,})
         } else {
-            None
+            Err(self.last_loc)
         }
     }
-    pub fn pop_back(&mut self) -> Option<PrimitiveContainer<'a>> {
+    pub fn pop_back(&mut self) -> Result<PrimitiveContainer<'a>,Loc> {
         if self.start < self.end {
             self.end-=1;
             let primitive_ind=self.end;
@@ -288,9 +345,9 @@ impl<'a> PrimitiveIterContainer<'a> {
                 self.parsed.primitives[self.end-1].end_loc
             };
 
-            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc})
+            Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc})
         } else {
-            None
+            Err(self.last_loc)
         }
     }
 
@@ -327,7 +384,7 @@ impl<'a> PrimitiveIterContainer<'a> {
         self.end-self.start
     }
 
-    pub fn get(&self, ind:usize) -> Option<PrimitiveContainer<'a>> {
+    pub fn get(&self, ind:usize) -> Result<PrimitiveContainer<'a>,Loc> {
         let primitive_ind= self.start+ind;
 
         if primitive_ind < self.end {
@@ -337,9 +394,15 @@ impl<'a> PrimitiveIterContainer<'a> {
                 self.parsed.primitives[primitive_ind-1].end_loc
             };
 
-            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc})
+            Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc})
         } else {
-            None
+            let last_loc=if self.len()==0 {
+                self.last_loc
+            } else {
+                self.get(self.len()-1).unwrap().end_loc()
+            };
+
+            Err(last_loc)
         }
     }
 
@@ -401,6 +464,17 @@ impl<'a> PrimitiveIterContainer<'a> {
             None
         }
     }
+
+    // pub fn expect_get(&self,ind:usize) -> Result<PrimitiveContainer<'a>,Loc> {
+    //     self.get(ind).ok_or_else(||{
+    //         if ind==0 {
+    //             self.last_loc
+    //         } else {
+    //             self.parsed.primitives[self.start+ind-1].end_loc
+    //         }
+    //     })
+
+    // }
 
 }
 

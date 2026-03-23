@@ -213,8 +213,8 @@ impl Compiler {
             }
             PrimitiveTypeContainer::Identifier(x) => { //cmd or idn
                 if let Some(cmds)=self.cmds.get(x) {
-                    // let params=top_primitive_iter.get_range(1..);
-                    let mut primitives=top_primitive_iter.clone();
+                    let mut primitives=top_primitive_iter.get_range(1..);
+                    // let mut primitives=top_primitive_iter.clone();
 	                let mut errors=Vec::<BuilderError<BuilderErrorType>>::new();
 
                     //

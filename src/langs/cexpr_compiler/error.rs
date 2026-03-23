@@ -10,6 +10,7 @@ pub enum BuilderErrorType {
     ExpectedCurlyBraces,
     ExpectedString,
     ExpectedEnd,
+    ExpectedIdentifier,
 
     ExpectSymbol(u32),
     NoSymbolPrefixAllowed,
