@@ -3,6 +3,28 @@ use super::super::super::super::compiler::builder::*;
 use super::super::error::*;
 
 pub fn if_cmd<'a>(primitives : &mut PrimitiveIterContainer<'a>, builder :&mut Builder<'a,PrimitiveIterContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> {
+
+    let cond0=primitives.pop_front().and_then(|p|p.get_parenthesis());
+    let cond0=cond0.or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedParenthesis }))?;
+
+
+    let body0= primitives.pop_front().and_then(|p|p.get_curly());
+    let body0=body0.or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedCurlyBraces }))?;
+
+    loop {
+        let t=primitives.get(0);
+        let t=t.and_then(|p|p.identifier_eq("elif"));
+
+        let cond0= primitives.pop_front();
+        let cond0=cond0.and_then(|p|p.get_parenthesis());
+        let cond0=cond0.or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedParenthesis }))?;
+
+        let body0_primitive= primitives.pop_front();
+        let body0=body0_primitive.and_then(|p|p.get_curly());
+        let body0=body0.or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedCurlyBraces }))?;
+
+    }
+
     // let if_param = primitives.pop_front().unwrap(); //if
 
     // let cond_param=primitives.pop_front()

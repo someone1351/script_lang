@@ -23,16 +23,16 @@ pub enum PrimitiveTypeContainer<'a> {
 pub struct PrimitiveContainer<'a> {
     pub parsed:&'a Parsed,
     pub primitive_ind:usize,
-    pub last_loc:Loc,
+    // pub last_loc:Loc,
 }
+
 
 
 #[derive(Clone,Copy)]
-pub struct BlockContainer<'a> {
-    parsed:&'a Parsed,
-    primitive_ind:usize,
+pub struct ValueContainer<'a,T> {
+    pub primitive : PrimitiveContainer<'a>,
+    value : T,
 }
-
 
 impl<'a> PrimitiveContainer<'a> {
     fn primitive(&self) -> &'a Primitive {
@@ -63,41 +63,49 @@ impl<'a> PrimitiveContainer<'a> {
         }
     }
 
-    pub fn get_float(&self) -> Result<f64,Loc> {
-        if let PrimitiveType::Float(x, _)=self.primitive().primitive_type {
-            Ok(x)
+    pub fn get_float(&self) -> Result<ValueContainer<'a,f64>,Loc> {
+        if let PrimitiveType::Float(value, _)=self.primitive().primitive_type {
+            Ok(ValueContainer{ primitive: self.clone(), value })
         } else {
             Err(self.start_loc())
         }
     }
-    pub fn get_int(&self) -> Result<i64,Loc> {
-        if let PrimitiveType::Int(x, _)=self.primitive().primitive_type {
-            Ok(x)
+    pub fn get_int(&self) -> Result<ValueContainer<'a,i64>,Loc> {
+        if let PrimitiveType::Int(value, _)=self.primitive().primitive_type {
+            Ok(ValueContainer{ primitive: self.clone(), value })
         } else {
             Err(self.start_loc())
         }
     }
-    pub fn get_string(&self) -> Result<&'a str,Loc> {
+    pub fn get_string(&self) -> Result<ValueContainer<'a,&'a str>,Loc> {
         if let PrimitiveType::String(x)=self.primitive().primitive_type {
-            Ok(self.parsed.texts[x].as_str())
+            Ok(ValueContainer{ primitive: self.clone(), value: self.parsed.texts[x].as_str() })
         } else {
             Err(self.start_loc())
         }
     }
 
-    pub fn get_symbol(&self) -> Result<&'a str,Loc> {
+    pub fn get_symbol(&self) -> Result<ValueContainer<'a,&'a str>,Loc> {
         if let PrimitiveType::Symbol(x)=self.primitive().primitive_type {
-            Ok(self.parsed.texts[x].as_str())
+            Ok(ValueContainer{ primitive: self.clone(), value: self.parsed.texts[x].as_str() })
         } else {
             Err(self.start_loc())
         }
     }
-    pub fn get_identifier(&self) -> Result<&'a str,Loc> {
+    pub fn get_identifier(&self) -> Result<ValueContainer<'a,&'a str>,Loc> {
         if let PrimitiveType::Identifier(x)=self.primitive().primitive_type {
-            Ok(self.parsed.texts[x].as_str())
+            Ok(ValueContainer{ primitive: self.clone(), value: self.parsed.texts[x].as_str() })
         } else {
             Err(self.start_loc())
         }
+    }
+    pub fn identifier_eq(&self,idn:&str) -> Result<(),Loc> {
+        if idn == self.get_identifier()?.value {
+            Ok(())
+        } else {
+            Err(self.start_loc())
+        }
+
     }
     // pub fn get_end(&self) -> bool {
     //     if let PrimitiveType::End=self.primitive().primitive_type {
@@ -250,13 +258,20 @@ impl<'a> PrimitiveContainer<'a> {
     // }
 }
 
+
+#[derive(Clone,Copy)]
+pub struct BlockContainer<'a> {
+    parsed:&'a Parsed,
+    primitive_ind:usize,
+}
+
 impl<'a> BlockContainer<'a> {
-    fn primitive(&self) -> &'a Primitive {
+    fn inner_primitive(&self) -> &'a Primitive {
         &self.parsed.primitives[self.primitive_ind]
     }
 
     fn block_ind(&self) -> usize {
-        match self.primitive().primitive_type {
+        match self.inner_primitive().primitive_type {
             PrimitiveType::Root(x)|
             PrimitiveType::CurlyBlock(x)|
             PrimitiveType::SquareBlock(x)|
@@ -271,21 +286,21 @@ impl<'a> BlockContainer<'a> {
     }
 
     pub fn is_root(&self) -> bool {
-        if let PrimitiveType::Root(_)=self.primitive().primitive_type {
+        if let PrimitiveType::Root(_)=self.inner_primitive().primitive_type {
             true
         } else {
             false
         }
     }
     pub fn is_square(&self) -> bool {
-        if let PrimitiveType::SquareBlock(_)=self.primitive().primitive_type {
+        if let PrimitiveType::SquareBlock(_)=self.inner_primitive().primitive_type {
             true
         } else {
             false
         }
     }
     pub fn is_curly(&self) -> bool {
-        if let PrimitiveType::CurlyBlock(_)=self.primitive().primitive_type {
+        if let PrimitiveType::CurlyBlock(_)=self.inner_primitive().primitive_type {
             true
         } else {
             false
@@ -293,7 +308,7 @@ impl<'a> BlockContainer<'a> {
     }
 
     pub fn is_parentheses(&self) -> bool {
-        if let PrimitiveType::ParenthesesBlock(_)=self.primitive().primitive_type {
+        if let PrimitiveType::ParenthesesBlock(_)=self.inner_primitive().primitive_type {
             true
         } else {
             false
@@ -303,11 +318,14 @@ impl<'a> BlockContainer<'a> {
     pub fn size(&self) -> usize {
         self.block_range().len()
     }
-    pub fn primitives(&self) -> PrimitiveIterContainer<'a> {
+    pub fn children(&self) -> PrimitiveIterContainer<'a> {
         let r=self.block_range();
-        PrimitiveIterContainer { last_loc:self.primitive().end_loc ,start: r.start, end: r.end, parsed: self.parsed }
+        PrimitiveIterContainer { last_loc:self.inner_primitive().end_loc ,start: r.start, end: r.end, parsed: self.parsed }
     }
 
+    pub fn primitive(&self) -> PrimitiveContainer<'a> {
+        PrimitiveContainer { parsed: self.parsed, primitive_ind: self.primitive_ind,  }
+    }
 }
 
 
@@ -329,7 +347,7 @@ impl<'a> PrimitiveIterContainer<'a> {
         if self.start < self.end {
             let primitive_ind=self.start;
             self.start+=1;
-            Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc:self.last_loc,})
+            Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,}) //last_loc:self.last_loc,
         } else {
             Err(self.last_loc)
         }
@@ -339,13 +357,13 @@ impl<'a> PrimitiveIterContainer<'a> {
             self.end-=1;
             let primitive_ind=self.end;
 
-            let last_loc=if self.start==self.end {
-                self.last_loc
-            } else {
-                self.parsed.primitives[self.end-1].end_loc
-            };
+            // let last_loc=if self.start==self.end {
+            //     self.last_loc
+            // } else {
+            //     self.parsed.primitives[self.end-1].end_loc
+            // };
 
-            Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc})
+            Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,}) //last_loc
         } else {
             Err(self.last_loc)
         }
@@ -388,13 +406,13 @@ impl<'a> PrimitiveIterContainer<'a> {
         let primitive_ind= self.start+ind;
 
         if primitive_ind < self.end {
-            let last_loc=if ind==0 {
-                self.last_loc
-            } else {
-                self.parsed.primitives[primitive_ind-1].end_loc
-            };
+            // let last_loc=if ind==0 {
+            //     self.last_loc
+            // } else {
+            //     self.parsed.primitives[primitive_ind-1].end_loc
+            // };
 
-            Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc})
+            Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,}) //last_loc
         } else {
             let last_loc=if self.len()==0 {
                 self.last_loc
@@ -444,7 +462,7 @@ impl<'a> PrimitiveIterContainer<'a> {
 
     pub fn first(&self) -> Option<PrimitiveContainer<'a>> {
         if self.start < self.end {
-            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind:self.start,last_loc:self.last_loc})
+            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind:self.start,}) //last_loc:self.last_loc
         } else {
             None
         }
@@ -453,13 +471,13 @@ impl<'a> PrimitiveIterContainer<'a> {
         if self.start < self.end {
             let primitive_ind=self.end-1;
 
-            let last_loc=if self.len()==1 {
-                self.last_loc
-            } else {
-                self.parsed.primitives[primitive_ind-1].end_loc
-            };
+            // let last_loc=if self.len()==1 {
+            //     self.last_loc
+            // } else {
+            //     self.parsed.primitives[primitive_ind-1].end_loc
+            // };
 
-            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind,last_loc})
+            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind,}) //last_loc
         } else {
             None
         }
@@ -483,10 +501,10 @@ impl<'a> Iterator for PrimitiveIterContainer<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
-            let last_loc2=self.last_loc;
+            // let last_loc2=self.last_loc;
             self.last_loc=self.parsed.primitives[self.start].end_loc;
 
-            let x=PrimitiveContainer {primitive_ind: self.start,parsed: self.parsed,last_loc:last_loc2};
+            let x=PrimitiveContainer {primitive_ind: self.start,parsed: self.parsed,}; //last_loc:last_loc2
             self.start+=1;
 
             Some(x)
@@ -502,15 +520,15 @@ impl<'a> DoubleEndedIterator for PrimitiveIterContainer<'a> {
             self.end-=1;
             let primitive_ind=self.end;
 
-            let last_loc=if self.len()==1 {
-                self.last_loc
-            } else {
-                self.parsed.primitives[primitive_ind-1].end_loc
-            };
-            Some(PrimitiveContainer {primitive_ind,parsed: self.parsed,last_loc})
+            // let last_loc=if self.len()==1 {
+            //     self.last_loc
+            // } else {
+            //     self.parsed.primitives[primitive_ind-1].end_loc
+            // };
+
+            Some(PrimitiveContainer {primitive_ind,parsed: self.parsed,}) //last_loc
         } else {
             None
         }
     }
 }
-
