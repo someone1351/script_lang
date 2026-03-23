@@ -14,6 +14,7 @@ pub enum PrimitiveTypeContainer<'a> {
     Int(i64),
     String(&'a str),
     Symbol(&'a str),
+    Identifier(&'a str),
     // End,
     Eol,Eob,
 }
@@ -53,8 +54,9 @@ impl<'a> PrimitiveContainer<'a> {
             PrimitiveType::ParenthesesBlock(_) => PrimitiveTypeContainer::ParenthesesBlock(self.get_block().unwrap()),
             PrimitiveType::Float(x, _) => PrimitiveTypeContainer::Float(x),
             PrimitiveType::Int(x, _) => PrimitiveTypeContainer::Int(x),
-            PrimitiveType::String(_) => PrimitiveTypeContainer::String(self.get_string().unwrap()),
-            PrimitiveType::Symbol(_) => PrimitiveTypeContainer::Symbol(self.get_symbol().unwrap()),
+            PrimitiveType::String(x) => PrimitiveTypeContainer::String(self.parsed.texts[x].as_str()),
+            PrimitiveType::Symbol(x) => PrimitiveTypeContainer::Symbol(self.parsed.texts[x].as_str()),
+            PrimitiveType::Identifier(x) => PrimitiveTypeContainer::Symbol(self.parsed.texts[x].as_str()),
             // PrimitiveType::End => PrimitiveTypeContainer::End,
             PrimitiveType::Eol => PrimitiveTypeContainer::Eol,
             PrimitiveType::Eob => PrimitiveTypeContainer::Eob,
@@ -85,6 +87,13 @@ impl<'a> PrimitiveContainer<'a> {
 
     pub fn get_symbol(&self) -> Option<&'a str> {
         if let PrimitiveType::Symbol(x)=self.primitive().primitive_type {
+            Some(self.parsed.texts[x].as_str())
+        } else {
+            None
+        }
+    }
+    pub fn get_identifier(&self) -> Option<&'a str> {
+        if let PrimitiveType::Identifier(x)=self.primitive().primitive_type {
             Some(self.parsed.texts[x].as_str())
         } else {
             None

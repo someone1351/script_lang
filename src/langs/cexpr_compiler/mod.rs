@@ -209,7 +209,9 @@ impl Compiler {
             PrimitiveTypeContainer::String(x) => { //string
                 builder.result_string(x);
             }
-            PrimitiveTypeContainer::Symbol(x) => { //cmd or idn
+            PrimitiveTypeContainer::Symbol(x) => { //
+            }
+            PrimitiveTypeContainer::Identifier(x) => { //cmd or idn
                 if let Some(cmds)=self.cmds.get(x) {
                     // let params=top_primitive_iter.get_range(1..);
                     let mut primitives=top_primitive_iter.clone();

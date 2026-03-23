@@ -381,7 +381,7 @@ fn parse_ident_symbol(
 
         input.next(i);
         let end_loc=input.loc();
-        let primitive_type=PrimitiveType::Symbol(text_ind);
+        let primitive_type=PrimitiveType::Identifier(text_ind);
         Some(Primitive { primitive_type, start_loc, end_loc })
     }
 

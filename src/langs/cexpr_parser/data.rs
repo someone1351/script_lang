@@ -19,6 +19,7 @@ pub enum PrimitiveType {
     Int(i64,usize,),//num,text_ind,
     String(usize),//text_ind
     Symbol(usize), //text_ind
+    Identifier(usize), //text_ind
     // Param(usize),
 
     // Undefined,
@@ -117,6 +118,9 @@ impl Parsed {
                 }
                 PrimitiveType::Symbol(s) => {
                     println!("{indent}symbol({})",self.texts[s]);
+                }
+                PrimitiveType::Identifier(s) => {
+                    println!("{indent}identifier({})",self.texts[s]);
                 }
                 // PrimitiveType::End => {
                 //     println!("{indent}end");
