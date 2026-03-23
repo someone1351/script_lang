@@ -9,7 +9,7 @@ pub fn if_cmd<'a>(primitives : &mut PrimitiveIterContainer<'a>, builder :&mut Bu
         .ok_or_else(||BuilderError{ loc: if_param.end_loc(), error_type: BuilderErrorType::ExpectedParenthesis })?;
 
     if !cond_param.is_parentheses() {
-        return Err(BuilderError{ loc: if_param.end_loc(), error_type: BuilderErrorType::ExpectedParenthesis });
+        return Err(BuilderError{ loc: cond_param.start_loc(), error_type: BuilderErrorType::ExpectedParenthesis });
     }
 
     //todo cond
@@ -18,7 +18,7 @@ pub fn if_cmd<'a>(primitives : &mut PrimitiveIterContainer<'a>, builder :&mut Bu
         .ok_or_else(||BuilderError{ loc: if_param.end_loc(), error_type: BuilderErrorType::ExpectedCurlyBraces })?;
 
     if !body0_param.is_curly() {
-        return Err(BuilderError{ loc: if_param.end_loc(), error_type: BuilderErrorType::ExpectedCurlyBraces });
+        return Err(BuilderError{ loc: body0_param.start_loc(), error_type: BuilderErrorType::ExpectedCurlyBraces });
     }
 
     //todo body0
@@ -33,7 +33,7 @@ pub fn if_cmd<'a>(primitives : &mut PrimitiveIterContainer<'a>, builder :&mut Bu
                 .ok_or_else(||BuilderError{ loc: if_param.end_loc(), error_type: BuilderErrorType::ExpectedCurlyBraces })?;
 
             if !body1_param.is_curly() {
-                return Err(BuilderError{ loc: if_param.end_loc(), error_type: BuilderErrorType::ExpectedCurlyBraces });
+                return Err(BuilderError{ loc: if_param.start_loc(), error_type: BuilderErrorType::ExpectedCurlyBraces });
             }
             //todo body1
         } else if rest_cond_param.get_symbol()==Some("else") {

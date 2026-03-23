@@ -26,6 +26,8 @@
 ** treat as single expr, if want to have it as two vals then do
     1;
     -2
+
+** any infix expr before a val, will be consued by prev expr parsing, same with after
 ===
 
 * could treat cmds like prefixes
@@ -33,6 +35,8 @@
 * could convert whole thing into sexprs, and run the builder on that instead
 
 * when "if" is used as a stmt, needs "end" before another stmt can be used, but not if used as expr
+** could treat stmts as exprs that just return void
+** so exprs need symbols between the vars, then everything would need an end eg eol/eob/semicolon
 
 */
 #![allow(unused_variables)]

@@ -71,7 +71,7 @@ impl Parsed {
     // }
     pub fn root_primitives(&self) -> PrimitiveIterContainer<'_> {
         let r=&self.blocks[0].primitives;
-        PrimitiveIterContainer { start: r.start, end: r.end, parsed: self }
+        PrimitiveIterContainer { last_loc:Loc::one(),start: r.start, end: r.end, parsed: self }
     }
 //     // pub fn src(&self)->&'a str {
 //     //     self.src

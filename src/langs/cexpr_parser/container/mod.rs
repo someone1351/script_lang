@@ -242,7 +242,7 @@ impl<'a> BlockContainer<'a> {
     }
     pub fn primitives(&self) -> PrimitiveIterContainer<'a> {
         let r=self.block_range();
-        PrimitiveIterContainer { start: r.start, end: r.end, parsed: self.parsed }
+        PrimitiveIterContainer { last_loc:self.primitive().end_loc ,start: r.start, end: r.end, parsed: self.parsed }
     }
 
 }
@@ -252,7 +252,9 @@ impl<'a> BlockContainer<'a> {
 pub struct PrimitiveIterContainer<'a> {
     pub start : usize, //if 0, then 0 hasnt been traversed yet
     pub end : usize, //if last_ind then last_ind has been traversed
+    pub last_loc:Loc,
     pub parsed :&'a Parsed,
+
 }
 
 impl<'a> PrimitiveIterContainer<'a> {
@@ -277,17 +279,28 @@ impl<'a> PrimitiveIterContainer<'a> {
 
     pub fn pop_front_amount(&mut self,amount:usize) -> Option<PrimitiveIterContainer<'a>> {
         if self.start+amount < self.end {
-            let x=self.start;
+            let start2=self.start;
             self.start+=amount;
-            Some(PrimitiveIterContainer{ start: x, end: self.start, parsed: self.parsed })
+            let end2=self.start;
+
+            Some(PrimitiveIterContainer{last_loc:self.last_loc, start: start2, end: end2, parsed: self.parsed })
         } else {
             None
         }
     }
     pub fn pop_back_amount(&mut self,amount:usize) -> Option<PrimitiveIterContainer<'a>> {
         if self.start+amount < self.end {
-            self.end+=amount;
-            Some(PrimitiveIterContainer{ start: self.end-amount, end: self.end, parsed: self.parsed })
+            let end2=self.end;
+            self.end-=amount;
+            let start2=self.end;
+
+            let last_loc=if self.start==self.end {
+                self.last_loc
+            } else {
+                self.parsed.primitives[self.end-1].start_loc
+            };
+
+            Some(PrimitiveIterContainer{last_loc, start: start2, end: end2, parsed: self.parsed })
         } else {
             None
         }
@@ -322,19 +335,25 @@ impl<'a> PrimitiveIterContainer<'a> {
         };
 
         if range_start>range_end { //if range start==end is same as empty iter
-            return PrimitiveIterContainer {start: 0, end: 0, parsed: self.parsed};
+            return PrimitiveIterContainer {last_loc:Loc::zero(),start: 0, end: 0, parsed: self.parsed};
         }
 
         let x_len=range_end-range_start;
 
         if x_len>self.len() {
-            return PrimitiveIterContainer {start: 0, end: 0, parsed: self.parsed};
+            return PrimitiveIterContainer {last_loc:Loc::zero(),start: 0, end: 0, parsed: self.parsed};
         }
 
         let x_start=self.start+range_start;
         let x_end = x_start+x_len;
 
-        PrimitiveIterContainer {start: x_start, end: x_end, parsed: self.parsed}
+        let last_loc=if range_start==0 {
+            self.last_loc
+        } else {
+            self.parsed.primitives[range_start].start_loc
+        };
+
+        PrimitiveIterContainer {last_loc,start: x_start, end: x_end, parsed: self.parsed}
     }
 
     pub fn first(&self) -> Option<PrimitiveContainer<'a>> {
@@ -359,8 +378,11 @@ impl<'a> Iterator for PrimitiveIterContainer<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
+            self.last_loc=self.parsed.primitives[self.start].end_loc;
+
             let x=PrimitiveContainer {primitive_ind: self.start,parsed: self.parsed,};
             self.start+=1;
+
             Some(x)
         } else {
             None
