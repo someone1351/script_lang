@@ -186,7 +186,7 @@ impl Compiler {
         let infixes : HashSet<&'static str>=["+","-","*","/","&&","||","^","==","!=",">=","<=","<",">","^","%"].into();
         let setters  : HashSet<&'static str>=["=","+=","-=","*=","/="].into();
 
-        let Some(first_primitive)=top_primitive_iter.first() else { return Ok(()) };
+        let Ok(first_primitive)=top_primitive_iter.first() else { return Ok(()) };
         builder.loc(first_primitive.start_loc());
 
         match first_primitive.primitive_type() {

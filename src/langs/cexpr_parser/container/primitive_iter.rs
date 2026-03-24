@@ -135,27 +135,16 @@ impl<'a> PrimitiveIterContainer<'a> {
         PrimitiveIterContainer {last_loc,start: x_start, end: x_end, parsed: self.parsed}
     }
 
-    pub fn first(&self) -> Option<PrimitiveContainer<'a>> {
-        if self.start < self.end {
-            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind:self.start,}) //last_loc:self.last_loc
-        } else {
-            None
-        }
+    pub fn is_empty(&self) -> bool {
+        self.start!=self.end
     }
-    pub fn last(&self) -> Option<PrimitiveContainer<'a>> {
-        if self.start < self.end {
-            let primitive_ind=self.end-1;
 
-            // let last_loc=if self.len()==1 {
-            //     self.last_loc
-            // } else {
-            //     self.parsed.primitives[primitive_ind-1].end_loc
-            // };
+    pub fn first(&self) -> Result<PrimitiveContainer<'a>,Loc> {
+        self.get(0)
+    }
+    pub fn last(&self) -> Result<PrimitiveContainer<'a>,Loc> {
+        self.get(if self.is_empty() {0} else{self.len()-1})
 
-            Some(PrimitiveContainer { parsed: self.parsed, primitive_ind,}) //last_loc
-        } else {
-            None
-        }
     }
 
     // pub fn expect_get(&self,ind:usize) -> Result<PrimitiveContainer<'a>,Loc> {

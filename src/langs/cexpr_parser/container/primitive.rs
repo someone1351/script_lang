@@ -79,13 +79,24 @@ impl<'a> PrimitiveContainer<'a> {
             Err(self.start_loc())
         }
     }
-    pub fn identifier_eq(&self,idn:&str) -> Result<(),Loc> {
+    pub fn has_identifiers<'b,I:IntoIterator<Item = &'b str>>(&self,idns:I) -> Result<ValueContainer<'a,&'a str>,Loc> {
+        let g=self.get_identifier()?;
+
+        for idn in idns.into_iter() {
+            if idn.eq(g.value) {
+                return Ok(g);
+            }
+        }
+
+        Err(self.start_loc())
+    }
+
+    pub fn identifier(&self,idn:&str) -> Result<(),Loc> {
         if idn == self.get_identifier()?.value {
             Ok(())
         } else {
             Err(self.start_loc())
         }
-
     }
     // pub fn get_end(&self) -> bool {
     //     if let PrimitiveType::End=self.primitive().primitive_type {
