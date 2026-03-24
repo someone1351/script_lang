@@ -29,9 +29,9 @@ impl<'a> PrimitiveContainer<'a> {
     pub fn primitive_type(&self) -> PrimitiveTypeContainer<'a> {
         match self.primitive().primitive_type {
             PrimitiveType::Root(_) => panic!("shouldn't be able to get"),
-            PrimitiveType::CurlyBlock(_) => PrimitiveTypeContainer::CurlyBlock(self.get_block().unwrap()),
-            PrimitiveType::SquareBlock(_) => PrimitiveTypeContainer::SquareBlock(self.get_block().unwrap()),
-            PrimitiveType::ParenthesesBlock(_) => PrimitiveTypeContainer::ParenthesesBlock(self.get_block().unwrap()),
+            PrimitiveType::CurlyBlock(_) => PrimitiveTypeContainer::CurlyBlock(self.get_curly().unwrap().value),
+            PrimitiveType::SquareBlock(_) => PrimitiveTypeContainer::SquareBlock(self.get_square().unwrap().value),
+            PrimitiveType::ParenthesesBlock(_) => PrimitiveTypeContainer::ParenthesesBlock(self.get_parenthesis().unwrap().value),
             PrimitiveType::Float(x, _) => PrimitiveTypeContainer::Float(x),
             PrimitiveType::Int(x, _) => PrimitiveTypeContainer::Int(x),
             PrimitiveType::String(x) => PrimitiveTypeContainer::String(self.parsed.texts[x].as_str()),
@@ -95,41 +95,71 @@ impl<'a> PrimitiveContainer<'a> {
     //     }
     // }
 
-    pub fn get_block(&self) -> Option<BlockContainer<'a>> {
-        match self.primitive().primitive_type {
-            PrimitiveType::Root(_)| //primtive not provided for root?
-            PrimitiveType::CurlyBlock(_)|
-            PrimitiveType::SquareBlock(_)|
-            PrimitiveType::ParenthesesBlock(_)
-            => Some(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind }),
-            _ => None,
-        }
-    }
+    // pub fn get_block(&self) -> Option<BlockContainer<'a>> {
+    //     match self.primitive().primitive_type {
+    //         PrimitiveType::Root(_)| //primtive not provided for root?
+    //         PrimitiveType::CurlyBlock(_)|
+    //         PrimitiveType::SquareBlock(_)|
+    //         PrimitiveType::ParenthesesBlock(_)
+    //         => Some(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind }),
+    //         _ => None,
+    //     }
+    // }
 
-    pub fn get_curly(&self) -> Result<BlockContainer<'a>,Loc> {
-        if let PrimitiveType::CurlyBlock(_)=self.primitive().primitive_type {
-            Ok(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind })
+    // pub fn get_curly(&self) -> Result<BlockContainer<'a>,Loc> {
+    //     if let PrimitiveType::CurlyBlock(_)=self.primitive().primitive_type {
+    //         Ok(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind })
+    //     } else {
+    //         Err(self.start_loc())
+    //     }
+    // }
+
+    pub fn get_curly(&self) -> Result<ValueContainer<'a,PrimitiveIterContainer<'a>>,Loc> {
+        if let PrimitiveType::CurlyBlock(b)=self.primitive().primitive_type {
+            let b=&self.parsed.blocks[b];
+            let r=b.primitives.clone();
+            let value =PrimitiveIterContainer { last_loc:b.inner_start_loc ,start: r.start, end: r.end, parsed: self.parsed };
+            Ok(ValueContainer{ primitive: self.clone(), value })
         } else {
             Err(self.start_loc())
         }
     }
 
-    pub fn get_parenthesis(&self) -> Result<BlockContainer<'a>,Loc> {
-        if let PrimitiveType::ParenthesesBlock(_)=self.primitive().primitive_type {
-            Ok(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind })
+    // pub fn get_parenthesis(&self) -> Result<BlockContainer<'a>,Loc> {
+    //     if let PrimitiveType::ParenthesesBlock(_)=self.primitive().primitive_type {
+    //         Ok(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind })
+    //     } else {
+    //         Err(self.start_loc())
+    //     }
+    // }
+    pub fn get_parenthesis(&self) -> Result<ValueContainer<'a,PrimitiveIterContainer<'a>>,Loc> {
+        if let PrimitiveType::ParenthesesBlock(b)=self.primitive().primitive_type {
+            let b=&self.parsed.blocks[b];
+            let r=b.primitives.clone();
+            let value =PrimitiveIterContainer { last_loc:b.inner_start_loc ,start: r.start, end: r.end, parsed: self.parsed };
+            Ok(ValueContainer{ primitive: self.clone(), value })
         } else {
             Err(self.start_loc())
         }
     }
 
-    pub fn get_square(&self) -> Result<BlockContainer<'a>,Loc> {
-        if let PrimitiveType::SquareBlock(_)=self.primitive().primitive_type {
-            Ok(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind })
+    // pub fn get_square(&self) -> Result<BlockContainer<'a>,Loc> {
+    //     if let PrimitiveType::SquareBlock(_)=self.primitive().primitive_type {
+    //         Ok(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind })
+    //     } else {
+    //         Err(self.start_loc())
+    //     }
+    // }
+    pub fn get_square(&self) -> Result<ValueContainer<'a,PrimitiveIterContainer<'a>>,Loc> {
+        if let PrimitiveType::SquareBlock(b)=self.primitive().primitive_type {
+            let b=&self.parsed.blocks[b];
+            let r=b.primitives.clone();
+            let value =PrimitiveIterContainer { last_loc:b.inner_start_loc ,start: r.start, end: r.end, parsed: self.parsed };
+            Ok(ValueContainer{ primitive: self.clone(), value })
         } else {
             Err(self.start_loc())
         }
     }
-
     pub fn is_eol(&self) -> bool {
         if let PrimitiveType::Eol=self.primitive().primitive_type {
             true

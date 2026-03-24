@@ -54,6 +54,8 @@ pub struct Block {
     // pub block_type:BlockType,
     // pub self_primitive:usize, //BlockParent, // enum? Primitive(usize),Field(usize)
     pub primitives : Range<usize>,
+    pub inner_start_loc:Loc,
+    pub inner_end_loc:Loc,
 }
 
 // #[derive (Default)]

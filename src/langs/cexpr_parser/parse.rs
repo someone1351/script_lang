@@ -25,7 +25,8 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
     // let mut blocks : Vec<Block> = vec![Block{ self_primitive: todo!(), primitives: todo!() }];
     // let mut primitives : Vec<Primitive> = Default::default();
 
-    let mut block_primitives : Vec<Vec<Primitive>> = vec![Vec::new()];
+    let mut block_primitives : Vec<Vec<Primitive>> = vec![Vec::new()]; //starts with root prims pushed
+    let mut block_inner_locs : Vec<(Loc,Loc)> = vec![(Loc::zero(),Loc::zero())]; //init for root, but not used, just for simplicity
     let mut block_stk: Vec<(usize,BlockBracket,Loc)> = vec![]; //(0,None,Loc::one())
 
     let mut some=false;
@@ -56,13 +57,14 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
         } else if let Some(primitive)=parse_ident_symbol(&mut input, &mut text_map) {
             cur_block_primitives.push(primitive);
             some=true; // println!("yes5");
-        } else if let Some((bracket,start_loc,_end_loc))=parse_block_begin(&mut input) {
+        } else if let Some((bracket,start_loc,end_loc))=parse_block_begin(&mut input) {
             // let cur_block_primitives=block_primitives.get_mut(cur_block_ind).unwrap();
 
 
             // cur_block_primitives.push(Primitive { primitive_type, start_loc, end_loc: Loc::zero() });
 
             block_stk.push((block_primitives.len(),bracket,start_loc));
+            block_inner_locs.push((end_loc,Loc::zero()));
             block_primitives.push(Vec::new());
             some=true; // println!("yes6");
 
@@ -124,6 +126,11 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
 
             cur_block_primitives.push(Primitive { primitive_type, start_loc, end_loc });
             some=true; // println!("yes7");
+
+
+            let cur_block_inner_locs = block_inner_locs.get_mut(cur_block_ind).unwrap();
+            cur_block_inner_locs.1=start_loc;
+
         } else if input.is_end() {
             // match cur_block_primitives.last().map(|p|p.primitive_type.clone()) {
             //     Some(PrimitiveType::Eob) => {
@@ -172,12 +179,14 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
 
     let mut out_blocks=vec![];
 
-    for primitives in block_primitives {
+    for (block_ind,primitives) in block_primitives.into_iter().enumerate() {
         let primitive_start=out_primitives.len();
         out_primitives.extend(primitives);
         let primitive_end=out_primitives.len();
 
-        out_blocks.push(Block{ primitives: primitive_start..primitive_end });
+        let (inner_start_loc,inner_end_loc)=block_inner_locs[block_ind];
+
+        out_blocks.push(Block{ primitives: primitive_start..primitive_end,inner_start_loc,inner_end_loc });
     }
 
     //

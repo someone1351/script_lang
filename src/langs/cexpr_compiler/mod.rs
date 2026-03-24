@@ -191,7 +191,7 @@ impl Compiler {
 
         match first_primitive.primitive_type() {
             PrimitiveTypeContainer::CurlyBlock(b) => { //code block
-                builder.eval(b.children());
+                builder.eval(b);
             }
             PrimitiveTypeContainer::SquareBlock(b) => { //array or dict
                 // let is_dict=b.children().find(|p|p.get_symbol().map(|s|s.eq(":")).unwrap_or(false)).is_some();
