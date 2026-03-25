@@ -288,6 +288,8 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
 
         self
     }
+
+    //allows backtracking on inputs
     pub fn temp_mark(&mut self) {
         self.temp_last_loc=self.cur_loc;
         self.temp_stk_last_len = self.temp_stk.len();
@@ -296,6 +298,8 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         self.cur_loc=self.temp_last_loc;
         self.temp_stk.truncate(self.temp_stk_last_len);
     }
+
+    //
     pub fn new() -> Self {
         Self {
             phantom_data:Default::default(),
