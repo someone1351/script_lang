@@ -1,6 +1,7 @@
 
 
-if (true)
+if (true
+)
 {
     1
 } elif (false) {

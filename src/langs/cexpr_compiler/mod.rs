@@ -186,6 +186,13 @@ impl Compiler {
         let infixes : HashSet<&'static str>=["+","-","*","/","&&","||","^","==","!=",">=","<=","<",">","^","%"].into();
         let setters  : HashSet<&'static str>=["=","+=","-=","*=","/="].into();
 
+        enum ExprVal<'b> {
+            BuilderVal(),
+            Symbol(PrimitiveContainer<'b>),
+            Identifier(PrimitiveContainer<'b>),
+        }
+        let mut cur_expr: Vec<ExprVal>= Vec::new();
+
         //
         while let Ok(first_primitive)=top_primitive_iter.pop_front() {
 
@@ -230,9 +237,7 @@ impl Compiler {
                             if let Err(e)=cmd(&mut primitives,builder) {
                                 errors.push(e);
                                 builder.temp_clear();
-                                println!("  not ok");
                             } else { //ok
-                                println!("  is ok");
                                 errors.clear();
                                 *next_anon_id+=1;
                                 top_primitive_iter=primitives;
