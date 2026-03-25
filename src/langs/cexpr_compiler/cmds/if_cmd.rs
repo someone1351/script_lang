@@ -6,41 +6,26 @@ use super::super::error::*;
 
 pub fn if_cmd<'a>(primitives : &mut PrimitiveIterContainer<'a>, builder :&mut Builder<'a,PrimitiveIterContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> {
     let mut vs = Vec::new();
-    println!("it is {:?}",primitives);
+
     //
     {
-        // println!("it is {:?}| {}| {:?}",
-        //     primitives.first().unwrap().primitive_type(),
-        //     primitives.first().unwrap().start_loc(),
-        //     primitives.first().unwrap().get_parenthesis().is_ok(),
-        // );
-        let cond0=primitives.pop_front().and_then(|p|p.get_parenthesis())
-            .or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedParenthesis }))?;
-        let body0= primitives.pop_front().and_then(|p|p.get_curly())
-            .or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedCurlyBraces }))?;
+
+        let cond0=primitives.pop_parenthesis().or_else(|loc|BuilderErrorType::ExpectedParenthesis.loc_err(loc))?;
+        let body0=primitives.pop_curly().or_else(|loc|BuilderErrorType::ExpectedCurlyBraces.loc_err(loc))?;
 
         vs.push((Some(cond0),body0));
     }
 
     //
-    while let Ok(pre)=primitives.first().and_then(|p|p.has_identifiers(["elif","else"])).map(|v|v.value) {
+    while let Ok(pre)=primitives.pop_with_identifiers(["elif","else"]).map(|v|v.value) {
         match pre {
             "elif" => {
-                primitives.pop_front().unwrap();
-
-                let cond1=primitives.pop_front().and_then(|p|p.get_parenthesis())
-                    .or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedParenthesis }))?;
-                let body1=primitives.pop_front().and_then(|p|p.get_curly())
-                    .or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedCurlyBraces }))?;
-
+                let cond1=primitives.pop_parenthesis().or_else(|loc|BuilderErrorType::ExpectedParenthesis.loc_err(loc))?;
+                let body1=primitives.pop_curly().or_else(|loc|BuilderErrorType::ExpectedCurlyBraces.loc_err(loc))?;
                 vs.push((Some(cond1),body1));
             }
             "else" => {
-                primitives.pop_front().unwrap();
-
-                let body2=primitives.pop_front().and_then(|p|p.get_curly())
-                    .or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedCurlyBraces }))?;
-
+                let body2=primitives.pop_curly().or_else(|loc|BuilderErrorType::ExpectedCurlyBraces.loc_err(loc))?;
                 vs.push((None,body2));
                 break;
             }

@@ -79,7 +79,10 @@ impl<'a> PrimitiveContainer<'a> {
             Err(self.start_loc())
         }
     }
-    pub fn has_identifiers<'b,I:IntoIterator<Item = &'b str>>(&self,idns:I) -> Result<ValueContainer<'a,&'a str>,Loc> {
+    pub fn has_identifiers<'b,I>(&self,idns:I) -> Result<ValueContainer<'a,&'a str>,Loc>
+    where
+        I:IntoIterator<Item = &'b str>,
+    {
         let g=self.get_identifier()?;
 
         for idn in idns.into_iter() {
@@ -90,40 +93,6 @@ impl<'a> PrimitiveContainer<'a> {
 
         Err(self.start_loc())
     }
-
-    pub fn identifier(&self,idn:&str) -> Result<(),Loc> {
-        if idn == self.get_identifier()?.value {
-            Ok(())
-        } else {
-            Err(self.start_loc())
-        }
-    }
-    // pub fn get_end(&self) -> bool {
-    //     if let PrimitiveType::End=self.primitive().primitive_type {
-    //         true
-    //     } else {
-    //         false
-    //     }
-    // }
-
-    // pub fn get_block(&self) -> Option<BlockContainer<'a>> {
-    //     match self.primitive().primitive_type {
-    //         PrimitiveType::Root(_)| //primtive not provided for root?
-    //         PrimitiveType::CurlyBlock(_)|
-    //         PrimitiveType::SquareBlock(_)|
-    //         PrimitiveType::ParenthesesBlock(_)
-    //         => Some(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind }),
-    //         _ => None,
-    //     }
-    // }
-
-    // pub fn get_curly(&self) -> Result<BlockContainer<'a>,Loc> {
-    //     if let PrimitiveType::CurlyBlock(_)=self.primitive().primitive_type {
-    //         Ok(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind })
-    //     } else {
-    //         Err(self.start_loc())
-    //     }
-    // }
 
     pub fn get_curly(&self) -> Result<ValueContainer<'a,PrimitiveIterContainer<'a>>,Loc> {
         if let PrimitiveType::CurlyBlock(b)=self.primitive().primitive_type {
@@ -136,13 +105,6 @@ impl<'a> PrimitiveContainer<'a> {
         }
     }
 
-    // pub fn get_parenthesis(&self) -> Result<BlockContainer<'a>,Loc> {
-    //     if let PrimitiveType::ParenthesesBlock(_)=self.primitive().primitive_type {
-    //         Ok(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind })
-    //     } else {
-    //         Err(self.start_loc())
-    //     }
-    // }
     pub fn get_parenthesis(&self) -> Result<ValueContainer<'a,PrimitiveIterContainer<'a>>,Loc> {
         if let PrimitiveType::ParenthesesBlock(b)=self.primitive().primitive_type {
             // println!("b is {b}");
@@ -155,13 +117,6 @@ impl<'a> PrimitiveContainer<'a> {
         }
     }
 
-    // pub fn get_square(&self) -> Result<BlockContainer<'a>,Loc> {
-    //     if let PrimitiveType::SquareBlock(_)=self.primitive().primitive_type {
-    //         Ok(BlockContainer{ parsed: self.parsed, primitive_ind: self.primitive_ind })
-    //     } else {
-    //         Err(self.start_loc())
-    //     }
-    // }
     pub fn get_square(&self) -> Result<ValueContainer<'a,PrimitiveIterContainer<'a>>,Loc> {
         if let PrimitiveType::SquareBlock(b)=self.primitive().primitive_type {
             let b=&self.parsed.blocks[b];
@@ -172,6 +127,7 @@ impl<'a> PrimitiveContainer<'a> {
             Err(self.start_loc())
         }
     }
+
     pub fn is_eol(&self) -> bool {
         if let PrimitiveType::Eol=self.primitive().primitive_type {
             true
@@ -254,30 +210,6 @@ impl<'a> PrimitiveContainer<'a> {
             false
         }
     }
-    // pub fn expect_int(&self) -> Result<i64,Loc> {
-    //     self.get_int().ok_or_else(||self.start_loc())
-    // }
-    // pub fn expect_float(&self) -> Result<f64,Loc> {
-    //     self.get_float().ok_or_else(||self.start_loc())
-    // }
-    // pub fn expect_string(&self) -> Result<&'a str,Loc> {
-    //     self.get_string().ok_or_else(||self.start_loc())
-    // }
-    // pub fn expect_symbol(&self) -> Result<&'a str,Loc> {
-    //     self.get_symbol().ok_or_else(||self.start_loc())
-    // }
-    // pub fn expect_identifier(&self) -> Result<&'a str,Loc> {
-    //     self.get_identifier().ok_or_else(||self.start_loc())
-    // }
-    // pub fn expect_curly(&self) -> Result<BlockContainer<'a>,Loc> {
-    //     self.get_curly().ok_or_else(||self.start_loc())
-    // }
-    // pub fn expect_parenthesis(&self) -> Result<BlockContainer<'a>,Loc> {
-    //     self.get_parenthesis().ok_or_else(||self.start_loc())
-    // }
-    // pub fn expect_square(&self) -> Result<BlockContainer<'a>,Loc> {
-    //     self.get_square().ok_or_else(||self.start_loc())
-    // }
 }
 
 

@@ -1,10 +1,10 @@
 use std::{fmt::Debug, path::PathBuf};
 
-use crate::{ast, cexpr_parser::ParserErrorType, error_msg, Loc, StringVal};
+use crate::{ast, builder::BuilderError, cexpr_parser::ParserErrorType, error_msg, Loc, StringVal};
 
 
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Copy)]
 pub enum BuilderErrorType {
     ExpectedParenthesis,
     ExpectedCurlyBraces,
@@ -43,9 +43,38 @@ pub enum BuilderErrorType {
     CannotCallGetVar,
 }
 
+impl BuilderErrorType {
+    pub fn loc_err<T>(&self,loc:Loc) -> Result<T,BuilderError<BuilderErrorType>> {
+        Err(BuilderError{ loc, error_type:*self })
+    }
+}
 
 
 
+// // impl FnOnce(Loc) -> Result<ValueContainer<'a, PrimitiveIterContainer<'a>>, BuilderError<BuilderErrorType>>
+// impl<T> Into<Box<dyn FnOnce(Loc)->Result<T,BuilderError<BuilderErrorType>>>> for BuilderErrorType {
+//     fn into(self) -> Box<dyn FnOnce(Loc)->Result<T,BuilderError<BuilderErrorType>>> {
+//         let error_type=self;
+//         Box::new(move|loc|Err(BuilderError{ loc, error_type }))
+//     }
+// }
+
+// //ValueContainer<'a, PrimitiveIterContainer<'a>>
+// // impl               FnOnce(Loc)->Result<T, BuilderError<BuilderErrorType>>
+
+// //Box< FnOnce(Loc)->Result<T,BuilderError<BuilderErrorType>>>
+// impl<T,R:FnOnce(Loc)->Result<T,BuilderError<BuilderErrorType>>> Into<R> for BuilderErrorType
+
+
+// {
+//     fn into(self) -> R {
+//         let error_type=self;
+//         // Box::new()
+//         move|loc|Err(BuilderError{ loc, error_type })
+//     }
+// }
+
+// |loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedParenthesis })
 
 #[derive(Debug,Clone)]
 pub enum CompileErrorType {
