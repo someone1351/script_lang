@@ -36,7 +36,7 @@ impl<'a> PrimitiveContainer<'a> {
             PrimitiveType::Int(x, _) => PrimitiveTypeContainer::Int(x),
             PrimitiveType::String(x) => PrimitiveTypeContainer::String(self.parsed.texts[x].as_str()),
             PrimitiveType::Symbol(x) => PrimitiveTypeContainer::Symbol(self.parsed.texts[x].as_str()),
-            PrimitiveType::Identifier(x) => PrimitiveTypeContainer::Symbol(self.parsed.texts[x].as_str()),
+            PrimitiveType::Identifier(x) => PrimitiveTypeContainer::Identifier(self.parsed.texts[x].as_str()),
             // PrimitiveType::End => PrimitiveTypeContainer::End,
             PrimitiveType::Eol => PrimitiveTypeContainer::Eol,
             PrimitiveType::Eob => PrimitiveTypeContainer::Eob,
@@ -145,6 +145,7 @@ impl<'a> PrimitiveContainer<'a> {
     // }
     pub fn get_parenthesis(&self) -> Result<ValueContainer<'a,PrimitiveIterContainer<'a>>,Loc> {
         if let PrimitiveType::ParenthesesBlock(b)=self.primitive().primitive_type {
+            // println!("b is {b}");
             let b=&self.parsed.blocks[b];
             let r=b.primitives.clone();
             let value =PrimitiveIterContainer { last_loc:b.inner_start_loc ,start: r.start, end: r.end, parsed: self.parsed };
@@ -279,3 +280,16 @@ impl<'a> PrimitiveContainer<'a> {
     // }
 }
 
+
+impl<'a> std::fmt::Debug for PrimitiveContainer<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("Primitive{}({:?})", &self.primitive_ind,&self.primitive_type()))
+        // f.wr
+        // f.debug_struct("Primitive")
+        // // .field("parsed", &self.parsed)
+        // .field("primitive_ind", &self.primitive_ind)
+        // .field("loc", &self.start_loc())
+        // .field("primitive_type", &format!("{:?}",self.primitive_type()))
+        // .finish()
+    }
+}

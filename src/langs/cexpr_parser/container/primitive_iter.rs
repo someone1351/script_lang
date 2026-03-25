@@ -196,3 +196,11 @@ impl<'a> DoubleEndedIterator for PrimitiveIterContainer<'a> {
         }
     }
 }
+
+impl<'a> std::fmt::Debug for PrimitiveIterContainer<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+
+        f.write_fmt(format_args!("PrimitiveIter({})", self.clone().map(|p|format!("{p:?}")).collect::<Vec<String>>().join(", ")))
+
+    }
+}

@@ -179,87 +179,105 @@ impl Compiler {
 
     pub fn run<'a>(&self,
         builder:&mut Builder<'a,PrimitiveIterContainer<'a>,BuilderErrorType>,
-        top_primitive_iter:PrimitiveIterContainer<'a>,
+        mut top_primitive_iter:PrimitiveIterContainer<'a>,
         next_anon_id:&mut usize,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
         let prefixes : HashSet<&'static str>=["+","-","!"].into();
         let infixes : HashSet<&'static str>=["+","-","*","/","&&","||","^","==","!=",">=","<=","<",">","^","%"].into();
         let setters  : HashSet<&'static str>=["=","+=","-=","*=","/="].into();
 
-        let Ok(first_primitive)=top_primitive_iter.first() else { return Ok(()) };
-        builder.loc(first_primitive.start_loc());
+        //
+        while let Ok(first_primitive)=top_primitive_iter.pop_front() {
 
-        match first_primitive.primitive_type() {
-            PrimitiveTypeContainer::CurlyBlock(b) => { //code block
-                builder.eval(b);
-            }
-            PrimitiveTypeContainer::SquareBlock(b) => { //array or dict
-                // let is_dict=b.children().find(|p|p.get_symbol().map(|s|s.eq(":")).unwrap_or(false)).is_some();
+            // let Ok(first_primitive)=top_primitive_iter.first() else { return Ok(()) };
+            builder.loc(first_primitive.start_loc());
+            println!("hmm {first_primitive:?}",);
 
+            match first_primitive.primitive_type() {
+                PrimitiveTypeContainer::CurlyBlock(b) => { //code block
+                    builder.eval(b);
+                }
+                PrimitiveTypeContainer::SquareBlock(b) => { //array or dict
+                    // let is_dict=b.children().find(|p|p.get_symbol().map(|s|s.eq(":")).unwrap_or(false)).is_some();
+                }
+                PrimitiveTypeContainer::ParenthesesBlock(b) => {} //expr
 
-            }
-            PrimitiveTypeContainer::ParenthesesBlock(b) => {} //expr
+                PrimitiveTypeContainer::Float(x) => { //float
+                    builder.result_float(x);
+                }
+                PrimitiveTypeContainer::Int(x) => { //int
+                    builder.result_int(x);
+                }
+                PrimitiveTypeContainer::String(x) => { //string
+                    builder.result_string(x);
+                }
+                PrimitiveTypeContainer::Symbol(x) => { //
+                }
+                PrimitiveTypeContainer::Identifier(x) => { //cmd or idn
+                    // println("")
+                    if let Some(cmds)=self.cmds.get(x) {
+                        // let mut primitives=top_primitive_iter.clone();
+                        let mut errors=Vec::<BuilderError<BuilderErrorType>>::new();
 
-            PrimitiveTypeContainer::Float(x) => { //float
-                builder.result_float(x);
-            }
-            PrimitiveTypeContainer::Int(x) => { //int
-                builder.result_int(x);
-            }
-            PrimitiveTypeContainer::String(x) => { //string
-                builder.result_string(x);
-            }
-            PrimitiveTypeContainer::Symbol(x) => { //
-            }
-            PrimitiveTypeContainer::Identifier(x) => { //cmd or idn
-                if let Some(cmds)=self.cmds.get(x) {
-                    let mut primitives=top_primitive_iter.get_range(1..);
-                    // let mut primitives=top_primitive_iter.clone();
-	                let mut errors=Vec::<BuilderError<BuilderErrorType>>::new();
+                        //
+                        builder.temp_mark();
+                        builder.set_anon_scope(*next_anon_id);
 
-                    //
-                    builder.temp_mark();
-                    builder.set_anon_scope(*next_anon_id);
+                        //
+                        for cmd in cmds {
+                            let mut primitives=top_primitive_iter.clone();
 
-                    //
-                    for cmd in cmds {
-                        if let Err(e)=cmd(&mut primitives,builder) {
-                            errors.push(e);
-                            builder.temp_clear();
-                        } else { //ok
-                            errors.clear();
-                            *next_anon_id+=1;
-                            break;
+                            if let Err(e)=cmd(&mut primitives,builder) {
+                                errors.push(e);
+                                builder.temp_clear();
+                                println!("  not ok");
+                            } else { //ok
+                                println!("  is ok");
+                                errors.clear();
+                                *next_anon_id+=1;
+                                top_primitive_iter=primitives;
+                                break;
+                            }
                         }
-                    }
 
-                    //
-	                builder.set_anon_scope(0);
-                } else {
-                    match x {
-                        "true" => {
-                            builder.result_bool(true);
+                        //
+                        builder.set_anon_scope(0);
+
+                        //
+                        if errors.len()>0 {
+                            errors.sort_by(|a,b|a.loc.cmp(&b.loc));
+                            return Err(errors.last().unwrap().clone());
                         }
-                        "false" => {
-                            builder.result_bool(false);
-                        }
-                        "nil" => {
-                            builder.result_nil();
-                        }
-                        "void" => {
-                            builder.result_void();
-                        }
-                        _ => {
-                            // builder.get_var(x);
+                    } else {
+                        match x {
+                            "true" => {
+                                builder.result_bool(true);
+                            }
+                            "false" => {
+                                builder.result_bool(false);
+                            }
+                            "nil" => {
+                                builder.result_nil();
+                            }
+                            "void" => {
+                                builder.result_void();
+                            }
+                            _ => {
+                                // builder.get_var(x);
+                            }
                         }
                     }
                 }
+                // PrimitiveTypeContainer::End => {} //eol or eof //ignore
+                PrimitiveTypeContainer::Eol => {}
+                PrimitiveTypeContainer::Eob => {}
             }
-            // PrimitiveTypeContainer::End => {} //eol or eof //ignore
-            PrimitiveTypeContainer::Eol => {}
-            PrimitiveTypeContainer::Eob => {}
+
         }
 
+        //handle exprs
+
+        //
         Ok(())
     }
 

@@ -94,44 +94,44 @@ impl Parsed {
 
             match primitive.primitive_type {
                 PrimitiveType::Root(b) => {
-                    println!("{indent}root");
+                    println!("{indent}{cur} root");
                     for i in self.blocks[b].primitives.clone().rev() { work.push((i,depth+1)); }
                 }
                 PrimitiveType::CurlyBlock(b) => {
-                    println!("{indent}curly_block");
+                    println!("{indent}{cur} curly_block");
                     for i in self.blocks[b].primitives.clone().rev() { work.push((i,depth+1)); }
                 }
                 PrimitiveType::SquareBlock(b) => {
-                    println!("{indent}square_block");
+                    println!("{indent}{cur} square_block");
                     for i in self.blocks[b].primitives.clone().rev() { work.push((i,depth+1)); }
                 }
                 PrimitiveType::ParenthesesBlock(b) => {
-                    println!("{indent}parenth_block");
+                    println!("{indent}{cur} parenth_block");
                     for i in self.blocks[b].primitives.clone().rev() { work.push((i,depth+1)); }
                 }
                 PrimitiveType::Float(_, s) => {
-                    println!("{indent}float({})",self.texts[s]);
+                    println!("{indent}{cur} float({})",self.texts[s]);
                 }
                 PrimitiveType::Int(_, s) => {
-                    println!("{indent}int({})",self.texts[s]);
+                    println!("{indent}{cur} int({})",self.texts[s]);
                 }
                 PrimitiveType::String(s) => {
-                    println!("{indent}string({})",self.texts[s]);
+                    println!("{indent}{cur} string({})",self.texts[s]);
                 }
                 PrimitiveType::Symbol(s) => {
-                    println!("{indent}symbol({})",self.texts[s]);
+                    println!("{indent}{cur} symbol({})",self.texts[s]);
                 }
                 PrimitiveType::Identifier(s) => {
-                    println!("{indent}identifier({})",self.texts[s]);
+                    println!("{indent}{cur} identifier({})",self.texts[s]);
                 }
                 // PrimitiveType::End => {
-                //     println!("{indent}end");
+                //     println!("{indent}{cur} end");
                 // }
                 PrimitiveType::Eol => {
-                    println!("{indent}eol");
+                    println!("{indent}{cur} eol");
                 }
                 PrimitiveType::Eob => {
-                    println!("{indent}eob");
+                    println!("{indent}{cur} eob");
                 }
             }
         }
