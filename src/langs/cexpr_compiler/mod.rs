@@ -191,6 +191,7 @@ impl Compiler {
             Symbol(PrimitiveContainer<'b>),
             Identifier(PrimitiveContainer<'b>),
         }
+
         let mut cur_expr: Vec<ExprVal>= Vec::new();
 
         //
@@ -219,6 +220,14 @@ impl Compiler {
                     builder.result_string(x);
                 }
                 PrimitiveTypeContainer::Symbol(x) => { //
+                    match x {
+                        ";" => {
+
+                        }
+                        _ => {
+
+                        }
+                    }
                 }
                 PrimitiveTypeContainer::Identifier(x) => { //cmd or idn
                     // println("")
@@ -268,6 +277,7 @@ impl Compiler {
                                 builder.result_void();
                             }
                             _ => {
+                                cur_expr.push(ExprVal::Identifier(first_primitive));
                                 // builder.get_var(x);
                             }
                         }
