@@ -7,13 +7,17 @@ use super::super::error::*;
 pub fn if_cmd<'a>(primitives : &mut PrimitiveIterContainer<'a>, builder :&mut Builder<'a,PrimitiveIterContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>> {
     let mut vs = Vec::new();
 
-    let cond0=primitives.pop_front().and_then(|p|p.get_parenthesis())
-        .or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedParenthesis }))?;
-    let body0= primitives.pop_front().and_then(|p|p.get_curly())
-        .or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedCurlyBraces }))?;
+    //
+    {
+        let cond0=primitives.pop_front().and_then(|p|p.get_parenthesis())
+            .or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedParenthesis }))?;
+        let body0= primitives.pop_front().and_then(|p|p.get_curly())
+            .or_else(|loc|Err(BuilderError{ loc, error_type: BuilderErrorType::ExpectedCurlyBraces }))?;
 
-    vs.push((Some(cond0),body0));
+        vs.push((Some(cond0),body0));
+    }
 
+    //
     while let Ok(pre)=primitives.first().and_then(|p|p.has_identifiers(["elif","else"])).map(|v|v.value) {
         match pre {
             "elif" => {
