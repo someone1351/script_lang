@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 // use std::fmt::Debug;
-use std::marker::PhantomData;
+// use std::marker::PhantomData;
 
 
 
@@ -91,9 +91,17 @@ pub struct BuilderNode<'a,T:Clone+'a,E:Clone> {
     pub loc : Option<Loc>,
 }
 
+pub struct BuilderChunk {
+    start:usize,
+    cur_loc:Loc,
+    anon_id:usize,
+}
+
 
 pub struct Builder<'a,T:Clone+'a,E:Clone> {
-    phantom_data:PhantomData<E>,
+    // phantom_data:PhantomData<E>,
+
+    chunks:Vec<BuilderChunk>,
     temp_stk : Vec<BuilderNode<'a,T,E>>,
     cur_loc:Option<Loc>,
     // next_cmd_anon_id : usize,
@@ -129,164 +137,30 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
     }
 
 
-    pub fn get_fields<F>(&mut self, fields : F) -> &mut Self
-    where
-        // F : IntoIterator<Item = (BuilderField<'a,T>,Loc)>,
-        F : IntoIterator<Item = (T,bool,Loc)>,
-    {
 
-        //fields
-        for field in fields.into_iter() {
-            self.param_push(); //last result
+    /*
+    mark()
+    mark_discard()
+    mark_keep()
 
-            // match field.0 {
-            //     BuilderField::Eval(x) => { self.eval(x); }
-            //     BuilderField::String(x) => { self.result_string(x); }
-            // }
-
-            self.eval(field.0.clone()); //what is this for??
-
-            self
-                .loc(field.2)
-                .param_push()
-                .swap()
-                // .call_method("get_field", 2)
-                .get_field(field.1)
-                ;
-        }
-
-        self
+    mark_take()
+    extend(items)
+    */
+    pub fn chunk_new(&mut self) {
+        self.cur_anon_id+=1;
+        self.chunks.push(BuilderChunk { start: self.temp_stk.len(), cur_loc:self.cur_loc.unwrap_or_default(), anon_id: self.cur_anon_id });
+    }
+    pub fn chunk_extend(&mut self) {
     }
 
-    pub fn set_fields_begin<F>(&mut self, fields : F) -> &mut Self
-    where
-        F : IntoIterator<Item = (T,bool,Loc)>,
-    {
+    pub fn chunk_pop(&mut self) { //chunk_discard, chunk_keep
+        self.chunks.pop();
 
-        self.block_start(None); //needed for try_call_method
+        if let Some(c)=self.chunks.last() {
 
-        let fields=fields.into_iter().collect::<Vec<_>>();
-
-        //fields
-        for field_ind in 0 .. fields.len() {
-            //push last result
-            if fields.len()>1 {
-                self.param_push();
-            }
-
-            //push last result
-            self.param_push();
-
-            //push last result
-            if field_ind!=0 && field_ind!=fields.len()-1 { //not first or last field
-                self.param_push();
-            }
-
-            // //on last field : push to
-            // if field_ind==fields.len()-1 {
-            //     //push to_val
-            //     self
-            //         .eval(to_val.0.clone())
-            //         .param_push()
-            //         .swap()
-            //         ;
-            // }
-
-            //result toval => toval result
-            //toval result field => toval field result
-            //----
-            //result
-            //result field => field result
-
-            //
-            let field=fields.get(field_ind).unwrap();
-
-            self.eval(field.0.clone());
-            self.loc(field.2);
-
-
-            //push field, swap
-            self
-                .param_push()
-                .swap();
-
-            //on not last field
-            if field_ind!=fields.len()-1 {
-                //push field, swap
-                self
-                    .param_push()
-                    .swap();
-
-                //get_field
-                // self.call_method("get_field", 2);
-                self.get_field(field.1);
-            }
         }
-
-        //
-        self
     }
-    pub fn set_fields_end<F>(&mut self,
-        //fields_len:usize
-        fields : F) -> &mut Self
-    where
-        F : DoubleEndedIterator<Item = (T,bool,Loc)>,
-    {
-        let mut fields=fields.into_iter().rev();
-        let last_field=fields.next().unwrap();
-        // for f in fields {
-
-        // }
-        //push to_val
-        self //=> field result
-            .param_push() //=> field result to_val
-            .rot_right() //=> result to_val field
-            .rot_right(); //=> to_val field result
-
-        //
-        // self.call_method("set_field", 3);
-        self.set_field(last_field.1,true);
-
-        //sometimes is unecessary to call, for things like arrays and dicts, since they hold "pointer" like values,
-        //  and not copies, but for get_field's that return a copy and not a "pointer", then
-        //  it must be modified and then copied back to its original owner
-
-        //if a set_field method doesn't exist, want to abandon the set_field chain?
-        //could try to call a special set_field_end (and also a get_field_end),
-        //  might be useful for special fields like thing.0.color vs thing.0.color.on_press
-        //  but problem is: set thing.0.color.r 0.5 vs: set thing.0.color.on_press .r 0.5
-        // println!("fields num is {fields_num}");
-
-
-        // for _ in 0 .. fields_len-1
-        for field in fields
-        {
-            self
-                .rot_right()
-                .rot_right()
-                .swap()
-
-                //
-                // // .try_call_method("set_field", 3) //allowed to fail if no set_field method
-                // // .block_start(None)
-                // //     .to_block_end(JmpCond::NotUndefined, 0)
-                // //     .pop_params() //will pop all params though ...
-                // //     .to_block_end(JmpCond::None, 1) //todo:need to make try_call_method return undefined on fail
-                // // .block_end()
-                // // //todo: also need a way to store result of prev set_field, and re set it as result on try_call_method fail
-                // // //  why? don't use the result of a set_field anyway?
-                // // //     because it can eg var r {set a.x 5}, could optionally return void or something else
-                // // //       in that case just return undefined when method missing?
-                // // //todo: on try method fail, pop off unused params? don't need to, ast handles that?
-
-                // .call_method("set_field", 3)
-                .set_field(field.1,false)
-                ;
-        }
-
-        self.block_end(); //needed for try_call_method
-
-        self
+    pub fn chunk_flatten(&mut self) {
     }
 
     //allows backtracking on inputs
@@ -302,7 +176,8 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
     //
     pub fn new() -> Self {
         Self {
-            phantom_data:Default::default(),
+            chunks:Default::default(),
+            // phantom_data:Default::default(),
             temp_stk : Default::default(),
             // ast : BuilderAst::new(),
             nodes : Default::default(),
@@ -820,6 +695,166 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
     // }
 
 
+    pub fn get_fields<F>(&mut self, fields : F) -> &mut Self
+    where
+        // F : IntoIterator<Item = (BuilderField<'a,T>,Loc)>,
+        F : IntoIterator<Item = (T,bool,Loc)>,
+    {
+
+        //fields
+        for field in fields.into_iter() {
+            self.param_push(); //last result
+
+            // match field.0 {
+            //     BuilderField::Eval(x) => { self.eval(x); }
+            //     BuilderField::String(x) => { self.result_string(x); }
+            // }
+
+            self.eval(field.0.clone()); //what is this for??
+
+            self
+                .loc(field.2)
+                .param_push()
+                .swap()
+                // .call_method("get_field", 2)
+                .get_field(field.1)
+                ;
+        }
+
+        self
+    }
+
+    pub fn set_fields_begin<F>(&mut self, fields : F) -> &mut Self
+    where
+        F : IntoIterator<Item = (T,bool,Loc)>,
+    {
+
+        self.block_start(None); //needed for try_call_method
+
+        let fields=fields.into_iter().collect::<Vec<_>>();
+
+        //fields
+        for field_ind in 0 .. fields.len() {
+            //push last result
+            if fields.len()>1 {
+                self.param_push();
+            }
+
+            //push last result
+            self.param_push();
+
+            //push last result
+            if field_ind!=0 && field_ind!=fields.len()-1 { //not first or last field
+                self.param_push();
+            }
+
+            // //on last field : push to
+            // if field_ind==fields.len()-1 {
+            //     //push to_val
+            //     self
+            //         .eval(to_val.0.clone())
+            //         .param_push()
+            //         .swap()
+            //         ;
+            // }
+
+            //result toval => toval result
+            //toval result field => toval field result
+            //----
+            //result
+            //result field => field result
+
+            //
+            let field=fields.get(field_ind).unwrap();
+
+            self.eval(field.0.clone());
+            self.loc(field.2);
+
+
+            //push field, swap
+            self
+                .param_push()
+                .swap();
+
+            //on not last field
+            if field_ind!=fields.len()-1 {
+                //push field, swap
+                self
+                    .param_push()
+                    .swap();
+
+                //get_field
+                // self.call_method("get_field", 2);
+                self.get_field(field.1);
+            }
+        }
+
+        //
+        self
+    }
+    pub fn set_fields_end<F>(&mut self,
+        //fields_len:usize
+        fields : F) -> &mut Self
+    where
+        F : DoubleEndedIterator<Item = (T,bool,Loc)>,
+    {
+        let mut fields=fields.into_iter().rev();
+        let last_field=fields.next().unwrap();
+        // for f in fields {
+
+        // }
+        //push to_val
+        self //=> field result
+            .param_push() //=> field result to_val
+            .rot_right() //=> result to_val field
+            .rot_right(); //=> to_val field result
+
+        //
+        // self.call_method("set_field", 3);
+        self.set_field(last_field.1,true);
+
+        //sometimes is unecessary to call, for things like arrays and dicts, since they hold "pointer" like values,
+        //  and not copies, but for get_field's that return a copy and not a "pointer", then
+        //  it must be modified and then copied back to its original owner
+
+        //if a set_field method doesn't exist, want to abandon the set_field chain?
+        //could try to call a special set_field_end (and also a get_field_end),
+        //  might be useful for special fields like thing.0.color vs thing.0.color.on_press
+        //  but problem is: set thing.0.color.r 0.5 vs: set thing.0.color.on_press .r 0.5
+        // println!("fields num is {fields_num}");
+
+
+        // for _ in 0 .. fields_len-1
+        for field in fields
+        {
+            self
+                .rot_right()
+                .rot_right()
+                .swap()
+
+                //
+                // // .try_call_method("set_field", 3) //allowed to fail if no set_field method
+                // // .block_start(None)
+                // //     .to_block_end(JmpCond::NotUndefined, 0)
+                // //     .pop_params() //will pop all params though ...
+                // //     .to_block_end(JmpCond::None, 1) //todo:need to make try_call_method return undefined on fail
+                // // .block_end()
+                // // //todo: also need a way to store result of prev set_field, and re set it as result on try_call_method fail
+                // // //  why? don't use the result of a set_field anyway?
+                // // //     because it can eg var r {set a.x 5}, could optionally return void or something else
+                // // //       in that case just return undefined when method missing?
+                // // //todo: on try method fail, pop off unused params? don't need to, ast handles that?
+
+                // .call_method("set_field", 3)
+                .set_field(field.1,false)
+                ;
+        }
+
+        self.block_end(); //needed for try_call_method
+
+        self
+    }
+
 
 
     // ===
@@ -837,9 +872,13 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         while let Some(node)=working_stk.pop() {
             match node.node_type {
                 BuilderNodeType::EvalPrimitive{ primitive, data }=> {
-                    self.cur_flags=data;
+                    let mut last_flags=data;
+                    // self.cur_flags=data;
+                    std::mem::swap(&mut self.cur_flags, &mut last_flags);
+
                     callback(self,primitive)?;
-                    self.cur_flags.clear();
+                    // self.cur_flags.clear();
+                    self.cur_flags=last_flags;
                 }
 				BuilderNodeType::Ast(x)=>{
                     self.nodes.push((x,node.loc));

@@ -29,3 +29,268 @@ get {call some_func} 0
 get a.x.y 0
 
 set a.x.y 0 100
+
+
+###
+
+
+
+{
+	1
+}
+
+fn myfunc {a b} {
+	* a b
+}
+
+fn test {a b} {
+	if {< a b} a else b
+}
+
+var test2 {fn {a b} {? {< a b} a b}}
+
+println "test {}" {call test 1 2}
+println "test {}" {call test 4 3}
+println "test {}" {call test2 6 7}
+
+
+# println("test {}" test2(6 7))
+# println("test {}", test2(6, 7))
+# dot(a,b)
+# {dot a b}
+# fn abc (a,b) {+ a b}
+# +(1 2)
+# +(1, 2)
+# [1 2 + 3 *]
+# eval [1 + x * 3]
+# eval 1 + x * 3
+# eval (1 + x) * 3
+
+# [1 + x * 3]
+# [1 + x*3]
+
+# rpolish [x 3 * 1 +]
+# {rpolish x 3 * 1 +}
+# {polish * x 3 + 1}
+
+
+var b false;
+? b {println "y"} {println "n"}
+or {and b {println "t"} } {println "f"}
+
+
+
+for i 0 10 {
+	if {= 0 {mod i 2}} {
+		println "hello {i}";
+	} elif {= 0 {mod i 3}} {
+		println "other3 {} {}" i {call myfunc i 5};
+	} else {
+		println "other {} {}" i {call myfunc i 5};
+	}
+}
+
+var aaa {array 1 2 {array 3 4} 5}
+
+println aaa;
+println {get aaa 2 1}
+
+var h {dict :a 1 :b 2 :c 3}
+println h
+println {get h :b}
+
++ 1 2
+
+var self;
+println "self {}" {h}
+
+
+
+#var a 5
+#fn myfunc {a b} {* a b}
+#func myfunc {a b} {* a b}
+#methd abc {a:int b:int} {+ a b}
+
+#var a 5
+#function myfunc {a b} {* a b}
+#method abc {a:int b:int} {+ a b}
+
+#defv a 5
+#defn myfunc {a b} {* a b}
+#defm abc {a:int b:int} {+ a b}
+
+###
+
+#var h 5;
+#var self;
+
+#println "self {}" self #{self}
+
+#for j 0 4 { }
+
+#for j 0 4 { }
+
+#fn abc { self }
+#fn abc { println "self is {self}" }
+#call abc
+
+
+#var self
+
+
+#selfa
+
+#fn myfunc a b {+ $a $b}
+#var a $b;
+
+#var self;
+#set self 44343;
+
+#fn xx self
+#call xx
+
+set self 444
+
+#println self
+#+ self
+
+###
+
+var a {array 0 11 22 {array 30 31 32 33} 44}
+
+var i 2;
+set a.3.{i} 43
+
+println a
+
+
+var d {dict :a 1 :b {array 55 66 77}}
+
+println {d."b".2}
+
+###
+
++ a b
+a.xy.4.{i}
+expr 1+4
+expr @a 1*-4
+abc{}
+
+###
+
+
+fn myfunc {a b} {
+	* a b
+}
+
+for i 0 10 {
+	if {= 0 {mod i 2}} { # mod is a method (function from rust), so doesn't need to use the "call" command to run it
+		println "hello {i}";
+	} elif {= 0 {mod i 3}} {
+		println "other3 {} {}" i {call myfunc i 5};
+	} else {
+		println "other {} {}" i {call myfunc i 5};
+	}
+}
+
+fn thing {a} {
+	#when returning variable, need dollar prefix, everywhere else the prefix is optional
+	$a
+	#return a
+}
+
+call thing 44
+thing 44
+
+var v {array 1 {fn {} 123} {fn {a} {+ a 1}}}
+
+v.2 11
+
+fn abc(a b) {
+	+ a b 12
+}
+
+abc 11 22
+
+var a [array 0 1 2 3]
+var i 2
+set a.$i 99
+println a
+
+
+var a2 [array 0 [array 1 [array 22]] ]
+set a2.1.1.0 1112
+
+println "a2 is {}" a2.1.1.0
+
+
+var d [dict]
+#set d.func {fn {x} {println "hello {x}"}}
+fn d.func {x} {println "hello {x}"}
+
+d.func "joe"
+
+###
+
+var k 0;
+
+while true {
+    set k (+ k 1)
+    println "k is {k}"
+
+    if (< k 5) {
+        continue;
+    }
+
+    println "end"
+    break
+}
+
+###
+
+#{
+#    var t {thing}
+#    fn abc {} { println "{}" t }   store abc
+#}
+
+
+#var root;
+#var _stubs;
+#var _ns {create _stubs 0 root};
+
+fn _n1 {self} {
+    add_event_listener self "click" [fn {} {
+        println "{self} was clicked";
+    }];
+}
+#var _r1 {_n1 _ns.1};
+var _r1 {_n1 123};
+
+###
+
+var g {array 0 1 (array 2 3 {dict "x" 11 "y" 22 "z" {array 33 44 55}})}
+set g.2.2.z.1 99
+println g
+
+###
+
+#var a (array 1 2 3)
+#a.len
+
+var v (array (dict "abc" (array )))
+v.0.abc.push 99
+println v
+
+###
+
+var e
+
+fn abc (e) {
+    for i 3 4 {
+        set e.77.width 99
+    }
+}
+
+call abc e
+
+###
