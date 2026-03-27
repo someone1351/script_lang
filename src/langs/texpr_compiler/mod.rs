@@ -209,7 +209,7 @@ impl Compiler {
 
                                     // let last_loc=builder.cur_loc;
                                     // let temp_stk_last_len = builder.temp_stk.len();
-                                    builder.temp_mark();
+                                    builder.mark();
 
                                     // builder.in_cmd=true;
                                     builder.set_anon_scope(*next_anon_id);
@@ -222,7 +222,7 @@ impl Compiler {
                                             //reset
                                             // builder.cur_loc=last_loc;
                                             // builder.temp_stk.truncate(temp_stk_last_len);
-                                            builder.temp_clear();
+                                            builder.discard_from_mark();
                                         } else { //ok
                                             errors.clear();
                                             // builder.next_cmd_anon_id+=1;

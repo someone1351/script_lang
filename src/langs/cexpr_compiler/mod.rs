@@ -61,7 +61,10 @@ use super::super::builder::*;
 
 use cmds::*;
 
-pub type Cmd = for<'a> fn(&mut PrimitiveIterContainer<'a>, &mut Builder<'a,PrimitiveIterContainer<'a>,BuilderErrorType>) -> Result<(),BuilderError<BuilderErrorType>>;
+pub type CExprBuilder<'a>=Builder<'a,PrimitiveIterContainer<'a>,BuilderErrorType>;
+type CExprBuilderTaken<'a>=BuilderTaken<'a,PrimitiveIterContainer<'a>,BuilderErrorType>;
+
+pub type Cmd = for<'a> fn(&mut PrimitiveIterContainer<'a>, &mut CExprBuilder<'a>) -> Result<(),BuilderError<BuilderErrorType>>;
 
 /*
 
@@ -178,7 +181,7 @@ impl Compiler {
 
 
     pub fn run<'a>(&self,
-        builder:&mut Builder<'a,PrimitiveIterContainer<'a>,BuilderErrorType>,
+        builder:&mut CExprBuilder<'a>,
         mut top_primitive_iter:PrimitiveIterContainer<'a>,
         next_anon_id:&mut usize,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
@@ -187,12 +190,12 @@ impl Compiler {
         let setters  : HashSet<&'static str>=["=","+=","-=","*=","/="].into();
 
         enum ExprVal<'b> {
-            BuilderVal(),
+            Builder(CExprBuilderTaken<'b>),
             Symbol(PrimitiveContainer<'b>),
             Identifier(PrimitiveContainer<'b>),
         }
 
-        let mut cur_expr: Vec<ExprVal>= Vec::new();
+        let mut cur_exprs: Vec<ExprVal>= Vec::new();
 
         //
         while let Ok(first_primitive)=top_primitive_iter.pop_front() {
@@ -201,9 +204,15 @@ impl Compiler {
             builder.loc(first_primitive.start_loc());
             println!("hmm {first_primitive:?}",);
 
+            let mut done=false;
+
+
+            builder.mark();
+
             match first_primitive.primitive_type() {
                 PrimitiveTypeContainer::CurlyBlock(b) => { //code block
                     builder.eval(b);
+                    cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
                 }
                 PrimitiveTypeContainer::SquareBlock(b) => { //array or dict
                     // let is_dict=b.children().find(|p|p.get_symbol().map(|s|s.eq(":")).unwrap_or(false)).is_some();
@@ -222,10 +231,10 @@ impl Compiler {
                 PrimitiveTypeContainer::Symbol(x) => { //
                     match x {
                         ";" => {
-
+                            done=true;
                         }
                         _ => {
-
+                            cur_exprs.push(ExprVal::Symbol(first_primitive));
                         }
                     }
                 }
@@ -236,7 +245,6 @@ impl Compiler {
                         let mut errors=Vec::<BuilderError<BuilderErrorType>>::new();
 
                         //
-                        builder.temp_mark();
                         builder.set_anon_scope(*next_anon_id);
 
                         //
@@ -245,11 +253,12 @@ impl Compiler {
 
                             if let Err(e)=cmd(&mut primitives,builder) {
                                 errors.push(e);
-                                builder.temp_clear();
+                                builder.discard_from_mark();
                             } else { //ok
                                 errors.clear();
                                 *next_anon_id+=1;
                                 top_primitive_iter=primitives;
+                                cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
                                 break;
                             }
                         }
@@ -266,26 +275,35 @@ impl Compiler {
                         match x {
                             "true" => {
                                 builder.result_bool(true);
+                                cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
                             }
                             "false" => {
                                 builder.result_bool(false);
+                                cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
                             }
                             "nil" => {
                                 builder.result_nil();
+                                cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
                             }
                             "void" => {
                                 builder.result_void();
+                                cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
                             }
                             _ => {
-                                cur_expr.push(ExprVal::Identifier(first_primitive));
+                                cur_exprs.push(ExprVal::Identifier(first_primitive));
                                 // builder.get_var(x);
                             }
                         }
                     }
                 }
                 // PrimitiveTypeContainer::End => {} //eol or eof //ignore
-                PrimitiveTypeContainer::Eol => {}
-                PrimitiveTypeContainer::Eob => {}
+                PrimitiveTypeContainer::Eol|PrimitiveTypeContainer::Eob => {
+                    if let Some(ExprVal::Symbol(_))=cur_exprs.last() {
+                        //there aren't any postfix symbols, so don't need to handle
+                    } else {
+                        done=true;
+                    }
+                }
             }
 
         }

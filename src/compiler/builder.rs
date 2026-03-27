@@ -91,17 +91,18 @@ pub struct BuilderNode<'a,T:Clone+'a,E:Clone> {
     pub loc : Option<Loc>,
 }
 
-pub struct BuilderChunk {
-    start:usize,
-    cur_loc:Loc,
-    anon_id:usize,
-}
+// pub struct BuilderChunk {
+//     start:usize,
+//     cur_loc:Loc,
+//     anon_id:usize,
+// }
 
+pub struct BuilderTaken<'a,T:Clone+'a,E:Clone>(Vec<BuilderNode<'a,T,E>>);
 
 pub struct Builder<'a,T:Clone+'a,E:Clone> {
     // phantom_data:PhantomData<E>,
 
-    chunks:Vec<BuilderChunk>,
+    // chunks:Vec<BuilderChunk>,
     temp_stk : Vec<BuilderNode<'a,T,E>>,
     cur_loc:Option<Loc>,
     // next_cmd_anon_id : usize,
@@ -117,8 +118,10 @@ pub struct Builder<'a,T:Clone+'a,E:Clone> {
     // global_decls : HashSet<&'a str>,
     // depth : usize,
 
+
+    temp_anon_id:usize,
     temp_last_loc:Option<Loc>,
-    temp_stk_last_len : usize,
+    temp_stk_last_len : Option<usize>,
 
     cur_flags:HashMap<&'a str,usize>,
 }
@@ -146,37 +149,59 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
     mark_take()
     extend(items)
     */
-    pub fn chunk_new(&mut self) {
-        self.cur_anon_id+=1;
-        self.chunks.push(BuilderChunk { start: self.temp_stk.len(), cur_loc:self.cur_loc.unwrap_or_default(), anon_id: self.cur_anon_id });
-    }
-    pub fn chunk_extend(&mut self) {
-    }
+    // pub fn chunk_new(&mut self) {
+    //     self.cur_anon_id+=1;
+    //     self.chunks.push(BuilderChunk { start: self.temp_stk.len(), cur_loc:self.cur_loc.unwrap_or_default(), anon_id: self.cur_anon_id });
+    // }
+    // pub fn chunk_extend(&mut self) {
+    // }
 
-    pub fn chunk_pop(&mut self) { //chunk_discard, chunk_keep
-        self.chunks.pop();
+    // pub fn chunk_pop(&mut self) { //chunk_discard, chunk_keep
+    //     self.chunks.pop();
 
-        if let Some(c)=self.chunks.last() {
+    //     if let Some(c)=self.chunks.last() {
 
-        }
-    }
-    pub fn chunk_flatten(&mut self) {
-    }
+    //     }
+    // }
+    // pub fn chunk_flatten(&mut self) {
+    // }
 
     //allows backtracking on inputs
-    pub fn temp_mark(&mut self) {
-        self.temp_last_loc=self.cur_loc;
-        self.temp_stk_last_len = self.temp_stk.len();
+    pub fn mark(&mut self) {
+        self.temp_last_loc=self.cur_loc; //also not needed?
+        self.temp_anon_id=self.cur_anon_id; //not really needed?
+        self.temp_stk_last_len = Some(self.temp_stk.len());
+        // self.cur_anon_id+=1;
     }
-    pub fn temp_clear(&mut self) {
-        self.cur_loc=self.temp_last_loc;
-        self.temp_stk.truncate(self.temp_stk_last_len);
+    pub fn remove_mark(&mut self) {
+        self.temp_stk_last_len=None;
+    }
+    pub fn discard_from_mark(&mut self) {
+        if let Some(temp_stk_last_len)=self.temp_stk_last_len {
+            self.cur_loc=self.temp_last_loc; //also not needed?
+            self.cur_anon_id=self.temp_anon_id; //not really needed?
+            self.temp_stk.truncate(temp_stk_last_len);
+            // self.temp_stk_last_len=None;
+        }
+    }
+
+    pub fn take_from_mark(&mut self) -> BuilderTaken<'a,T,E> {
+        if let Some(temp_stk_last_len)=self.temp_stk_last_len {
+            self.temp_stk_last_len=None;
+            BuilderTaken(self.temp_stk.drain(temp_stk_last_len ..).collect())
+        } else {
+            BuilderTaken(Vec::new())
+        }
+    }
+
+    pub fn extend(&mut self,taken:BuilderTaken<'a,T,E>) {
+        self.temp_stk.extend(taken.0);
     }
 
     //
     pub fn new() -> Self {
         Self {
-            chunks:Default::default(),
+            // chunks:Default::default(),
             // phantom_data:Default::default(),
             temp_stk : Default::default(),
             // ast : BuilderAst::new(),
@@ -187,8 +212,9 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
             // in_cmd : false,
             cur_anon_id:0,
 
+            temp_anon_id:0,
             temp_last_loc:None,
-            temp_stk_last_len : 0,
+            temp_stk_last_len : None,
 
             cur_flags:Default::default(),
         }
@@ -900,6 +926,7 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         // for node in nodes
         while let Some((node,loc))=nodes.pop()
         {
+            self.temp_stk_last_len=None;
             ast.set_cur_loc(loc);
 
             // let x=match &node.node_type {

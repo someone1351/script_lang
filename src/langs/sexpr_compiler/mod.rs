@@ -173,7 +173,7 @@ impl Compiler {
                         // let last_loc=builder.cur_loc;
                         // let temp_stk_last_len = builder.temp_stk.len();
                         // builder.in_cmd=true;
-                        builder.temp_mark();
+                        builder.mark();
                         builder.set_anon_scope(self.next_anon_id);
 
                         for cmd in cmds {
@@ -184,7 +184,7 @@ impl Compiler {
                                 //reset
                                 // builder.cur_loc=last_loc;
                                 // builder.temp_stk.truncate(temp_stk_last_len);
-                                builder.temp_clear();
+                                builder.discard_from_mark();
                             } else { //ok
                                 errors.clear();
                                 *next_anon_id+=1;
