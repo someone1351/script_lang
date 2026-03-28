@@ -198,8 +198,42 @@ impl Compiler {
         let mut cur_exprs: Vec<ExprVal>= Vec::new();
 
         //
-        while let Ok(first_primitive)=top_primitive_iter.pop_front() {
+        // while let Ok(first_primitive)=top_primitive_iter.pop_front()
+        loop
+        {
+            match top_primitive_iter.first().map(|p|p.primitive_type()) {
+                Ok(PrimitiveTypeContainer::Eob) => {
 
+                }
+                Ok(PrimitiveTypeContainer::Eol) => {
+
+                }
+                Ok(PrimitiveTypeContainer::Symbol(";")) => {
+
+                }
+                Ok(PrimitiveTypeContainer::Identifier(idn)) => {
+                    match cur_exprs.last() {
+                        Some(ExprVal::Identifier(_)) => {
+
+                        }
+                        Some(ExprVal::Builder(_)) => {
+
+                        }
+                        _ => {
+
+                        }
+                    }
+                    if let Some(ExprVal::Identifier(_))=cur_exprs.last() {
+
+                    }
+
+                }
+                Err(_) => {break;}
+                _ => {}
+            }
+
+
+            let Ok(first_primitive)=top_primitive_iter.pop_front() else {break;};
             // let Ok(first_primitive)=top_primitive_iter.first() else { return Ok(()) };
             builder.loc(first_primitive.start_loc());
             println!("hmm {first_primitive:?}",);
@@ -231,7 +265,7 @@ impl Compiler {
                 PrimitiveTypeContainer::Symbol(x) => { //
                     match x {
                         ";" => {
-                            done=true;
+                            // done=true;
                         }
                         _ => {
                             cur_exprs.push(ExprVal::Symbol(first_primitive));
