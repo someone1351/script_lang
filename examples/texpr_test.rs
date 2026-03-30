@@ -1,4 +1,5 @@
 
+use script_lang::langs::texpr_compiler::Compiler;
 
 use std::{collections::BTreeMap, path::Path};
 
@@ -12,7 +13,7 @@ pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
     let path = path.as_ref();
     let src = std::fs::read_to_string(path).unwrap();
 
-    let compiler=script_lang::langs::texpr_compiler::Compiler::new();
+    let compiler=Compiler::new();
 
     let build = compiler.compile(src.as_str(), 0, Some(path), true,
         // false

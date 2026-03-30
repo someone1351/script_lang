@@ -498,7 +498,7 @@ fn parse_cmnt(input:&mut Input) -> Result<bool,ParseError> {
 fn parse_space(input:&mut Input) -> bool {
     let mut found=false;
 
-    while let Some(x)=input.has(0, [" ","\t","\\\r\n","\\\n"]) {
+    while let Some(x)=input.has(0, [" ","\t",]) { //"\\\r\n","\\\n"
         input.next(x.len());
         found=true;
     }

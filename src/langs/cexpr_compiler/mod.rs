@@ -38,8 +38,49 @@
 ** could treat stmts as exprs that just return void
 ** so exprs need symbols between the vars, then everything would need an end eg eol/eob/semicolon
 
+=====
+=====
+
+* make cmds not applicable to expressions, they end with a semicolon/eol/eob
+** what about lambdas? need special expr_cmds list for them or a bool marking whether or not they can be used as part of an expr
+
+* have it so exprs can only be placed at the end
+** except for function/method calls
+
+* could not allow exprs to be used outside certain places: set, cond, ind, etc
+** what about for repl?
+** what about if stmt used as expr?
+*** could check if it is being used that way, and then allow it
+**** can't know that, as they are handled later on after
+
+* could enforce semicolons
+* it's only really a problem for prefixes
+** could just have the user use brackets where necessary eg  (-1)
+* could not have things like if_stmt exprs, but is useful
+
+a?b:c?d:e
+a==1?a:b==2?b:c
+
+===
+
+* how to hanle var decl with expr eg
+    var a= 1+2
+    var b= 1+2, c=3+4
+** might require semiclon ending
+** when passing off to builder.expr(), how does builder know where it ends, when it comes to commas?
+
+* if used a special do_expr(), it would need to handle cmd exprs, which potentially lead to a rust stack overflow
+
+===
+
+* could  add grammar handling?
+** just for exprs? including ifs?
+
+* want optional semicolons, so that stmts not having semicolons is consistent with other stmts requring semicolons
+
 */
 #![allow(unused_variables)]
+#![allow(unused)]
 
 mod error;
 mod cmds;
@@ -322,6 +363,9 @@ impl Compiler {
                             "void" => {
                                 builder.result_void();
                                 cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
+                            }
+                            "var" => {
+                                //var decls ...
                             }
                             _ => {
                                 cur_exprs.push(ExprVal::Identifier(first_primitive));
