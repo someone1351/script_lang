@@ -4,15 +4,14 @@ use crate::ccexpr_parser::PrimitiveIterContainer;
 
 use super::super::super::build::Loc;
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq)]
 pub enum PrimitiveType {
     Float(f64,usize,), //num,text_ind,
     Int(i64,usize,),//num,text_ind,
     String(usize),//text_ind
     Symbol(usize), //text_ind
     Identifier(usize), //text_ind
-    Eol,
-    Eob,
+    End,
 }
 
 #[derive(Debug,Clone)]

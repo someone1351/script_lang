@@ -40,7 +40,10 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
             cur_primitives.push(primitive);
             continue;
         } else if input.is_end() {
-            cur_primitives.push(Primitive { primitive_type: PrimitiveType::Eob, start_loc:input.loc(), end_loc: input.loc() });
+            if cur_primitives.last().map(|p|p.primitive_type.clone())!=Some(PrimitiveType::End) {
+                cur_primitives.push(Primitive { primitive_type: PrimitiveType::End, start_loc:input.loc(), end_loc: input.loc() });
+            }
+
             break;
         }
 
@@ -259,7 +262,7 @@ fn parse_ident_symbol(
 fn parse_eol(input:&mut Input) -> Option<Primitive> {
     if let Some(x)=input.has(0, ["\r\n","\n"]) {
         input.next(x.len());
-        let primitive_type=PrimitiveType::Eol;
+        let primitive_type=PrimitiveType::End;
         Some(Primitive { primitive_type, start_loc: input.prev_loc(), end_loc: input.loc() })
     } else {
         None
@@ -320,26 +323,31 @@ fn parse_space(input:&mut Input) -> bool {
 
 fn parse_ws(input:&mut Input) -> Result<Option<Primitive>,ParseError> {
     let mut first_end : Option<Primitive> = None;
-    let mut found=true;
 
-    while found && !input.is_end() {
-        found=false;
+    while !input.is_end() {
 
         if parse_cmnt(input)? || parse_space(input) {
-            found=true;
+            continue;
         } else if parse_space(input) {
-            found=true;
+            continue;
         } else if let Some(x)=parse_eol(input) {
-            found=true;
-
-            if first_end.is_none() {
+            if let Some(y)=&mut first_end {
+                y.end_loc=x.end_loc;
+            } else {
                 first_end=Some(x);
+
             }
-        } else if input.is_end() {
-            if first_end.is_none() {
-                first_end=Some(Primitive { primitive_type: PrimitiveType::Eob, start_loc: input.loc(), end_loc: input.loc() });
-            }
+            // if first_end.is_none() {
+            // }
+            continue;
         }
+        // else if input.is_end() {
+        //     if first_end.is_none() {
+        //         first_end=Some(Primitive { primitive_type: PrimitiveType::End, start_loc: input.loc(), end_loc: input.loc() });
+        //     }
+        // }
+
+        break;
 
     }
 

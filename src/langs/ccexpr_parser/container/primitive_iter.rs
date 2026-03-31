@@ -151,7 +151,7 @@ impl<'a> PrimitiveIterContainer<'a> {
     where
         F:FnOnce(PrimitiveContainer<'a>)->Result<ValueContainer<'a,T>,Loc>,
     {
-        let first_eol=self.first().map(|p|p.is_eol()).unwrap_or_default();
+        let first_eol=self.first().map(|p|p.is_end()).unwrap_or_default();
         let v=self.get(if first_eol {1} else {0}).and_then(func);
         self.pop_front_amount(if v.is_ok() && first_eol {2}else{1}).unwrap();
         v
