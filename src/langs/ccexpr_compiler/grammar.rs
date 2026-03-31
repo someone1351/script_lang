@@ -75,7 +75,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
 
         "stmt" => Or([
             NonTerm("expr"),NonTerm("var"),NonTerm("set"),NonTerm("while"),NonTerm("for"),
-            NonTerm("include"),NonTerm("format"),NonTerm("print"),NonTerm("println"),
+            NonTerm("include"),NonTerm("output"),
             NonTerm("if"),NonTerm("call"),
         ].into()),
 
@@ -159,9 +159,20 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "val" => And([
             NonTerm("prefix").many0(),
             Or([
-                Int,Float,String,Identifier,NonTerm("call"),
-                And([Symbol("lparenth"),NonTerm("expr"),Symbol("rparenth"),].into()),
+                Int,Float,String,Identifier,NonTerm("call"),NonTerm("idn"),
+                And([NonTerm("lparenth"),NonTerm("expr"),NonTerm("rparenth"),].into()),
             ].into()),
+        ].into()),
+        "idn_field" => And([Symbol("."),Or([Identifier,Int,].into()),].into()),
+        "idn_index" => And([NonTerm("lsquare"),NonTerm("expr"),NonTerm("rsquare"),].into()),
+        "idn" => And([
+            Identifier,
+            Or([NonTerm("idn_index"), NonTerm("idn_field"),].into()).many0(),
+        ].into()),
+        "output" => And([
+            Or([Keyword("format"),Keyword("print"),Keyword("println")].into()),
+            NonTerm("lparenth"),
+            NonTerm("rparenth"),
         ].into()),
         _ => Never,
     }
