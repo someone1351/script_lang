@@ -40,9 +40,10 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
             cur_primitives.push(primitive);
             continue;
         } else if input.is_end() {
-            if cur_primitives.last().map(|p|p.primitive_type.clone())!=Some(PrimitiveType::End) {
-                cur_primitives.push(Primitive { primitive_type: PrimitiveType::End, start_loc:input.loc(), end_loc: input.loc() });
-            }
+            //not needed?
+            // if cur_primitives.last().map(|p|p.primitive_type.clone())!=Some(PrimitiveType::End) {
+            //     cur_primitives.push(Primitive { primitive_type: PrimitiveType::End, start_loc:input.loc(), end_loc: input.loc() });
+            // }
 
             break;
         }
