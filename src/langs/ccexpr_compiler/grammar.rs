@@ -193,18 +193,19 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "val" => [
             NonTerm("prefix").many0(),
             [
-                Int,Float,String,Identifier,NonTerm("idn"),
+                Int,Float,String,
+                Identifier, //NonTerm("idn"),
+                Keyword("void"),Keyword("nil"),
+                Keyword("true"),Keyword("false"),
                 NonTerm("call"),
                 NonTerm("if"),
                 [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
             ].or(),
+            [NonTerm("val_index"), NonTerm("val_field"),].or().many0(),
         ].and(),
-        "idn_field" => [NonTerm("dot"),[Identifier,Int,].or(),].and(),
-        "idn_index" => [NonTerm("lsquare"),NonTerm("expr"),NonTerm("rsquare"),].and(),
-        "idn" => [
-            Identifier,
-            [NonTerm("idn_index"), NonTerm("idn_field"),].or().many0(),
-        ].and(),
+        "val_field" => [NonTerm("dot"),[Identifier,Int,].or(),].and(),
+        "val_index" => [NonTerm("lsquare"),NonTerm("expr"),NonTerm("rsquare"),].and(),
+
         "format_params" => [
             NonTerm("lparen"),
             [
@@ -263,7 +264,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
     */
 
     let mut stk: Vec<(GrammarItem<'_>, usize,usize,PrimitiveIterContainer<'a>)>=vec![
-        (grammar_decl("test"),0,0,top_primitives)
+        (grammar_decl("start"),0,0,top_primitives)
     ];
 
     let mut c=0;
