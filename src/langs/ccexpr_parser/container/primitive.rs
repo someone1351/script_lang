@@ -162,7 +162,7 @@ impl<'a> PrimitiveContainer<'a> {
 
 impl<'a> std::fmt::Debug for PrimitiveContainer<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("Primitive{}({:?})", &self.primitive_ind,&self.primitive_type()))
+        f.write_fmt(format_args!("{}::{:?}", &self.primitive_ind,&self.primitive_type()))
         // f.wr
         // f.debug_struct("Primitive")
         // // .field("parsed", &self.parsed)
