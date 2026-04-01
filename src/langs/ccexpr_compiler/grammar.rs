@@ -280,7 +280,10 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
 
                 if let Some(rest)=gs.get(1..) {
                     // success_ind2=Some(stk.len());
-                    stk.push((GrammarItem::And(rest.into()),success_ind,fail_ind,primitives));
+                    // println!("rest {rest:?}");
+                    if !rest.is_empty() {
+                        stk.push((GrammarItem::And(rest.into()),success_ind,fail_ind,primitives));
+                    }
                 }
 
                 // let success_ind2=success_ind2.unwrap_or(success_ind);
@@ -295,7 +298,9 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
 
                 if let Some(rest)=gs.get(1..) {
                     // fail_ind2 = Some(stk.len());
-                    stk.push((GrammarItem::And(rest.into()),success_ind,fail_ind,primitives));
+                    if !rest.is_empty() {
+                        stk.push((GrammarItem::And(rest.into()),success_ind,fail_ind,primitives));
+                    }
                 }
 
                 // let fail_ind2 = fail_ind2.unwrap_or(fail_ind);
