@@ -51,23 +51,24 @@ impl<'a> GrammarItem<'a> {
 //     }
 // }
 
-#[macro_export]
-macro_rules! and {
-    ( $( $x:expr ),* $(,)? ) => {{
-        let mut v = Vec::new();
-        $( v.push($x); )*
-        GrammarItem::And(v.into())
-    }};
-}
+// #[macro_export]
+// macro_rules! and {
+//     ( $( $x:expr ),* $(,)? ) => {{
+//         let mut v = Vec::new();
+//         $( v.push($x); )*
+//         GrammarItem::And(v.into())
+//     }};
+// }
 
-#[macro_export]
-macro_rules! or {
-    ( $( $x:expr ),* $(,)? ) => {{
-        let mut v = Vec::new();
-        $( v.push($x); )*
-        GrammarItem::And(v.into())
-    }};
-}
+// #[macro_export]
+// macro_rules! or {
+//     ( $( $x:expr ),* $(,)? ) => {{
+//         let mut v = Vec::new();
+//         $( v.push($x); )*
+//         GrammarItem::And(v.into())
+//     }};
+// }
+
 trait GrammarArrayTrait<'a> {
     fn and(&self) -> GrammarItem<'a>;
     fn or(&self) -> GrammarItem<'a>;
@@ -86,63 +87,55 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
     match n {
         "start" => NonTerm("stmts"),
 
-        // // "stmts" => And([
-        // //     NonTerm("stmt"),
-        // //     And([ Or([NonTerm("semicolon"),Eol].into()), NonTerm("stmt"), ].into()).many0(),
-        // // ].into()).opt(),
-        // "stmts" => and![
-        //     NonTerm("stmt"),
-        //     and![or![NonTerm("semicolon"),Eol], NonTerm("stmt"),].many0(),
-        // ].opt(),
         "stmts" => [
             NonTerm("stmt"),
             [[NonTerm("semicolon"),Eol].or(), NonTerm("stmt"),].and().many0(),
         ].and().opt(),
 
-        "stmt" => Or([
+        "stmt" => [
             NonTerm("expr"),NonTerm("var"),NonTerm("set"),NonTerm("while"),NonTerm("for"),
             NonTerm("break"), NonTerm("continue"),
             NonTerm("return"),
             NonTerm("include"),
             NonTerm("format"),NonTerm("print"),NonTerm("println"),
             // NonTerm("if"),
-        ].into()),
+        ].or(),
 
         "continue" => Keyword("continue"),
         "break" => Keyword("break"),
-        "return" => And([Keyword("return"), NonTerm("expr").opt(),].into()),
+        "return" => [Keyword("return"), NonTerm("expr").opt(),].and(),
 
-        "var_set" => And([NonTerm("idn"), NonTerm("set_equal"),NonTerm("expr")].into()),
-        "var" => And([
+        "var_set" => [NonTerm("idn"), NonTerm("set_equal"),NonTerm("expr")].and(),
+        "var" => [
             Keyword("var"), NonTerm("var_set"),
-            And([NonTerm("comma"),NonTerm("var_set"),].into()).many0(),
-        ].into()),
+            [NonTerm("comma"),NonTerm("var_set"),].and().many0(),
+        ].and(),
 
-        "set" => And([
+        "set" => [
             NonTerm("idn"),
-            Or([NonTerm("add"),NonTerm("sub"),NonTerm("mul"),NonTerm("div"),NonTerm("not")].into()).opt(),
+            [NonTerm("add"),NonTerm("sub"),NonTerm("mul"),NonTerm("div"),NonTerm("not")].or().opt(),
             NonTerm("set_equal"),
             NonTerm("expr"),
-        ].into()),
+        ].and(),
 
-        "cond" => And([NonTerm("lparenth"),NonTerm("expr"),NonTerm("rparenth"),].into()),
-        "block" => And([NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].into()),
-        "if" => And([
+        "cond" => [NonTerm("lparenth"),NonTerm("expr"),NonTerm("rparenth"),].and(),
+        "block" => [NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
+        "if" => [
             Keyword("if"), NonTerm("cond"), NonTerm("block"),
-            And([Keyword("elif"),NonTerm("cond"),NonTerm("block"),].into()).many0(),
-            And([Keyword("else"),NonTerm("block"),].into()).opt(),
-        ].into()),
-        "while" => And([Keyword("while"), NonTerm("cond"), NonTerm("block"),].into()),
-        "for_init" => Or([
+            [Keyword("elif"),NonTerm("cond"),NonTerm("block"),].and().many0(),
+            [Keyword("else"),NonTerm("block"),].and().opt(),
+        ].and(),
+        "while" => [Keyword("while"), NonTerm("cond"), NonTerm("block"),].and(),
+        "for_init" => [
             NonTerm("var"),
-            And([NonTerm("set"), And([NonTerm("comma"),NonTerm("set")].into()).many0(),].into()),
-        ].into()),
-        "for_incr_stmt" => Or([NonTerm("set"),NonTerm("call"),].into()),
-        "for_incr" => And([
+            [NonTerm("set"), [NonTerm("comma"),NonTerm("set")].and().many0(),].and(),
+        ].or(),
+        "for_incr_stmt" => [NonTerm("set"),NonTerm("call"),].or(),
+        "for_incr" => [
             NonTerm("for_incr_stmt"),
-            And([NonTerm("comma"),NonTerm("for_incr_stmt")].into()).many0(),
-        ].into()),
-        "for" => And([
+            [NonTerm("comma"),NonTerm("for_incr_stmt")].and().many0(),
+        ].and(),
+        "for" => [
             Keyword("for"),
             NonTerm("lparenth"),
             NonTerm("for_init"),
@@ -152,71 +145,73 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             NonTerm("for_incr"),
             NonTerm("rparenth"),
             NonTerm("block"),
-        ].into()),
-        "call_params" => And([
+        ].and(),
+        "call_params" => [
             NonTerm("lparenth"),
-            And([
+            [
                 NonTerm("expr"),
-                And([NonTerm("comma"),NonTerm("expr"),].into()).many0(),
+                [NonTerm("comma"),NonTerm("expr"),].and().many0(),
                 NonTerm("comma").opt(),
-            ].into()).opt(),
+            ].and().opt(),
             NonTerm("rparenth"),
-        ].into()),
-        "call" => And([NonTerm("idn"),NonTerm("call_params"),].into()),
-        "include" => And([Keyword("include"),String,].into()),
+        ].and(),
+        "call" => [NonTerm("idn"),NonTerm("call_params"),].and(),
+        "include" => [Keyword("include"),String,].and(),
 
-        "func_params" => And([
+        "func_params" => [
             NonTerm("lparenth"),
-            And([
+            [
                 NonTerm("idn"),
-                And([NonTerm("comma"),NonTerm("idn"),].into()).many0(),
+                [NonTerm("comma"),NonTerm("idn"),].and().many0(),
                 NonTerm("ellipsis").opt(),
                 NonTerm("comma").opt(),
-            ].into()).opt(),
+            ].and().opt(),
             NonTerm("rparenth"),
-        ].into()),
-        "func_decl" => And([Keyword("fn"),Identifier,NonTerm("func_params"),NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].into()),
-        "func_lambda" => And([Keyword("fn"),NonTerm("func_params"),NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].into()),
+        ].and(),
+        "func_decl" => [Keyword("fn"),Identifier,NonTerm("func_params"),NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
+        "func_lambda" => [Keyword("fn"),NonTerm("func_params"),NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
 
 
-        "infix" => Or([
-            NonTerm("add"),NonTerm("sub"),NonTerm("mul"),NonTerm("div"),
+        "infix" => [
+            NonTerm("add"),NonTerm("sub"),
+            NonTerm("mul"),NonTerm("div"),
             NonTerm("lt"),NonTerm("gt"),
             NonTerm("le"),NonTerm("ge"),
             NonTerm("eq"),NonTerm("ne"),
             NonTerm("and"),NonTerm("or"),
-        ].into()),
-        "expr" => And([NonTerm("val"), And([NonTerm("infix"),NonTerm("val"),].into()).many0(),].into()),
+        ].or(),
+        "expr" => [NonTerm("val"), [NonTerm("infix"),NonTerm("val"),].and().many0(),].and(),
 
-        "prefix" => Or([NonTerm("add"),NonTerm("sub"),NonTerm("not"),].into()),
+        "prefix" => [NonTerm("add"),NonTerm("sub"),NonTerm("not"),].or(),
 
-        "val" => And([
+        "val" => [
             NonTerm("prefix").many0(),
-            Or([
+            [
                 Int,Float,String,Identifier,NonTerm("idn"),
                 NonTerm("call"),
                 NonTerm("if"),
-                And([NonTerm("lparenth"),NonTerm("expr"),NonTerm("rparenth"),].into()),
-            ].into()),
-        ].into()),
-        "idn_field" => And([NonTerm("dot"),Or([Identifier,Int,].into()),].into()),
-        "idn_index" => And([NonTerm("lsquare"),NonTerm("expr"),NonTerm("rsquare"),].into()),
-        "idn" => And([
+                [NonTerm("lparenth"),NonTerm("expr"),NonTerm("rparenth"),].and(),
+            ].or(),
+        ].and(),
+        "idn_field" => [NonTerm("dot"),[Identifier,Int,].or(),].and(),
+        "idn_index" => [NonTerm("lsquare"),NonTerm("expr"),NonTerm("rsquare"),].and(),
+        "idn" => [
             Identifier,
-            Or([NonTerm("idn_index"), NonTerm("idn_field"),].into()).many0(),
-        ].into()),
-        "format_params" =>And([
+            [NonTerm("idn_index"), NonTerm("idn_field"),].or().many0(),
+        ].and(),
+        "format_params" => [
             NonTerm("lparenth"),
-            And([
-                Or([String,NonTerm("expr"),].into()),
-                And([NonTerm("comma"),NonTerm("expr"),].into()).many0(),
+            [
+                [String,NonTerm("expr"),].or(),
+                [NonTerm("comma"),NonTerm("expr"),].and().many0(),
                 NonTerm("comma").opt(),
-            ].into()).opt(),
+            ].and().opt(),
             NonTerm("rparenth"),
-        ].into()),
-        "format" => And([Keyword("format"),NonTerm("format_params"),].into()),
-        "print" => And([Keyword("print"),NonTerm("format_params"),].into()),
-        "println" => And([Keyword("println"),NonTerm("format_params"),].into()),
+        ].and(),
+
+        "format" => [Keyword("format"),NonTerm("format_params"),].and(),
+        "print" => [Keyword("print"),NonTerm("format_params"),].and(),
+        "println" => [Keyword("println"),NonTerm("format_params"),].and(),
 
         "lcurly" => Symbol("{"),
         "rcurly" => Symbol("}"),
@@ -226,10 +221,10 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "rparenth" => Symbol(")"),
 
         "semicolon" => Symbol(";"),
-        "end" => Or([NonTerm("semicolon"),].into()),
+        "end" => [NonTerm("semicolon"),].or(),
 
         "dot" => Symbol("."),
-        "ellipsis" => And([NonTerm("dot"),NonTerm("dot"),NonTerm("dot"),].into()),
+        "ellipsis" => [NonTerm("dot"),NonTerm("dot"),NonTerm("dot"),].and(),
         "comma" => Symbol(","),
 
         "set_equal" => Symbol("="),
@@ -240,15 +235,15 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "mul" => Symbol("*"),
         "div" => Symbol("/"),
 
-        "and" => And([Symbol("&"),Symbol("&"),].into()),
-        "or" => And([Symbol("|"),Symbol("|"),].into()),
+        "and" => [Symbol("&"),Symbol("&"),].and(),
+        "or" => [Symbol("|"),Symbol("|"),].and(),
 
         "lt" => Symbol("<"),
         "gt" => Symbol(">"),
-        "le" => And([Symbol("<"),Symbol("="),].into()),
-        "ge" => And([Symbol(">"),Symbol("="),].into()),
-        "eq" => And([Symbol("="),Symbol("="),].into()),
-        "ne" => And([Symbol("!"),Symbol("="),].into()),
+        "le" => [Symbol("<"),Symbol("="),].and(),
+        "ge" => [Symbol(">"),Symbol("="),].and(),
+        "eq" => [Symbol("="),Symbol("="),].and(),
+        "ne" => [Symbol("!"),Symbol("="),].and(),
         _ => Never,
     }
 
