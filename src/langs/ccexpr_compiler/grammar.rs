@@ -90,13 +90,15 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         // "test" => [Int].and(),
         "test" => [Int,Float.opt()].and().many0(),
         "test2" => [Int,Float.opt()].and(),
+        "test3" => [Int.many1()].and().opt(),
 
         "start" => NonTerm("stmts"),
 
         "stmts" => [
             NonTerm("stmt"),
             [[NonTerm("semicolon"),Eol].or(), NonTerm("stmt"),].and().many0(),
-        ].and().opt(),
+        ].and().opt()
+        ,
 
         "stmt" => [
             NonTerm("expr"),NonTerm("var"),NonTerm("set"),NonTerm("while"),NonTerm("for"),
@@ -186,22 +188,25 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             NonTerm("eq"),NonTerm("ne"),
             NonTerm("and"),NonTerm("or"),
         ].or(),
-        "expr" => [NonTerm("val"), [NonTerm("infix"),NonTerm("val"),].and().many0(),].and(),
+        "expr" => [
+            NonTerm("val"),
+            // [NonTerm("infix"),NonTerm("val"),].and().many0(),
+        ].and(),
 
         "prefix" => [NonTerm("add"),NonTerm("sub"),NonTerm("not"),].or(),
 
         "val" => [
-            NonTerm("prefix").many0(),
+            // NonTerm("prefix").many0(),
             [
                 Int,Float,String,
-                Identifier, //NonTerm("idn"),
-                Keyword("void"),Keyword("nil"),
-                Keyword("true"),Keyword("false"),
-                NonTerm("call"),
-                NonTerm("if"),
-                [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
+                // Identifier, //NonTerm("idn"),
+                // Keyword("void"),Keyword("nil"),
+                // Keyword("true"),Keyword("false"),
+                // NonTerm("call"),
+                // NonTerm("if"),
+                // [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
             ].or(),
-            [NonTerm("val_index"), NonTerm("val_field"),].or().many0(),
+            // [NonTerm("val_index"), NonTerm("val_field"),].or().many0(),
         ].and(),
         "val_field" => [NonTerm("dot"),[Identifier,Int,].or(),].and(),
         "val_index" => [NonTerm("lsquare"),NonTerm("expr"),NonTerm("rsquare"),].and(),
@@ -264,7 +269,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
     */
 
     let mut stk: Vec<(GrammarItem<'_>, usize,usize,PrimitiveIterContainer<'a>)>=vec![
-        (grammar_decl("start"),0,0,top_primitives)
+        (grammar_decl("test3"),0,0,top_primitives)
     ];
 
     let mut c=0;
@@ -272,7 +277,12 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
         c+=1;
 
         // if c>20 {break;}
-        println!(": {cur:?} || {} && {primitives:?}", stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
+        // println!(": {cur:?} || {} && {primitives:?}", stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
+        println!(": {cur:?} && {primitives:?}");
+
+        for (g,_,_,ps) in stk.iter().rev() {
+            println!("\t{g:?} && {ps:?}",);
+        }
 
         match cur {
             GrammarItem::And(gs) => {
@@ -463,6 +473,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 if stk.is_empty() {
                     top_primitives=primitives;
                 }
+
                 if let Some((_g,_a,_b,ps))=stk.last_mut() {
                     *ps=primitives;
                 }
