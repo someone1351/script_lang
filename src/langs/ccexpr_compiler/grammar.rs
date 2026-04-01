@@ -298,16 +298,25 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
                 stk.push((*g,success_ind,success_ind,primitives));
             }
             GrammarItem::Many0(g) => {
-
+                let fail_ind=stk.len();
+                stk.push((GrammarItem::Many0(g.clone()),success_ind,fail_ind,primitives));
+                let success_ind=stk.len();
+                stk.push((*g,success_ind,fail_ind,primitives));
             }
             GrammarItem::Many1(g) => {
-
+                stk.push((GrammarItem::Many0(g.clone()),success_ind,fail_ind,primitives));
+                let success_ind=stk.len();
+                stk.push((*g,success_ind,fail_ind,primitives));
             }
             GrammarItem::String => {
                 match primitives.pop_string() {
                     Ok(v) => {
                         println!("string {:?}",v.value);
                         stk.truncate(success_ind);
+
+                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
+                            *ps=primitives;
+                        }
                     }
                     Err(_loc) => {
                         stk.truncate(fail_ind);
@@ -319,6 +328,10 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
                     Ok(v) => {
                         println!("identifier {:?}",v.value);
                         stk.truncate(success_ind);
+
+                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
+                            *ps=primitives;
+                        }
                     }
                     Err(_loc) => {
                         stk.truncate(fail_ind);
@@ -330,6 +343,10 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
                     Ok(v) => {
                         println!("int {:?}",v.value);
                         stk.truncate(success_ind);
+
+                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
+                            *ps=primitives;
+                        }
                     }
                     Err(_loc) => {
                         stk.truncate(fail_ind);
@@ -341,6 +358,10 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
                     Ok(v) => {
                         println!("float {:?}",v.value);
                         stk.truncate(success_ind);
+
+                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
+                            *ps=primitives;
+                        }
                     }
                     Err(_loc) => {
                         stk.truncate(fail_ind);
@@ -352,6 +373,10 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
                     Ok(v) => {
                         println!("symbol {:?}",v.value);
                         stk.truncate(success_ind);
+
+                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
+                            *ps=primitives;
+                        }
                     }
                     Err(_loc) => {
                         stk.truncate(fail_ind);
@@ -363,6 +388,10 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
                     Ok(v) => {
                         println!("keyword {:?}",v.value);
                         stk.truncate(success_ind);
+
+                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
+                            *ps=primitives;
+                        }
                     }
                     Err(_loc) => {
                         stk.truncate(fail_ind);
@@ -374,6 +403,10 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
                     Ok(_) => {
                         println!("eol");
                         stk.truncate(success_ind);
+
+                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
+                            *ps=primitives;
+                        }
                     }
                     Err(_loc) => {
                         stk.truncate(fail_ind);
