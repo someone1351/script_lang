@@ -34,7 +34,7 @@ impl<'a> PrimitiveContainer<'a> {
             PrimitiveType::Symbol(x) => PrimitiveTypeContainer::Symbol(self.parsed.texts[x].as_str()),
             PrimitiveType::Identifier(x) => PrimitiveTypeContainer::Identifier(self.parsed.texts[x].as_str()),
             // PrimitiveType::End => PrimitiveTypeContainer::End,
-            PrimitiveType::End => PrimitiveTypeContainer::End,
+            PrimitiveType::Eol => PrimitiveTypeContainer::Eol,
         }
     }
 
@@ -89,9 +89,9 @@ impl<'a> PrimitiveContainer<'a> {
         Err(self.start_loc())
     }
 
-    pub fn is_end(&self) -> bool {
+    pub fn is_eol(&self) -> bool {
         match self.primitive().primitive_type {
-            PrimitiveType::End => true,
+            PrimitiveType::Eol => true,
             _ => false,
 
         }

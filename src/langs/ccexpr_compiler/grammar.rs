@@ -26,7 +26,7 @@ pub enum GrammarItem<'a> {
     Float,
     Symbol(&'a str),
     Keyword(&'a str),
-    End,
+    Eol,
 
     NonTerm(&'a str),
     Always, //always succeeds
@@ -45,34 +45,59 @@ impl<'a> GrammarItem<'a> {
     }
 }
 
-// impl<T: Default, const N: usize> Default for [T; N] {
-//     fn default() -> [T; N] {
-//         [T::default; N]
+// impl<'a, const N: usize> From<[GrammarItem<'a>; N]> for  GrammarItem<'a> {
+//     fn from(value: [GrammarItem<'a>; N]) -> Self {
+//         Self::And(value.into())
 //     }
 // }
-impl<'a, const N: usize> From<[GrammarItem<'a>; N]> for  GrammarItem<'a> {
-    fn from(value: [GrammarItem<'a>; N]) -> Self {
-        Self::And(value.into())
-    }
+
+#[macro_export]
+macro_rules! and {
+    ( $( $x:expr ),* $(,)? ) => {{
+        let mut v = Vec::new();
+        $( v.push($x); )*
+        GrammarItem::And(v.into())
+    }};
 }
 
-// impl<T> Default for [T; 0] {
-//     fn default() -> [T; 0] {
-//         []
-//     }
-// }
+#[macro_export]
+macro_rules! or {
+    ( $( $x:expr ),* $(,)? ) => {{
+        let mut v = Vec::new();
+        $( v.push($x); )*
+        GrammarItem::And(v.into())
+    }};
+}
+trait GrammarArrayTrait<'a> {
+    fn and(&self) -> GrammarItem<'a>;
+    fn or(&self) -> GrammarItem<'a>;
+}
+impl<'a,const N: usize> GrammarArrayTrait <'a> for [GrammarItem<'a>; N] {
+    fn and(&self) -> GrammarItem<'a> {
+        GrammarItem::And(self.into())
+    }
+    fn or(&self) -> GrammarItem<'a> {
+        GrammarItem::Or(self.into())
+
+    }
+}
 pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
     use GrammarItem::*;
     match n {
         "start" => NonTerm("stmts"),
 
-        "stmts" => And([
+        // // "stmts" => And([
+        // //     NonTerm("stmt"),
+        // //     And([ Or([NonTerm("semicolon"),Eol].into()), NonTerm("stmt"), ].into()).many0(),
+        // // ].into()).opt(),
+        // "stmts" => and![
+        //     NonTerm("stmt"),
+        //     and![or![NonTerm("semicolon"),Eol], NonTerm("stmt"),].many0(),
+        // ].opt(),
+        "stmts" => [
             NonTerm("stmt"),
-            And([
-                Or([NonTerm("semicolon"),End].into()),
-                NonTerm("stmt"),
-            ].into()).many0(),
-        ].into()).opt(),
+            [[NonTerm("semicolon"),Eol].or(), NonTerm("stmt"),].and().many0(),
+        ].and().opt(),
 
         "stmt" => Or([
             NonTerm("expr"),NonTerm("var"),NonTerm("set"),NonTerm("while"),NonTerm("for"),
@@ -217,6 +242,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
 
         "and" => And([Symbol("&"),Symbol("&"),].into()),
         "or" => And([Symbol("|"),Symbol("|"),].into()),
+
         "lt" => Symbol("<"),
         "gt" => Symbol(">"),
         "le" => And([Symbol("<"),Symbol("="),].into()),
@@ -233,90 +259,6 @@ pub fn grammar_run() {
 }
 
 /*
-    start => stmts
-    stmts => (stmt end)*
-    loop_stmts => ((stmt | 'break' | 'continue') end)*
-    func_stmts => ((stmt | return) end)*
-    stmt => expr | var | if | set | while | for | call | include | format | print | println
-    return => 'return' expr?
-    var => 'var' idn '=' expr ' (comma idn '=' expr)*
-    set => idn ((add | sub | mul | div | and | or | not )? '=') expr
-    if => 'if' lparenth expr rparenth lcurly stmts rcurly ('elif' lparenth expr rparenth lcurly stmts rcurly)* (else lcurly stmts rcurly)?
-    while => 'while' lparenth expr rparenth lcurly loop_stmts rcurly
-    for => 'for' lparenth (var|set)? semicolon expr semicolon (var|set)? rparenth lcurly loop_stmts rcurly
-    call_params => lparenth (expr | (comma expr)*)? rparenth
-    call => idn call_params
-    include => 'include' str
-
-    func_params => lparenth (idn (comma idn)*)? comma? rparenth
-    func_decl => 'fn' idn func_params lcurly func_stmts rcurly
-    func_lambda => 'fn' func_params lcurly func_stmts rcurly
-
-    expr => val (infix val)*
-
-    infix => add | sub | mul | div | and | or | lt | le | gt | ge | eq | ne
-    prefix => add | sub | not
-
-    val => prefix* (int | float | string | idn | call | (lparen expr rparen))
-
-    var_idn => idn (var_ind|var_field)*
-    var_field => dot (idn|int) call_params?
-    var_ind => '[' expr ']' call_params?
-
-    format_params => lparenth (string | expr)? (comma expr)* comma? rparenth
-    format => 'format' format_params
-    print => 'print' format_params
-    println => 'println' format_params
-
-    end = semicolon | eol | eob
-
-    set => '='
-    add_set '+' '='
-    eq => '=' '='
-    ne => '!' '='
-    gt => '>'
-    lt => '<'
-    ge => '>' '='
-    le => '<' '='
-
-
-    add => '+'
-    sub => '-'
-    mul => '*'
-    div => '/'
-    not => '!'
-    and => '&' '&'
-    or => '|' '|'
-    comma => ','
-    dot => '.'
-    semicolon => ';'
-
-    lsquare => '['
-    rsquare => ']'
-    lparenth => '('
-    rparenth => ')'
-    lcurly => '{'
-    rcurly => '}'
-    quote => '"'
-
-====
-
-ManyStar(GrammarItem)
-ManyPlus(GrammarItem)
-And(Vec<GrammarItem>) //stored reversed
-Or(Vec<GrammarItem>) //stored reversed
-Opt(GrammarItem)
-
-String
-Symbol
-Identifier
-Int,
-Float,
-End,
-
-NonTerm(str)
-Always, //always succeeds
-===
 
 * use stk of grammer_items
 

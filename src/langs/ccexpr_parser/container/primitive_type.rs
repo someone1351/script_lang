@@ -14,7 +14,7 @@ pub enum PrimitiveTypeContainer<'a> {
     String(&'a str),
     Symbol(&'a str),
     Identifier(&'a str),
-    End,
+    Eol,
 }
 
 impl<'a> std::fmt::Debug for PrimitiveTypeContainer<'a> {
@@ -28,7 +28,7 @@ impl<'a> std::fmt::Debug for PrimitiveTypeContainer<'a> {
             Self::String(arg0) => f.debug_tuple("String").field(arg0).finish(),
             Self::Symbol(arg0) => f.debug_tuple("Symbol").field(arg0).finish(),
             Self::Identifier(arg0) => f.debug_tuple("Identifier").field(arg0).finish(),
-            Self::End => write!(f, "End"),
+            Self::Eol => write!(f, "Eol"),
         }
     }
 }

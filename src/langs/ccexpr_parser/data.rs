@@ -11,7 +11,7 @@ pub enum PrimitiveType {
     String(usize),//text_ind
     Symbol(usize), //text_ind
     Identifier(usize), //text_ind
-    End,
+    Eol,
 }
 
 #[derive(Debug,Clone)]

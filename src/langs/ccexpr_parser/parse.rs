@@ -263,7 +263,7 @@ fn parse_ident_symbol(
 fn parse_eol(input:&mut Input) -> Option<Primitive> {
     if let Some(x)=input.has(0, ["\r\n","\n"]) {
         input.next(x.len());
-        let primitive_type=PrimitiveType::End;
+        let primitive_type=PrimitiveType::Eol;
         Some(Primitive { primitive_type, start_loc: input.prev_loc(), end_loc: input.loc() })
     } else {
         None
