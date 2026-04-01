@@ -74,6 +74,14 @@ impl<'a> PrimitiveContainer<'a> {
             Err(self.start_loc())
         }
     }
+    pub fn get_eol(&self) -> Result<ValueContainer<'a,()>,Loc> {
+        if let PrimitiveType::Eol=self.primitive().primitive_type {
+            Ok(ValueContainer{ primitive: self.clone(), value: () })
+        } else {
+            Err(self.start_loc())
+        }
+    }
+
     pub fn has_identifiers<'b,I>(&self,idns:I) -> Result<ValueContainer<'a,&'a str>,Loc>
     where
         I:IntoIterator<Item = &'b str>,
@@ -81,6 +89,22 @@ impl<'a> PrimitiveContainer<'a> {
         let g=self.get_identifier()?;
 
         for idn in idns.into_iter() {
+            if idn.eq(g.value) {
+                return Ok(g);
+            }
+        }
+
+        Err(self.start_loc())
+    }
+
+
+    pub fn has_symbols<'b,I>(&self,symbols:I) -> Result<ValueContainer<'a,&'a str>,Loc>
+    where
+        I:IntoIterator<Item = &'b str>,
+    {
+        let g=self.get_identifier()?;
+
+        for idn in symbols.into_iter() {
             if idn.eq(g.value) {
                 return Ok(g);
             }

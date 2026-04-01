@@ -157,6 +157,10 @@ impl<'a> PrimitiveIterContainer<'a> {
         v
     }
 
+    pub fn pop_eol(&mut self) -> Result<(),Loc> {
+         self.get(0).and_then(|p|p.get_eol())?;
+         Ok(())
+    }
     pub fn pop_float(&mut self) -> Result<ValueContainer<'a,f64>,Loc> {
         self.pop_get(|p|p.get_float())
     }
@@ -182,6 +186,12 @@ impl<'a> PrimitiveIterContainer<'a> {
         I:IntoIterator<Item = &'b str>,
     {
         self.pop_get(move|p|p.has_identifiers(idns))
+    }
+    pub fn pop_with_symbols<'b,I>(&mut self,symbols:I) -> Result<ValueContainer<'a,&'a str>,Loc>
+    where
+        I:IntoIterator<Item = &'b str>,
+    {
+        self.pop_get(move|p|p.has_symbols(symbols))
     }
 
 

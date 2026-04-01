@@ -9,6 +9,8 @@ TODO
 ** if group not used, all output would be one single list of primitives
 */
 
+use crate::ccexpr_parser::PrimitiveIterContainer;
+
 #[derive(Clone)]
 pub enum GrammarItem<'a> {
     Many0(Box<GrammarItem<'a>>),
@@ -17,8 +19,8 @@ pub enum GrammarItem<'a> {
     Or(Vec<GrammarItem<'a>>), //stored reversed
     Opt(Box<GrammarItem<'a>>),
 
-    List(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
-    ListNoTrail(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
+    // List(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
+    // ListNoTrail(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
 
     String,
     Identifier,
@@ -118,7 +120,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             NonTerm("expr"),
         ].and(),
 
-        "cond" => [NonTerm("lparenth"),NonTerm("expr"),NonTerm("rparenth"),].and(),
+        "cond" => [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
         "block" => [NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
         "if" => [
             Keyword("if"), NonTerm("cond"), NonTerm("block"),
@@ -137,36 +139,36 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         ].and(),
         "for" => [
             Keyword("for"),
-            NonTerm("lparenth"),
+            NonTerm("lparen"),
             NonTerm("for_init"),
             NonTerm("semicolon"),
             NonTerm("expr"),
             NonTerm("semicolon"),
             NonTerm("for_incr"),
-            NonTerm("rparenth"),
+            NonTerm("rparen"),
             NonTerm("block"),
         ].and(),
         "call_params" => [
-            NonTerm("lparenth"),
+            NonTerm("lparen"),
             [
                 NonTerm("expr"),
                 [NonTerm("comma"),NonTerm("expr"),].and().many0(),
                 NonTerm("comma").opt(),
             ].and().opt(),
-            NonTerm("rparenth"),
+            NonTerm("rparen"),
         ].and(),
         "call" => [NonTerm("idn"),NonTerm("call_params"),].and(),
         "include" => [Keyword("include"),String,].and(),
 
         "func_params" => [
-            NonTerm("lparenth"),
+            NonTerm("lparen"),
             [
                 NonTerm("idn"),
                 [NonTerm("comma"),NonTerm("idn"),].and().many0(),
                 NonTerm("ellipsis").opt(),
                 NonTerm("comma").opt(),
             ].and().opt(),
-            NonTerm("rparenth"),
+            NonTerm("rparen"),
         ].and(),
         "func_decl" => [Keyword("fn"),Identifier,NonTerm("func_params"),NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
         "func_lambda" => [Keyword("fn"),NonTerm("func_params"),NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
@@ -190,7 +192,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
                 Int,Float,String,Identifier,NonTerm("idn"),
                 NonTerm("call"),
                 NonTerm("if"),
-                [NonTerm("lparenth"),NonTerm("expr"),NonTerm("rparenth"),].and(),
+                [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
             ].or(),
         ].and(),
         "idn_field" => [NonTerm("dot"),[Identifier,Int,].or(),].and(),
@@ -200,13 +202,13 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             [NonTerm("idn_index"), NonTerm("idn_field"),].or().many0(),
         ].and(),
         "format_params" => [
-            NonTerm("lparenth"),
+            NonTerm("lparen"),
             [
                 [String,NonTerm("expr"),].or(),
                 [NonTerm("comma"),NonTerm("expr"),].and().many0(),
                 NonTerm("comma").opt(),
             ].and().opt(),
-            NonTerm("rparenth"),
+            NonTerm("rparen"),
         ].and(),
 
         "format" => [Keyword("format"),NonTerm("format_params"),].and(),
@@ -217,8 +219,8 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "rcurly" => Symbol("}"),
         "lsquare" => Symbol("["),
         "rsquare" => Symbol("]"),
-        "lparenth" => Symbol("("),
-        "rparenth" => Symbol(")"),
+        "lparen" => Symbol("("),
+        "rparen" => Symbol(")"),
 
         "semicolon" => Symbol(";"),
         "end" => [NonTerm("semicolon"),].or(),
@@ -249,8 +251,146 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
 
 }
 //
-pub fn grammar_run() {
+pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
+    /*
+    * need on_succes_ind, on_fail_ind?
+    * success/fail ind needs to be before or after? after for truncate?
 
+    */
+
+    let mut stk: Vec<(GrammarItem<'_>, usize,usize,PrimitiveIterContainer<'a>)>=vec![
+        (grammar_decl("start"),0,0,primitives)
+    ];
+
+    while let Some((cur, success_ind,fail_ind, mut primitives))=stk.pop() {
+        match cur {
+            GrammarItem::And(gs) => {
+                let Some(first)=gs.first().cloned() else {continue;};
+                // let mut success_ind2=None;
+
+                if let Some(rest)=gs.get(1..) {
+                    // success_ind2=Some(stk.len());
+                    stk.push((GrammarItem::And(rest.into()),success_ind,fail_ind,primitives));
+                }
+
+                // let success_ind2=success_ind2.unwrap_or(success_ind);
+
+                let success_ind=if gs.len()>1 {stk.len()}else{success_ind};
+                stk.push((first,success_ind,fail_ind,primitives));
+            }
+            GrammarItem::Or(gs) => {
+                let Some(first)=gs.first().cloned() else {continue;};
+
+                // let mut fail_ind2=None;
+
+                if let Some(rest)=gs.get(1..) {
+                    // fail_ind2 = Some(stk.len());
+                    stk.push((GrammarItem::And(rest.into()),success_ind,fail_ind,primitives));
+                }
+
+                // let fail_ind2 = fail_ind2.unwrap_or(fail_ind);
+
+                let fail_ind=if gs.len()>1 {stk.len()}else{fail_ind};
+                stk.push((first,success_ind,fail_ind,primitives));
+            }
+
+            GrammarItem::Opt(g) => {
+                stk.push((*g,success_ind,success_ind,primitives));
+            }
+            GrammarItem::Many0(g) => {
+
+            }
+            GrammarItem::Many1(g) => {
+
+            }
+            GrammarItem::String => {
+                match primitives.pop_string() {
+                    Ok(v) => {
+                        println!("string {:?}",v.value);
+                        stk.truncate(success_ind);
+                    }
+                    Err(_loc) => {
+                        stk.truncate(fail_ind);
+                    }
+                }
+            }
+            GrammarItem::Identifier => {
+                match primitives.pop_identifier() {
+                    Ok(v) => {
+                        println!("identifier {:?}",v.value);
+                        stk.truncate(success_ind);
+                    }
+                    Err(_loc) => {
+                        stk.truncate(fail_ind);
+                    }
+                }
+            }
+            GrammarItem::Int => {
+                match primitives.pop_int() {
+                    Ok(v) => {
+                        println!("int {:?}",v.value);
+                        stk.truncate(success_ind);
+                    }
+                    Err(_loc) => {
+                        stk.truncate(fail_ind);
+                    }
+                }
+            }
+            GrammarItem::Float => {
+                match primitives.pop_float() {
+                    Ok(v) => {
+                        println!("float {:?}",v.value);
+                        stk.truncate(success_ind);
+                    }
+                    Err(_loc) => {
+                        stk.truncate(fail_ind);
+                    }
+                }
+            }
+            GrammarItem::Symbol(s) => {
+                match primitives.pop_with_symbols([s]) {
+                    Ok(v) => {
+                        println!("symbol {:?}",v.value);
+                        stk.truncate(success_ind);
+                    }
+                    Err(_loc) => {
+                        stk.truncate(fail_ind);
+                    }
+                }
+            }
+            GrammarItem::Keyword(s) => {
+                match primitives.pop_with_identifiers([s]) {
+                    Ok(v) => {
+                        println!("keyword {:?}",v.value);
+                        stk.truncate(success_ind);
+                    }
+                    Err(_loc) => {
+                        stk.truncate(fail_ind);
+                    }
+                }
+            }
+            GrammarItem::Eol => {
+                match primitives.pop_eol() {
+                    Ok(_) => {
+                        println!("eol");
+                        stk.truncate(success_ind);
+                    }
+                    Err(_loc) => {
+                        stk.truncate(fail_ind);
+                    }
+                }
+            }
+            GrammarItem::NonTerm(t) => {
+                // grammar_decl("t")
+            }
+            GrammarItem::Always => {
+
+            }
+            GrammarItem::Never => {
+
+            }
+        }
+    }
 }
 
 /*
