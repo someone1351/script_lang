@@ -45,18 +45,20 @@ impl<'a> PrimitiveIterContainer<'a> {
     }
 
     pub fn pop_front_amount(&mut self,amount:usize) -> Option<PrimitiveIterContainer<'a>> {
-        if self.start+amount < self.end {
+        if self.start+amount > self.end || amount==0 {
+            None
+        } else {
             let start2=self.start;
             self.start+=amount;
             let end2=self.start;
 
             Some(PrimitiveIterContainer{last_loc:self.last_loc, start: start2, end: end2, parsed: self.parsed })
-        } else {
-            None
         }
     }
     pub fn pop_back_amount(&mut self,amount:usize) -> Option<PrimitiveIterContainer<'a>> {
-        if self.start+amount < self.end {
+        if self.start+amount > self.end || amount==0 {
+            None
+        } else {
             let end2=self.end;
             self.end-=amount;
             let start2=self.end;
@@ -68,8 +70,6 @@ impl<'a> PrimitiveIterContainer<'a> {
             };
 
             Some(PrimitiveIterContainer{last_loc, start: start2, end: end2, parsed: self.parsed })
-        } else {
-            None
         }
     }
 
@@ -153,7 +153,14 @@ impl<'a> PrimitiveIterContainer<'a> {
     {
         let first_eol=self.first().map(|p|p.is_eol()).unwrap_or_default();
         let v=self.get(if first_eol {1} else {0}).and_then(func);
-        self.pop_front_amount(if v.is_ok() && first_eol {2}else{1}).unwrap();
+        if v.is_ok() {
+            // println!("==== {}, {}, {:?}, {self:?}",self.len(),if first_eol {2}else{1},self.first(),);
+            // let x=self.pop_front_amount(if first_eol {2}else{1});
+            // println!("===== {x:?}",);
+            // x.unwrap();
+            self.pop_front_amount(if first_eol {2}else{1}).unwrap();
+        }
+
         v
     }
 

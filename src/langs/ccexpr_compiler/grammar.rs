@@ -11,7 +11,7 @@ TODO
 
 use crate::ccexpr_parser::PrimitiveIterContainer;
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub enum GrammarItem<'a> {
     Many0(Box<GrammarItem<'a>>),
     Many1(Box<GrammarItem<'a>>),
@@ -87,6 +87,10 @@ impl<'a,const N: usize> GrammarArrayTrait <'a> for [GrammarItem<'a>; N] {
 pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
     use GrammarItem::*;
     match n {
+        // "test" => [Int].and(),
+        "test" => [Int,Float.opt()].and().many0(),
+        "test2" => [Int,Float.opt()].and(),
+
         "start" => NonTerm("stmts"),
 
         "stmts" => [
@@ -259,10 +263,16 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
     */
 
     let mut stk: Vec<(GrammarItem<'_>, usize,usize,PrimitiveIterContainer<'a>)>=vec![
-        (grammar_decl("start"),0,0,primitives)
+        (grammar_decl("test"),0,0,primitives)
     ];
 
+    let mut c=0;
     while let Some((cur, success_ind,fail_ind, mut primitives))=stk.pop() {
+        c+=1;
+
+        if c>10 {break;}
+        println!(": {cur:?} || {} && {primitives:?}", stk.iter().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" >> "), );
+
         match cur {
             GrammarItem::And(gs) => {
                 let Some(first)=gs.first().cloned() else {continue;};
@@ -295,6 +305,7 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
             }
 
             GrammarItem::Opt(g) => {
+                let fail_ind=stk.len();
                 stk.push((*g,success_ind,success_ind,primitives));
             }
             GrammarItem::Many0(g) => {
@@ -311,7 +322,7 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
             GrammarItem::String => {
                 match primitives.pop_string() {
                     Ok(v) => {
-                        println!("string {:?}",v.value);
+                        println!("--- string {:?}",v.value);
                         stk.truncate(success_ind);
 
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {
@@ -326,7 +337,7 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
             GrammarItem::Identifier => {
                 match primitives.pop_identifier() {
                     Ok(v) => {
-                        println!("identifier {:?}",v.value);
+                        println!("--- identifier {:?}",v.value);
                         stk.truncate(success_ind);
 
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {
@@ -341,7 +352,7 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
             GrammarItem::Int => {
                 match primitives.pop_int() {
                     Ok(v) => {
-                        println!("int {:?}",v.value);
+                        println!("--- int {:?}",v.value);
                         stk.truncate(success_ind);
 
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {
@@ -356,7 +367,7 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
             GrammarItem::Float => {
                 match primitives.pop_float() {
                     Ok(v) => {
-                        println!("float {:?}",v.value);
+                        println!("--- float {:?}",v.value);
                         stk.truncate(success_ind);
 
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {
@@ -371,7 +382,7 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
             GrammarItem::Symbol(s) => {
                 match primitives.pop_with_symbols([s]) {
                     Ok(v) => {
-                        println!("symbol {:?}",v.value);
+                        println!("--- symbol {:?}",v.value);
                         stk.truncate(success_ind);
 
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {
@@ -386,7 +397,7 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
             GrammarItem::Keyword(s) => {
                 match primitives.pop_with_identifiers([s]) {
                     Ok(v) => {
-                        println!("keyword {:?}",v.value);
+                        println!("--- keyword {:?}",v.value);
                         stk.truncate(success_ind);
 
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {

@@ -31,7 +31,7 @@ impl Parsed {
         PrimitiveIterContainer { last_loc:Loc::one(),start: 0, end: self.primitives.len(), parsed: self }
     }
     pub fn print(&self) {
-        println!("prims {:?}",self.primitives);
+        // println!("prims {:?}",self.primitives);
 
         for p in self.primitives() {
             println!("{p:?}");

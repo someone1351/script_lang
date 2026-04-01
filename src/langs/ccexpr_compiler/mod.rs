@@ -5,6 +5,7 @@ mod error;
 mod grammar;
 // mod cmds;
 
+use crate::ccexpr_compiler::grammar::grammar_run;
 // use std::path::PathBuf;
 use crate::StringVal;
 
@@ -76,6 +77,10 @@ impl Compiler {
         let parsed=parsed.unwrap();
 
         parsed.print();
+
+        println!("===");
+        grammar_run(parsed.primitives());
+        println!("===");
 
         //
         // let mut builder = builder::Builder::new();
