@@ -381,13 +381,13 @@ pub fn grammar_run<'a>(primitives:PrimitiveIterContainer<'a>) {
                 }
             }
             GrammarItem::NonTerm(t) => {
-                // grammar_decl("t")
+                stk.push((grammar_decl(t),success_ind,fail_ind,primitives));
             }
             GrammarItem::Always => {
-
+                stk.truncate(success_ind);
             }
             GrammarItem::Never => {
-
+                stk.truncate(fail_ind);
             }
         }
     }
