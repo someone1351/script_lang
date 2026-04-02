@@ -92,7 +92,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "test2" => [Int,Float.opt()].and(),
         "test3" => [ Int.many0() ].and().opt(),
 
-        "test4" => [[Int,String.opt(),].and(),Identifier,].or().opt(), //NonTerm("expr").many1().opt(),
+        "test4" => [[Int,String.opt(),].and(),Identifier,].or().opt(), //or(and(int,str?),idn)?
 
         "start" => NonTerm("stmts"),
 
