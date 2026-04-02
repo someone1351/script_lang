@@ -90,7 +90,9 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         // "test" => [Int].and(),
         "test" => [Int,Float.opt()].and().many0(),
         "test2" => [Int,Float.opt()].and(),
-        "test3" => [Int.many1()].and().opt(),
+        "test3" => [
+            Int.many0()
+            ].and().opt(),
 
         "start" => NonTerm("stmts"),
 
@@ -196,17 +198,17 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "prefix" => [NonTerm("add"),NonTerm("sub"),NonTerm("not"),].or(),
 
         "val" => [
-            // NonTerm("prefix").many0(),
+            NonTerm("prefix").many0(),
             [
                 Int,Float,String,
-                // Identifier, //NonTerm("idn"),
-                // Keyword("void"),Keyword("nil"),
-                // Keyword("true"),Keyword("false"),
-                // NonTerm("call"),
-                // NonTerm("if"),
-                // [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
+                Identifier,
+                Keyword("void"),Keyword("nil"),
+                Keyword("true"),Keyword("false"),
+                NonTerm("call"),
+                NonTerm("if"),
+                [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
             ].or(),
-            // [NonTerm("val_index"), NonTerm("val_field"),].or().many0(),
+            [NonTerm("val_index"), NonTerm("val_field"),].or().many0(),
         ].and(),
         "val_field" => [NonTerm("dot"),[Identifier,Int,].or(),].and(),
         "val_index" => [NonTerm("lsquare"),NonTerm("expr"),NonTerm("rsquare"),].and(),
@@ -269,7 +271,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
     */
 
     let mut stk: Vec<(GrammarItem<'_>, usize,usize,PrimitiveIterContainer<'a>)>=vec![
-        (grammar_decl("test3"),0,0,top_primitives)
+        (grammar_decl("start"),0,0,top_primitives)
     ];
 
     let mut c=0;
@@ -321,15 +323,15 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
             }
 
             GrammarItem::Opt(g) => {
-                stk.push((GrammarItem::Always,success_ind,success_ind,primitives));
+                stk.push((GrammarItem::Always,fail_ind,fail_ind,primitives));
                 let fail_ind=stk.len();
                 stk.push((*g,success_ind,fail_ind,primitives));
             }
             GrammarItem::Many0(g) => {
-                let fail_ind=stk.len();
+                let fail_ind=stk.len(); //only remove everything past here on fail
                 stk.push((GrammarItem::Many0(g.clone()),success_ind,fail_ind,primitives));
                 let success_ind=stk.len();
-                stk.push((*g,success_ind,fail_ind,primitives));
+                stk.push((GrammarItem::Opt(g),success_ind,fail_ind,primitives));
             }
             GrammarItem::Many1(g) => {
                 stk.push((GrammarItem::Many0(g.clone()),success_ind,fail_ind,primitives));
