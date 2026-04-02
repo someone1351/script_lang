@@ -71,6 +71,7 @@ impl<'a> GrammarItem<'a> {
 //     }};
 // }
 
+//todo have array stored in rev for or/and
 trait GrammarArrayTrait<'a> {
     fn and(&self) -> GrammarItem<'a>;
     fn or(&self) -> GrammarItem<'a>;
@@ -93,6 +94,9 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "test3" => [ Int.many0() ].and().opt(),
 
         "test4" => [[Int,String.opt(),].and(),Identifier,].or().opt(), //or(and(int,str?),idn)?
+        "test5" =>  Int.many0(),
+        "test6" =>  Int.many0().opt(),
+        "test7" =>  [ [ Int,String ].and(), Float, ].or(), //or(and(int,str),float)
 
         "start" => NonTerm("stmts"),
 
@@ -187,14 +191,18 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             NonTerm("and"),NonTerm("or"),
         ].or(),
 
-        "expr" => [ NonTerm("val"), [NonTerm("infix"),NonTerm("val"),].and().many0(), ].and(),
+        "expr" => [
+            NonTerm("val"),
+            [NonTerm("infix"),NonTerm("val"),].and().many0(),
+        ].and(),
 
         "prefix" => [NonTerm("add"),NonTerm("sub"),NonTerm("not"),].or(),
 
         "val" => [
             NonTerm("prefix").many0(),
             [
-                Int,Float,
+                Int,
+                Float,
                 String,
                 Identifier,
                 Keyword("void"),Keyword("nil"),
@@ -205,6 +213,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             ].or(),
             [ NonTerm("val_index"), NonTerm("val_field"), ].or().many0(),
         ].and(),
+
         "val_field" => [NonTerm("dot"),[Identifier,Int,].or(),].and(),
         "val_index" => [NonTerm("lsquare"),NonTerm("expr"),NonTerm("rsquare"),].and(),
 
@@ -266,14 +275,14 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
     */
 
     let mut stk: Vec<(GrammarItem<'_>, usize,usize,PrimitiveIterContainer<'a>)>=vec![
-        (grammar_decl("test4"),0,0,top_primitives)
+        (grammar_decl("test7"),0,0,top_primitives)
     ];
 
     let mut c=0;
     while let Some((cur, success_ind,fail_ind, mut primitives))=stk.pop() {
         c+=1;
 
-        // if c>20 {break;}
+        // if c>55 {break;}
         // println!(": {cur:?} || {} && {primitives:?}", stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
         println!(": {cur:?}, ps={primitives:?}, success={success_ind}, fail={fail_ind}");
 
@@ -314,15 +323,19 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
             }
 
             GrammarItem::Opt(g) => {
-                stk.push((GrammarItem::Always,fail_ind,fail_ind,primitives));
+                stk.push((GrammarItem::Always,success_ind,0,primitives)); //fail is not used
                 let fail_ind=stk.len();
                 stk.push((*g,success_ind,fail_ind,primitives));
             }
             GrammarItem::Many0(g) => {
-                let fail_ind=stk.len(); //only remove everything past here on fail
+                let fail_ind2=stk.len(); //only remove everything past here on fail
                 stk.push((GrammarItem::Many0(g.clone()),success_ind,fail_ind,primitives));
                 let success_ind=stk.len();
-                stk.push((GrammarItem::Opt(g),success_ind,fail_ind,primitives));
+                stk.push((GrammarItem::Always,fail_ind2,0,primitives)); //fail is not used
+                let fail_ind=stk.len(); //only remove everything past here on fail
+
+                // stk.push((GrammarItem::Opt(g),success_ind,fail_ind,primitives));
+                stk.push((*g,success_ind,fail_ind,primitives));
             }
             GrammarItem::Many1(g) => {
                 stk.push((GrammarItem::Many0(g.clone()),success_ind,fail_ind,primitives));
