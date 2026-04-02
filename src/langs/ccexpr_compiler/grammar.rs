@@ -96,7 +96,8 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "test4" => [[Int,String.opt(),].and(),Identifier,].or().opt(), //or(and(int,str?),idn)?
         "test5" =>  Int.many0(),
         "test6" =>  Int.many0().opt(),
-        "test7" =>  [ [ Int,String ].and(), Float, ].or(), //or(and(int,str),float)
+        // "test7" =>  [ [ Int,String ].and(), Float, ].or(), //or(and(int,str),float)
+        "test7" =>  [ Int.many0(), String, ].or().many0(), //.opt(), // many0(or(many0(int),str))
 
         "start" => NonTerm("stmts"),
 
