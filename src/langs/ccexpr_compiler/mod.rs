@@ -82,6 +82,8 @@ impl Compiler {
         grammar_run(parsed.primitives());
         println!("===");
 
+        // parsed.print();
+
         //
         // let mut builder = builder::Builder::new();
         // // // builder.eval(parsed.root_block_primitive().get_block().unwrap().primitives());

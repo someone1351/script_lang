@@ -102,7 +102,7 @@ impl<'a> PrimitiveContainer<'a> {
     where
         I:IntoIterator<Item = &'b str>,
     {
-        let g=self.get_identifier()?;
+        let g=self.get_symbol()?;
 
         for idn in symbols.into_iter() {
             if idn.eq(g.value) {

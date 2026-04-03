@@ -13,8 +13,8 @@ use crate::ccexpr_parser::PrimitiveIterContainer;
 
 #[derive(Clone,Debug)]
 pub enum GrammarItem<'a> {
-    Many0(Box<GrammarItem<'a>>),
-    Many1(Box<GrammarItem<'a>>),
+    Many(Box<GrammarItem<'a>>),
+    // Many1(Box<GrammarItem<'a>>),
     And(Vec<GrammarItem<'a>>), //stored reversed
     Or(Vec<GrammarItem<'a>>), //stored reversed
     Opt(Box<GrammarItem<'a>>),
@@ -37,20 +37,27 @@ pub enum GrammarItem<'a> {
 
 impl<'a> GrammarItem<'a> {
     pub fn many0(self) -> GrammarItem<'a> {
-        Self::Many0(self.into())
+        Self::Many(self.into())
     }
     pub fn many1(self) -> GrammarItem<'a> {
-        Self::Many1(self.into())
+        let x=self.clone();
+        [self.many0(),x,].and()
+        // Self::Many1(self.into())
     }
     pub fn opt(self) -> GrammarItem<'a> {
         Self::Opt(self.into())
     }
 
     pub fn is_many(&self) -> bool {
-        match self {
-            GrammarItem::Many0(_)|GrammarItem::Many1(_) => true,
-            _ =>false,
+        if let GrammarItem::Many(_)=self {
+            true
+        } else {
+            false
         }
+        // match self {
+        //     GrammarItem::Many(_)|GrammarItem::Many1(_) => true,
+        //     _ =>false,
+        // }
     }
 }
 
@@ -106,17 +113,30 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         // "test7" =>  [ [ Int,String ].and(), Float, ].or(), //or(and(int,str),float)
         "test7" =>  [ Int.many0(), String, ].or().many0(), //.opt(), // many0(or(many0(int),str))
 
+        "test8" => [
+            Symbol("+"),
+            Int,
+        ].and(),
+
+        // "test9" => NonTerm("if"),
+
         "start" => NonTerm("stmts"),
 
-        "stmts" => [ NonTerm("stmt"), [[NonTerm("semicolon"),Eol].or(), NonTerm("stmt"),].and().many0(), ].and().opt(),
+        "ending" => [NonTerm("semicolon"),Eol].or().many1(),
+        "stmts" => [
+            NonTerm("stmt"),
+            [NonTerm("ending"), NonTerm("stmt"),].and().many0(),
+            [NonTerm("semicolon"),Eol].or().many0(),
+        ].and().opt(),
 
         "stmt" => [
-            NonTerm("expr"),
+            NonTerm("block"),
             NonTerm("var"),NonTerm("set"),NonTerm("while"),NonTerm("for"),
             NonTerm("break"), NonTerm("continue"),
             NonTerm("return"),
             NonTerm("include"),
             NonTerm("format"),NonTerm("print"),NonTerm("println"),
+            NonTerm("expr"),
             // NonTerm("if"),
         ].or(),
 
@@ -212,11 +232,11 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
                 Int,
                 Float,
                 String,
-                Identifier,
                 Keyword("void"),Keyword("nil"),
                 Keyword("true"),Keyword("false"),
                 NonTerm("call"),
                 NonTerm("if"),
+                Identifier,
                 [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
             ].or(),
             [ NonTerm("val_index"), NonTerm("val_field"), ].or().many0(),
@@ -227,11 +247,12 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
 
         "format_params" => [
             NonTerm("lparen"),
-            [
-                [String,NonTerm("expr"),].or(),
-                [NonTerm("comma"),NonTerm("expr"),].and().many0(),
-                NonTerm("comma").opt(),
-            ].and().opt(),
+            String,
+            // [
+            //     [String,NonTerm("expr"),].or(),
+            //     [NonTerm("comma"),NonTerm("expr"),].and().many0(),
+            //     NonTerm("comma").opt(),
+            // ].and().opt(),
             NonTerm("rparen"),
         ].and(),
 
@@ -304,13 +325,10 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
         match cur {
             GrammarItem::And(gs) => {
                 let Some(first)=gs.first().cloned() else {continue;};
-                // let mut success_len2=None;
 
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
                     stk.push((GrammarItem::And(rest.into()),success_len,fail_len,primitives));
                 }
-
-                // let success_len2=success_len2.unwrap_or(success_len);
 
                 let success_len=if gs.len()>1 {stk.len()}else{success_len};
                 stk.push((first,success_len,fail_len,primitives));
@@ -318,13 +336,9 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
             GrammarItem::Or(gs) => {
                 let Some(first)=gs.first().cloned() else {continue;};
 
-                // let mut fail_len2=None;
-
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
                     stk.push((GrammarItem::Or(rest.into()),success_len,fail_len,primitives));
                 }
-
-                // let fail_len2 = fail_len2.unwrap_or(fail_len);
 
                 let fail_len=if gs.len()>1 {stk.len()}else{fail_len};
                 stk.push((first,success_len,fail_len,primitives));
@@ -335,19 +349,19 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 let fail_len=stk.len();
                 stk.push((*g,success_len,fail_len,primitives));
             }
-            GrammarItem::Many0(g) => {
+            GrammarItem::Many(g) => {
                 // let fail_len2=stk.len(); //only remove everything past here on fail
-                stk.push((GrammarItem::Many0(g.clone()),success_len,fail_len,primitives));
+                stk.push((GrammarItem::Many(g.clone()),success_len,fail_len,primitives));
                 let success_len2=stk.len();
                 stk.push((GrammarItem::Always,success_len,0,primitives)); //fail is not used
                 let fail_len=stk.len();
                 stk.push((*g,success_len2,fail_len,primitives));
             }
-            GrammarItem::Many1(g) => {
-                stk.push((GrammarItem::Many0(g.clone()),success_len,fail_len,primitives));
-                let success_len=stk.len();
-                stk.push((*g,success_len,fail_len,primitives));
-            }
+            // GrammarItem::Many1(g) => {
+            //     stk.push((GrammarItem::Many(g.clone()),success_len,fail_len,primitives));
+            //     let success_len=stk.len();
+            //     stk.push((*g,success_len,fail_len,primitives));
+            // }
             GrammarItem::Always => {
                 stk.truncate(success_len);
 
@@ -454,6 +468,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                     }
                     Err(_loc) => {
                         stk.truncate(fail_len);
+                        // println!("nos");
                     }
                 }
                 if stk.is_empty() {

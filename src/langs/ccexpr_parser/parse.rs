@@ -72,35 +72,44 @@ fn parse_number(
 ) -> Option<Primitive> {
     let mut i=0;
     let mut is_float=false;
-    let mut ok=false;
+    // let mut ok=false;
 
     while let Some(c)=input.get(i, 1) {
         if ("0"..="9").contains(&c) {
             i+=1;
-            ok=true;
+            // ok=true;
         } else {
             break;
         }
     }
 
-    if float_aswell {
-        if Some(".")==input.get(i, 1) {
-            i+=1;
-            is_float=true;
-        }
-
-        while let Some(c)=input.get(i, 1) {
-            if ("0"..="9").contains(&c) {
-                i+=1;
-                ok=true;
-            } else {
-                break;
-            }
-        }
+    if i==0 {
+        return None;
     }
 
-    if !ok {
-        return None;
+    if float_aswell {
+        let mut j=i;
+
+        if Some(".")==input.get(j, 1) {
+            j+=1;
+        }
+
+        if j!=i {
+            // ok=false;
+            while let Some(c)=input.get(j, 1) {
+                if ("0"..="9").contains(&c) {
+                    j+=1;
+                    // ok=true;
+                } else {
+                    break;
+                }
+            }
+
+            if j>i+1 {
+                is_float=true;
+                i=j;
+            }
+        }
     }
 
     let start_loc=input.loc();
@@ -238,6 +247,10 @@ fn parse_ident_symbol(
 
     if input.hasc(i,['_'],['a'..='z','A'..='Z']).is_some() {
         i+=1;
+    }
+
+    if i==0 {
+        return None;
     }
 
     while input.hasc(i,['_'],['a'..='z','A'..='Z','0'..='9']).is_some() {
