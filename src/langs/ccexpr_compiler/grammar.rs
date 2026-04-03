@@ -45,6 +45,13 @@ impl<'a> GrammarItem<'a> {
     pub fn opt(self) -> GrammarItem<'a> {
         Self::Opt(self.into())
     }
+
+    pub fn is_many(&self) -> bool {
+        match self {
+            GrammarItem::Many0(_)|GrammarItem::Many1(_) => true,
+            _ =>false,
+        }
+    }
 }
 
 // impl<'a, const N: usize> From<[GrammarItem<'a>; N]> for  GrammarItem<'a> {
@@ -276,7 +283,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
     */
 
     let mut stk: Vec<(GrammarItem<'_>, usize,usize,PrimitiveIterContainer<'a>)>=vec![
-        (grammar_decl("test7"),0,0,top_primitives)
+        (grammar_decl("start"),0,0,top_primitives)
     ];
 
     let mut c=0;
@@ -345,12 +352,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 stk.truncate(success_len);
 
                 if let Some((g,_,_,ps))=stk.last_mut() {
-                    let is_many=match g {
-                        GrammarItem::Many0(_)|GrammarItem::Many1(_) => true,
-                        _ =>false,
-                    };
-
-                    if is_many {
+                    if g.is_many() && ps.len()==primitives.len() { //if not parsing anything, exit the many
                         *g=GrammarItem::Always;
                     }
 
