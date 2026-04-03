@@ -270,7 +270,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
 //
 pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
     /*
-    * need on_succes_ind, on_fail_ind?
+    * need on_succes_ind, on_fail_len?
     * success/fail ind needs to be before or after? after for truncate?
 
     */
@@ -280,12 +280,12 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
     ];
 
     let mut c=0;
-    while let Some((cur, success_ind,fail_ind, mut primitives))=stk.pop() {
+    while let Some((cur, success_len,fail_len, mut primitives))=stk.pop() {
         c+=1;
 
         // if c>55 {break;}
         // println!(": {cur:?} || {} && {primitives:?}", stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
-        println!(": {cur:?}, ps={primitives:?}, success={success_ind}, fail={fail_ind}");
+        println!(": {cur:?}, ps={primitives:?}, success={success_len}, fail={fail_len}");
 
         for (i,(g,s,f,ps)) in stk.iter()
             // .rev()
@@ -297,63 +297,70 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
         match cur {
             GrammarItem::And(gs) => {
                 let Some(first)=gs.first().cloned() else {continue;};
-                // let mut success_ind2=None;
+                // let mut success_len2=None;
 
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
-                    stk.push((GrammarItem::And(rest.into()),success_ind,fail_ind,primitives));
+                    stk.push((GrammarItem::And(rest.into()),success_len,fail_len,primitives));
                 }
 
-                // let success_ind2=success_ind2.unwrap_or(success_ind);
+                // let success_len2=success_len2.unwrap_or(success_len);
 
-                let success_ind=if gs.len()>1 {stk.len()}else{success_ind};
-                stk.push((first,success_ind,fail_ind,primitives));
+                let success_len=if gs.len()>1 {stk.len()}else{success_len};
+                stk.push((first,success_len,fail_len,primitives));
             }
             GrammarItem::Or(gs) => {
                 let Some(first)=gs.first().cloned() else {continue;};
 
-                // let mut fail_ind2=None;
+                // let mut fail_len2=None;
 
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
-                    stk.push((GrammarItem::Or(rest.into()),success_ind,fail_ind,primitives));
+                    stk.push((GrammarItem::Or(rest.into()),success_len,fail_len,primitives));
                 }
 
-                // let fail_ind2 = fail_ind2.unwrap_or(fail_ind);
+                // let fail_len2 = fail_len2.unwrap_or(fail_len);
 
-                let fail_ind=if gs.len()>1 {stk.len()}else{fail_ind};
-                stk.push((first,success_ind,fail_ind,primitives));
+                let fail_len=if gs.len()>1 {stk.len()}else{fail_len};
+                stk.push((first,success_len,fail_len,primitives));
             }
 
             GrammarItem::Opt(g) => {
-                stk.push((GrammarItem::Always,success_ind,0,primitives)); //fail is not used
-                let fail_ind=stk.len();
-                stk.push((*g,success_ind,fail_ind,primitives));
+                stk.push((GrammarItem::Always,success_len,0,primitives)); //fail is not used
+                let fail_len=stk.len();
+                stk.push((*g,success_len,fail_len,primitives));
             }
             GrammarItem::Many0(g) => {
-                let fail_ind2=stk.len(); //only remove everything past here on fail
-                stk.push((GrammarItem::Many0(g.clone()),success_ind,fail_ind,primitives));
-                let success_ind=stk.len();
-                stk.push((GrammarItem::Always,fail_ind2,0,primitives)); //fail is not used
-                let fail_ind=stk.len(); //only remove everything past here on fail
-
-                // stk.push((GrammarItem::Opt(g),success_ind,fail_ind,primitives));
-                stk.push((*g,success_ind,fail_ind,primitives));
+                // let fail_len2=stk.len(); //only remove everything past here on fail
+                stk.push((GrammarItem::Many0(g.clone()),success_len,fail_len,primitives));
+                let success_len2=stk.len();
+                stk.push((GrammarItem::Always,success_len,0,primitives)); //fail is not used
+                let fail_len=stk.len();
+                stk.push((*g,success_len2,fail_len,primitives));
             }
             GrammarItem::Many1(g) => {
-                stk.push((GrammarItem::Many0(g.clone()),success_ind,fail_ind,primitives));
-                let success_ind=stk.len();
-                stk.push((*g,success_ind,fail_ind,primitives));
+                stk.push((GrammarItem::Many0(g.clone()),success_len,fail_len,primitives));
+                let success_len=stk.len();
+                stk.push((*g,success_len,fail_len,primitives));
             }
             GrammarItem::Always => {
-                stk.truncate(success_ind);
+                stk.truncate(success_len);
 
-                if let Some((_g,_a,_b,ps))=stk.last_mut() {
+                if let Some((g,_,_,ps))=stk.last_mut() {
+                    let is_many=match g {
+                        GrammarItem::Many0(_)|GrammarItem::Many1(_) => true,
+                        _ =>false,
+                    };
+
+                    if is_many {
+                        *g=GrammarItem::Always;
+                    }
+
                     *ps=primitives;
                 } else {
                     top_primitives=primitives;
                 }
             }
             GrammarItem::Never => {
-                stk.truncate(fail_ind);
+                stk.truncate(fail_len);
 
                 if stk.is_empty() {
                     top_primitives=primitives;
@@ -363,14 +370,14 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 match primitives.pop_string() {
                     Ok(v) => {
                         println!("--- string {:?}",v.value);
-                        stk.truncate(success_ind);
+                        stk.truncate(success_len);
 
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {
                             *ps=primitives;
                         }
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_ind);
+                        stk.truncate(fail_len);
                     }
                 }
                 if stk.is_empty() {
@@ -381,14 +388,14 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 match primitives.pop_identifier() {
                     Ok(v) => {
                         println!("--- identifier {:?}",v.value);
-                        stk.truncate(success_ind);
+                        stk.truncate(success_len);
 
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {
                             *ps=primitives;
                         }
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_ind);
+                        stk.truncate(fail_len);
                     }
                 }
                 if stk.is_empty() {
@@ -399,13 +406,13 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 match primitives.pop_int() {
                     Ok(v) => {
                         println!("--- int {:?}",v.value);
-                        stk.truncate(success_ind);
+                        stk.truncate(success_len);
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {
                             *ps=primitives;
                         }
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_ind);
+                        stk.truncate(fail_len);
                     }
                 }
 
@@ -417,7 +424,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 match primitives.pop_float() {
                     Ok(v) => {
                         println!("--- float {:?}",v.value);
-                        stk.truncate(success_ind);
+                        stk.truncate(success_len);
 
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {
                         //     println!("{_g:?}");
@@ -425,7 +432,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                         }
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_ind);
+                        stk.truncate(fail_len);
                     }
                 }
 
@@ -437,14 +444,14 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 match primitives.pop_with_symbols([s]) {
                     Ok(v) => {
                         println!("--- symbol {:?}",v.value);
-                        stk.truncate(success_ind);
+                        stk.truncate(success_len);
 
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {
                             *ps=primitives;
                         }
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_ind);
+                        stk.truncate(fail_len);
                     }
                 }
                 if stk.is_empty() {
@@ -455,14 +462,14 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 match primitives.pop_with_identifiers([s]) {
                     Ok(v) => {
                         println!("--- keyword {:?}",v.value);
-                        stk.truncate(success_ind);
+                        stk.truncate(success_len);
 
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {
                             *ps=primitives;
                         }
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_ind);
+                        stk.truncate(fail_len);
                     }
                 }
                 if stk.is_empty() {
@@ -473,14 +480,14 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 match primitives.pop_eol() {
                     Ok(_) => {
                         println!("eol");
-                        stk.truncate(success_ind);
+                        stk.truncate(success_len);
 
                         if let Some((_g,_a,_b,ps))=stk.last_mut() {
                             *ps=primitives;
                         }
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_ind);
+                        stk.truncate(fail_len);
                     }
                 }
                 if stk.is_empty() {
@@ -488,7 +495,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 }
             }
             GrammarItem::NonTerm(t) => {
-                stk.push((grammar_decl(t),success_ind,fail_ind,primitives));
+                stk.push((grammar_decl(t),success_len,fail_len,primitives));
             }
         }
     }
