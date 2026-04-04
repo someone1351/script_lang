@@ -15,9 +15,10 @@ use crate::ccexpr_parser::PrimitiveIterContainer;
 pub enum GrammarItem<'a> {
     Many(Box<GrammarItem<'a>>),
     // Many1(Box<GrammarItem<'a>>),
-    And(Vec<GrammarItem<'a>>), //stored reversed
-    Or(Vec<GrammarItem<'a>>), //stored reversed
+    And(Vec<GrammarItem<'a>>), //should store reversed?
+    Or(Vec<GrammarItem<'a>>), //should store reversed?
     Opt(Box<GrammarItem<'a>>),
+    Group(&'a str,Box<GrammarItem<'a>>),
 
     // List(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
     // ListNoTrail(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
@@ -41,11 +42,14 @@ impl<'a> GrammarItem<'a> {
     }
     pub fn many1(self) -> GrammarItem<'a> {
         let x=self.clone();
-        [self.many0(),x,].and()
+        [x,self.many0(),].and()
         // Self::Many1(self.into())
     }
     pub fn opt(self) -> GrammarItem<'a> {
         Self::Opt(self.into())
+    }
+    pub fn group(self,name: &'a str) -> GrammarItem<'a> {
+        Self::Group(name,self.into())
     }
 
     pub fn is_many(&self) -> bool {
@@ -100,6 +104,20 @@ impl<'a,const N: usize> GrammarArrayTrait <'a> for [GrammarItem<'a>; N] {
     }
 }
 pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
+    /*
+    this:
+        if(cond) {1} else {2}
+        -5
+    is same as: if(cond) {1} else {2}-5
+    but that doesn't happen for things like for(..){}, while(..){}, might be better to treat those like exprs to be consistent, even though they aren't?
+
+    should have checks for traversing recursively? or just let the user make the mistake?
+        would need to keep a stk of hashsets containing nonterm names,
+            store with rest of the work in the main stk
+
+        only a problem when the recursive nonterm is used before any token is eaten
+
+    */
     use GrammarItem::*;
     match n {
         // "test" => [Int].and(),
@@ -118,7 +136,9 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             Int,
         ].and(),
 
-        // "test9" => NonTerm("if"),
+        //if traversing same terminal and pos is the same, fail
+        // / [x,self.many0(),].and()
+        // "test9" => Eol.many0(),
 
         "start" => NonTerm("stmts"),
 
@@ -311,9 +331,9 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
     while let Some((cur, success_len,fail_len, mut primitives))=stk.pop() {
         c+=1;
 
-        // if c>55 {break;}
+        // if c>30 {break;}
         // println!(": {cur:?} || {} && {primitives:?}", stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
-        println!(": {cur:?}, ps={primitives:?}, success={success_len}, fail={fail_len}");
+        println!("{c:4}: {cur:?}, ps={primitives:?}, success={success_len}, fail={fail_len}");
 
         for (i,(g,s,f,ps)) in stk.iter()
             // .rev()
@@ -323,6 +343,9 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
         }
 
         match cur {
+            GrammarItem::Group(n, g) => {
+
+            }
             GrammarItem::And(gs) => {
                 let Some(first)=gs.first().cloned() else {continue;};
 
