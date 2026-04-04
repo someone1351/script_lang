@@ -350,14 +350,14 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
     // let mut cur_out=Vec::new();
 
     struct Work<'a> {
-        cur:GrammarItem<'a>,
+        grammar:GrammarItem<'a>,
         success_len:usize,
         fail_len:usize,
         primitives:PrimitiveIterContainer<'a>,
     }
 
     let mut stk=vec![
-        Work{cur:grammar_decl("start"),success_len:0,fail_len:0,primitives:top_primitives}
+        Work{grammar:grammar_decl("start"),success_len:0,fail_len:0,primitives:top_primitives}
     ];
 
     let mut c=0;
@@ -367,18 +367,18 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
         // if c>30 {break;}
         // println!(": {cur:?} || {} && {primitives:?}", stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
         {
-            let Work { cur, success_len, fail_len, primitives }=&cur;
-            println!("{c:4}: {cur:?}, ps={primitives:?}, success={success_len}, fail={fail_len}");
+            let Work { grammar, success_len, fail_len, primitives }=&cur;
+            println!("{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}");
         }
 
-        for (i,Work { cur:g, success_len:s, fail_len:f, primitives:ps }) in stk.iter()
+        for (i,Work { grammar:g, success_len:s, fail_len:f, primitives:ps }) in stk.iter()
             // .rev()
             .enumerate() {
             // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
             println!("\t{i:3}: {g:?}, ps={ps:?},success={s}, fail={f}",);
         }
 
-        match cur.cur {
+        match cur.grammar {
             GrammarItem::Group(n, g) => {
 
             }
@@ -387,7 +387,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
 
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
                     stk.push(Work {
-                        cur: GrammarItem::And(rest.into()),
+                        grammar: GrammarItem::And(rest.into()),
                         success_len: cur.success_len, fail_len: cur.fail_len,
                         primitives: cur.primitives,
                     });
@@ -396,7 +396,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 let success_len=if gs.len()>1 {stk.len()}else{cur.success_len};
 
                 stk.push(Work {
-                    cur: first,
+                    grammar: first,
                     success_len, fail_len: cur.fail_len,
                     primitives: cur.primitives,
                 });
@@ -406,7 +406,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
 
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
                     stk.push(Work {
-                        cur: GrammarItem::Or(rest.into()),
+                        grammar: GrammarItem::Or(rest.into()),
                         success_len: cur.success_len, fail_len: cur.fail_len,
                         primitives: cur.primitives,
                     });
@@ -414,7 +414,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
 
                 let fail_len=if gs.len()>1 {stk.len()}else{cur.fail_len};
                 stk.push(Work {
-                    cur: first,
+                    grammar: first,
                     success_len: cur.success_len, fail_len,
                     primitives: cur.primitives,
                 });
@@ -422,7 +422,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
 
             GrammarItem::Opt(g) => {
                 stk.push(Work {
-                    cur: GrammarItem::Always,
+                    grammar: GrammarItem::Always,
                     success_len: cur.success_len, fail_len: 0,
                     primitives: cur.primitives,
                 }); //fail is not used
@@ -430,7 +430,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 let fail_len=stk.len();
 
                 stk.push(Work {
-                    cur: *g,
+                    grammar: *g,
                     success_len: cur.success_len, fail_len,
                     primitives: cur.primitives,
                 });
@@ -438,20 +438,20 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
             GrammarItem::Many(g) => {
                 // let fail_len2=stk.len(); //only remove everything past here on fail
                 stk.push(Work {
-                    cur: GrammarItem::Many(g.clone()),
+                    grammar: GrammarItem::Many(g.clone()),
                     success_len: cur.success_len, fail_len: cur.fail_len,
                     primitives: cur.primitives,
                 });
 
                 let success_len2=stk.len();
                 stk.push(Work {
-                    cur: GrammarItem::Always,
+                    grammar: GrammarItem::Always,
                     success_len: cur.success_len, fail_len: 0,
                     primitives: cur.primitives,
                 }); //fail is not used
 
                 let fail_len=stk.len();
-                stk.push(Work { cur: *g, success_len: success_len2, fail_len, primitives: cur.primitives });
+                stk.push(Work { grammar: *g, success_len: success_len2, fail_len, primitives: cur.primitives });
             }
             // GrammarItem::Many1(g) => {
             //     stk.push((GrammarItem::Many(g.clone()),success_len,fail_len,primitives));
@@ -462,8 +462,8 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 stk.truncate(cur.success_len);
 
                 if let Some(last)=stk.last_mut() {
-                    if last.cur.is_many() && last.primitives.len()==cur.primitives.len() { //if not parsing anything, exit the many
-                        last.cur=GrammarItem::Always;
+                    if last.grammar.is_many() && last.primitives.len()==cur.primitives.len() { //if not parsing anything, exit the many
+                        last.grammar=GrammarItem::Always;
                     }
 
                     last.primitives=cur.primitives;
@@ -480,7 +480,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
             }
             GrammarItem::NonTerm(t) => {
                 stk.push(Work {
-                    cur: grammar_decl(t),
+                    grammar: grammar_decl(t),
                     success_len: cur.success_len, fail_len: cur.fail_len,
                     primitives: cur.primitives,
                 });
