@@ -349,26 +349,36 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
     let mut output: Vec<GrammarOutput> = Vec::new();
     // let mut cur_out=Vec::new();
 
-    let mut stk: Vec<(GrammarItem<'_>, usize,usize,PrimitiveIterContainer<'a>)>=vec![
-        (grammar_decl("start"),0,0,top_primitives)
+    struct Work<'a> {
+        cur:GrammarItem<'a>,
+        success_len:usize,
+        fail_len:usize,
+        primitives:PrimitiveIterContainer<'a>,
+    }
+
+    let mut stk=vec![
+        Work{cur:grammar_decl("start"),success_len:0,fail_len:0,primitives:top_primitives}
     ];
 
     let mut c=0;
-    while let Some((cur, success_len,fail_len, mut primitives))=stk.pop() {
+    while let Some(mut cur)=stk.pop() {
         c+=1;
 
         // if c>30 {break;}
         // println!(": {cur:?} || {} && {primitives:?}", stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
-        println!("{c:4}: {cur:?}, ps={primitives:?}, success={success_len}, fail={fail_len}");
+        {
+            let Work { cur, success_len, fail_len, primitives }=&cur;
+            println!("{c:4}: {cur:?}, ps={primitives:?}, success={success_len}, fail={fail_len}");
+        }
 
-        for (i,(g,s,f,ps)) in stk.iter()
+        for (i,Work { cur:g, success_len:s, fail_len:f, primitives:ps }) in stk.iter()
             // .rev()
             .enumerate() {
             // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
             println!("\t{i:3}: {g:?}, ps={ps:?},success={s}, fail={f}",);
         }
 
-        match cur {
+        match cur.cur {
             GrammarItem::Group(n, g) => {
 
             }
@@ -376,35 +386,72 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 let Some(first)=gs.first().cloned() else {continue;};
 
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
-                    stk.push((GrammarItem::And(rest.into()),success_len,fail_len,primitives));
+                    stk.push(Work {
+                        cur: GrammarItem::And(rest.into()),
+                        success_len: cur.success_len, fail_len: cur.fail_len,
+                        primitives: cur.primitives,
+                    });
                 }
 
-                let success_len=if gs.len()>1 {stk.len()}else{success_len};
-                stk.push((first,success_len,fail_len,primitives));
+                let success_len=if gs.len()>1 {stk.len()}else{cur.success_len};
+
+                stk.push(Work {
+                    cur: first,
+                    success_len, fail_len: cur.fail_len,
+                    primitives: cur.primitives,
+                });
             }
             GrammarItem::Or(gs) => {
                 let Some(first)=gs.first().cloned() else {continue;};
 
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
-                    stk.push((GrammarItem::Or(rest.into()),success_len,fail_len,primitives));
+                    stk.push(Work {
+                        cur: GrammarItem::Or(rest.into()),
+                        success_len: cur.success_len, fail_len: cur.fail_len,
+                        primitives: cur.primitives,
+                    });
                 }
 
-                let fail_len=if gs.len()>1 {stk.len()}else{fail_len};
-                stk.push((first,success_len,fail_len,primitives));
+                let fail_len=if gs.len()>1 {stk.len()}else{cur.fail_len};
+                stk.push(Work {
+                    cur: first,
+                    success_len: cur.success_len, fail_len,
+                    primitives: cur.primitives,
+                });
             }
 
             GrammarItem::Opt(g) => {
-                stk.push((GrammarItem::Always,success_len,0,primitives)); //fail is not used
+                stk.push(Work {
+                    cur: GrammarItem::Always,
+                    success_len: cur.success_len, fail_len: 0,
+                    primitives: cur.primitives,
+                }); //fail is not used
+
                 let fail_len=stk.len();
-                stk.push((*g,success_len,fail_len,primitives));
+
+                stk.push(Work {
+                    cur: *g,
+                    success_len: cur.success_len, fail_len,
+                    primitives: cur.primitives,
+                });
             }
             GrammarItem::Many(g) => {
                 // let fail_len2=stk.len(); //only remove everything past here on fail
-                stk.push((GrammarItem::Many(g.clone()),success_len,fail_len,primitives));
+                stk.push(Work {
+                    cur: GrammarItem::Many(g.clone()),
+                    success_len: cur.success_len, fail_len: cur.fail_len,
+                    primitives: cur.primitives,
+                });
+
                 let success_len2=stk.len();
-                stk.push((GrammarItem::Always,success_len,0,primitives)); //fail is not used
+                stk.push(Work {
+                    cur: GrammarItem::Always,
+                    success_len: cur.success_len, fail_len: 0,
+                    primitives: cur.primitives,
+                }); //fail is not used
+
                 let fail_len=stk.len();
-                stk.push((*g,success_len2,fail_len,primitives));
+                stk.push(Work { cur: *g, success_len: success_len2, fail_len, primitives: cur.primitives });
             }
             // GrammarItem::Many1(g) => {
             //     stk.push((GrammarItem::Many(g.clone()),success_len,fail_len,primitives));
@@ -412,169 +459,173 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
             //     stk.push((*g,success_len,fail_len,primitives));
             // }
             GrammarItem::Always => {
-                stk.truncate(success_len);
+                stk.truncate(cur.success_len);
 
-                if let Some((g,_,_,ps))=stk.last_mut() {
-                    if g.is_many() && ps.len()==primitives.len() { //if not parsing anything, exit the many
-                        *g=GrammarItem::Always;
+                if let Some(last)=stk.last_mut() {
+                    if last.cur.is_many() && last.primitives.len()==cur.primitives.len() { //if not parsing anything, exit the many
+                        last.cur=GrammarItem::Always;
                     }
 
-                    *ps=primitives;
+                    last.primitives=cur.primitives;
                 } else {
-                    top_primitives=primitives;
+                    top_primitives=cur.primitives;
                 }
             }
             GrammarItem::Never => {
-                stk.truncate(fail_len);
+                stk.truncate(cur.fail_len);
 
                 if stk.is_empty() {
-                    top_primitives=primitives;
+                    top_primitives=cur.primitives;
                 }
             }
             GrammarItem::NonTerm(t) => {
-                stk.push((grammar_decl(t),success_len,fail_len,primitives));
+                stk.push(Work {
+                    cur: grammar_decl(t),
+                    success_len: cur.success_len, fail_len: cur.fail_len,
+                    primitives: cur.primitives,
+                });
             }
             GrammarItem::String => {
-                match primitives.pop_string() {
+                match cur.primitives.pop_string() {
                     Ok(v) => {
                         println!("--- string {:?}",v.value);
-                        stk.truncate(success_len);
+                        stk.truncate(cur.success_len);
 
-                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
-                            *ps=primitives;
+                        if let Some(last)=stk.last_mut() {
+                            last.primitives=cur.primitives;
                         }
 
                         output.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_len);
+                        stk.truncate(cur.fail_len);
                     }
                 }
                 if stk.is_empty() {
-                    top_primitives=primitives;
+                    top_primitives=cur.primitives;
                 }
             }
             GrammarItem::Identifier => {
-                match primitives.pop_identifier() {
+                match cur.primitives.pop_identifier() {
                     Ok(v) => {
                         println!("--- identifier {:?}",v.value);
-                        stk.truncate(success_len);
+                        stk.truncate(cur.success_len);
 
-                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
-                            *ps=primitives;
+                        if let Some(last)=stk.last_mut() {
+                            last.primitives=cur.primitives;
                         }
 
                         output.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_len);
+                        stk.truncate(cur.fail_len);
                     }
                 }
                 if stk.is_empty() {
-                    top_primitives=primitives;
+                    top_primitives=cur.primitives;
                 }
             }
             GrammarItem::Int => {
-                match primitives.pop_int() {
+                match cur.primitives.pop_int() {
                     Ok(v) => {
                         println!("--- int {:?}",v.value);
-                        stk.truncate(success_len);
-                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
-                            *ps=primitives;
+                        stk.truncate(cur.success_len);
+                        if let Some(last)=stk.last_mut() {
+                            last.primitives=cur.primitives;
                         }
 
                         output.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_len);
+                        stk.truncate(cur.fail_len);
                     }
                 }
 
                 if stk.is_empty() {
-                    top_primitives=primitives;
+                    top_primitives=cur.primitives;
                 }
             }
             GrammarItem::Float => {
-                match primitives.pop_float() {
+                match cur.primitives.pop_float() {
                     Ok(v) => {
                         println!("--- float {:?}",v.value);
-                        stk.truncate(success_len);
+                        stk.truncate(cur.success_len);
 
-                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
+                        if let Some(last)=stk.last_mut() {
                         //     println!("{_g:?}");
-                            *ps=primitives;
+                            last.primitives=cur.primitives;
                         }
 
                         output.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_len);
+                        stk.truncate(cur.fail_len);
                     }
                 }
 
                 if stk.is_empty() {
-                    top_primitives=primitives;
+                    top_primitives=cur.primitives;
                 }
             }
             GrammarItem::Symbol(s) => {
-                match primitives.pop_with_symbols([s]) {
+                match cur.primitives.pop_with_symbols([s]) {
                     Ok(v) => {
                         println!("--- symbol {:?}",v.value);
-                        stk.truncate(success_len);
+                        stk.truncate(cur.success_len);
 
-                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
-                            *ps=primitives;
+                        if let Some(last)=stk.last_mut() {
+                            last.primitives=cur.primitives;
                         }
 
                         output.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_len);
+                        stk.truncate(cur.fail_len);
                         // println!("nos");
                     }
                 }
                 if stk.is_empty() {
-                    top_primitives=primitives;
+                    top_primitives=cur.primitives;
                 }
             }
             GrammarItem::Keyword(s) => {
-                match primitives.pop_with_identifiers([s]) {
+                match cur.primitives.pop_with_identifiers([s]) {
                     Ok(v) => {
                         println!("--- keyword {:?}",v.value);
-                        stk.truncate(success_len);
+                        stk.truncate(cur.success_len);
 
-                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
-                            *ps=primitives;
+                        if let Some(last)=stk.last_mut() {
+                            last.primitives=cur.primitives;
                         }
 
                         output.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_len);
+                        stk.truncate(cur.fail_len);
                     }
                 }
                 if stk.is_empty() {
-                    top_primitives=primitives;
+                    top_primitives=cur.primitives;
                 }
             }
             GrammarItem::Eol => {
-                match primitives.pop_eol() {
+                match cur.primitives.pop_eol() {
                     Ok(v) => {
                         println!("eol");
-                        stk.truncate(success_len);
+                        stk.truncate(cur.success_len);
 
-                        if let Some((_g,_a,_b,ps))=stk.last_mut() {
-                            *ps=primitives;
+                        if let Some(last)=stk.last_mut() {
+                            last.primitives=cur.primitives;
                         }
 
                         output.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
-                        stk.truncate(fail_len);
+                        stk.truncate(cur.fail_len);
                     }
                 }
                 if stk.is_empty() {
-                    top_primitives=primitives;
+                    top_primitives=cur.primitives;
                 }
             }
         }
