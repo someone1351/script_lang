@@ -467,6 +467,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 });
 
                 let success_len2=stk.len();
+
                 stk.push(Work {
                     grammar: GrammarItem::Always,
                     success_len: cur.success_len,
