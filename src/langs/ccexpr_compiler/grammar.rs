@@ -183,7 +183,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             Keyword("if"), NonTerm("cond"), NonTerm("block"),
             [Keyword("elif"),NonTerm("cond"),NonTerm("block"),].and().many0(),
             [Keyword("else"),NonTerm("block"),].and().opt(),
-        ].and(),
+        ].and().group("if"),
         "while" => [Keyword("while"), NonTerm("cond"), NonTerm("block"),].and(),
         "for_init" => [
             NonTerm("var"),
@@ -328,7 +328,7 @@ impl<'a> std::fmt::Debug for GrammarOutput<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Group { name, primitives } => {
-                write!(f,"[{name}]:{primitives:?}")
+                write!(f,"{name}:{primitives:?}")
                 // f.debug_struct("Group").field("name", name).field("primitives", primitives).finish()
             }
             Self::Primitive(arg0) => {
@@ -346,7 +346,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
 
     */
 
-    let mut output: Vec<GrammarOutput> = Vec::new();
+    let mut outputs: Vec<GrammarOutput> = Vec::new();
     // let mut cur_out=Vec::new();
 
     struct Work<'a> {
@@ -380,14 +380,15 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
         }
 
         match cur.grammar {
-            GrammarItem::Group(n, g) => {
+            GrammarItem::Group(name, g) => {
+                outputs.push(GrammarOutput::Group { name, primitives: Vec::new() });
 
                 stk.push(Work {
                     grammar: *g,
                     success_len: cur.success_len,
                     fail_len: cur.fail_len,
                     primitives: cur.primitives,
-                    group_start: cur.group_start,
+                    group_start: outputs.len(),
                 });
             }
             GrammarItem::And(gs) => {
@@ -529,7 +530,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        output.push(GrammarOutput::Primitive(v.primitive));
+                        outputs.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -549,7 +550,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        output.push(GrammarOutput::Primitive(v.primitive));
+                        outputs.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -568,7 +569,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        output.push(GrammarOutput::Primitive(v.primitive));
+                        outputs.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -590,7 +591,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        output.push(GrammarOutput::Primitive(v.primitive));
+                        outputs.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -611,7 +612,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        output.push(GrammarOutput::Primitive(v.primitive));
+                        outputs.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -632,7 +633,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        output.push(GrammarOutput::Primitive(v.primitive));
+                        outputs.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -652,7 +653,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        output.push(GrammarOutput::Primitive(v.primitive));
+                        outputs.push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -667,7 +668,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
 
     //
     println!("top_primitives={top_primitives:?}",  );
-    println!("output={output:?}",  );
+    println!("output={outputs:?}",  );
 
 }
 
