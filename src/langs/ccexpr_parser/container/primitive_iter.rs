@@ -164,9 +164,8 @@ impl<'a> PrimitiveIterContainer<'a> {
         v
     }
 
-    pub fn pop_eol(&mut self) -> Result<(),Loc> {
-         self.pop_get(|p|p.get_eol())?;
-         Ok(())
+    pub fn pop_eol(&mut self) -> Result<ValueContainer<'a,()>,Loc> {
+         self.pop_get(|p|p.get_eol())
     }
     pub fn pop_float(&mut self) -> Result<ValueContainer<'a,f64>,Loc> {
         self.pop_get(|p|p.get_float())
