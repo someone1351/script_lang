@@ -381,6 +381,11 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
         match cur.grammar {
             GrammarItem::Group(n, g) => {
 
+                stk.push(Work {
+                    grammar: *g,
+                    success_len: cur.success_len, fail_len: cur.fail_len,
+                    primitives: cur.primitives,
+                });
             }
             GrammarItem::And(gs) => {
                 let Some(first)=gs.first().cloned() else {continue;};
