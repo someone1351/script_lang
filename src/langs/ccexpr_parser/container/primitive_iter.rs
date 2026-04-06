@@ -147,60 +147,65 @@ impl<'a> PrimitiveIterContainer<'a> {
 
     }
 
-    fn pop_get<T,F>(&mut self,func:F) -> Result<ValueContainer<'a,T>,Loc>
+    fn pop_get<T,F>(&mut self,skip_eols:bool,func:F) -> Result<ValueContainer<'a,T>,Loc>
     where
         F:FnOnce(PrimitiveContainer<'a>)->Result<ValueContainer<'a,T>,Loc>,
     {
-        let first_eol=self.first().map(|p|p.is_eol()).unwrap_or_default();
-        let v=self.get(if first_eol {1} else {0}).and_then(func);
+        if skip_eols {
+            while let Ok(x)=self.first() {
+                if !x.is_eol() {
+                    break;
+                }
+
+                self.pop_front().unwrap();
+            }
+        }
+
+
+        let v=self.first().and_then(func);
+
         if v.is_ok() {
-            // println!("==== {}, {}, {:?}, {self:?}",self.len(),if first_eol {2}else{1},self.first(),);
-            // let x=self.pop_front_amount(if first_eol {2}else{1});
-            // println!("===== {x:?}",);
-            // x.unwrap();
-            self.pop_front_amount(if first_eol {2}else{1}).unwrap();
+            self.pop_front().unwrap();
         }
 
         v
     }
 
     pub fn pop_eol(&mut self) -> Result<ValueContainer<'a,()>,Loc> {
-         self.pop_get(|p|p.get_eol())
+         self.pop_get(false,|p|p.get_eol())
     }
     pub fn pop_float(&mut self) -> Result<ValueContainer<'a,f64>,Loc> {
-        self.pop_get(|p|p.get_float())
+        self.pop_get(true,|p|p.get_float())
     }
 
     pub fn pop_int(&mut self) -> Result<ValueContainer<'a,i64>,Loc> {
-        self.pop_get(|p|p.get_int())
+        self.pop_get(true,|p|p.get_int())
     }
 
     pub fn pop_string(&mut self) -> Result<ValueContainer<'a,&'a str>,Loc> {
-        self.pop_get(|p|p.get_string())
+        self.pop_get(true,|p|p.get_string())
     }
 
     pub fn pop_symbol(&mut self) -> Result<ValueContainer<'a,&'a str>,Loc> {
-        self.pop_get(|p|p.get_symbol())
+        self.pop_get(true,|p|p.get_symbol())
     }
 
     pub fn pop_identifier(&mut self) -> Result<ValueContainer<'a,&'a str>,Loc> {
-        self.pop_get(|p|p.get_identifier())
+        self.pop_get(true,|p|p.get_identifier())
     }
 
     pub fn pop_with_identifiers<'b,I>(&mut self,idns:I) -> Result<ValueContainer<'a,&'a str>,Loc>
     where
         I:IntoIterator<Item = &'b str>,
     {
-        self.pop_get(move|p|p.has_identifiers(idns))
+        self.pop_get(true,move|p|p.has_identifiers(idns))
     }
     pub fn pop_with_symbols<'b,I>(&mut self,symbols:I) -> Result<ValueContainer<'a,&'a str>,Loc>
     where
         I:IntoIterator<Item = &'b str>,
     {
-        self.pop_get(move|p|p.has_symbols(symbols))
+        self.pop_get(true,move|p|p.has_symbols(symbols))
     }
-
-
 }
 
 impl<'a> Iterator for PrimitiveIterContainer<'a> {

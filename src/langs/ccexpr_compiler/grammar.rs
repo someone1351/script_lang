@@ -9,6 +9,8 @@ TODO
 ** if group not used, all output would be one single list of primitives
 */
 
+use std::ops::Range;
+
 use crate::ccexpr_parser::{PrimitiveContainer, PrimitiveIterContainer};
 
 #[derive(Clone,Debug)]
@@ -146,7 +148,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "stmts" => [
             NonTerm("stmt"),
             [NonTerm("ending"), NonTerm("stmt"),].and().many0(),
-            [NonTerm("semicolon"),Eol].or().many0(),
+            NonTerm("ending").many0(),
         ].and().opt(),
 
         "stmt" => [
@@ -268,11 +270,11 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "format_params" => [
             NonTerm("lparen"),
             String,
-            // [
-            //     [String,NonTerm("expr"),].or(),
-            //     [NonTerm("comma"),NonTerm("expr"),].and().many0(),
-            //     NonTerm("comma").opt(),
-            // ].and().opt(),
+            [
+                [String,NonTerm("expr"),].or(),
+                [NonTerm("comma"),NonTerm("expr"),].and().many0(),
+                NonTerm("comma").opt(),
+            ].and().opt(),
             NonTerm("rparen"),
         ].and(),
 
@@ -316,28 +318,34 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
 
 }
 
-
 #[derive(Clone)]
+enum TempGrammarOutput<'a> {
+    Group{name:&'a str,group:usize},
+    Primitive(PrimitiveContainer<'a>),
+
+}
+#[derive(Clone,Debug)]
 enum GrammarOutput<'a> {
-    Group{name:&'a str,primitives:Vec<GrammarOutput<'a>>},
+    Group{name:&'a str,primitives:Range<usize>},
     Primitive(PrimitiveContainer<'a>),
 
 }
 
-impl<'a> std::fmt::Debug for GrammarOutput<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Group { name, primitives } => {
-                write!(f,"{name}:{primitives:?}")
-                // f.debug_struct("Group").field("name", name).field("primitives", primitives).finish()
-            }
-            Self::Primitive(arg0) => {
-                // f.debug_tuple("Primitive").field(arg0).finish()
-                write!(f,"{arg0:?}")
-            }
-        }
-    }
-}
+// impl<'a> std::fmt::Debug for GrammarOutput<'a> {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         match self {
+//             Self::Group { name, primitives } => {
+//                 write!(f,"{name}:{primitives:?}")
+//                 // f.debug_struct("Group").field("name", name).field("primitives", primitives).finish()
+//             }
+//             Self::Primitive(arg0) => {
+//                 // f.debug_tuple("Primitive").field(arg0).finish()
+//                 write!(f,"{arg0:?}")
+//             }
+//         }
+//     }
+// }
+
 //
 pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
     /*
@@ -345,8 +353,8 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
     * success/fail ind needs to be before or after? after for truncate?
 
     */
-
-    let mut outputs: Vec<GrammarOutput> = Vec::new();
+    let mut temp_groups: Vec<Vec<GrammarOutput>> = vec![vec![]];
+    let mut temp_group_inds: Vec<(usize, usize)> = vec![];
     // let mut cur_out=Vec::new();
 
     struct Work<'a> {
@@ -354,11 +362,11 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
         success_len:usize,
         fail_len:usize,
         primitives:PrimitiveIterContainer<'a>,
-        group_start:usize,
+        group:usize,
     }
 
     let mut stk=vec![
-        Work{grammar:grammar_decl("start"),success_len:0,fail_len:0,primitives:top_primitives,group_start:0,}
+        Work{grammar:grammar_decl("start"),success_len:0,fail_len:0,primitives:top_primitives,group:0,}
     ];
 
     let mut c=0;
@@ -368,11 +376,11 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
         // if c>30 {break;}
         // println!(": {cur:?} || {} && {primitives:?}", stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
         {
-            let Work { grammar, success_len, fail_len, primitives,group_start, }=&cur;
+            let Work { grammar, success_len, fail_len, primitives,group: group_start, }=&cur;
             println!("{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_start={group_start}");
         }
 
-        for (i,Work { grammar:g, success_len:s, fail_len:f, primitives:ps,group_start }) in stk.iter()
+        for (i,Work { grammar:g, success_len:s, fail_len:f, primitives:ps,group: group_start }) in stk.iter()
             // .rev()
             .enumerate() {
             // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
@@ -381,15 +389,20 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
 
         match cur.grammar {
             GrammarItem::Group(name, g) => {
-                outputs.push(GrammarOutput::Group { name, primitives: Vec::new() });
+                // outputs.push(GrammarOutput::Group { name, primitives: Vec::new() });
+                let new_group=temp_groups.len();
 
                 stk.push(Work {
                     grammar: *g,
                     success_len: cur.success_len,
                     fail_len: cur.fail_len,
                     primitives: cur.primitives,
-                    group_start: outputs.len(),
+                    group: new_group,
                 });
+
+                temp_group_inds.push((cur.group,temp_groups[cur.group].len()));
+                temp_groups[cur.group].push(GrammarOutput::Group { name, primitives: 0..0, });
+                temp_groups.push(Vec::new());
             }
             GrammarItem::And(gs) => {
                 let Some(first)=gs.first().cloned() else {continue;};
@@ -400,7 +413,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                         success_len: cur.success_len,
                         fail_len: cur.fail_len,
                         primitives: cur.primitives,
-                        group_start: cur.group_start,
+                        group: cur.group,
                     });
                 }
 
@@ -411,7 +424,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                     success_len,
                     fail_len: cur.fail_len,
                     primitives: cur.primitives,
-                    group_start: cur.group_start,
+                    group: cur.group,
                 });
             }
             GrammarItem::Or(gs) => {
@@ -423,7 +436,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                         success_len: cur.success_len,
                         fail_len: cur.fail_len,
                         primitives: cur.primitives,
-                        group_start: cur.group_start,
+                        group: cur.group,
                     });
                 }
 
@@ -434,7 +447,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                     success_len: cur.success_len,
                     fail_len,
                     primitives: cur.primitives,
-                    group_start: cur.group_start,
+                    group: cur.group,
                 });
             }
 
@@ -444,7 +457,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                     success_len: cur.success_len,
                     fail_len: 0, //fail is not used
                     primitives: cur.primitives,
-                    group_start: cur.group_start,
+                    group: cur.group,
                 });
 
                 let fail_len=stk.len();
@@ -454,7 +467,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                     success_len: cur.success_len,
                     fail_len,
                     primitives: cur.primitives,
-                    group_start: cur.group_start,
+                    group: cur.group,
                 });
             }
             GrammarItem::Many(g) => {
@@ -464,7 +477,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                     success_len: cur.success_len,
                     fail_len: cur.fail_len,
                     primitives: cur.primitives,
-                    group_start: cur.group_start,
+                    group: cur.group,
                 });
 
                 let success_len2=stk.len();
@@ -474,7 +487,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                     success_len: cur.success_len,
                     fail_len: 0, //fail is not used
                     primitives: cur.primitives,
-                    group_start: cur.group_start,
+                    group: cur.group,
                 });
 
                 let fail_len=stk.len();
@@ -483,7 +496,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                     success_len: success_len2,
                     fail_len,
                     primitives: cur.primitives,
-                    group_start: cur.group_start,
+                    group: cur.group,
                 });
             }
             // GrammarItem::Many1(g) => {
@@ -517,7 +530,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                     success_len: cur.success_len,
                     fail_len: cur.fail_len,
                     primitives: cur.primitives,
-                    group_start: cur.group_start,
+                    group: cur.group,
                 });
             }
             GrammarItem::String => {
@@ -530,7 +543,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        outputs.push(GrammarOutput::Primitive(v.primitive));
+                        temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -550,7 +563,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        outputs.push(GrammarOutput::Primitive(v.primitive));
+                        temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -569,7 +582,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        outputs.push(GrammarOutput::Primitive(v.primitive));
+                        temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -591,7 +604,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        outputs.push(GrammarOutput::Primitive(v.primitive));
+                        temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -612,7 +625,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        outputs.push(GrammarOutput::Primitive(v.primitive));
+                        temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -633,7 +646,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        outputs.push(GrammarOutput::Primitive(v.primitive));
+                        temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -653,7 +666,7 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                             last.primitives=cur.primitives;
                         }
 
-                        outputs.push(GrammarOutput::Primitive(v.primitive));
+                        temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
                     }
                     Err(_loc) => {
                         stk.truncate(cur.fail_len);
@@ -664,6 +677,53 @@ pub fn grammar_run<'a>(mut top_primitives:PrimitiveIterContainer<'a>) {
                 }
             }
         }
+    }
+
+    //
+    let mut temp_group_ends: Vec<usize> = Vec::new();
+
+    for (i,gs) in temp_groups.iter().enumerate() {
+        let last_end=temp_group_ends.get(i).cloned().unwrap_or_default();
+        temp_group_ends.push(last_end+gs.len());
+    }
+
+    //
+    for (i,(group,group_primitives_ind)) in temp_group_inds.into_iter().enumerate() {
+        let i=i+1;
+        let temp_group_primtives=&mut temp_groups[i];
+
+    }
+
+    //
+    let mut outputs: Vec<GrammarOutput> = Vec::new();
+
+    for gs in temp_groups {
+        outputs.extend(gs);
+    }
+
+    {
+        println!("===");
+
+        let mut stk: Vec<(usize, usize)>=(0..temp_group_ends[0]).rev().map(|i|(i,0)).collect::<Vec<_>>();
+
+        // let mut stk=vec![0..temp_group_ends.last().cloned().unwrap_or_default()];
+
+        while let Some((ind,depth))=stk.pop() {
+            let cur=&outputs[ind];
+
+            let indent="  ".repeat(depth);
+
+            match cur {
+                GrammarOutput::Group { name, primitives } => {
+                    stk.extend(primitives.clone().rev().map(|i|(i,depth+1)));
+                    println!("{indent}group: {name}");
+                }
+                GrammarOutput::Primitive(p) => {
+                    println!("{indent}{p:?}");
+                }
+            }
+        }
+        println!("===");
     }
 
     //
