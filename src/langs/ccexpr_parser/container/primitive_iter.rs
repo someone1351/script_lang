@@ -1,4 +1,4 @@
-use std::ops::{Bound, RangeBounds};
+use std::ops::{Bound, Range, RangeBounds};
 
 use crate::{ccexpr_parser::data::Parsed, Loc};
 
@@ -14,6 +14,9 @@ pub struct PrimitiveIterContainer<'a> {
 }
 
 impl<'a> PrimitiveIterContainer<'a> {
+    pub fn inds(&self) -> Range<usize> {
+        self.start..self.end
+    }
     pub fn last_loc(&self) -> Loc {
         self.last_loc
     }

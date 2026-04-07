@@ -18,6 +18,9 @@ impl<'a> PrimitiveContainer<'a> {
     fn primitive(&self) -> &'a Primitive {
         &self.parsed.primitives[self.primitive_ind]
     }
+    pub fn ind(&self) -> usize {
+        self.primitive_ind
+    }
 
     pub fn start_loc(&self) -> Loc {
         self.primitive().start_loc
