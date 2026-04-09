@@ -37,7 +37,7 @@ pub enum GrammarItem<'a> {
     Always, //always succeeds
     Never, //replace with Error ?
     // Not(Box<GrammarItem<'a>>), //todo, needed? better to have NotIdentifier etc?
-    // Discard(Box<GrammarItem<'a>>), //todo, removes token from output (via just hding it, ie have hashmap of tokens to hide)
+    Discard(Box<GrammarItem<'a>>), //todo, removes token from output (via just hding it, ie have hashmap of tokens to hide)
 }
 
 impl<'a> GrammarItem<'a> {
@@ -55,7 +55,12 @@ impl<'a> GrammarItem<'a> {
     pub fn group(self,name: &'a str) -> GrammarItem<'a> {
         Self::Group(name,self.into())
     }
-
+    pub fn discard(self,) -> GrammarItem<'a> {
+        Self::Discard(self.into())
+    }
+    pub fn d(self,) -> GrammarItem<'a> {
+        self.discard()
+    }
     pub fn is_many(&self) -> bool {
         if let GrammarItem::Many(_)=self {
             true
@@ -144,7 +149,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
 
         "start" => NonTerm("stmts"),
 
-        "ending" => [NonTerm("semicolon"),Eol].or().many1(),
+        "ending" => [NonTerm("semicolon"),Eol].or().many1().d(),
         "stmts" => [
             NonTerm("stmt"),
             [NonTerm("ending"), NonTerm("stmt"),].and().many0(),
@@ -183,12 +188,12 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             NonTerm("expr"),
         ].and(),
 
-        "cond" => [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
-        "block" => [NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
+        "cond" => [NonTerm("lparen").d(),NonTerm("expr"),NonTerm("rparen").d(),].and(),
+        "block" => [NonTerm("lcurly").d(),NonTerm("stmts"),NonTerm("rcurly").d(),].and(),
         "if" => [
-            [Keyword("if"), NonTerm("cond"), NonTerm("block")].and().group(""),
-            [Keyword("elif"),NonTerm("cond"),NonTerm("block"),].and().group("").many0(),
-            [Keyword("else"),NonTerm("block"),].and().group("").opt(),
+            [Keyword("if").d(), NonTerm("cond"), NonTerm("block")].and().group(""),
+            [Keyword("elif").d(),NonTerm("cond"),NonTerm("block"),].and().group("").many0(),
+            [Keyword("else").d(),NonTerm("block"),].and().group("").opt(),
         ].and().group("if"),
         "while" => [Keyword("while"), NonTerm("cond"), NonTerm("block"),].and(),
         // "for_init" => [
@@ -395,7 +400,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
         // name:&'a str,
         // depth:usize,
         group:usize,
-        // discard:bool,
+        discard:bool,
     }
 
     #[derive(Debug)]
@@ -425,30 +430,32 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
         group_len:usize,
         output_len:usize,
+
+        discard:bool,
     }
 
     let mut stk=vec![Work{
         grammar:grammar_decl("start"),success_len:0,fail_len:0,primitives:top_primitives,
-        group_ind: 0, group_len: 1, output_len: 0,
+        group_ind: 0, group_len: 1, output_len: 0, discard:false,
     }];
 
     let mut c=0;
     while let Some(mut cur)=stk.pop() {
         c+=1;
 
-        // if c>30 {break;}
-        // println!(": {cur:?} || {} && {primitives:?}", stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
-        {
-            let Work { grammar, success_len, fail_len, primitives, group_ind, group_len, output_len }=&cur;
-            println!("{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind/len={group_ind}/{group_len}, output_len={output_len}");
-        }
+        // // if c>30 {break;}
+        // // println!(": {cur:?} || {} && {primitives:?}", stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
+        // {
+        //     let Work { grammar, success_len, fail_len, primitives, group_ind, group_len, output_len, discard }=&cur;
+        //     println!("{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind/len={group_ind}/{group_len}, output_len={output_len}, discard{discard}");
+        // }
 
-        for (i,Work { grammar:g, success_len:s, fail_len:f, primitives:ps, group_ind, group_len, output_len }) in stk.iter()
-            // .rev()
-            .enumerate() {
-            // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
-            println!("\t{i:3}: {g:?}, ps={ps:?},success={s}, fail={f}, group_ind/len={group_ind}/{group_len}, output_len={output_len}",);
-        }
+        // for (i,Work { grammar:g, success_len:s, fail_len:f, primitives:ps, group_ind, group_len, output_len, discard }) in stk.iter()
+        //     // .rev()
+        //     .enumerate() {
+        //     // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
+        //     println!("\t{i:3}: {g:?}, ps={ps:?},success={s}, fail={f}, group_ind/len={group_ind}/{group_len}, output_len={output_len}, discard{discard}",);
+        // }
 
         match cur.grammar {
             GrammarItem::Group(name, g) => {
@@ -470,12 +477,29 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_ind: new_group_ind,
                     group_len: new_group_len,
                     output_len: cur.output_len,
+                    discard:cur.discard,
                 });
 
 
                 // temp_group_inds.push((cur.group,temp_groups[cur.group].len()));
                 // temp_groups[cur.group].push(GrammarOutput::Group { name, primitives: 0..0, });
                 // temp_groups.push(Vec::new());
+            }
+            GrammarItem::Discard(g) => {
+
+                stk.push(Work {
+                    grammar: *g,
+                    success_len: cur.success_len,
+                    fail_len: cur.fail_len,
+                    primitives: cur.primitives,
+
+                    group_ind: cur.group_ind,
+                    group_len: cur.group_len,
+                    output_len: cur.output_len,
+                    discard:true,
+                });
+
+
             }
             GrammarItem::And(gs) => {
                 let Some(first)=gs.first().cloned() else {continue;};
@@ -490,6 +514,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         group_ind: cur.group_ind,
                         group_len: cur.group_len,
                         output_len: cur.output_len,
+                        discard:cur.discard,
 
                         // group: cur.group,
                         // group_next_ind:cur.group_next_ind,
@@ -511,6 +536,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     output_len: cur.output_len,
+                    discard:cur.discard,
                 });
             }
             GrammarItem::Or(gs) => {
@@ -529,6 +555,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         group_ind: cur.group_ind,
                         group_len: cur.group_len,
                         output_len: cur.output_len,
+                        discard:cur.discard,
                     });
                 }
 
@@ -546,6 +573,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     output_len: cur.output_len,
+                    discard:cur.discard,
                 });
             }
 
@@ -562,6 +590,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     output_len: cur.output_len,
+                    discard:cur.discard,
                 });
 
                 let fail_len=stk.len();
@@ -577,6 +606,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     output_len: cur.output_len,
+                    discard:cur.discard,
                 });
             }
             GrammarItem::Many(g) => {
@@ -593,6 +623,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     output_len: cur.output_len,
+                    discard:cur.discard,
                 });
 
                 let success_len2=stk.len();
@@ -608,6 +639,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     output_len: cur.output_len,
+                    discard:cur.discard,
                 });
 
                 let fail_len=stk.len();
@@ -623,6 +655,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     output_len: cur.output_len,
+                    discard:cur.discard,
                 });
             }
             // GrammarItem::Many1(g) => {
@@ -672,6 +705,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     output_len: cur.output_len,
+                    discard:cur.discard,
                 });
             }
             GrammarItem::String => {
@@ -680,7 +714,8 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         println!("--- string {:?}",v.value);
                         stk.truncate(cur.success_len);
 
-                        temp_primtives.resize(v.primitive.ind()+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
+                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
 
                         if let Some(last)=stk.last_mut() {
                             last.primitives=cur.primitives;
@@ -714,7 +749,8 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         println!("--- identifier {:?}",v.value);
                         stk.truncate(cur.success_len);
 
-                        temp_primtives.resize(v.primitive.ind()+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
+                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
 
                         if let Some(last)=stk.last_mut() {
                             last.primitives=cur.primitives;
@@ -749,8 +785,8 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         println!("--- int {:?}",v.value);
                         stk.truncate(cur.success_len);
 
-                        temp_primtives.resize(v.primitive.ind()+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
-
+                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
 
                         if let Some(last)=stk.last_mut() {
                             last.primitives=cur.primitives;
@@ -784,7 +820,8 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         println!("--- float {:?}",v.value);
                         stk.truncate(cur.success_len);
 
-                        temp_primtives.resize(v.primitive.ind()+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
+                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
 
                         if let Some(last)=stk.last_mut() {
                         //     println!("{_g:?}");
@@ -819,7 +856,8 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         println!("--- symbol {:?}",v.value);
                         stk.truncate(cur.success_len);
 
-                        temp_primtives.resize(v.primitive.ind()+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
+                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
 
                         if let Some(last)=stk.last_mut() {
                             last.primitives=cur.primitives;
@@ -853,7 +891,8 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         println!("--- keyword {:?}",v.value);
                         stk.truncate(cur.success_len);
 
-                        temp_primtives.resize(v.primitive.ind()+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
+                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
 
                         if let Some(last)=stk.last_mut() {
                             last.primitives=cur.primitives;
@@ -886,7 +925,8 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         println!("eol");
                         stk.truncate(cur.success_len);
 
-                        temp_primtives.resize(v.primitive.ind()+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
+                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
 
                         if let Some(last)=stk.last_mut() {
                             last.primitives=cur.primitives;
@@ -996,7 +1036,10 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
             let gg=&temp_groups3[g];
 
             if !groups_visited.contains(&g) {
-                println!("{}{:?}","  ".repeat(d),gg.name);
+                println!("{}{:?}",
+                    "  ".repeat(d),
+                    gg.name,
+                );
                 groups_visited.insert(g);
             }
 
@@ -1004,7 +1047,10 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
         }
 
-        println!("{}{p:?}","  ".repeat(depth),);
+        println!("{}{}{p:?}",
+            "  ".repeat(depth),
+            if output.discard {"---"}else{""}
+        );
         // let group=
         // let g=temp_groups.get(&i).cloned();//.unwrap_or_default();
         // let Some(g)=g else {
