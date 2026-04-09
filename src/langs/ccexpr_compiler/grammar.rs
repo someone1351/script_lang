@@ -335,21 +335,21 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
 
         "set_equal" => Symbol("="),
 
-        "not" => Symbol("!"),
+        "not" => Symbol("!").group("not"),
         "add" => Symbol("+"),
         "sub" => Symbol("-"),
         "mul" => Symbol("*"),
         "div" => Symbol("/"),
 
-        "and" => [Symbol("&"),Symbol("&"),].and(),
-        "or" => [Symbol("|"),Symbol("|"),].and(),
+        "and" => [Symbol("&"),Symbol("&"),].and().group("and"),
+        "or" => [Symbol("|"),Symbol("|"),].and().group("or"),
 
-        "lt" => Symbol("<"),
-        "gt" => Symbol(">"),
-        "le" => [Symbol("<"),Symbol("="),].and(),
-        "ge" => [Symbol(">"),Symbol("="),].and(),
-        "eq" => [Symbol("="),Symbol("="),].and(),
-        "ne" => [Symbol("!"),Symbol("="),].and(),
+        "lt" => Symbol("<").group("lt"),
+        "gt" => Symbol(">").group("gt"),
+        "le" => [Symbol("<"),Symbol("="),].and().group("le"),
+        "ge" => [Symbol(">"),Symbol("="),].and().group("ge"),
+        "eq" => [Symbol("="),Symbol("="),].and().group("eq"),
+        "ne" => [Symbol("!"),Symbol("="),].and().group("ne"),
         _ => Never,
     }
 
@@ -391,6 +391,12 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
     * success/fail ind needs to be before or after? after for truncate?
 
     */
+
+    /*
+        abc|ab with "ab" => "" //abc will fail, but then tries ab, which succeeds
+        ab|abc with "abc" => "c" //will consume ab, and then fail to consume c, there is no backtracking
+
+     */
     // let mut temp_groups: Vec<Vec<GrammarOutput>> = vec![vec![]];
     // let mut temp_group_inds: Vec<(usize, usize)> = vec![];
     // // let mut cur_out=Vec::new();
@@ -1049,7 +1055,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
         println!("{}{}{p:?}",
             "  ".repeat(depth),
-            if output.discard {"---"}else{""}
+            if output.discard {"-"}else{""}
         );
         // let group=
         // let g=temp_groups.get(&i).cloned();//.unwrap_or_default();
