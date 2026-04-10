@@ -28,6 +28,7 @@ impl<'a> PrimitiveIterContainer<'a> {
         if self.start < self.end {
             let primitive_ind=self.start;
             self.start+=1;
+            self.last_loc=self.loc();
             Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,}) //last_loc:self.last_loc,
         } else {
             Err(self.last_loc)
@@ -168,13 +169,15 @@ impl<'a> PrimitiveIterContainer<'a> {
         }
 
 
-        let v=self.first().and_then(func);
+        let v=self.first().and_then(func)?;
 
-        if v.is_ok() {
-            self.pop_front().unwrap();
-        }
+        // if v.is_ok() {
+        self.pop_front().unwrap();
+        // self.last_loc=v.as_ref().unwrap().primitive.end_loc();
+        // self.last_loc=v.primitive.end_loc();
+        // }
 
-        v
+        Ok(v)
     }
 
     pub fn pop_eol(&mut self) -> Result<ValueContainer<'a,()>,Loc> {
