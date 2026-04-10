@@ -15,6 +15,9 @@ impl Loc {
     pub fn zero() -> Self {
         Loc { pos: 0, row: 0, col: 0, byte_pos:0 }
     }
+    pub fn is_zero(&self) -> bool {
+        self.pos==0
+    }
 }
 
 impl PartialEq for Loc {

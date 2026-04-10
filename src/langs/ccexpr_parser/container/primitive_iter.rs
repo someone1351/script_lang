@@ -20,6 +20,9 @@ impl<'a> PrimitiveIterContainer<'a> {
     pub fn last_loc(&self) -> Loc {
         self.last_loc
     }
+    pub fn loc(&self) -> Loc {
+        self.first().map(|p|p.start_loc()).unwrap_or(self.last_loc)
+    }
 
     pub fn pop_front(&mut self) -> Result<PrimitiveContainer<'a>,Loc> {
         if self.start < self.end {
