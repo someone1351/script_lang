@@ -143,7 +143,7 @@ impl<'a> PrimitiveIterContainer<'a> {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.start!=self.end
+        self.start==self.end
     }
 
     pub fn first(&self) -> Result<PrimitiveContainer<'a>,Loc> {

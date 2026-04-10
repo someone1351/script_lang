@@ -148,7 +148,11 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             Int,
         ].and(),
 
-        "test9" => [NonTerm("x").many0().group("a"),NonTerm("x").group("b")].and(),
+        "test9" => [
+            // NonTerm("x").many0().group("a"),
+            NonTerm("x").group("b"),
+            // Eol.many0(),
+        ].and(),
         "x" => Int,
 
         "start" => NonTerm("stmts"),
@@ -427,6 +431,11 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
     let mut temp_primtives : Vec<PrimitiveInfo> = Default::default();
     let mut temp_groups3 : Vec<GroupInfo<'a>> = vec![GroupInfo{ name: "", parent: 0 }];
 
+    //not completely correct,
+    //  if succeeds to a certain point, need to clear the expecteds,
+    //  currently it just clears everything after any success
+    //  could just add expects that are ==, and replace ones that are >
+    //  on success, only clear if >= than loc
     let mut expected: (Loc,Vec<GrammarItem<'a>>,) = Default::default();
     // let mut temp_outpts:Vec<TempOutput<'a>> = vec![]
 
@@ -459,6 +468,8 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
             opt_hists:Default::default(),
         },
     ];
+
+    let mut primitives_remaining = top_primitives.clone();
 
     let mut c=0;
     while let Some(mut cur)=stk.pop() {
@@ -736,9 +747,14 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
                 } else {
                     // top_primitives=cur.primitives;
+                    primitives_remaining=cur.primitives;
                 }
 
-                expected=Default::default();
+                // expected=Default::default();
+
+                expected.0=Loc::zero();
+                expected.1.clear();
+
             }
             // GrammarItem::Never => {
             //     stk.truncate(cur.fail_len);
@@ -777,7 +793,11 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
             GrammarItem::String => {
                 match cur.primitives.pop_string() {
                     Ok(v) => {
-                        expected=Default::default();
+                        // expected=Default::default();
+                        if v.primitive.start_loc() >= expected.0 {
+                            expected.0=Loc::zero();
+                            expected.1.clear();
+                        }
                         println!("--- string {:?}",v.value);
                         stk.truncate(cur.success_len);
 
@@ -815,12 +835,17 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 }
                 if stk.is_empty() {
                     // top_primitives=cur.primitives;
+                    primitives_remaining=cur.primitives;
                 }
             }
             GrammarItem::Identifier => {
                 match cur.primitives.pop_identifier() {
                     Ok(v) => {
-                        expected=Default::default();
+                        // expected=Default::default();
+                        if v.primitive.start_loc() >= expected.0 {
+                            expected.0=Loc::zero();
+                            expected.1.clear();
+                        }
                         println!("--- identifier {:?}",v.value);
                         stk.truncate(cur.success_len);
 
@@ -859,12 +884,17 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 }
                 if stk.is_empty() {
                     // top_primitives=cur.primitives;
+                    primitives_remaining=cur.primitives;
                 }
             }
             GrammarItem::Int => {
                 match cur.primitives.pop_int() {
                     Ok(v) => {
-                        expected=Default::default();
+                        // expected=Default::default();
+                        if v.primitive.start_loc() >= expected.0 {
+                            expected.0=Loc::zero();
+                            expected.1.clear();
+                        }
                         println!("--- int {:?}",v.value);
                         stk.truncate(cur.success_len);
 
@@ -902,12 +932,17 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
                 if stk.is_empty() {
                     // top_primitives=cur.primitives;
+                    primitives_remaining=cur.primitives;
                 }
             }
             GrammarItem::Float => {
                 match cur.primitives.pop_float() {
                     Ok(v) => {
-                        expected=Default::default();
+                        // expected=Default::default();
+                        if v.primitive.start_loc() >= expected.0 {
+                            expected.0=Loc::zero();
+                            expected.1.clear();
+                        }
                         println!("--- float {:?}",v.value);
                         stk.truncate(cur.success_len);
 
@@ -946,12 +981,17 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
                 if stk.is_empty() {
                     // top_primitives=cur.primitives;
+                    primitives_remaining=cur.primitives;
                 }
             }
             GrammarItem::Symbol(s) => {
                 match cur.primitives.pop_with_symbols([s]) {
                     Ok(v) => {
-                        expected=Default::default();
+                        // expected=Default::default();
+                        if v.primitive.start_loc() >= expected.0 {
+                            expected.0=Loc::zero();
+                            expected.1.clear();
+                        }
                         println!("--- symbol {:?}",v.value);
                         stk.truncate(cur.success_len);
 
@@ -989,12 +1029,17 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 }
                 if stk.is_empty() {
                     // top_primitives=cur.primitives;
+                    primitives_remaining=cur.primitives;
                 }
             }
             GrammarItem::Keyword(s) => {
                 match cur.primitives.pop_with_identifiers([s]) {
                     Ok(v) => {
-                        expected=Default::default();
+                        // expected=Default::default();
+                        if v.primitive.start_loc() >= expected.0 {
+                            expected.0=Loc::zero();
+                            expected.1.clear();
+                        }
                         println!("--- keyword {:?}",v.value);
                         stk.truncate(cur.success_len);
 
@@ -1031,12 +1076,18 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 }
                 if stk.is_empty() {
                     // top_primitives=cur.primitives;
+                    primitives_remaining=cur.primitives;
                 }
             }
             GrammarItem::Eol => {
                 match cur.primitives.pop_eol() {
                     Ok(v) => {
-                        expected=Default::default();
+                        if v.primitive.start_loc() >= expected.0 {
+                            // expected.0=v.primitive.start_loc();
+                            // expected=Default::default();
+                            expected.0=Loc::zero();
+                            expected.1.clear();
+                        }
                         println!("eol");
                         stk.truncate(cur.success_len);
 
@@ -1073,6 +1124,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 }
                 if stk.is_empty() {
                     // top_primitives=cur.primitives;
+                    primitives_remaining=cur.primitives;
                 }
             }
         }
@@ -1127,6 +1179,10 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
     println!("groups={temp_groups3:?}");
     println!("outputs={temp_primtives:?}");
+
+    if !primitives_remaining.is_empty() {
+        println!("error, failed to parse all tokens {primitives_remaining:?}");
+    }
 
     println!("===");
 
