@@ -188,8 +188,8 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             NonTerm("expr"),
         ].and(),
 
-        "cond" => [NonTerm("lparen").d(),NonTerm("expr"),NonTerm("rparen").d(),].and(),
-        "block" => [NonTerm("lcurly").d(),NonTerm("stmts"),NonTerm("rcurly").d(),].and(),
+        "cond" => [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
+        "block" => [NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
         "if" => [
             [Keyword("if").d(), NonTerm("cond"), NonTerm("block")].and().group(""),
             [Keyword("elif").d(),NonTerm("cond"),NonTerm("block"),].and().group("").many0(),
@@ -319,12 +319,12 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "print" => [Keyword("print"),NonTerm("format_params"),].and(),
         "println" => [Keyword("println"),NonTerm("format_params"),].and(),
 
-        "lcurly" => Symbol("{"),
-        "rcurly" => Symbol("}"),
-        "lsquare" => Symbol("["),
-        "rsquare" => Symbol("]"),
-        "lparen" => Symbol("("),
-        "rparen" => Symbol(")"),
+        "lcurly" => Symbol("{").d(),
+        "rcurly" => Symbol("}").d(),
+        "lsquare" => Symbol("[").d(),
+        "rsquare" => Symbol("]").d(),
+        "lparen" => Symbol("(").d(),
+        "rparen" => Symbol(")").d(),
 
         "semicolon" => Symbol(";"),
         "end" => [NonTerm("semicolon"),].or(),
@@ -438,11 +438,14 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
         output_len:usize,
 
         discard:bool,
+
+        opt_hists:HashMap<&'a str,usize>, //[non_term]=output_ind
     }
 
     let mut stk=vec![Work{
         grammar:grammar_decl("start"),success_len:0,fail_len:0,primitives:top_primitives,
         group_ind: 0, group_len: 1, output_len: 0, discard:false,
+        opt_hists:Default::default(),
     }];
 
     let mut c=0;
@@ -484,6 +487,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: new_group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
+                    opt_hists:cur.opt_hists,
                 });
 
 
@@ -503,6 +507,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:true,
+                    opt_hists:cur.opt_hists,
                 });
 
 
@@ -515,6 +520,8 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         grammar: GrammarItem::And(rest.into()),
                         success_len: cur.success_len,
                         fail_len: cur.fail_len,
+
+                        //not really necessary? since gets updated by always/primtitives
                         primitives: cur.primitives,
 
                         group_ind: cur.group_ind,
@@ -522,6 +529,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         output_len: cur.output_len,
                         discard:cur.discard,
 
+                        opt_hists:cur.opt_hists.clone(),
                         // group: cur.group,
                         // group_next_ind:cur.group_next_ind,
 
@@ -543,6 +551,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
+                    opt_hists:cur.opt_hists,
                 });
             }
             GrammarItem::Or(gs) => {
@@ -562,6 +571,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         group_len: cur.group_len,
                         output_len: cur.output_len,
                         discard:cur.discard,
+                        opt_hists:cur.opt_hists.clone(),
                     });
                 }
 
@@ -580,6 +590,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
+                    opt_hists:cur.opt_hists,
                 });
             }
 
@@ -597,6 +608,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
+                    opt_hists:cur.opt_hists.clone(),
                 });
 
                 let fail_len=stk.len();
@@ -613,6 +625,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
+                    opt_hists:cur.opt_hists,
                 });
             }
             GrammarItem::Many(g) => {
@@ -630,6 +643,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
+                    opt_hists:cur.opt_hists.clone(),
                 });
 
                 let success_len2=stk.len();
@@ -646,6 +660,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
+                    opt_hists:cur.opt_hists.clone(),
                 });
 
                 let fail_len=stk.len();
@@ -662,6 +677,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
+                    opt_hists:cur.opt_hists,
                 });
             }
             // GrammarItem::Many1(g) => {
@@ -669,6 +685,24 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
             //     let success_len=stk.len();
             //     stk.push((*g,success_len,fail_len,primitives));
             // }
+
+            GrammarItem::NonTerm(t) => {
+                stk.push(Work {
+                    grammar: grammar_decl(t), //should return err on not found, instead of grammar never, should have error
+                    success_len: cur.success_len,
+                    fail_len: cur.fail_len,
+                    primitives: cur.primitives,
+                    // group: cur.group,
+                    // group_next_ind:cur.group_next_ind,
+
+
+                    group_ind: cur.group_ind,
+                    group_len: cur.group_len,
+                    output_len: cur.output_len,
+                    discard:cur.discard,
+                    opt_hists:cur.opt_hists,
+                });
+            }
             GrammarItem::Always => {
                 stk.truncate(cur.success_len);
 
@@ -686,6 +720,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     // last.group_ind=cur.group_ind;
                     last.group_len=cur.group_len;
                     last.output_len=cur.output_len;
+                    last.opt_hists=cur.opt_hists;
 
                 } else {
                     // top_primitives=cur.primitives;
@@ -697,22 +732,6 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 if stk.is_empty() {
                     // top_primitives=cur.primitives;
                 }
-            }
-            GrammarItem::NonTerm(t) => {
-                stk.push(Work {
-                    grammar: grammar_decl(t), //should return err on not found, instead of grammar never, should have error
-                    success_len: cur.success_len,
-                    fail_len: cur.fail_len,
-                    primitives: cur.primitives,
-                    // group: cur.group,
-                    // group_next_ind:cur.group_next_ind,
-
-
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    output_len: cur.output_len,
-                    discard:cur.discard,
-                });
             }
             GrammarItem::String => {
                 match cur.primitives.pop_string() {
@@ -1015,7 +1034,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
     println!("===");
 
 
-    let mut last_group:PrimitiveInfo=Default::default();
+    // let mut last_group:PrimitiveInfo=Default::default();
 
     let mut groups_visited: HashSet<usize>=HashSet::new();
 
