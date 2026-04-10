@@ -821,7 +821,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 match cur.primitives.pop_identifier() {
                     Ok(v) => {
                         expected=Default::default();
-                        println!("--- identifier {:?} {}",v.value,v.primitive.start_loc());
+                        println!("--- identifier {:?}",v.value);
                         stk.truncate(cur.success_len);
 
                         temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
@@ -840,10 +840,8 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
                         // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
                         // temp_groups.insert(v.primitive.ind(),cur.group);
-
                     }
                     Err(loc) => {
-                        println!("err {loc}",);
                         if loc==expected.0 {
                             expected.1.push(cur.grammar);
                         } else if loc>expected.0 {
@@ -867,7 +865,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 match cur.primitives.pop_int() {
                     Ok(v) => {
                         expected=Default::default();
-                        println!("--- int {:?} {}",v.value,v.primitive.start_loc());
+                        println!("--- int {:?}",v.value);
                         stk.truncate(cur.success_len);
 
                         temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
@@ -887,8 +885,6 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         // temp_groups.insert(v.primitive.ind(),cur.group);
                     }
                     Err(loc) => {
-                        println!("err {loc}");
-
                         if loc==expected.0 {
                             expected.1.push(cur.grammar);
                         } else if loc>expected.0 {
