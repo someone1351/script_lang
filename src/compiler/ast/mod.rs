@@ -144,6 +144,8 @@ TODO
 * when jumping past a local var decl, set their values to undefined (includes value inside refvals)
 * implement goto_var
 
+TODO
+* for var gotos, keep list of labels stored as vals, then in each gotovar, get only valid labels, and check which is used, and set vars to undefined from there
 */
 
 use std::{collections::{HashMap,  HashSet},  path::Path};
