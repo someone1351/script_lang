@@ -13,7 +13,7 @@ use std::{collections::{BTreeMap, HashMap, HashSet}, ops::Range};
 
 use crate::{ccexpr_parser::{PrimitiveContainer, PrimitiveIterContainer}, Loc};
 
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug,Hash,PartialEq,Eq)]
 pub enum GrammarItem<'a> {
     Many(Box<GrammarItem<'a>>),
     // Many1(Box<GrammarItem<'a>>),
@@ -465,7 +465,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
         visiteds:HashSet<(&'a str,usize)>,
 
-        takeables:HashMap<&'a str,PrimitiveIterContainer<'a>>, //[non_term]
+        takeables:HashMap<GrammarItem<'a>,PrimitiveIterContainer<'a>>, //[non_term]
     }
 
     let mut stk=vec![
@@ -671,7 +671,12 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 });
             }
             GrammarItem::Take(g) => {
+                if let Some(x)=cur.takeables.get(&g) {
 
+                } else {
+                    println!("no takeable {g:?}");
+                    break;
+                }
             }
             GrammarItem::Many(g) => {
                 // let fail_len2=stk.len(); //only remove everything past here on fail
