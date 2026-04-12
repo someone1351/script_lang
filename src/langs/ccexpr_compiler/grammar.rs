@@ -174,6 +174,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "stmt" => [
             NonTerm("block"),
             NonTerm("var"),NonTerm("set"),
+            NonTerm("func"),
             NonTerm("while"),NonTerm("for_in"),NonTerm("for_to"),
             NonTerm("break"), NonTerm("continue"),
             NonTerm("return"),
@@ -272,7 +273,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             ].and().opt(),
             NonTerm("rparen"),
         ].and(),
-        "func_decl" => [
+        "func" => [
             Keyword("fn"),
             [Identifier, NonTerm("val_field_index").many0()].and(),
             NonTerm("func_params"),
@@ -280,7 +281,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             NonTerm("stmts"),
             NonTerm("rcurly"),
         ].and(),
-        "func_lambda" => [Keyword("fn"),NonTerm("func_params"),NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
+        "lambda" => [Keyword("fn"),NonTerm("func_params"),NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
 
         "infix" => [
             NonTerm("add"),NonTerm("sub"),
@@ -313,6 +314,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
                 Keyword("true"),
                 Keyword("false"),
                 NonTerm("if"),
+                NonTerm("lambda"),
                 Identifier,
                 [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
             ].or(),
@@ -671,8 +673,48 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 });
             }
             GrammarItem::Take(g) => {
-                if let Some(x)=cur.takeables.get(&g) {
+                if let Some(x)=cur.takeables.get(&g).cloned() {
+                    if let Some(p)=temp_primtives.get(x.inds().start) {
+                        //clear unused groups
+                        let mut g=p.group;
 
+                        let mut gg=0;
+
+                        while g!=0 {
+                            let group=temp_groups3.get(g).unwrap();
+
+                            if group.primitive_ind_start>=x.inds().start {
+                                gg=g;
+                            }
+
+                            g=group.parent;
+                        }
+
+                        if gg!=0 {
+                            temp_groups3.truncate(gg);
+                        }
+                    }
+
+                    //clear outputs to start of taken
+                    temp_primtives.truncate(x.inds().start);
+
+                    //
+                    stk.push(Work {
+                        grammar: *g,
+                        success_len: cur.success_len,
+                        fail_len: cur.fail_len,
+
+                        primitives: x.clone(),
+                        output_len: x.inds().start,
+
+                        group_ind: cur.group_ind,
+                        group_len: temp_groups3.len(),
+
+                        discard: cur.discard,
+                        opt_hists: (),
+                        visiteds: cur.visiteds, //
+                        takeables: Default::default(),
+                    });
                 } else {
                     println!("no takeable {g:?}");
                     break;
