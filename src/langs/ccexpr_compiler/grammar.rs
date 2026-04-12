@@ -154,6 +154,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
 
         "test9" => [
             Int.many0().group("a"),
+            Float.many0().group("b"),
             // NonTerm("x").many0().group("a"),
             // NonTerm("x").take().group("b"),
             Eol.many0(),
@@ -769,10 +770,22 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
                     // temp_primtives.resize(cur.output_len+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
 
-                    // last.group_ind=cur.group_ind;
-                    last.group_len=cur.group_len;
+                    // // last.group_ind=cur.group_ind;
+                    // last.group_len=cur.group_len;
                     last.output_len=cur.output_len;
                     last.opt_hists=cur.opt_hists;
+
+
+                    println!("===www {} {} {:?}",last.group_len , cur.group_len, last.grammar);
+                    for i in last.group_len .. cur.group_len {
+                        let g=temp_groups3.get(i).unwrap();
+                        println!("===hmmm {i}");
+
+                        if g.primitive_ind_start==cur.primitives.inds().start {
+                            temp_groups3.truncate(i);
+                            break;
+                        }
+                    }
 
                 } else {
                     // top_primitives=cur.primitives;
