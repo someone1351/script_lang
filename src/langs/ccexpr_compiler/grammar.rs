@@ -155,6 +155,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         "test9" => [
             Int.many0().group("a"),
             Float.many0().group("b"),
+            String.many0().group("c"),
             // NonTerm("x").many0().group("a"),
             // NonTerm("x").take().group("b"),
             Eol.many0(),
@@ -454,10 +455,8 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
         fail_len:usize,
         primitives:PrimitiveIterContainer<'a>,
         group_ind:usize,
-        // group:PrimitiveInfo<'a>,
-        // group_next_ind:usize,
 
-        group_len:usize,
+        group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
         output_len:usize,
 
         discard:bool,
@@ -771,18 +770,21 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     // temp_primtives.resize(cur.output_len+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
 
                     // // last.group_ind=cur.group_ind;
-                    // last.group_len=cur.group_len;
+                    let last_group_len= last.group_len;
+                    last.group_len=cur.group_len;
                     last.output_len=cur.output_len;
                     last.opt_hists=cur.opt_hists;
 
 
-                    println!("===www {} {} {:?}",last.group_len , cur.group_len, last.grammar);
-                    for i in last.group_len .. cur.group_len {
+                    println!("===www {last_group_len} {} {:?}",  cur.group_len, last.grammar);
+                    for i in last_group_len .. cur.group_len {
                         let g=temp_groups3.get(i).unwrap();
                         println!("===hmmm {i}");
 
                         if g.primitive_ind_start==cur.primitives.inds().start {
-                            temp_groups3.truncate(i);
+                            temp_groups3.truncate(i); //removes this group and ones after
+                            last.group_len=i;
+                            println!("====== {i} {}",temp_groups3.len(), );
                             break;
                         }
                     }
