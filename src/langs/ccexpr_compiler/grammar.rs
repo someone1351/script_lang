@@ -480,7 +480,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
     }];
 
 
-    let mut takeable_starts:Vec<(GrammarItem<'a>,usize)>= Default::default(); //[(g,output_ind_start)]
+    let mut takeable_starts:Vec<(GrammarItem<'a>,PrimitiveIterContainer<'a>)>= Default::default(); //[(g,output_ind_start)]
 
 
     //not completely correct,
@@ -578,7 +578,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 let new_group_len=temp_groups3.len();
 
                 if cur.opt {
-                    takeable_starts.push((*g.clone(),cur.primitives.inds().start));
+                    takeable_starts.push((*g.clone(),cur.primitives.clone()));
                 }
 
                 stk.push(Work {
@@ -606,7 +606,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
             GrammarItem::Discard(g) => {
 
                 if cur.opt {
-                    takeable_starts.push((*g.clone(),cur.primitives.inds().start));
+                    takeable_starts.push((*g.clone(),cur.primitives.clone()));
                 }
 
                 stk.push(Work {
@@ -655,7 +655,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 let success_len=if gs.len()>1 {stk.len()}else{cur.success_len};
 
                 if cur.opt {
-                    takeable_starts.push((first.clone(),cur.primitives.inds().start));
+                    takeable_starts.push((first.clone(),cur.primitives.clone()));
                 }
 
                 stk.push(Work {
@@ -698,7 +698,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 let fail_len=if gs.len()>1 {stk.len()}else{cur.fail_len};
 
                 if cur.opt {
-                    takeable_starts.push((first.clone(),cur.primitives.inds().start));
+                    takeable_starts.push((first.clone(),cur.primitives.clone()));
                 }
 
                 stk.push(Work {
@@ -738,7 +738,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 let fail_len=stk.len();
 
                 if cur.opt {
-                    takeable_starts.push((*g.clone(),cur.primitives.inds().start));
+                    takeable_starts.push((*g.clone(),cur.primitives.clone()));
                 }
 
                 stk.push(Work {
@@ -788,7 +788,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
                     //
                     if cur.opt {
-                        takeable_starts.push((*g.clone(),cur.primitives.inds().start));
+                        takeable_starts.push((*g.clone(),cur.primitives.clone()));
                     }
 
                     //
@@ -854,7 +854,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
 
                 if cur.opt {
-                    takeable_starts.push((*g.clone(),cur.primitives.inds().start));
+                    takeable_starts.push((*g.clone(),cur.primitives.clone()));
                 }
 
                 stk.push(Work {
@@ -895,7 +895,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 let g=grammar_decl(t);
 
                 if cur.opt {
-                    takeable_starts.push((g.clone(),cur.primitives.inds().start));
+                    takeable_starts.push((g.clone(),cur.primitives.clone()));
                 }
 
                 stk.push(Work {
@@ -956,8 +956,11 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     // });
 
                     //
+                    last.takeables=cur.takeables;
+
                     for (tg,tp_ind) in takeable_starts.drain(last.takeable_starts_len ..) {
-                        last.takeables.insert(tg, last.primitives);
+                        println!("--- inserting takeable1 {tg:?} {tp_ind:?}", );
+                        last.takeables.insert(tg, tp_ind);
                     }
 
                 } else {
@@ -1035,7 +1038,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                                 v.inds().start >= last.primitives.inds().start
                             });
 
-                            last.takeables.insert(cur.grammar, cur_primtives2);
+                            // last.takeables.insert(cur.grammar, cur_primtives2);
                         }
 
                         // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
@@ -1063,7 +1066,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
                 if let Some(last)=stk.last_mut() {
                     for (tg,tp_ind) in takeable_starts.drain(last.takeable_starts_len ..) {
-                        last.takeables.insert(tg, last.primitives);
+                        last.takeables.insert(tg, tp_ind);
                     }
                 }
 
@@ -1123,7 +1126,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 }
             }
             GrammarItem::Int => {
-                let cur_primtives2=cur.primitives.clone();
+                // let cur_primtives2=cur.primitives.clone();
                 match cur.primitives.pop_int() {
                     Ok(v) => {
                         // expected=Default::default();
@@ -1151,12 +1154,22 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                                 v.inds().start >= last.primitives.inds().start
                             });
 
-                            last.takeables.insert(cur.grammar, cur_primtives2);
+                            // println!("--- inserting takeable2 {:?} {cur_primtives2:?}",&cur.grammar);
+                            // println!("------ {:?}",&last.grammar);
+                            // last.takeables.insert(cur.grammar, cur_primtives2);
 
                             //
 
                         }
 
+                        if let Some(last)=stk.last_mut() {
+                            // let dr=takeable_starts.drain(last.takeable_starts_len ..).collect::<Vec<_>>();
+                            // println!("=== dr={dr:?}");
+                            for (tg,tp_ind) in takeable_starts.drain(last.takeable_starts_len ..) {
+                                println!("--- inserting takeable3 {tg:?} {tp_ind:?}",);
+                                last.takeables.insert(tg, tp_ind);
+                            }
+                        }
                         // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
                         // // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
                         // temp_groups.insert(v.primitive.ind(),cur.group);
@@ -1169,11 +1182,25 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                             expected.1=vec![cur.grammar];
                         }
 
+                        //
                         stk.truncate(cur.fail_len);
 
+                        //
                         if let Some(last)=stk.last() {
                             temp_primtives.truncate(last.output_len);
+
+                            takeable_starts.truncate(last.takeable_starts_len);
+
+
                         }
+
+                        //
+                        // if let Some(last)=stk.last() {
+
+                        //     // takeable_starts.retain(|(g,ps)|{
+                        //     //     ps.inds().start<=last.primitives.inds().start
+                        //     // });
+                        // }
                     }
 
 
@@ -1181,11 +1208,6 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
                 //
 
-                if let Some(last)=stk.last_mut() {
-                    for (tg,tp_ind) in takeable_starts.drain(last.takeable_starts_len ..) {
-                        last.takeables.insert(tg, last.primitives);
-                    }
-                }
 
                 if stk.is_empty() {
                     // top_primitives=cur.primitives;
