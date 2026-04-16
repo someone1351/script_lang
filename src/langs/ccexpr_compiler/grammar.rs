@@ -20,6 +20,7 @@ pub enum GrammarItem<'a> {
     And(Vec<GrammarItem<'a>>), //should store reversed?
     Or(Vec<GrammarItem<'a>>), //should store reversed?
     Opt(Box<GrammarItem<'a>>),
+    Give(Box<GrammarItem<'a>>),
     Take(Box<GrammarItem<'a>>),
     Group(&'a str,Box<GrammarItem<'a>>),
 
@@ -59,6 +60,9 @@ impl<'a> GrammarItem<'a> {
     }
     pub fn discard(self,) -> GrammarItem<'a> {
         Self::Discard(self.into())
+    }
+    pub fn give(self,) -> GrammarItem<'a> {
+        Self::Give(self.into())
     }
     pub fn take(self,) -> GrammarItem<'a> {
         Self::Take(self.into())
@@ -158,7 +162,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             // // // String.many0().group("c"),
             // NonTerm("x").many0(), //.group("a"),
             // NonTerm("x").take(), //.group("b"),
-            Int.many0().group("a"),
+            Int.give().many0().group("a"),
             Int.take().group("b"),
             // Eol.many0(),
         ].and(),
@@ -577,9 +581,9 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 });
                 let new_group_len=temp_groups3.len();
 
-                if cur.opt {
-                    takeable_starts.push((*g.clone(),cur.primitives.clone()));
-                }
+                // if cur.opt {
+                //     takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                // }
 
                 stk.push(Work {
                     grammar: *g,
@@ -592,7 +596,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: new_group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
-                    takeable_starts_len:takeable_starts.len(),
+                    takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:cur.opt,
@@ -605,9 +609,9 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
             }
             GrammarItem::Discard(g) => {
 
-                if cur.opt {
-                    takeable_starts.push((*g.clone(),cur.primitives.clone()));
-                }
+                // if cur.opt {
+                //     takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                // }
 
                 stk.push(Work {
                     grammar: *g,
@@ -619,7 +623,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:true,
-                    takeable_starts_len:takeable_starts.len(),
+                    takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:cur.opt,
@@ -654,9 +658,9 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
                 let success_len=if gs.len()>1 {stk.len()}else{cur.success_len};
 
-                if cur.opt {
-                    takeable_starts.push((first.clone(),cur.primitives.clone()));
-                }
+                // if cur.opt {
+                //     takeable_starts.push((first.clone(),cur.primitives.clone()));
+                // }
 
                 stk.push(Work {
                     grammar: first,
@@ -668,7 +672,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
-                    takeable_starts_len:takeable_starts.len(),
+                    takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:false, //opt isnt passed to individual items in And
@@ -697,9 +701,9 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
                 let fail_len=if gs.len()>1 {stk.len()}else{cur.fail_len};
 
-                if cur.opt {
-                    takeable_starts.push((first.clone(),cur.primitives.clone()));
-                }
+                // if cur.opt {
+                //     takeable_starts.push((first.clone(),cur.primitives.clone()));
+                // }
 
                 stk.push(Work {
                     grammar: first,
@@ -711,7 +715,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
-                    takeable_starts_len:takeable_starts.len(),
+                    takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:cur.opt,
@@ -737,9 +741,9 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
                 let fail_len=stk.len();
 
-                if cur.opt {
-                    takeable_starts.push((*g.clone(),cur.primitives.clone()));
-                }
+                // if cur.opt {
+                //     takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                // }
 
                 stk.push(Work {
                     grammar: *g,
@@ -751,10 +755,32 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
-                    takeable_starts_len:takeable_starts.len(),
+                    takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:true,
+                });
+            }
+            GrammarItem::Give(g) => {
+                //should return err if not giveable? ie not opt? or just ignore?
+
+                if cur.opt {
+                    takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                }
+
+                stk.push(Work {
+                    grammar: *g,
+                    success_len: cur.success_len,
+                    fail_len: cur.fail_len,
+                    primitives: cur.primitives,
+                    group_ind: cur.group_ind,
+                    group_len: cur.group_len,
+                    output_len: cur.output_len,
+                    discard:cur.discard,
+                    takeable_starts_len:takeable_starts.len(),
+                    visiteds:cur.visiteds,
+                    takeables:cur.takeables,
+                    opt:cur.opt,
                 });
             }
             GrammarItem::Take(g) => {
@@ -787,9 +813,9 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     temp_primtives.truncate(x.inds().start);
 
                     //
-                    if cur.opt {
-                        takeable_starts.push((*g.clone(),cur.primitives.clone()));
-                    }
+                    // if cur.opt {
+                    //     takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                    // }
 
                     //
                     stk.push(Work {
@@ -804,14 +830,21 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         group_len: temp_groups3.len(),
 
                         discard: cur.discard,
-                        takeable_starts_len: takeable_starts.len(),//cur.takeable_starts_len, // ??
+                        takeable_starts_len: cur.takeable_starts_len,//cur.takeable_starts_len, // ??
                         visiteds: cur.visiteds, //
                         takeables: Default::default(),
                         opt:cur.opt,
                     });
                 } else {
-                    println!("no takeable {g:?}");
-                    break;
+
+                    //
+                    stk.truncate(cur.fail_len);
+
+                    //
+                    if let Some(last)=stk.last() {
+                        temp_primtives.truncate(last.output_len);
+                        takeable_starts.truncate(last.takeable_starts_len);
+                    }
                 }
             }
             GrammarItem::Many(g) => {
@@ -853,9 +886,9 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 let fail_len=stk.len();
 
 
-                if cur.opt {
-                    takeable_starts.push((*g.clone(),cur.primitives.clone()));
-                }
+                // if cur.opt {
+                //     takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                // }
 
                 stk.push(Work {
                     grammar: *g,
@@ -867,7 +900,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     group_len: cur.group_len,
                     output_len: cur.output_len,
                     discard:cur.discard,
-                    takeable_starts_len:takeable_starts.len(),
+                    takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:true,
@@ -894,9 +927,9 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 // takeable_starts.insert((cur.grammar,cur.primitives.inds().start));
                 let g=grammar_decl(t);
 
-                if cur.opt {
-                    takeable_starts.push((g.clone(),cur.primitives.clone()));
-                }
+                // if cur.opt {
+                //     takeable_starts.push((g.clone(),cur.primitives.clone()));
+                // }
 
                 stk.push(Work {
                     grammar: g, //should return err on not found, instead of grammar never, should have error
@@ -910,7 +943,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     discard:cur.discard,
                     visiteds,
                     takeables:cur.takeables,
-                    takeable_starts_len:takeable_starts.len(),
+                    takeable_starts_len:cur.takeable_starts_len,
                     opt:cur.opt,
                 });
             }
