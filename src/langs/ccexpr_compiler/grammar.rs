@@ -788,24 +788,31 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     println!("---the groups are {temp_groups3:?}");
                     //how to remove no longer used groups, and fix inds of the used group that ccomes after the removed one?
                     // if let Some(p)=temp_primtives.get(x.inds().start) {
+                    //     //problem is if
+
                     //     //clear unused groups
-                    //     let mut g=p.group;
 
-                    //     let mut gg=0;
 
-                    //     while g!=0 {
-                    //         let group=temp_groups3.get(g).unwrap();
+                    //     //get group of the taken primitive
+                    //     let mut group_ind=p.group;
 
+                    //     let mut furthest_group_ind=0;
+
+                    //     //loop through its ancestors, excpet for the root one
+                    //     while group_ind!=0 {
+                    //         let group=temp_groups3.get(group_ind).unwrap();
+
+                    //         //finding the furthest one whose prim ind is >= the taken prim ind
                     //         if group.primitive_ind_start>=x.inds().start {
-                    //             gg=g;
+                    //             furthest_group_ind=group_ind;
                     //         }
 
-                    //         g=group.parent;
+                    //         group_ind=group.parent;
                     //     }
 
-                    //     if gg!=0 {
-                    //         temp_groups3.truncate(gg);
-                    //         temp_groups3.remo
+                    //     if furthest_group_ind!=0 {
+                    //         temp_groups3.truncate(furthest_group_ind);
+                    //         // temp_groups3.remo
                     //     }
                     // }
 
