@@ -83,7 +83,7 @@ pub fn test_compile<P:AsRef<Path>>(path:P) {
 }
 
 fn main() {
-    test_script("scripts/cexpr/test17.script",true,false);
+    test_script("scripts/cexpr/test18.script",true,false);
     // test_compile("scripts/cexpr/test16.script");
     // test_compile("scripts/cexpr/test17.script");
 }

@@ -166,9 +166,12 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             Int.take().group("b"),
             // Eol.many0(),
         ].and(),
-        "x" => Int,
+        // "x" => Int,
 
-        "start" => NonTerm("stmts"),
+        "start" => [
+            NonTerm("stmts"),
+            NonTerm("ending").many0(),
+        ].and(),
 
         "ending" => [NonTerm("semicolon"),Eol].or().many1().d(),
         "stmts" => [
@@ -527,7 +530,7 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
             opt:false,
         },
         Work{
-            grammar:grammar_decl("test9"),success_len:0,fail_len:1,primitives:top_primitives,
+            grammar:grammar_decl("start"),success_len:0,fail_len:1,primitives:top_primitives,
             group_ind: 0, group_len: 1, output_len: 0, discard:false,
             // takeable_starts:Default::default(),
             takeable_starts_len:0,
