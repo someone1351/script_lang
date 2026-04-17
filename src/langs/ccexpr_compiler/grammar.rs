@@ -20,7 +20,7 @@ pub enum GrammarItem<'a> {
     And(Vec<GrammarItem<'a>>), //should store reversed?
     Or(Vec<GrammarItem<'a>>), //should store reversed?
     Opt(Box<GrammarItem<'a>>),
-    Give(Box<GrammarItem<'a>>),
+    Offer(Box<GrammarItem<'a>>),
     Take(Box<GrammarItem<'a>>),
     Group(&'a str,Box<GrammarItem<'a>>),
 
@@ -61,8 +61,8 @@ impl<'a> GrammarItem<'a> {
     pub fn discard(self,) -> GrammarItem<'a> {
         Self::Discard(self.into())
     }
-    pub fn give(self,) -> GrammarItem<'a> {
-        Self::Give(self.into())
+    pub fn offer(self,) -> GrammarItem<'a> {
+        Self::Offer(self.into())
     }
     pub fn take(self,) -> GrammarItem<'a> {
         Self::Take(self.into())
@@ -162,7 +162,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             // // // String.many0().group("c"),
             // NonTerm("x").many0(), //.group("a"),
             // NonTerm("x").take(), //.group("b"),
-            Int.give().many0().group("a"),
+            Int.offer().many0().group("a"),
             Int.take().group("b"),
             // Eol.many0(),
         ].and(),
@@ -761,12 +761,13 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                     opt:true,
                 });
             }
-            GrammarItem::Give(g) => {
+            GrammarItem::Offer(g) => {
                 //should return err if not giveable? ie not opt? or just ignore?
+                //  or just don't rquire at all
 
-                if cur.opt {
-                    takeable_starts.push((*g.clone(),cur.primitives.clone()));
-                }
+                // if cur.opt {
+                takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                // }
 
                 stk.push(Work {
                     grammar: *g,
@@ -784,40 +785,79 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                 });
             }
             GrammarItem::Take(g) => {
-                if let Some(x)=cur.takeables.get(&g).cloned() {
+                if let Some(taken)=cur.takeables.get(&g).cloned() {
                     println!("---the groups are {temp_groups3:?}");
                     //how to remove no longer used groups, and fix inds of the used group that ccomes after the removed one?
-                    // if let Some(p)=temp_primtives.get(x.inds().start) {
-                    //     //problem is if
 
-                    //     //clear unused groups
+                    let mut cur_group_ind=cur.group_ind;
 
 
-                    //     //get group of the taken primitive
-                    //     let mut group_ind=p.group;
+                    if let Some(temp_prim)=temp_primtives.get(taken.inds().start) {
 
-                    //     let mut furthest_group_ind=0;
 
-                    //     //loop through its ancestors, excpet for the root one
-                    //     while group_ind!=0 {
-                    //         let group=temp_groups3.get(group_ind).unwrap();
+                        //collect cur groups
+                        let mut cur_used_group_inds: HashSet<usize>=HashSet::new();
 
-                    //         //finding the furthest one whose prim ind is >= the taken prim ind
-                    //         if group.primitive_ind_start>=x.inds().start {
-                    //             furthest_group_ind=group_ind;
-                    //         }
+                        //
+                        {
+                            let mut group_ind=cur.group_ind;
 
-                    //         group_ind=group.parent;
-                    //     }
+                            loop {
+                                cur_used_group_inds.insert(group_ind);
 
-                    //     if furthest_group_ind!=0 {
-                    //         temp_groups3.truncate(furthest_group_ind);
-                    //         // temp_groups3.remo
-                    //     }
-                    // }
+                                if group_ind==0 {
+                                    break;
+                                }
+
+                                let group=&temp_groups3[group_ind];
+                                group_ind=group.parent;
+
+                            }
+                        }
+
+                        //get first group ind with prim ind >= taken.inds().start
+                        let mut after_group_ind = temp_groups3.len();
+
+                        while after_group_ind > 0 {
+                            let group=temp_groups3.get(after_group_ind-1).unwrap();
+
+                            if group.primitive_ind_start < taken.inds().start {
+                                break;
+                            }
+
+                            after_group_ind-=1;
+                        }
+
+                        //get num of groups to remove
+                        let mut remove_groups_num=0;
+
+                        for i in after_group_ind..temp_groups3.len() {
+                            if cur_used_group_inds.contains(&i) {
+                                break;
+                            }
+
+                            remove_groups_num+=1;
+                        }
+
+                        //remove unused groups
+                        temp_groups3.drain(after_group_ind..after_group_ind+remove_groups_num);
+
+                        //
+                        if cur_group_ind >=after_group_ind {
+                            cur_group_ind-=remove_groups_num;
+                        }
+
+                        //
+                        for prev in stk.iter_mut().rev() {
+                            if prev.group_ind >=after_group_ind {
+                                prev.group_ind-=remove_groups_num;
+                                prev.group_len-=remove_groups_num;
+                            }
+                        }
+                    }
 
                     //clear outputs to start of taken
-                    temp_primtives.truncate(x.inds().start);
+                    temp_primtives.truncate(taken.inds().start);
 
                     //
                     // if cur.opt {
@@ -830,10 +870,10 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
                         success_len: cur.success_len,
                         fail_len: cur.fail_len,
 
-                        primitives: x.clone(),
-                        output_len: x.inds().start,
+                        primitives: taken.clone(),
+                        output_len: taken.inds().start,
 
-                        group_ind: cur.group_ind,
+                        group_ind: cur_group_ind,
                         group_len: temp_groups3.len(),
 
                         discard: cur.discard,
