@@ -168,6 +168,22 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         ].and(),
         // "x" => Int,
 
+        "test10" => [
+            [
+                Identifier,
+                // NonTerm("val_field_index").offer(),
+                // // [ NonTerm("val_index"), NonTerm("val_field"), ].or(),
+                // // NonTerm("val_field_index_call").many0(),
+                // // [ NonTerm("val_field_index").offer(), NonTerm("call"), ].or(),
+                // NonTerm("val_field_index").take(),
+
+                NonTerm("val_field").offer(), //.opt(),
+                NonTerm("val_field").take(),
+            ].and(),
+            NonTerm("set_equal"),
+            NonTerm("int"),
+        ].and(),
+
         "start" => [
             NonTerm("stmts"),
             NonTerm("ending").many0(),
@@ -181,16 +197,17 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
         ].and().opt(),
 
         "stmt" => [
-            NonTerm("var"),NonTerm("set"),
-            NonTerm("func"),
-            NonTerm("while"),NonTerm("for_in"),NonTerm("for_to"),
-            NonTerm("break"), NonTerm("continue"),
-            NonTerm("return"),
-            NonTerm("include"),
-            NonTerm("format"),NonTerm("print"),NonTerm("println"),
-            NonTerm("expr"),
-            NonTerm("block"), //after expr, so dict can use the empty {}
-            // NonTerm("if"),
+            // NonTerm("var"),
+            NonTerm("set"),
+            // NonTerm("func"),
+            // NonTerm("while"),NonTerm("for_in"),NonTerm("for_to"),
+            // NonTerm("break"), NonTerm("continue"),
+            // NonTerm("return"),
+            // NonTerm("include"),
+            // NonTerm("format"),NonTerm("print"),NonTerm("println"),
+            // NonTerm("expr"),
+            // NonTerm("block"), //after expr, so dict can use the empty {}
+            // // NonTerm("if"),
         ].or().group("stmt"),
 
         "continue" => Keyword("continue"),
@@ -205,10 +222,11 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
 
         "set" => [
             [
-                [NonTerm("val"), NonTerm("val_field_index").take(),].and(),
+                // NonTerm("val_field_index").offer().
+                [Identifier,NonTerm("val_field_index_call").many0(), NonTerm("val_field_index").take(),].and(),
                 Identifier,
             ].or(),
-            [NonTerm("add"),NonTerm("sub"),NonTerm("mul"),NonTerm("div"),NonTerm("not")].or().opt(),
+            // [NonTerm("add"),NonTerm("sub"),NonTerm("mul"),NonTerm("div"),NonTerm("not")].or().opt(),
             NonTerm("set_equal"),
             NonTerm("expr"),
         ].and(),
@@ -303,11 +321,13 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
 
         "expr" => [
             NonTerm("val"),
-            [NonTerm("infix"),NonTerm("val"),].and().many0(),
+            // [NonTerm("infix"),NonTerm("val"),].and().many0(),
         ].and().group("expr"),
 
         "prefix" => [NonTerm("add"),NonTerm("sub"),NonTerm("not"),].or(),
         "val_field_index" => [ NonTerm("val_index"), NonTerm("val_field"), ].or(),
+        "val_field_index_call" => [ NonTerm("val_field_index").offer(), NonTerm("call"), ].or(),
+
 
         "val_field" => [NonTerm("dot"),[Identifier,Int,].or(),].and(),
         "val_index" => [NonTerm("lsquare"),NonTerm("expr"),NonTerm("rsquare"),].and(),
@@ -317,20 +337,21 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
             NonTerm("prefix").many0(),
             [
                 Int,
-                Float,
-                String,
-                Keyword("bool"),
-                Keyword("nil"),
-                Keyword("void"),
-                NonTerm("if"),
-                NonTerm("lambda"),
-                NonTerm("array"),
-                NonTerm("dict"),
-                // NonTerm("block"), //allow code blocks?
+                // Float,
+                // String,
+                // Keyword("bool"),
+                // Keyword("nil"),
+                // Keyword("void"),
+                // NonTerm("if"),
+                // NonTerm("lambda"),
+                // NonTerm("array"),
+                // NonTerm("dict"),
+                // // NonTerm("block"), //allow code blocks?
                 Identifier,
-                [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
+                // [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
             ].or(),
-            [NonTerm("val_field_index"),NonTerm("call"),].or().many0(),
+            NonTerm("val_field_index_call").many0(),
+            // [NonTerm("val_field_index").offer(),NonTerm("call"),].or().many0(),
         ].and(),
 
         "dict_key_val" => [
@@ -445,21 +466,7 @@ pub fn grammar_decl<'a>(n:&str) -> GrammarItem<'a> {
 
 // }
 //
-pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
-    /*
-    * need on_succes_ind, on_fail_len?
-    * success/fail ind needs to be before or after? after for truncate?
 
-    */
-
-    /*
-        abc|ab with "ab" => "" //abc will fail, but then tries ab, which succeeds
-        ab|abc with "abc" => "c" //will consume ab, and then fail to consume c, there is no backtracking
-
-     */
-    // let mut temp_groups: Vec<Vec<GrammarOutput>> = vec![vec![]];
-    // let mut temp_group_inds: Vec<(usize, usize)> = vec![];
-    // // let mut cur_out=Vec::new();
 
     #[derive(Clone, Copy, Default, Debug)]
     struct PrimitiveInfo {
@@ -475,28 +482,6 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
         parent:usize, //group
         primitive_ind_start:usize,
     }
-
-    // let mut temp_groups2: Vec<(&'a str,Range<usize>)> = vec![("",0..0)]; //start with root group, for simplicity ...
-    // let mut temp_groups: BTreeMap<usize,PrimitiveInfo<'a>>=Default::default();
-
-    // let mut temp_groups2:Vec<PrimitiveInfo> = vec![Default::default()];
-
-    let mut temp_primtives : Vec<PrimitiveInfo> = Default::default();
-    let mut temp_groups3 : Vec<GroupInfo<'a>> = vec![GroupInfo{
-        name: "", parent: 0, primitive_ind_start:0,
-    }];
-
-
-    let mut takeable_starts:Vec<(GrammarItem<'a>,PrimitiveIterContainer<'a>)>= Default::default(); //[(g,output_ind_start)]
-
-
-    //not completely correct,
-    //  if succeeds to a certain point, need to clear the expecteds,
-    //  currently it just clears everything after any success
-    //  could just add expects that are ==, and replace ones that are >
-    //  on success, only clear if >= than loc
-    let mut expected: (Loc,Vec<GrammarItem<'a>>,) = Default::default();
-    // let mut temp_outpts:Vec<TempOutput<'a>> = vec![]
 
     struct Work<'a> {
         grammar:GrammarItem<'a>,
@@ -518,1123 +503,1149 @@ pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
 
         takeables:HashMap<GrammarItem<'a>,PrimitiveIterContainer<'a>>, //[non_term]
     }
+pub struct GrammarWalker<'a,F> {
+    top_primitives:PrimitiveIterContainer<'a>,
+    temp_primtives : Vec<PrimitiveInfo>,
+    temp_groups3 : Vec<GroupInfo<'a>>,
+    takeable_starts:Vec<(GrammarItem<'a>,PrimitiveIterContainer<'a>)>, //[(g,output_ind_start)]
+    grammar_func:F,
 
-    let mut stk=vec![
-        Work{
-            grammar:GrammarItem::Error,success_len:0,fail_len:0,primitives:top_primitives,
-            group_ind: 0, group_len: 1, output_len: 0, discard:false,
-            // takeable_starts:Default::default(),
-            takeable_starts_len:0,
-            visiteds:Default::default(),
-            takeables:Default::default(),
-            opt:false,
-        },
-        Work{
-            grammar:grammar_decl("start"),success_len:0,fail_len:1,primitives:top_primitives,
-            group_ind: 0, group_len: 1, output_len: 0, discard:false,
-            // takeable_starts:Default::default(),
-            takeable_starts_len:0,
-            visiteds:Default::default(),
-            takeables:Default::default(),
-            opt:false,
-        },
-    ];
+    primitives_remaining: PrimitiveIterContainer<'a>,
+    stk: Vec<Work<'a>>,
+    c:usize,
+    expected: (Loc,Vec<GrammarItem<'a>>,),
+}
 
-    let mut primitives_remaining = top_primitives.clone();
-
-    let mut c=0;
-    while let Some(mut cur)=stk.pop() {
-        c+=1;
-
-        // // if c>30 {break;}
-        // // println!(": {cur:?} || {} && {primitives:?}", stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
-        {
-            let Work { grammar, success_len, fail_len, primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt}=&cur;
-            println!("{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
-            println!("         -takeable_starts={takeable_starts:?}");
-            println!("         -temp_primtives={temp_primtives:?}");
-            println!("         -temp_groups3={temp_groups3:?}");
+impl<'a,F> GrammarWalker<'a,F>
+where
+    F: Fn(&'a str)->GrammarItem<'a>,
+{
+    pub fn new(top_primitives:PrimitiveIterContainer<'a>, grammar_func:F) -> Self {
+        Self {
+            temp_primtives :  Default::default(),
+            temp_groups3 : vec![GroupInfo{ name: "", parent: 0, primitive_ind_start:0, }],
+            takeable_starts: Default::default(),
+            grammar_func,
+            primitives_remaining:top_primitives.clone(),
+            top_primitives,
+            stk:vec![
+                Work{
+                    grammar:GrammarItem::Error,success_len:0,fail_len:0,primitives:top_primitives,
+                    group_ind: 0, group_len: 1, output_len: 0, discard:false,
+                    // takeable_starts:Default::default(),
+                    takeable_starts_len:0,
+                    visiteds:Default::default(),
+                    takeables:Default::default(),
+                    opt:false,
+                },
+                Work{
+                    grammar:grammar_decl("test10"),success_len:0,fail_len:1,primitives:top_primitives,
+                    group_ind: 0, group_len: 1, output_len: 0, discard:false,
+                    // takeable_starts:Default::default(),
+                    takeable_starts_len:0,
+                    visiteds:Default::default(),
+                    takeables:Default::default(),
+                    opt:false,
+                },
+            ],
+            c:0,
+            expected:Default::default(),
         }
+    }
 
-        for (i,Work { grammar:g, success_len:s, fail_len:f, primitives:ps, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt }) in stk.iter()
-            // .rev()
-            .enumerate() {
-            // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
-            println!("\t{i:3}: {g:?}, ps={ps:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
-        }
+    pub fn run(&mut self) {
+        while let Some(mut cur)=self.stk.pop() {
+            self.c+=1;
 
-        // match cur.grammar {
-        //     GrammarItem::NonTerm(x) => {
-
-        //     }
-        //     _=> {}
-        // }
-
-
-        match cur.grammar {
-            GrammarItem::Group(name, g) => {
-                // // outputs.push(GrammarOutput::Group { name, primitives: Vec::new() });
-                // let new_group=temp_groups.len();
-                // // temp_groups2.push((name,cur.primitives.inds().start..cur.primitives.inds().start));
-                // temp_groups.push(value);
-                let new_group_ind=temp_groups3.len();
-                temp_groups3.push(GroupInfo {
-                    name, parent: cur.group_ind,
-                    primitive_ind_start: cur.primitives.inds().start,
-                });
-                let new_group_len=temp_groups3.len();
-
-                // if cur.opt {
-                //     takeable_starts.push((*g.clone(),cur.primitives.clone()));
-                // }
-
-                stk.push(Work {
-                    grammar: *g,
-                    success_len: cur.success_len,
-                    fail_len: cur.fail_len,
-                    primitives: cur.primitives,
-                    // group: PrimitiveInfo { name, depth: cur.group.depth+1, group: cur.group_next_ind },
-                    // group_next_ind:cur.group_next_ind+1,
-                    group_ind: new_group_ind,
-                    group_len: new_group_len,
-                    output_len: cur.output_len,
-                    discard:cur.discard,
-                    takeable_starts_len:cur.takeable_starts_len,
-                    visiteds:cur.visiteds,
-                    takeables:cur.takeables,
-                    opt:cur.opt,
-                });
-
-
-                // temp_group_inds.push((cur.group,temp_groups[cur.group].len()));
-                // temp_groups[cur.group].push(GrammarOutput::Group { name, primitives: 0..0, });
-                // temp_groups.push(Vec::new());
+            // // if c>30 {break;}
+            // // println!(": {cur:?} || {} && {primitives:?}", self.stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
+            {
+                let c=self.c;
+                let Work { grammar, success_len, fail_len, primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt}=&cur;
+                println!("{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
+                println!("         -takeable_starts={:?}",self.takeable_starts);
+                println!("         -temp_primtives={:?}",self.temp_primtives);
+                println!("         -temp_groups3={:?}",self.temp_groups3);
             }
-            GrammarItem::Discard(g) => {
 
-                // if cur.opt {
-                //     takeable_starts.push((*g.clone(),cur.primitives.clone()));
-                // }
-
-                stk.push(Work {
-                    grammar: *g,
-                    success_len: cur.success_len,
-                    fail_len: cur.fail_len,
-                    primitives: cur.primitives,
-
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    output_len: cur.output_len,
-                    discard:true,
-                    takeable_starts_len:cur.takeable_starts_len,
-                    visiteds:cur.visiteds,
-                    takeables:cur.takeables,
-                    opt:cur.opt,
-                });
-
-
+            for (i,Work { grammar:g, success_len:s, fail_len:f, primitives:ps, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt }) in self.stk.iter()
+                // .rev()
+                .enumerate() {
+                // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
+                println!("\t{i:3}: {g:?}, ps={ps:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
             }
-            GrammarItem::And(gs) => {
-                let Some(first)=gs.first().cloned() else {continue;};
 
-                if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
-                    stk.push(Work {
-                        grammar: GrammarItem::And(rest.into()),
-                        success_len: cur.success_len,
-                        fail_len: cur.fail_len,
+            // match cur.grammar {
+            //     GrammarItem::NonTerm(x) => {
 
-                        //not really necessary? since gets updated by always/primtitives
-                        primitives: cur.primitives,
+            //     }
+            //     _=> {}
+            // }
 
-                        group_ind: cur.group_ind,
-                        group_len: cur.group_len,
-                        output_len: cur.output_len,
-                        discard:cur.discard,
 
-                        takeable_starts_len:cur.takeable_starts_len,
-                        visiteds:cur.visiteds.clone(),
-                        takeables:cur.takeables.clone(),
-                        opt:false, //opt isnt passed to individual items in And
-
+            match cur.grammar {
+                GrammarItem::Group(name, g) => {
+                    // // outputs.push(GrammarOutput::Group { name, primitives: Vec::new() });
+                    // let new_group=temp_groups.len();
+                    // // temp_groups2.push((name,cur.primitives.inds().start..cur.primitives.inds().start));
+                    // temp_groups.push(value);
+                    let new_group_ind=self.temp_groups3.len();
+                    self.temp_groups3.push(GroupInfo {
+                        name, parent: cur.group_ind,
+                        primitive_ind_start: cur.primitives.inds().start,
                     });
-                }
+                    let new_group_len=self.temp_groups3.len();
 
-                let success_len=if gs.len()>1 {stk.len()}else{cur.success_len};
-
-                // if cur.opt {
-                //     takeable_starts.push((first.clone(),cur.primitives.clone()));
-                // }
-
-                stk.push(Work {
-                    grammar: first,
-                    success_len,
-                    fail_len: cur.fail_len,
-                    primitives: cur.primitives,
-
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    output_len: cur.output_len,
-                    discard:cur.discard,
-                    takeable_starts_len:cur.takeable_starts_len,
-                    visiteds:cur.visiteds,
-                    takeables:cur.takeables,
-                    opt:false, //opt isnt passed to individual items in And
-                });
-            }
-            GrammarItem::Or(gs) => {
-                let Some(first)=gs.first().cloned() else {continue;};
-
-                if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
-                    stk.push(Work {
-                        grammar: GrammarItem::Or(rest.into()),
-                        success_len: cur.success_len,
-                        fail_len: cur.fail_len,
-                        primitives: cur.primitives,
-
-                        group_ind: cur.group_ind,
-                        group_len: cur.group_len,
-                        output_len: cur.output_len,
-                        discard:cur.discard,
-                        takeable_starts_len:cur.takeable_starts_len,
-                        visiteds:cur.visiteds.clone(),
-                        takeables:cur.takeables.clone(),
-                        opt:cur.opt,
-                    });
-                }
-
-                let fail_len=if gs.len()>1 {stk.len()}else{cur.fail_len};
-
-                // if cur.opt {
-                //     takeable_starts.push((first.clone(),cur.primitives.clone()));
-                // }
-
-                stk.push(Work {
-                    grammar: first,
-                    success_len: cur.success_len,
-                    fail_len,
-                    primitives: cur.primitives,
-
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    output_len: cur.output_len,
-                    discard:cur.discard,
-                    takeable_starts_len:cur.takeable_starts_len,
-                    visiteds:cur.visiteds,
-                    takeables:cur.takeables,
-                    opt:cur.opt,
-                });
-            }
-
-            GrammarItem::Opt(g) => {
-                stk.push(Work {
-                    grammar: GrammarItem::Always,
-                    success_len: cur.success_len,
-                    fail_len: 0, //fail is not used
-                    primitives: cur.primitives,
-
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    output_len: cur.output_len,
-                    discard:cur.discard,
-                    takeable_starts_len:cur.takeable_starts_len,
-                    visiteds:cur.visiteds.clone(),
-                    takeables:cur.takeables.clone(),
-                    opt:false, //not used on always
-                });
-
-                let fail_len=stk.len();
-
-                // if cur.opt {
-                //     takeable_starts.push((*g.clone(),cur.primitives.clone()));
-                // }
-
-                stk.push(Work {
-                    grammar: *g,
-                    success_len: cur.success_len,
-                    fail_len,
-                    primitives: cur.primitives,
-
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    output_len: cur.output_len,
-                    discard:cur.discard,
-                    takeable_starts_len:cur.takeable_starts_len,
-                    visiteds:cur.visiteds,
-                    takeables:cur.takeables,
-                    opt:true,
-                });
-            }
-            GrammarItem::Offer(g) => {
-                //should return err if not giveable? ie not opt? or just ignore?
-                //  or just don't rquire at all
-
-                // if cur.opt {
-                takeable_starts.push((*g.clone(),cur.primitives.clone()));
-                // }
-
-                stk.push(Work {
-                    grammar: *g,
-                    success_len: cur.success_len,
-                    fail_len: cur.fail_len,
-                    primitives: cur.primitives,
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    output_len: cur.output_len,
-                    discard:cur.discard,
-                    takeable_starts_len:takeable_starts.len(),
-                    visiteds:cur.visiteds,
-                    takeables:cur.takeables,
-                    opt:cur.opt,
-                });
-            }
-            GrammarItem::Take(g) => {
-                if let Some(taken)=cur.takeables.get(&g).cloned() {
-                    println!("---the groups are {temp_groups3:?}");
-                    //how to remove no longer used groups, and fix inds of the used group that ccomes after the removed one?
-
-                    let mut cur_group_ind=cur.group_ind;
-
-
-                    if let Some(temp_prim)=temp_primtives.get(taken.inds().start) {
-
-
-                        //collect cur groups
-                        let mut cur_used_group_inds: HashSet<usize>=HashSet::new();
-
-                        //
-                        {
-                            let mut group_ind=cur.group_ind;
-
-                            loop {
-                                cur_used_group_inds.insert(group_ind);
-
-                                if group_ind==0 {
-                                    break;
-                                }
-
-                                let group=&temp_groups3[group_ind];
-                                group_ind=group.parent;
-
-                            }
-                        }
-
-                        //get first group ind with prim ind >= taken.inds().start
-                        let mut after_group_ind = temp_groups3.len();
-
-                        while after_group_ind > 0 {
-                            let group=temp_groups3.get(after_group_ind-1).unwrap();
-
-                            if group.primitive_ind_start < taken.inds().start {
-                                break;
-                            }
-
-                            after_group_ind-=1;
-                        }
-
-                        //get num of groups to remove
-                        let mut remove_groups_num=0;
-
-                        for i in after_group_ind..temp_groups3.len() {
-                            if cur_used_group_inds.contains(&i) {
-                                break;
-                            }
-
-                            remove_groups_num+=1;
-                        }
-
-                        //remove unused groups
-                        temp_groups3.drain(after_group_ind..after_group_ind+remove_groups_num);
-
-                        //
-                        if cur_group_ind >=after_group_ind {
-                            cur_group_ind-=remove_groups_num;
-                        }
-
-                        //
-                        for prev in stk.iter_mut().rev() {
-                            if prev.group_ind >=after_group_ind {
-                                prev.group_ind-=remove_groups_num;
-                                prev.group_len-=remove_groups_num;
-                            }
-                        }
-                    }
-
-                    //clear outputs to start of taken
-                    temp_primtives.truncate(taken.inds().start);
-
-                    //
                     // if cur.opt {
-                    //     takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                    //     self.takeable_starts.push((*g.clone(),cur.primitives.clone()));
                     // }
 
-                    //
-                    stk.push(Work {
+                    self.stk.push(Work {
                         grammar: *g,
                         success_len: cur.success_len,
                         fail_len: cur.fail_len,
-
-                        primitives: taken.clone(),
-                        output_len: taken.inds().start,
-
-                        group_ind: cur_group_ind,
-                        group_len: temp_groups3.len(),
-
-                        discard: cur.discard,
-                        takeable_starts_len: cur.takeable_starts_len,//cur.takeable_starts_len, // ??
-                        visiteds: cur.visiteds, //
-                        takeables: Default::default(),
+                        primitives: cur.primitives,
+                        // group: PrimitiveInfo { name, depth: cur.group.depth+1, group: cur.group_next_ind },
+                        // group_next_ind:cur.group_next_ind+1,
+                        group_ind: new_group_ind,
+                        group_len: new_group_len,
+                        output_len: cur.output_len,
+                        discard:cur.discard,
+                        takeable_starts_len:cur.takeable_starts_len,
+                        visiteds:cur.visiteds,
+                        takeables:cur.takeables,
                         opt:cur.opt,
                     });
-                } else {
 
-                    //
-                    stk.truncate(cur.fail_len);
 
-                    //
-                    if let Some(last)=stk.last() {
-                        temp_primtives.truncate(last.output_len);
-                        takeable_starts.truncate(last.takeable_starts_len);
-                    }
+                    // temp_group_inds.push((cur.group,temp_groups[cur.group].len()));
+                    // temp_groups[cur.group].push(GrammarOutput::Group { name, primitives: 0..0, });
+                    // temp_groups.push(Vec::new());
                 }
-            }
-            GrammarItem::Many(g) => {
-                // let fail_len2=stk.len(); //only remove everything past here on fail
-                stk.push(Work {
-                    grammar: GrammarItem::Many(g.clone()),
-                    success_len: cur.success_len,
-                    fail_len: cur.fail_len,
-                    primitives: cur.primitives,
+                GrammarItem::Discard(g) => {
 
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    output_len: cur.output_len,
-                    discard:cur.discard,
-                    takeable_starts_len:cur.takeable_starts_len,
-                    visiteds:cur.visiteds.clone(),
-                    takeables:cur.takeables.clone(),
-                    opt:true,
-                });
+                    // if cur.opt {
+                    //     self.takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                    // }
 
-                let success_len2=stk.len();
+                    self.stk.push(Work {
+                        grammar: *g,
+                        success_len: cur.success_len,
+                        fail_len: cur.fail_len,
+                        primitives: cur.primitives,
 
-                stk.push(Work {
-                    grammar: GrammarItem::Always,
-                    success_len: cur.success_len,
-                    fail_len: 0, //fail is not used
-                    primitives: cur.primitives,
+                        group_ind: cur.group_ind,
+                        group_len: cur.group_len,
+                        output_len: cur.output_len,
+                        discard:true,
+                        takeable_starts_len:cur.takeable_starts_len,
+                        visiteds:cur.visiteds,
+                        takeables:cur.takeables,
+                        opt:cur.opt,
+                    });
 
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    output_len: cur.output_len,
-                    discard:cur.discard,
-                    takeable_starts_len:cur.takeable_starts_len,
-                    visiteds:cur.visiteds.clone(),
-                    takeables:cur.takeables.clone(),
-                    opt:false, //not used
-                });
-
-                let fail_len=stk.len();
-
-
-                // if cur.opt {
-                //     takeable_starts.push((*g.clone(),cur.primitives.clone()));
-                // }
-
-                stk.push(Work {
-                    grammar: *g,
-                    success_len: success_len2,
-                    fail_len,
-                    primitives: cur.primitives,
-
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    output_len: cur.output_len,
-                    discard:cur.discard,
-                    takeable_starts_len:cur.takeable_starts_len,
-                    visiteds:cur.visiteds,
-                    takeables:cur.takeables,
-                    opt:true,
-                });
-            }
-            // GrammarItem::Many1(g) => {
-            //     stk.push((GrammarItem::Many(g.clone()),success_len,fail_len,primitives));
-            //     let success_len=stk.len();
-            //     stk.push((*g,success_len,fail_len,primitives));
-            // }
-
-            GrammarItem::NonTerm(t) => {
-                let v=(t,cur.primitives.inds().start);
-
-                if cur.visiteds.contains(&v) {
-                    println!("err, circular nonterm {t}");
-                    break;
-                }
-
-                let mut visiteds=cur.visiteds;
-                visiteds.insert(v);
-
-                // let mut takeable_starts_len=cur.takeable_starts_len;
-                // takeable_starts.insert((cur.grammar,cur.primitives.inds().start));
-                let g=grammar_decl(t);
-
-                // if cur.opt {
-                //     takeable_starts.push((g.clone(),cur.primitives.clone()));
-                // }
-
-                stk.push(Work {
-                    grammar: g, //should return err on not found, instead of grammar never, should have error
-                    success_len: cur.success_len,
-                    fail_len: cur.fail_len,
-                    primitives: cur.primitives,
-
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    output_len: cur.output_len,
-                    discard:cur.discard,
-                    visiteds,
-                    takeables:cur.takeables,
-                    takeable_starts_len:cur.takeable_starts_len,
-                    opt:cur.opt,
-                });
-            }
-            GrammarItem::Always => {
-                stk.truncate(cur.success_len);
-
-                if let Some(last)=stk.last_mut() {
-                    if last.grammar.is_many() && last.primitives.len()==cur.primitives.len() { //if not parsing anything, exit the many
-                        last.grammar=GrammarItem::Always;
-                    }
-
-                    last.primitives=cur.primitives;
-                    // last.group_next_ind=cur.group_next_ind;
-
-
-                    // temp_primtives.resize(cur.output_len+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
-
-                    // // last.group_ind=cur.group_ind;
-                    let last_group_len= last.group_len;
-                    last.group_len=cur.group_len;
-                    last.output_len=cur.output_len;
-                    // last.takeable_starts=cur.takeable_starts;
-
-                    //
-                    println!("===www {last_group_len} {} {:?}",  cur.group_len, last.grammar);
-
-                    //
-                    for i in last_group_len .. cur.group_len {
-                        let g=temp_groups3.get(i).unwrap();
-                        println!("===hmmm {i}");
-
-                        if g.primitive_ind_start==cur.primitives.inds().start {
-                            temp_groups3.truncate(i); //removes this group and ones after
-                            last.group_len=i;
-                            println!("====== {i} {}",temp_groups3.len(), );
-                            break;
-                        }
-                    }
-
-                    // //
-                    // last.takeables.retain(|_k,v|{
-                    //     v.inds().start >= last.primitives.inds().start
-                    // });
-
-                    //
-                    last.takeables=cur.takeables;
-
-                    for (tg,tp_ind) in takeable_starts.drain(last.takeable_starts_len ..) {
-                        println!("--- inserting takeable1 {tg:?} {tp_ind:?}", );
-                        last.takeables.insert(tg, tp_ind);
-                    }
-
-                } else {
-                    // top_primitives=cur.primitives;
-                    primitives_remaining=cur.primitives;
-                }
-
-                // expected=Default::default();
-
-                expected.0=Loc::zero();
-                expected.1.clear();
-
-            }
-            // GrammarItem::Never => {
-            //     stk.truncate(cur.fail_len);
-
-            //     if stk.is_empty() {
-            //         // top_primitives=cur.primitives;
-            //     }
-            // }
-            GrammarItem::Error => {
-                println!("====error {expected:?}");
-                if !expected.1.is_empty() {
-                    let ee=expected.1.iter().map(|g|match g {
-
-                        GrammarItem::String => "string",
-                        GrammarItem::Identifier => "identifier",
-                        GrammarItem::Int => "int",
-                        GrammarItem::Float => "float",
-                        GrammarItem::Symbol(s) => *s,
-                        GrammarItem::Keyword(s) => *s,
-                        GrammarItem::Eol => todo!(),
-                        _ =>"",
-                    }).collect::<Vec<_>>().join(", ");
-
-                    println!("At {}, expected {:?}",expected.0,ee);
-
-                } else  {
-                    let loc=cur.primitives.loc();
-
-                    println!("At {loc}", );
 
                 }
+                GrammarItem::And(gs) => {
+                    let Some(first)=gs.first().cloned() else {continue;};
 
-                break;
+                    if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
+                        self.stk.push(Work {
+                            grammar: GrammarItem::And(rest.into()),
+                            success_len: cur.success_len,
+                            fail_len: cur.fail_len,
 
-            }
-            GrammarItem::String => {
-                let cur_primtives2=cur.primitives.clone();
+                            //not really necessary? since gets updated by always/primtitives
+                            primitives: cur.primitives,
 
-                match cur.primitives.pop_string() {
-                    Ok(v) => {
-                        // expected=Default::default();
-                        if v.primitive.start_loc() >= expected.0 {
-                            expected.0=Loc::zero();
-                            expected.1.clear();
-                        }
-                        println!("--- string {:?}",v.value);
-                        stk.truncate(cur.success_len);
+                            group_ind: cur.group_ind,
+                            group_len: cur.group_len,
+                            output_len: cur.output_len,
+                            discard:cur.discard,
 
-                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
-                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+                            takeable_starts_len:cur.takeable_starts_len,
+                            visiteds:cur.visiteds.clone(),
+                            takeables:cur.takeables.clone(),
+                            opt:false, //opt isnt passed to individual items in And
 
-                        if let Some(last)=stk.last_mut() {
-                            last.primitives=cur.primitives;
-                            // last.group_next_ind=cur.group_next_ind;
-
-                            // last.group_ind=cur.group_ind;
-                            last.group_len=cur.group_len;
-                            last.output_len=temp_primtives.len();
-
-                            // last.takeables.clear();
-
-                            last.takeables.retain(|_k,v|{
-                                v.inds().start >= last.primitives.inds().start
-                            });
-
-                            // last.takeables.insert(cur.grammar, cur_primtives2);
-                        }
-
-                        // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
-                        // // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
-                        // temp_groups.insert(v.primitive.ind(),cur.group);
+                        });
                     }
-                    Err(loc) => {
-                        if loc==expected.0 {
-                            expected.1.push(cur.grammar);
-                        } else if loc>expected.0 {
-                            expected.0=loc;
-                            expected.1=vec![cur.grammar];
-                        }
 
-                        stk.truncate(cur.fail_len);
+                    let success_len=if gs.len()>1 {self.stk.len()}else{cur.success_len};
 
+                    // if cur.opt {
+                    //     self.takeable_starts.push((first.clone(),cur.primitives.clone()));
+                    // }
 
-                        if let Some(last)=stk.last() {
-                            temp_primtives.truncate(last.output_len);
-                        }
+                    self.stk.push(Work {
+                        grammar: first,
+                        success_len,
+                        fail_len: cur.fail_len,
+                        primitives: cur.primitives,
+
+                        group_ind: cur.group_ind,
+                        group_len: cur.group_len,
+                        output_len: cur.output_len,
+                        discard:cur.discard,
+                        takeable_starts_len:cur.takeable_starts_len,
+                        visiteds:cur.visiteds,
+                        takeables:cur.takeables,
+                        opt:false, //opt isnt passed to individual items in And
+                    });
+                }
+                GrammarItem::Or(gs) => {
+                    let Some(first)=gs.first().cloned() else {continue;};
+
+                    if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
+                        self.stk.push(Work {
+                            grammar: GrammarItem::Or(rest.into()),
+                            success_len: cur.success_len,
+                            fail_len: cur.fail_len,
+                            primitives: cur.primitives,
+
+                            group_ind: cur.group_ind,
+                            group_len: cur.group_len,
+                            output_len: cur.output_len,
+                            discard:cur.discard,
+                            takeable_starts_len:cur.takeable_starts_len,
+                            visiteds:cur.visiteds.clone(),
+                            takeables:cur.takeables.clone(),
+                            opt:cur.opt,
+                        });
                     }
+
+                    let fail_len=if gs.len()>1 {self.stk.len()}else{cur.fail_len};
+
+                    // if cur.opt {
+                    //     self.takeable_starts.push((first.clone(),cur.primitives.clone()));
+                    // }
+
+                    self.stk.push(Work {
+                        grammar: first,
+                        success_len: cur.success_len,
+                        fail_len,
+                        primitives: cur.primitives,
+
+                        group_ind: cur.group_ind,
+                        group_len: cur.group_len,
+                        output_len: cur.output_len,
+                        discard:cur.discard,
+                        takeable_starts_len:cur.takeable_starts_len,
+                        visiteds:cur.visiteds,
+                        takeables:cur.takeables,
+                        opt:cur.opt,
+                    });
                 }
 
-                //
+                GrammarItem::Opt(g) => {
+                    self.stk.push(Work {
+                        grammar: GrammarItem::Always,
+                        success_len: cur.success_len,
+                        fail_len: 0, //fail is not used
+                        primitives: cur.primitives,
 
-                if let Some(last)=stk.last_mut() {
-                    for (tg,tp_ind) in takeable_starts.drain(last.takeable_starts_len ..) {
-                        last.takeables.insert(tg, tp_ind);
-                    }
+                        group_ind: cur.group_ind,
+                        group_len: cur.group_len,
+                        output_len: cur.output_len,
+                        discard:cur.discard,
+                        takeable_starts_len:cur.takeable_starts_len,
+                        visiteds:cur.visiteds.clone(),
+                        takeables:cur.takeables.clone(),
+                        opt:false, //not used on always
+                    });
+
+                    let fail_len=self.stk.len();
+
+                    // if cur.opt {
+                    //     self.takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                    // }
+
+                    self.stk.push(Work {
+                        grammar: *g,
+                        success_len: cur.success_len,
+                        fail_len,
+                        primitives: cur.primitives,
+
+                        group_ind: cur.group_ind,
+                        group_len: cur.group_len,
+                        output_len: cur.output_len,
+                        discard:cur.discard,
+                        takeable_starts_len:cur.takeable_starts_len,
+                        visiteds:cur.visiteds,
+                        takeables:cur.takeables,
+                        opt:true,
+                    });
                 }
+                GrammarItem::Offer(g) => {
+                    //should return err if not giveable? ie not opt? or just ignore?
+                    //  or just don't rquire at all
 
-                if stk.is_empty() {
-                    // top_primitives=cur.primitives;
-                    primitives_remaining=cur.primitives;
+                    // if cur.opt {
+                    self.takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                    // }
+
+                    self.stk.push(Work {
+                        grammar: *g,
+                        success_len: cur.success_len,
+                        fail_len: cur.fail_len,
+                        primitives: cur.primitives,
+                        group_ind: cur.group_ind,
+                        group_len: cur.group_len,
+                        output_len: cur.output_len,
+                        discard:cur.discard,
+                        takeable_starts_len:self.takeable_starts.len(),
+                        visiteds:cur.visiteds,
+                        takeables:cur.takeables,
+                        opt:cur.opt,
+                    });
                 }
-            }
-            GrammarItem::Identifier => {
-                match cur.primitives.pop_identifier() {
-                    Ok(v) => {
-                        // expected=Default::default();
-                        if v.primitive.start_loc() >= expected.0 {
-                            expected.0=Loc::zero();
-                            expected.1.clear();
-                        }
-                        println!("--- identifier {:?}",v.value);
-                        stk.truncate(cur.success_len);
+                GrammarItem::Take(g) => {
+                    if let Some(taken)=cur.takeables.get(&g).cloned() {
+                        println!("---the groups are {:?}",self.temp_groups3);
+                        //how to remove no longer used groups, and fix inds of the used group that ccomes after the removed one?
 
-                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
-                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
-
-                        if let Some(last)=stk.last_mut() {
-                            last.primitives=cur.primitives;
-                            // last.group_next_ind=cur.group_next_ind;
+                        let mut cur_group_ind=cur.group_ind;
 
 
-                            // last.group_ind=cur.group_ind;
-                            last.group_len=cur.group_len;
-                            last.output_len=temp_primtives.len();
-                            last.takeables.clear();
-                        }
-
-                        // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
-                        // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
-                        // temp_groups.insert(v.primitive.ind(),cur.group);
-                    }
-                    Err(loc) => {
-                        if loc==expected.0 {
-                            expected.1.push(cur.grammar);
-                        } else if loc>expected.0 {
-                            expected.0=loc;
-                            expected.1=vec![cur.grammar];
-                        }
-
-                        stk.truncate(cur.fail_len);
+                        if let Some(temp_prim)=self.temp_primtives.get(taken.inds().start) {
 
 
-                        if let Some(last)=stk.last() {
-                            temp_primtives.truncate(last.output_len);
-                        }
-                    }
-                }
-                if stk.is_empty() {
-                    // top_primitives=cur.primitives;
-                    primitives_remaining=cur.primitives;
-                }
-            }
-            GrammarItem::Int => {
-                // let cur_primtives2=cur.primitives.clone();
-                match cur.primitives.pop_int() {
-                    Ok(v) => {
-                        // expected=Default::default();
-                        if v.primitive.start_loc() >= expected.0 {
-                            expected.0=Loc::zero();
-                            expected.1.clear();
-                        }
-                        println!("--- int {:?}",v.value);
-                        stk.truncate(cur.success_len);
-
-                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
-                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
-
-                        if let Some(last)=stk.last_mut() {
-                            last.primitives=cur.primitives;
-                            // last.group_next_ind=cur.group_next_ind;
-
-                            // last.group_ind=cur.group_ind;
-                            last.group_len=cur.group_len;
-                            last.output_len=temp_primtives.len();
-                            // last.takeables.clear();
-
-
-                            last.takeables.retain(|_k,v|{
-                                v.inds().start >= last.primitives.inds().start
-                            });
-
-                            // println!("--- inserting takeable2 {:?} {cur_primtives2:?}",&cur.grammar);
-                            // println!("------ {:?}",&last.grammar);
-                            // last.takeables.insert(cur.grammar, cur_primtives2);
+                            //collect cur groups
+                            let mut cur_used_group_inds: HashSet<usize>=HashSet::new();
 
                             //
+                            {
+                                let mut group_ind=cur.group_ind;
 
-                        }
+                                loop {
+                                    cur_used_group_inds.insert(group_ind);
 
-                        if let Some(last)=stk.last_mut() {
-                            // let dr=takeable_starts.drain(last.takeable_starts_len ..).collect::<Vec<_>>();
-                            // println!("=== dr={dr:?}");
-                            for (tg,tp_ind) in takeable_starts.drain(last.takeable_starts_len ..) {
-                                println!("--- inserting takeable3 {tg:?} {tp_ind:?}",);
-                                last.takeables.insert(tg, tp_ind);
+                                    if group_ind==0 {
+                                        break;
+                                    }
+
+                                    let group=&self.temp_groups3[group_ind];
+                                    group_ind=group.parent;
+
+                                }
+                            }
+
+                            //get first group ind with prim ind >= taken.inds().start
+                            let mut after_group_ind = self.temp_groups3.len();
+
+                            while after_group_ind > 0 {
+                                let group=self.temp_groups3.get(after_group_ind-1).unwrap();
+
+                                if group.primitive_ind_start < taken.inds().start {
+                                    break;
+                                }
+
+                                after_group_ind-=1;
+                            }
+
+                            //get num of groups to remove
+                            let mut remove_groups_num=0;
+
+                            for i in after_group_ind..self.temp_groups3.len() {
+                                if cur_used_group_inds.contains(&i) {
+                                    break;
+                                }
+
+                                remove_groups_num+=1;
+                            }
+
+                            //remove unused groups
+                            self.temp_groups3.drain(after_group_ind..after_group_ind+remove_groups_num);
+
+                            //
+                            if cur_group_ind >=after_group_ind {
+                                cur_group_ind-=remove_groups_num;
+                            }
+
+                            //
+                            for prev in self.stk.iter_mut().rev() {
+                                if prev.group_ind >=after_group_ind {
+                                    prev.group_ind-=remove_groups_num;
+                                    prev.group_len-=remove_groups_num;
+                                }
                             }
                         }
-                        // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
-                        // // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
-                        // temp_groups.insert(v.primitive.ind(),cur.group);
-                    }
-                    Err(loc) => {
-                        if loc==expected.0 {
-                            expected.1.push(cur.grammar);
-                        } else if loc>expected.0 {
-                            expected.0=loc;
-                            expected.1=vec![cur.grammar];
-                        }
+
+                        //clear outputs to start of taken
+                        self.temp_primtives.truncate(taken.inds().start);
 
                         //
-                        stk.truncate(cur.fail_len);
-
-                        //
-                        if let Some(last)=stk.last() {
-                            temp_primtives.truncate(last.output_len);
-
-                            takeable_starts.truncate(last.takeable_starts_len);
-
-
-                        }
-
-                        //
-                        // if let Some(last)=stk.last() {
-
-                        //     // takeable_starts.retain(|(g,ps)|{
-                        //     //     ps.inds().start<=last.primitives.inds().start
-                        //     // });
+                        // if cur.opt {
+                        //     self.takeable_starts.push((*g.clone(),cur.primitives.clone()));
                         // }
-                    }
 
+                        //
+                        self.stk.push(Work {
+                            grammar: *g,
+                            success_len: cur.success_len,
+                            fail_len: cur.fail_len,
 
-                }
+                            primitives: taken.clone(),
+                            output_len: taken.inds().start,
 
-                //
+                            group_ind: cur_group_ind,
+                            group_len: self.temp_groups3.len(),
 
+                            discard: cur.discard,
+                            takeable_starts_len: cur.takeable_starts_len,//cur.takeable_starts_len, // ??
+                            visiteds: cur.visiteds, //
+                            takeables: Default::default(),
+                            opt:cur.opt,
+                        });
+                    } else {
 
-                if stk.is_empty() {
-                    // top_primitives=cur.primitives;
-                    primitives_remaining=cur.primitives;
-                }
-            }
-            GrammarItem::Float => {
-                match cur.primitives.pop_float() {
-                    Ok(v) => {
-                        // expected=Default::default();
-                        if v.primitive.start_loc() >= expected.0 {
-                            expected.0=Loc::zero();
-                            expected.1.clear();
-                        }
-                        println!("--- float {:?}",v.value);
-                        stk.truncate(cur.success_len);
+                        //
+                        self.stk.truncate(cur.fail_len);
 
-                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
-                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
-
-                        if let Some(last)=stk.last_mut() {
-                        //     println!("{_g:?}");
-                            last.primitives=cur.primitives;
-                            // last.group_next_ind=cur.group_next_ind;
-
-                            // last.group_ind=cur.group_ind;
-                            last.group_len=cur.group_len;
-                            last.output_len=temp_primtives.len();
-                            last.takeables.clear();
-                        }
-
-                        // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
-                        // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
-                        // temp_groups.insert(v.primitive.ind(),cur.group);
-                    }
-                    Err(loc) => {
-                        if loc==expected.0 {
-                            expected.1.push(cur.grammar);
-                        } else if loc>expected.0 {
-                            expected.0=loc;
-                            expected.1=vec![cur.grammar];
-                        }
-
-                        stk.truncate(cur.fail_len);
-
-                        if let Some(last)=stk.last() {
-                            temp_primtives.truncate(last.output_len);
+                        //
+                        if let Some(last)=self.stk.last() {
+                            self.temp_primtives.truncate(last.output_len);
+                            self.takeable_starts.truncate(last.takeable_starts_len);
                         }
                     }
                 }
+                GrammarItem::Many(g) => {
+                    // let fail_len2=self.stk.len(); //only remove everything past here on fail
+                    self.stk.push(Work {
+                        grammar: GrammarItem::Many(g.clone()),
+                        success_len: cur.success_len,
+                        fail_len: cur.fail_len,
+                        primitives: cur.primitives,
 
-                if stk.is_empty() {
-                    // top_primitives=cur.primitives;
-                    primitives_remaining=cur.primitives;
+                        group_ind: cur.group_ind,
+                        group_len: cur.group_len,
+                        output_len: cur.output_len,
+                        discard:cur.discard,
+                        takeable_starts_len:cur.takeable_starts_len,
+                        visiteds:cur.visiteds.clone(),
+                        takeables:cur.takeables.clone(),
+                        opt:true,
+                    });
+
+                    let success_len2=self.stk.len();
+
+                    self.stk.push(Work {
+                        grammar: GrammarItem::Always,
+                        success_len: cur.success_len,
+                        fail_len: 0, //fail is not used
+                        primitives: cur.primitives,
+
+                        group_ind: cur.group_ind,
+                        group_len: cur.group_len,
+                        output_len: cur.output_len,
+                        discard:cur.discard,
+                        takeable_starts_len:cur.takeable_starts_len,
+                        visiteds:cur.visiteds.clone(),
+                        takeables:cur.takeables.clone(),
+                        opt:false, //not used
+                    });
+
+                    let fail_len=self.stk.len();
+
+
+                    // if cur.opt {
+                    //     self.takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                    // }
+
+                    self.stk.push(Work {
+                        grammar: *g,
+                        success_len: success_len2,
+                        fail_len,
+                        primitives: cur.primitives,
+
+                        group_ind: cur.group_ind,
+                        group_len: cur.group_len,
+                        output_len: cur.output_len,
+                        discard:cur.discard,
+                        takeable_starts_len:cur.takeable_starts_len,
+                        visiteds:cur.visiteds,
+                        takeables:cur.takeables,
+                        opt:true,
+                    });
                 }
-            }
-            GrammarItem::Symbol(s) => {
-                match cur.primitives.pop_with_symbols([s]) {
-                    Ok(v) => {
-                        // expected=Default::default();
-                        if v.primitive.start_loc() >= expected.0 {
-                            expected.0=Loc::zero();
-                            expected.1.clear();
-                        }
-                        println!("--- symbol {:?}",v.value);
-                        stk.truncate(cur.success_len);
+                // GrammarItem::Many1(g) => {
+                //     self.stk.push((GrammarItem::Many(g.clone()),success_len,fail_len,primitives));
+                //     let success_len=self.stk.len();
+                //     self.stk.push((*g,success_len,fail_len,primitives));
+                // }
 
-                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
-                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+                GrammarItem::NonTerm(t) => {
+                    let v=(t,cur.primitives.inds().start);
 
-                        if let Some(last)=stk.last_mut() {
-                            last.primitives=cur.primitives;
-                            // last.group_next_ind=cur.group_next_ind;
-
-                            // last.group_ind=cur.group_ind;
-                            last.group_len=cur.group_len;
-                            last.output_len=temp_primtives.len();
-                            last.takeables.clear();
-                        }
-
-                        // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
-                        // // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
-                        // temp_groups.insert(v.primitive.ind(),cur.group);
+                    if cur.visiteds.contains(&v) {
+                        println!("err, circular nonterm {t}");
+                        break;
                     }
-                    Err(loc) => {
-                        if loc==expected.0 {
-                            expected.1.push(cur.grammar);
-                        } else if loc>expected.0 {
-                            expected.0=loc;
-                            expected.1=vec![cur.grammar];
+
+                    let mut visiteds=cur.visiteds;
+                    visiteds.insert(v);
+
+                    // let mut takeable_starts_len=cur.takeable_starts_len;
+                    // self.takeable_starts.insert((cur.grammar,cur.primitives.inds().start));
+                    let g=grammar_decl(t);
+
+                    // if cur.opt {
+                    //     self.takeable_starts.push((g.clone(),cur.primitives.clone()));
+                    // }
+
+                    self.stk.push(Work {
+                        grammar: g, //should return err on not found, instead of grammar never, should have error
+                        success_len: cur.success_len,
+                        fail_len: cur.fail_len,
+                        primitives: cur.primitives,
+
+                        group_ind: cur.group_ind,
+                        group_len: cur.group_len,
+                        output_len: cur.output_len,
+                        discard:cur.discard,
+                        visiteds,
+                        takeables:cur.takeables,
+                        takeable_starts_len:cur.takeable_starts_len,
+                        opt:cur.opt,
+                    });
+                }
+                GrammarItem::Always => {
+                    self.stk.truncate(cur.success_len);
+
+                    if let Some(last)=self.stk.last_mut() {
+                        if last.grammar.is_many() && last.primitives.len()==cur.primitives.len() { //if not parsing anything, exit the many
+                            last.grammar=GrammarItem::Always;
                         }
 
-                        stk.truncate(cur.fail_len);
-                        // println!("nos");
+                        last.primitives=cur.primitives;
+                        // last.group_next_ind=cur.group_next_ind;
 
-                        if let Some(last)=stk.last() {
-                            temp_primtives.truncate(last.output_len);
+
+                        // self.temp_primtives.resize(cur.output_len+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
+
+                        // // last.group_ind=cur.group_ind;
+                        let last_group_len= last.group_len;
+                        last.group_len=cur.group_len;
+                        last.output_len=cur.output_len;
+                        // last.takeable_starts=cur.takeable_starts;
+
+                        //
+                        println!("===www {last_group_len} {} {:?}",  cur.group_len, last.grammar);
+
+                        //
+                        for i in last_group_len .. cur.group_len {
+                            let g=self.temp_groups3.get(i).unwrap();
+                            println!("===hmmm {i}");
+
+                            if g.primitive_ind_start==cur.primitives.inds().start {
+                                self.temp_groups3.truncate(i); //removes this group and ones after
+                                last.group_len=i;
+                                println!("====== {i} {}",self.temp_groups3.len(), );
+                                break;
+                            }
                         }
+
+                        // //
+                        // last.takeables.retain(|_k,v|{
+                        //     v.inds().start >= last.primitives.inds().start
+                        // });
+
+                        //
+                        last.takeables=cur.takeables;
+
+                        for (tg,tp_ind) in self.takeable_starts.drain(last.takeable_starts_len ..) {
+                            println!("--- inserting takeable1 {tg:?} {tp_ind:?}", );
+                            last.takeables.insert(tg, tp_ind);
+                        }
+
+                    } else {
+                        // top_primitives=cur.primitives;
+                        self.primitives_remaining=cur.primitives;
                     }
+
+                    // expected=Default::default();
+
+                    self.expected.0=Loc::zero();
+                    self.expected.1.clear();
+
                 }
-                if stk.is_empty() {
-                    // top_primitives=cur.primitives;
-                    primitives_remaining=cur.primitives;
-                }
-            }
-            GrammarItem::Keyword(s) => {
-                match cur.primitives.pop_with_identifiers([s]) {
-                    Ok(v) => {
-                        // expected=Default::default();
-                        if v.primitive.start_loc() >= expected.0 {
-                            expected.0=Loc::zero();
-                            expected.1.clear();
-                        }
-                        println!("--- keyword {:?}",v.value);
-                        stk.truncate(cur.success_len);
+                // GrammarItem::Never => {
+                //     self.stk.truncate(cur.fail_len);
 
-                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
-                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+                //     if self.stk.is_empty() {
+                //         // top_primitives=cur.primitives;
+                //     }
+                // }
+                GrammarItem::Error => {
+                    println!("====error {:?}",self.expected);
+                    if !self.expected.1.is_empty() {
+                        let ee=self.expected.1.iter().map(|g|match g {
 
-                        if let Some(last)=stk.last_mut() {
-                            last.primitives=cur.primitives;
-                            // last.group_next_ind=cur.group_next_ind;
+                            GrammarItem::String => "string",
+                            GrammarItem::Identifier => "identifier",
+                            GrammarItem::Int => "int",
+                            GrammarItem::Float => "float",
+                            GrammarItem::Symbol(s) => *s,
+                            GrammarItem::Keyword(s) => *s,
+                            GrammarItem::Eol => todo!(),
+                            _ =>"",
+                        }).collect::<Vec<_>>().join(", ");
 
-                            // last.group_ind=cur.group_ind;
-                            last.group_len=cur.group_len;
-                            last.output_len=temp_primtives.len();
-                            last.takeables.clear();
-                        }
+                        println!("At {}, expected {:?}",self.expected.0,ee);
 
-                        // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
-                        // // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
-                        // temp_groups.insert(v.primitive.ind(),cur.group);
+                    } else  {
+                        let loc=cur.primitives.loc();
+
+                        println!("At {loc}", );
+
                     }
-                    Err(loc) => {
-                        if loc==expected.0 {
-                            expected.1.push(cur.grammar);
-                        } else if loc>expected.0 {
-                            expected.0=loc;
-                            expected.1=vec![cur.grammar];
-                        }
 
-                        stk.truncate(cur.fail_len);
+                    break;
 
-                        if let Some(last)=stk.last() {
-                            temp_primtives.truncate(last.output_len);
-                        }
-                    }
                 }
-                if stk.is_empty() {
-                    // top_primitives=cur.primitives;
-                    primitives_remaining=cur.primitives;
-                }
-            }
-            GrammarItem::Eol => {
-                match cur.primitives.pop_eol() {
-                    Ok(v) => {
-                        if v.primitive.start_loc() >= expected.0 {
-                            // expected.0=v.primitive.start_loc();
+                GrammarItem::String => {
+                    let cur_primtives2=cur.primitives.clone();
+
+                    match cur.primitives.pop_string() {
+                        Ok(v) => {
                             // expected=Default::default();
-                            expected.0=Loc::zero();
-                            expected.1.clear();
+                            if v.primitive.start_loc() >= self.expected.0 {
+                                self.expected.0=Loc::zero();
+                                self.expected.1.clear();
+                            }
+                            println!("--- string {:?}",v.value);
+                            self.stk.truncate(cur.success_len);
+
+                            self.temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                            self.temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+
+                            if let Some(last)=self.stk.last_mut() {
+                                last.primitives=cur.primitives;
+                                // last.group_next_ind=cur.group_next_ind;
+
+                                // last.group_ind=cur.group_ind;
+                                last.group_len=cur.group_len;
+                                last.output_len=self.temp_primtives.len();
+
+                                // last.takeables.clear();
+
+                                last.takeables.retain(|_k,v|{
+                                    v.inds().start >= last.primitives.inds().start
+                                });
+
+                                // last.takeables.insert(cur.grammar, cur_primtives2);
+                            }
+
+                            // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
+                            // // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
+                            // temp_groups.insert(v.primitive.ind(),cur.group);
                         }
-                        println!("eol");
-                        stk.truncate(cur.success_len);
+                        Err(loc) => {
+                            if loc==self.expected.0 {
+                                self.expected.1.push(cur.grammar);
+                            } else if loc>self.expected.0 {
+                                self.expected.0=loc;
+                                self.expected.1=vec![cur.grammar];
+                            }
 
-                        temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
-                        temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+                            self.stk.truncate(cur.fail_len);
 
-                        if let Some(last)=stk.last_mut() {
-                            last.primitives=cur.primitives;
-                            // last.group_next_ind=cur.group_next_ind;
 
-                            // last.group_ind=cur.group_ind;
-                            last.group_len=cur.group_len;
-                            last.output_len=temp_primtives.len();
-                            last.takeables.clear();
+                            if let Some(last)=self.stk.last() {
+                                self.temp_primtives.truncate(last.output_len);
+                            }
                         }
-
-                        // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
-                        // // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
-                        // temp_groups.insert(v.primitive.ind(),cur.group);
                     }
-                    Err(loc) => {
-                        if loc==expected.0 {
-                            expected.1.push(cur.grammar);
-                        } else if loc>expected.0 {
-                            expected.0=loc;
-                            expected.1=vec![cur.grammar];
-                        }
 
-                        stk.truncate(cur.fail_len);
+                    //
 
-                        if let Some(last)=stk.last() {
-                            temp_primtives.truncate(last.output_len);
+                    if let Some(last)=self.stk.last_mut() {
+                        for (tg,tp_ind) in self.takeable_starts.drain(last.takeable_starts_len ..) {
+                            last.takeables.insert(tg, tp_ind);
                         }
+                    }
+
+                    if self.stk.is_empty() {
+                        // top_primitives=cur.primitives;
+                        self.primitives_remaining=cur.primitives;
                     }
                 }
-                if stk.is_empty() {
-                    // top_primitives=cur.primitives;
-                    primitives_remaining=cur.primitives;
+                GrammarItem::Identifier => {
+                    match cur.primitives.pop_identifier() {
+                        Ok(v) => {
+                            // expected=Default::default();
+                            if v.primitive.start_loc() >= self.expected.0 {
+                                self.expected.0=Loc::zero();
+                                self.expected.1.clear();
+                            }
+                            println!("--- identifier {:?}",v.value);
+                            self.stk.truncate(cur.success_len);
+
+                            self.temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                            self.temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+
+                            if let Some(last)=self.stk.last_mut() {
+                                last.primitives=cur.primitives;
+                                // last.group_next_ind=cur.group_next_ind;
+
+
+                                // last.group_ind=cur.group_ind;
+                                last.group_len=cur.group_len;
+                                last.output_len=self.temp_primtives.len();
+                                last.takeables.clear();
+                            }
+
+                            // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
+                            // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
+                            // temp_groups.insert(v.primitive.ind(),cur.group);
+                        }
+                        Err(loc) => {
+                            if loc==self.expected.0 {
+                                self.expected.1.push(cur.grammar);
+                            } else if loc>self.expected.0 {
+                                self.expected.0=loc;
+                                self.expected.1=vec![cur.grammar];
+                            }
+
+                            self.stk.truncate(cur.fail_len);
+
+
+                            if let Some(last)=self.stk.last() {
+                                self.temp_primtives.truncate(last.output_len);
+                            }
+                        }
+                    }
+                    if self.stk.is_empty() {
+                        // top_primitives=cur.primitives;
+                        self.primitives_remaining=cur.primitives;
+                    }
+                }
+                GrammarItem::Int => {
+                    // let cur_primtives2=cur.primitives.clone();
+                    match cur.primitives.pop_int() {
+                        Ok(v) => {
+                            // expected=Default::default();
+                            if v.primitive.start_loc() >= self.expected.0 {
+                                self.expected.0=Loc::zero();
+                                self.expected.1.clear();
+                            }
+                            println!("--- int {:?}",v.value);
+                            self.stk.truncate(cur.success_len);
+
+                            self.temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                            self.temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+
+                            if let Some(last)=self.stk.last_mut() {
+                                last.primitives=cur.primitives;
+                                // last.group_next_ind=cur.group_next_ind;
+
+                                // last.group_ind=cur.group_ind;
+                                last.group_len=cur.group_len;
+                                last.output_len=self.temp_primtives.len();
+                                // last.takeables.clear();
+
+
+                                last.takeables.retain(|_k,v|{
+                                    v.inds().start >= last.primitives.inds().start
+                                });
+
+                                // println!("--- inserting takeable2 {:?} {cur_primtives2:?}",&cur.grammar);
+                                // println!("------ {:?}",&last.grammar);
+                                // last.takeables.insert(cur.grammar, cur_primtives2);
+
+                                //
+
+                            }
+
+                            if let Some(last)=self.stk.last_mut() {
+                                // let dr=self.takeable_starts.drain(last.takeable_starts_len ..).collect::<Vec<_>>();
+                                // println!("=== dr={dr:?}");
+                                for (tg,tp_ind) in self.takeable_starts.drain(last.takeable_starts_len ..) {
+                                    println!("--- inserting takeable3 {tg:?} {tp_ind:?}",);
+                                    last.takeables.insert(tg, tp_ind);
+                                }
+                            }
+                            // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
+                            // // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
+                            // temp_groups.insert(v.primitive.ind(),cur.group);
+                        }
+                        Err(loc) => {
+                            if loc==self.expected.0 {
+                                self.expected.1.push(cur.grammar);
+                            } else if loc>self.expected.0 {
+                                self.expected.0=loc;
+                                self.expected.1=vec![cur.grammar];
+                            }
+
+                            //
+                            self.stk.truncate(cur.fail_len);
+
+                            //
+                            if let Some(last)=self.stk.last() {
+                                self.temp_primtives.truncate(last.output_len);
+
+                                self.takeable_starts.truncate(last.takeable_starts_len);
+
+
+                            }
+
+                            //
+                            // if let Some(last)=self.stk.last() {
+
+                            //     // self.takeable_starts.retain(|(g,ps)|{
+                            //     //     ps.inds().start<=last.primitives.inds().start
+                            //     // });
+                            // }
+                        }
+
+
+                    }
+
+                    //
+
+
+                    if self.stk.is_empty() {
+                        // top_primitives=cur.primitives;
+                        self.primitives_remaining=cur.primitives;
+                    }
+                }
+                GrammarItem::Float => {
+                    match cur.primitives.pop_float() {
+                        Ok(v) => {
+                            // expected=Default::default();
+                            if v.primitive.start_loc() >= self.expected.0 {
+                                self.expected.0=Loc::zero();
+                                self.expected.1.clear();
+                            }
+                            println!("--- float {:?}",v.value);
+                            self.stk.truncate(cur.success_len);
+
+                            self.temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                            self.temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+
+                            if let Some(last)=self.stk.last_mut() {
+                            //     println!("{_g:?}");
+                                last.primitives=cur.primitives;
+                                // last.group_next_ind=cur.group_next_ind;
+
+                                // last.group_ind=cur.group_ind;
+                                last.group_len=cur.group_len;
+                                last.output_len=self.temp_primtives.len();
+                                last.takeables.clear();
+                            }
+
+                            // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
+                            // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
+                            // temp_groups.insert(v.primitive.ind(),cur.group);
+                        }
+                        Err(loc) => {
+                            if loc==self.expected.0 {
+                                self.expected.1.push(cur.grammar);
+                            } else if loc>self.expected.0 {
+                                self.expected.0=loc;
+                                self.expected.1=vec![cur.grammar];
+                            }
+
+                            self.stk.truncate(cur.fail_len);
+
+                            if let Some(last)=self.stk.last() {
+                                self.temp_primtives.truncate(last.output_len);
+                            }
+                        }
+                    }
+
+                    if self.stk.is_empty() {
+                        // top_primitives=cur.primitives;
+                        self.primitives_remaining=cur.primitives;
+                    }
+                }
+                GrammarItem::Symbol(s) => {
+                    match cur.primitives.pop_with_symbols([s]) {
+                        Ok(v) => {
+                            // expected=Default::default();
+                            if v.primitive.start_loc() >= self.expected.0 {
+                                self.expected.0=Loc::zero();
+                                self.expected.1.clear();
+                            }
+                            println!("--- symbol {:?}",v.value);
+                            self.stk.truncate(cur.success_len);
+
+                            self.temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                            self.temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+
+                            if let Some(last)=self.stk.last_mut() {
+                                last.primitives=cur.primitives;
+                                // last.group_next_ind=cur.group_next_ind;
+
+                                // last.group_ind=cur.group_ind;
+                                last.group_len=cur.group_len;
+                                last.output_len=self.temp_primtives.len();
+                                last.takeables.clear();
+                            }
+
+                            // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
+                            // // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
+                            // temp_groups.insert(v.primitive.ind(),cur.group);
+                        }
+                        Err(loc) => {
+                            if loc==self.expected.0 {
+                                self.expected.1.push(cur.grammar);
+                            } else if loc>self.expected.0 {
+                                self.expected.0=loc;
+                                self.expected.1=vec![cur.grammar];
+                            }
+
+                            self.stk.truncate(cur.fail_len);
+                            // println!("nos");
+
+                            if let Some(last)=self.stk.last() {
+                                self.temp_primtives.truncate(last.output_len);
+                            }
+                        }
+                    }
+                    if self.stk.is_empty() {
+                        // top_primitives=cur.primitives;
+                        self.primitives_remaining=cur.primitives;
+                    }
+                }
+                GrammarItem::Keyword(s) => {
+                    match cur.primitives.pop_with_identifiers([s]) {
+                        Ok(v) => {
+                            // expected=Default::default();
+                            if v.primitive.start_loc() >= self.expected.0 {
+                                self.expected.0=Loc::zero();
+                                self.expected.1.clear();
+                            }
+                            println!("--- keyword {:?}",v.value);
+                            self.stk.truncate(cur.success_len);
+
+                            self.temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                            self.temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+
+                            if let Some(last)=self.stk.last_mut() {
+                                last.primitives=cur.primitives;
+                                // last.group_next_ind=cur.group_next_ind;
+
+                                // last.group_ind=cur.group_ind;
+                                last.group_len=cur.group_len;
+                                last.output_len=self.temp_primtives.len();
+                                last.takeables.clear();
+                            }
+
+                            // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
+                            // // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
+                            // temp_groups.insert(v.primitive.ind(),cur.group);
+                        }
+                        Err(loc) => {
+                            if loc==self.expected.0 {
+                                self.expected.1.push(cur.grammar);
+                            } else if loc>self.expected.0 {
+                                self.expected.0=loc;
+                                self.expected.1=vec![cur.grammar];
+                            }
+
+                            self.stk.truncate(cur.fail_len);
+
+                            if let Some(last)=self.stk.last() {
+                                self.temp_primtives.truncate(last.output_len);
+                            }
+                        }
+                    }
+                    if self.stk.is_empty() {
+                        // top_primitives=cur.primitives;
+                        self.primitives_remaining=cur.primitives;
+                    }
+                }
+                GrammarItem::Eol => {
+                    match cur.primitives.pop_eol() {
+                        Ok(v) => {
+                            if v.primitive.start_loc() >= self.expected.0 {
+                                // self.expected.0=v.primitive.start_loc();
+                                // expected=Default::default();
+                                self.expected.0=Loc::zero();
+                                self.expected.1.clear();
+                            }
+                            println!("eol");
+                            self.stk.truncate(cur.success_len);
+
+                            self.temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                            self.temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+
+                            if let Some(last)=self.stk.last_mut() {
+                                last.primitives=cur.primitives;
+                                // last.group_next_ind=cur.group_next_ind;
+
+                                // last.group_ind=cur.group_ind;
+                                last.group_len=cur.group_len;
+                                last.output_len=self.temp_primtives.len();
+                                last.takeables.clear();
+                            }
+
+                            // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
+                            // // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
+                            // temp_groups.insert(v.primitive.ind(),cur.group);
+                        }
+                        Err(loc) => {
+                            if loc==self.expected.0 {
+                                self.expected.1.push(cur.grammar);
+                            } else if loc>self.expected.0 {
+                                self.expected.0=loc;
+                                self.expected.1=vec![cur.grammar];
+                            }
+
+                            self.stk.truncate(cur.fail_len);
+
+                            if let Some(last)=self.stk.last() {
+                                self.temp_primtives.truncate(last.output_len);
+                            }
+                        }
+                    }
+                    if self.stk.is_empty() {
+                        // top_primitives=cur.primitives;
+                        self.primitives_remaining=cur.primitives;
+                    }
                 }
             }
         }
-    }
 
-    // //
-    // let mut temp_group_ends: Vec<usize> = Vec::new();
+        // //
+        // let mut temp_group_ends: Vec<usize> = Vec::new();
 
-    // for (i,gs) in temp_groups.iter().enumerate() {
-    //     let last_end=temp_group_ends.get(i).cloned().unwrap_or_default();
-    //     temp_group_ends.push(last_end+gs.len());
-    // }
-
-    // //
-    // for (i,(group,group_primitives_ind)) in temp_group_inds.into_iter().enumerate() {
-    //     let i=i+1;
-    //     let temp_group_primtives=&mut temp_groups[i];
-
-    // }
-
-    // //
-    // let mut outputs: Vec<GrammarOutput> = Vec::new();
-
-    // for gs in temp_groups {
-    //     outputs.extend(gs);
-    // }
-
-    // {
-    //     println!("===");
-
-    //     let mut stk: Vec<(usize, usize)>=(0..temp_group_ends[0]).rev().map(|i|(i,0)).collect::<Vec<_>>();
-
-    //     // let mut stk=vec![0..temp_group_ends.last().cloned().unwrap_or_default()];
-
-    //     while let Some((ind,depth))=stk.pop() {
-    //         let cur=&outputs[ind];
-
-    //         let indent="  ".repeat(depth);
-
-    //         match cur {
-    //             GrammarOutput::Group { name, primitives } => {
-    //                 stk.extend(primitives.clone().rev().map(|i|(i,depth+1)));
-    //                 println!("{indent}group: {name}");
-    //             }
-    //             GrammarOutput::Primitive(p) => {
-    //                 println!("{indent}{p:?}");
-    //             }
-    //         }
-    //     }
-    //     println!("===");
-    // }
-
-    println!("groups={temp_groups3:?}");
-    println!("outputs={temp_primtives:?}");
-
-    if !primitives_remaining.is_empty() {
-        println!("error, failed to parse all tokens {primitives_remaining:?}");
-    }
-
-    println!("===");
-
-
-    // let mut last_group:PrimitiveInfo=Default::default();
-
-    let mut groups_visited: HashSet<usize>=HashSet::new();
-
-    for p in top_primitives {
-        let i=p.ind();
-        let Some(output)=temp_primtives.get(i) else {
-            break;
-        };
-
-        let mut g=output.group;
-        let mut depth=0;
-        let mut gs: Vec<usize>=Vec::new();
-        while g!=0 {
-            gs.push(g);
-            let gg=&temp_groups3[g];
-
-            depth+=1;
-
-            g=gg.parent;
-
-        }
-
-        for (d,&g) in gs.iter().rev().enumerate() {
-            let gg=&temp_groups3[g];
-
-            if !groups_visited.contains(&g) {
-                println!("{}{:?}",
-                    "  ".repeat(d),
-                    gg.name,
-                );
-                groups_visited.insert(g);
-            }
-
-
-
-        }
-
-        println!("{}{}{p:?}",
-            "  ".repeat(depth),
-            if output.discard {"-"}else{""}
-        );
-        // let group=
-        // let g=temp_groups.get(&i).cloned();//.unwrap_or_default();
-        // let Some(g)=g else {
-        //     // println!("~~~i=[{i}], p={p:?}");
-        //     // break;
-        //     continue;
-        // };
-        // // let prev_g= (i!=0).then(||temp_groups.get(&(i-1)).cloned().unwrap_or_default()).unwrap_or_default();
-
-        // if g.depth>last_group.depth {
-        //     println!("{}group: {}","    ".repeat(last_group.depth),g.name);
+        // for (i,gs) in temp_groups.iter().enumerate() {
+        //     let last_end=temp_group_ends.get(i).cloned().unwrap_or_default();
+        //     temp_group_ends.push(last_end+gs.len());
         // }
 
+        // //
+        // for (i,(group,group_primitives_ind)) in temp_group_inds.into_iter().enumerate() {
+        //     let i=i+1;
+        //     let temp_group_primtives=&mut temp_groups[i];
 
-        // println!("{}{p:?}","    ".repeat(g.depth));
-        // last_group=g;
+        // }
+
+        // //
+        // let mut outputs: Vec<GrammarOutput> = Vec::new();
+
+        // for gs in temp_groups {
+        //     outputs.extend(gs);
+        // }
+
+        // {
+        //     println!("===");
+
+        //     let mut stk: Vec<(usize, usize)>=(0..temp_group_ends[0]).rev().map(|i|(i,0)).collect::<Vec<_>>();
+
+        //     // let mut stk=vec![0..temp_group_ends.last().cloned().unwrap_or_default()];
+
+        //     while let Some((ind,depth))=self.stk.pop() {
+        //         let cur=&outputs[ind];
+
+        //         let indent="  ".repeat(depth);
+
+        //         match cur {
+        //             GrammarOutput::Group { name, primitives } => {
+        //                 self.stk.extend(primitives.clone().rev().map(|i|(i,depth+1)));
+        //                 println!("{indent}group: {name}");
+        //             }
+        //             GrammarOutput::Primitive(p) => {
+        //                 println!("{indent}{p:?}");
+        //             }
+        //         }
+        //     }
+        //     println!("===");
+        // }
+
+        println!("groups={:?}",self.temp_groups3);
+        println!("outputs={:?}",self.temp_primtives);
+
+        if !self.primitives_remaining.is_empty() {
+            println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
+        }
+
+        println!("===");
+
+
+        // let mut last_group:PrimitiveInfo=Default::default();
+
+        let mut groups_visited: HashSet<usize>=HashSet::new();
+
+        for p in self.top_primitives {
+            let i=p.ind();
+            let Some(output)=self.temp_primtives.get(i) else {
+                break;
+            };
+
+            let mut g=output.group;
+            let mut depth=0;
+            let mut gs: Vec<usize>=Vec::new();
+            while g!=0 {
+                gs.push(g);
+                let gg=&self.temp_groups3[g];
+
+                depth+=1;
+
+                g=gg.parent;
+
+            }
+
+            for (d,&g) in gs.iter().rev().enumerate() {
+                let gg=&self.temp_groups3[g];
+
+                if !groups_visited.contains(&g) {
+                    println!("{}{:?}",
+                        "  ".repeat(d),
+                        gg.name,
+                    );
+                    groups_visited.insert(g);
+                }
+
+
+
+            }
+
+            println!("{}{}{p:?}",
+                "  ".repeat(depth),
+                if output.discard {"-"}else{""}
+            );
+            // let group=
+            // let g=temp_groups.get(&i).cloned();//.unwrap_or_default();
+            // let Some(g)=g else {
+            //     // println!("~~~i=[{i}], p={p:?}");
+            //     // break;
+            //     continue;
+            // };
+            // // let prev_g= (i!=0).then(||temp_groups.get(&(i-1)).cloned().unwrap_or_default()).unwrap_or_default();
+
+            // if g.depth>last_group.depth {
+            //     println!("{}group: {}","    ".repeat(last_group.depth),g.name);
+            // }
+
+
+            // println!("{}{p:?}","    ".repeat(g.depth));
+            // last_group=g;
+        }
+        println!("===");
+
+        //
+        println!("top_primitives={:?}", self.top_primitives );
+        // println!("output={outputs:?}",  );
+
     }
-    println!("===");
-
-    //
-    println!("top_primitives={top_primitives:?}",  );
-    // println!("output={outputs:?}",  );
-
 }
 
-/*
+pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
+    /*
+    abc|ab with "ab" => "" //abc will fail, but then tries ab, which succeeds
+    ab|abc with "abc" => "c" //will consume ab, and then fail to consume c, there is no backtracking
+     */
 
-* use stk of grammer_items
+    //expects not completely correct,
+    //  if succeeds to a certain point, need to clear the expecteds,
+    //  currently it just clears everything after any success
+    //  could just add expects that are ==, and replace ones that are >
+    //  on success, only clear if >= than loc
 
-* how handle manys,
+    let mut walker=GrammarWalker::new(top_primitives, grammar_decl);
 
-* how handle ors
-** need backtracking or lock in if any parse succeeds
-** when coming across an OR, then mark ind into the stk, so can jump back to if fail, and if suceeds, then remove that OR and the mark
-** can put ORs on second stk eg Vec<(Vec<GrammarItem>,usize)>
-
-* for And, just push whole lot on stk?
-** no simpler for handling Ors not to, or can depending
-
-* for many0 and opt, push them on OR stk, but with Always as last option
-** eg [OptionalItem,Always] or [Many0,Always]
-*** Many0 on succeeds, ...
-*/
+    walker.run();
+}
