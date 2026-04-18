@@ -858,6 +858,13 @@ where
                             self.temp_groups3.drain(after_group_ind..after_group_ind+remove_groups_num);
 
                             //
+                            for group in &mut self.temp_groups3[after_group_ind..] {
+                                if group.parent>=after_group_ind {
+                                    group.parent-=remove_groups_num;
+                                }
+                            }
+
+                            //
                             if cur_group_ind >=after_group_ind {
                                 cur_group_ind-=remove_groups_num;
                             }
