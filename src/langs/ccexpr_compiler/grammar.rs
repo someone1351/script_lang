@@ -585,15 +585,7 @@ where
 
             match cur.grammar {
                 GrammarItem::Group(name, g) => {
-                    // // outputs.push(GrammarOutput::Group { name, primitives: Vec::new() });
-                    // let new_group=temp_groups.len();
-                    // // temp_groups2.push((name,cur.primitives.inds().start..cur.primitives.inds().start));
-                    // temp_groups.push(value);
-                    let new_group_ind=self.temp_groups3.len();
-                    self.temp_groups3.push(GroupInfo {
-                        name, parent: cur.group_ind,
-                        primitive_ind_start: cur.primitives.inds().start,
-                    });
+                    let new_group_ind=self.new_group(name, cur.group_ind, cur.primitives);
                     let new_group_len=self.temp_groups3.len();
 
                     // if cur.opt {
@@ -605,8 +597,7 @@ where
                         success_len: cur.success_len,
                         fail_len: cur.fail_len,
                         primitives: cur.primitives,
-                        // group: PrimitiveInfo { name, depth: cur.group.depth+1, group: cur.group_next_ind },
-                        // group_next_ind:cur.group_next_ind+1,
+
                         group_ind: new_group_ind,
                         group_len: new_group_len,
                         output_len: cur.output_len,
@@ -616,11 +607,6 @@ where
                         takeables:cur.takeables,
                         opt:cur.opt,
                     });
-
-
-                    // temp_group_inds.push((cur.group,temp_groups[cur.group].len()));
-                    // temp_groups[cur.group].push(GrammarOutput::Group { name, primitives: 0..0, });
-                    // temp_groups.push(Vec::new());
                 }
                 GrammarItem::Discard(g) => {
 
@@ -800,86 +786,15 @@ where
                     });
                 }
                 GrammarItem::Take(g) => {
-                    if let Some(taken)=cur.takeables.get(&g).cloned() {
+                    if let Some(taken_ps_start)=cur.takeables.get(&g).cloned() {
                         println!("---the groups are {:?}",self.temp_groups3);
                         //how to remove no longer used groups, and fix inds of the used group that ccomes after the removed one?
 
-                        let mut cur_group_ind=cur.group_ind;
+                        let cur_group_ind=self.remove_groups_at_except(taken_ps_start,cur.group_ind,);
 
-
-                        if let Some(temp_prim)=self.temp_primtives.get(taken.inds().start) {
-
-
-                            //collect cur groups
-                            let mut cur_used_group_inds: HashSet<usize>=HashSet::new();
-
-                            //
-                            {
-                                let mut group_ind=cur.group_ind;
-
-                                loop {
-                                    cur_used_group_inds.insert(group_ind);
-
-                                    if group_ind==0 {
-                                        break;
-                                    }
-
-                                    let group=&self.temp_groups3[group_ind];
-                                    group_ind=group.parent;
-
-                                }
-                            }
-
-                            //get first group ind with prim ind >= taken.inds().start
-                            let mut after_group_ind = self.temp_groups3.len();
-
-                            while after_group_ind > 0 {
-                                let group=self.temp_groups3.get(after_group_ind-1).unwrap();
-
-                                if group.primitive_ind_start < taken.inds().start {
-                                    break;
-                                }
-
-                                after_group_ind-=1;
-                            }
-
-                            //get num of groups to remove
-                            let mut remove_groups_num=0;
-
-                            for i in after_group_ind..self.temp_groups3.len() {
-                                if cur_used_group_inds.contains(&i) {
-                                    break;
-                                }
-
-                                remove_groups_num+=1;
-                            }
-
-                            //remove unused groups
-                            self.temp_groups3.drain(after_group_ind..after_group_ind+remove_groups_num);
-
-                            //
-                            for group in &mut self.temp_groups3[after_group_ind..] {
-                                if group.parent>=after_group_ind {
-                                    group.parent-=remove_groups_num;
-                                }
-                            }
-
-                            //
-                            if cur_group_ind >=after_group_ind {
-                                cur_group_ind-=remove_groups_num;
-                            }
-
-                            //
-                            for prev in self.stk.iter_mut().rev() {
-                                if prev.group_ind >=after_group_ind {
-                                    prev.group_ind-=remove_groups_num;
-                                    prev.group_len-=remove_groups_num;
-                                }
-                            }
-                        }
 
                         //clear outputs to start of taken
-                        self.temp_primtives.truncate(taken.inds().start);
+                        self.temp_primtives.truncate(taken_ps_start.inds().start);
 
                         //
                         // if cur.opt {
@@ -892,8 +807,8 @@ where
                             success_len: cur.success_len,
                             fail_len: cur.fail_len,
 
-                            primitives: taken.clone(),
-                            output_len: taken.inds().start,
+                            primitives: taken_ps_start.clone(),
+                            output_len: taken_ps_start.inds().start,
 
                             group_ind: cur_group_ind,
                             group_len: self.temp_groups3.len(),
@@ -975,22 +890,21 @@ where
                         opt:true,
                     });
                 }
-                // GrammarItem::Many1(g) => {
-                //     self.stk.push((GrammarItem::Many(g.clone()),success_len,fail_len,primitives));
-                //     let success_len=self.stk.len();
-                //     self.stk.push((*g,success_len,fail_len,primitives));
-                // }
 
                 GrammarItem::NonTerm(t) => {
-                    let v=(t,cur.primitives.inds().start);
+                    // let v=(t,cur.primitives.inds().start);
 
-                    if cur.visiteds.contains(&v) {
-                        println!("err, circular nonterm {t}");
-                        break;
-                    }
+                    // if cur.visiteds.contains(&v) {
+                    //     println!("err, circular nonterm {t}");
+                    //     break;
+                    // }
 
-                    let mut visiteds=cur.visiteds;
-                    visiteds.insert(v);
+                    // let mut visiteds=cur.visiteds;
+                    // visiteds.insert(v);
+
+                    let Some(visiteds)=self.do_non_term_visiteds(t,cur.primitives,cur.visiteds) else {
+                        break; //todo err
+                    };
 
                     // let mut takeable_starts_len=cur.takeable_starts_len;
                     // self.takeable_starts.insert((cur.grammar,cur.primitives.inds().start));
@@ -1025,32 +939,17 @@ where
                         }
 
                         last.primitives=cur.primitives;
-                        // last.group_next_ind=cur.group_next_ind;
-
 
                         // self.temp_primtives.resize(cur.output_len+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
 
                         // // last.group_ind=cur.group_ind;
-                        let last_group_len= last.group_len;
-                        last.group_len=cur.group_len;
+                        // let last_group_len= last.group_len;
+                        last.group_len=cur.group_len; //done below //not anymore
                         last.output_len=cur.output_len;
                         // last.takeable_starts=cur.takeable_starts;
 
                         //
-                        println!("===www {last_group_len} {} {:?}",  cur.group_len, last.grammar);
 
-                        //
-                        for i in last_group_len .. cur.group_len {
-                            let g=self.temp_groups3.get(i).unwrap();
-                            println!("===hmmm {i}");
-
-                            if g.primitive_ind_start==cur.primitives.inds().start {
-                                self.temp_groups3.truncate(i); //removes this group and ones after
-                                last.group_len=i;
-                                println!("====== {i} {}",self.temp_groups3.len(), );
-                                break;
-                            }
-                        }
 
                         // //
                         // last.takeables.retain(|_k,v|{
@@ -1060,20 +959,27 @@ where
                         //
                         last.takeables=cur.takeables;
 
-                        for (tg,tp_ind) in self.takeable_starts.drain(last.takeable_starts_len ..) {
-                            println!("--- inserting takeable1 {tg:?} {tp_ind:?}", );
-                            last.takeables.insert(tg, tp_ind);
-                        }
 
-                    } else {
-                        // top_primitives=cur.primitives;
-                        self.primitives_remaining=cur.primitives;
                     }
+
+                    //
+                    // last.group_len=
+                    self.last_remove_groups_at(cur.group_len,cur.primitives);
+
+
+                    //
+                    self.last_insert_start_takeables();
+
+                    //
+                    // if self.stk.is_empty() {
+                    //     self.primitives_remaining=cur.primitives;
+                    // }
+
+                    self.set_remaining_prims(cur.primitives);
 
                     // expected=Default::default();
 
-                    self.expected.0=Loc::zero();
-                    self.expected.1.clear();
+                    self.clear_expected();
 
                 }
 
@@ -1209,10 +1115,8 @@ where
     {
         match prim_func(&mut cur.primitives) {
             Ok(v) => {
-                // expected=Default::default();
                 if v.primitive.start_loc() >= self.expected.0 {
-                    self.expected.0=Loc::zero();
-                    self.expected.1.clear();
+                    self.clear_expected();
                 }
 
                 self.stk.truncate(cur.success_len);
@@ -1222,53 +1126,24 @@ where
 
                 if let Some(last)=self.stk.last_mut() {
                     last.primitives=cur.primitives;
-                    // last.group_next_ind=cur.group_next_ind;
-
-                    // last.group_ind=cur.group_ind;
                     last.group_len=cur.group_len;
                     last.output_len=self.temp_primtives.len();
-                    // last.takeables.clear();
-
-
-                    last.takeables.retain(|_k,v|{
-                        v.inds().start >= last.primitives.inds().start
-                    });
-
-                    // println!("--- inserting takeable2 {:?} {cur_primtives2:?}",&cur.grammar);
-                    // println!("------ {:?}",&last.grammar);
-                    // last.takeables.insert(cur.grammar, cur_primtives2);
-
-                    //
-
                 }
 
-                if let Some(last)=self.stk.last_mut() {
-                    // let dr=self.takeable_starts.drain(last.takeable_starts_len ..).collect::<Vec<_>>();
-                    // println!("=== dr={dr:?}");
-                    for (tg,tp_ind) in self.takeable_starts.drain(last.takeable_starts_len ..) {
-                        println!("--- inserting takeable3 {tg:?} {tp_ind:?}",);
-                        last.takeables.insert(tg, tp_ind);
-                    }
-                }
-                // // temp_groups[cur.group].push(GrammarOutput::Primitive(v.primitive));
-                // // temp_groups2[cur.group].1.end=v.primitive.ind()+1; //end+=1
-                // temp_groups.insert(v.primitive.ind(),cur.group);
+                //
+                self.last_remove_old_takeables();
+                self.last_insert_start_takeables();
 
-
-                if self.stk.is_empty() {
-                    // top_primitives=cur.primitives;
-                    self.primitives_remaining=cur.primitives;
-                }
+                //
+                // if self.stk.is_empty() {
+                //     self.primitives_remaining=cur.primitives;
+                // }
+                self.set_remaining_prims(cur.primitives);
 
                 Some(v.value)
             }
             Err(loc) => {
-                if loc==self.expected.0 {
-                    self.expected.1.push(cur.grammar);
-                } else if loc>self.expected.0 {
-                    self.expected.0=loc;
-                    self.expected.1=vec![cur.grammar];
-                }
+                self.add_expected(loc,cur.grammar);
 
                 //
                 self.stk.truncate(cur.fail_len);
@@ -1278,28 +1153,15 @@ where
                     self.temp_primtives.truncate(last.output_len);
 
                     self.takeable_starts.truncate(last.takeable_starts_len);
-
-
                 }
 
-                //
-                // if let Some(last)=self.stk.last() {
-
-                //     // self.takeable_starts.retain(|(g,ps)|{
-                //     //     ps.inds().start<=last.primitives.inds().start
-                //     // });
+                // if self.stk.is_empty() {
+                //     self.primitives_remaining=cur.primitives;
                 // }
-
-
-                if self.stk.is_empty() {
-                    // top_primitives=cur.primitives;
-                    self.primitives_remaining=cur.primitives;
-                }
+                self.set_remaining_prims(cur.primitives);
 
                 None
             }
-
-
         }
 
         //
@@ -1307,14 +1169,185 @@ where
 
     }
 
-    fn insert_takeables(&mut self) {
+    fn do_non_term_visiteds(&mut self,
+        t:&'a str,
+        cur_primitives:PrimitiveIterContainer<'a>,
+        cur_visiteds: HashSet<(&'a str, usize)>,
+    ) -> Option<HashSet<(&'a str, usize)>> {
+        let v=(t,cur_primitives.inds().start);
+
+        if cur_visiteds.contains(&v) {
+            println!("err, circular nonterm {t}");
+            // break;
+            return None;
+        }
+
+        let mut visiteds=cur_visiteds;
+        visiteds.insert(v);
+
+        Some(visiteds)
+    }
+
+    fn last_insert_start_takeables(&mut self,
+        // mut last_takeables: HashMap<GrammarItem<'a>, PrimitiveIterContainer<'a>>,last_takeable_starts_len:usize,
+    )
+        // -> HashMap<GrammarItem<'a>, PrimitiveIterContainer<'a>>
+    {
         if let Some(last)=self.stk.last_mut() {
             for (tg,tp_ind) in self.takeable_starts.drain(last.takeable_starts_len ..) {
                 println!("--- inserting takeable {tg:?} {tp_ind:?}",);
                 last.takeables.insert(tg, tp_ind);
             }
         }
+        // last_takeables
     }
+
+    fn last_remove_old_takeables(&mut self) {
+        if let Some(last)=self.stk.last_mut() {
+            last.takeables.retain(|_k,v|{
+                v.inds().start >= last.primitives.inds().start
+            });
+        }
+    }
+    fn clear_expected(&mut self) {
+        self.expected.0=Loc::zero();
+        self.expected.1.clear();
+    }
+    fn add_expected(&mut self,loc:Loc,g:GrammarItem<'a>) {
+        if loc==self.expected.0 {
+            self.expected.1.push(g);
+        } else if loc>self.expected.0 {
+            self.expected.0=loc;
+            self.expected.1=vec![g];
+        }
+    }
+    fn new_group(&mut self,name : &'a str, parent:usize, ps:PrimitiveIterContainer<'a>) -> usize {
+        let new_group_ind=self.temp_groups3.len();
+
+        self.temp_groups3.push(GroupInfo {
+            name,
+            parent,
+            primitive_ind_start: ps.inds().start,
+        });
+
+        new_group_ind
+    }
+
+    fn set_remaining_prims(&mut self,cur_primitives:PrimitiveIterContainer<'a>,) {
+        if self.stk.is_empty() {
+            self.primitives_remaining=cur_primitives;
+        }
+    }
+
+    fn remove_groups_at_except(&mut self,
+        taken_ps_start:PrimitiveIterContainer<'a>,
+        cur_group_ind:usize,
+    ) -> usize{
+
+        let mut cur_group_ind=cur_group_ind;
+
+
+        // if let Some(temp_prim)=self.temp_primtives.get(taken_ps_start.inds().start) {
+
+
+        //collect cur groups
+        let mut cur_used_group_inds: HashSet<usize>=HashSet::new();
+
+        //
+        {
+            let mut group_ind=cur_group_ind;
+
+            loop {
+                cur_used_group_inds.insert(group_ind);
+
+                if group_ind==0 {
+                    break;
+                }
+
+                let group=&self.temp_groups3[group_ind];
+                group_ind=group.parent;
+
+            }
+        }
+
+        //get first group ind with prim ind >= taken.inds().start
+        let mut after_group_ind = self.temp_groups3.len();
+
+        while after_group_ind > 0 {
+            let group=self.temp_groups3.get(after_group_ind-1).unwrap();
+
+            if group.primitive_ind_start < taken_ps_start.inds().start {
+                break;
+            }
+
+            after_group_ind-=1;
+        }
+
+        //get num of groups to remove
+        let mut remove_groups_num=0;
+
+        for i in after_group_ind..self.temp_groups3.len() {
+            if cur_used_group_inds.contains(&i) {
+                break;
+            }
+
+            remove_groups_num+=1;
+        }
+
+        //remove unused groups
+        self.temp_groups3.drain(after_group_ind..after_group_ind+remove_groups_num);
+
+        //
+        for group in &mut self.temp_groups3[after_group_ind..] {
+            if group.parent>=after_group_ind {
+                group.parent-=remove_groups_num;
+            }
+        }
+
+        //
+        if cur_group_ind >=after_group_ind {
+            cur_group_ind-=remove_groups_num;
+        }
+
+        //
+        for prev in self.stk.iter_mut().rev() {
+            if prev.group_ind >=after_group_ind {
+                prev.group_ind-=remove_groups_num;
+                prev.group_len-=remove_groups_num;
+            }
+        }
+
+        cur_group_ind
+    }
+
+    fn last_remove_groups_at(&mut self,
+        // last_group_len:usize ,
+        cur_group_len:usize,cur_primitives:PrimitiveIterContainer<'a>)
+        // -> usize
+    {
+
+        if let Some(last)=self.stk.last_mut() {
+            println!("===www {} {cur_group_len} ",  last.group_len ); //last.grammar
+
+            //
+            for group_ind in last.group_len .. cur_group_len {
+                let group=&self.temp_groups3[group_ind];
+                println!("===hmmm {group_ind}");
+
+                if group.primitive_ind_start==cur_primitives.inds().start {
+                    self.temp_groups3.truncate(group_ind); //removes this group and ones after
+                    last.group_len=group_ind;
+
+                    println!("====== {group_ind} {}",self.temp_groups3.len(), );
+                    break;
+                    // return group_ind;
+                }
+            }
+
+            // cur_group_len
+        }
+    }
+
 }
 
 pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
