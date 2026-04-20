@@ -79,17 +79,17 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
         ].and().opt(),
 
         "stmt" => [
-            // NonTerm("var"),
+            NonTerm("var"),
             NonTerm("set"),
-            // NonTerm("func"),
-            // NonTerm("while"),NonTerm("for_in"),NonTerm("for_to"),
-            // NonTerm("break"), NonTerm("continue"),
-            // NonTerm("return"),
-            // NonTerm("include"),
-            // NonTerm("format"),NonTerm("print"),NonTerm("println"),
-            // NonTerm("expr"),
-            // NonTerm("block"), //after expr, so dict can use the empty {}
-            // // NonTerm("if"),
+            NonTerm("func"),
+            NonTerm("while"),NonTerm("for_in"),NonTerm("for_to"),
+            NonTerm("break"), NonTerm("continue"),
+            NonTerm("return"),
+            NonTerm("include"),
+            NonTerm("format"),NonTerm("print"),NonTerm("println"),
+            NonTerm("expr"),
+            // NonTerm("block"), //after expr, so dict can use the empty {} //put as expr or stmt?
+            // NonTerm("if"),
         ].or().group("stmt"),
 
         "continue" => Keyword("continue"),
@@ -104,11 +104,10 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
 
         "set" => [
             [
-                // NonTerm("val_field_index").offer().
                 [Identifier,NonTerm("val_field_index_call").many0(), NonTerm("val_field_index").take(),].and(),
                 Identifier,
             ].or(),
-            // [NonTerm("add"),NonTerm("sub"),NonTerm("mul"),NonTerm("div"),NonTerm("not")].or().opt(),
+            [NonTerm("add"),NonTerm("sub"),NonTerm("mul"),NonTerm("div"),NonTerm("not")].or().opt(),
             NonTerm("set_equal"),
             NonTerm("expr"),
         ].and(),
@@ -203,7 +202,7 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
 
         "expr" => [
             NonTerm("val"),
-            // [NonTerm("infix"),NonTerm("val"),].and().many0(),
+            [NonTerm("infix"),NonTerm("val"),].and().many0(),
         ].and().group("expr"),
 
         "prefix" => [NonTerm("add"),NonTerm("sub"),NonTerm("not"),].or(),
@@ -219,18 +218,18 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
             NonTerm("prefix").many0(),
             [
                 Int,
-                // Float,
-                // String,
-                // Keyword("bool"),
-                // Keyword("nil"),
-                // Keyword("void"),
-                // NonTerm("if"),
-                // NonTerm("lambda"),
-                // NonTerm("array"),
-                // NonTerm("dict"),
-                // // NonTerm("block"), //allow code blocks?
+                Float,
+                String,
+                Keyword("bool"),
+                Keyword("nil"),
+                Keyword("void"),
+                NonTerm("if"),
+                NonTerm("lambda"),
+                NonTerm("array"),
+                NonTerm("dict"),
+                NonTerm("block"), //allow code blocks?
                 Identifier,
-                // [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
+                [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
             ].or(),
             NonTerm("val_field_index_call").many0(),
             // [NonTerm("val_field_index").offer(),NonTerm("call"),].or().many0(),
