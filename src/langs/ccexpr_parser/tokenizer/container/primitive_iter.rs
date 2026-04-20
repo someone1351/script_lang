@@ -1,6 +1,7 @@
 use std::ops::{Bound, Range, RangeBounds};
 
-use crate::{ccexpr_parser::data::Parsed, Loc};
+use crate::build::Loc;
+use super::super::super::tokenizer::data::Parsed;
 
 use super::*;
 

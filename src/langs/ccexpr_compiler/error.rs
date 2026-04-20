@@ -1,6 +1,6 @@
 use std::{fmt::Debug, path::PathBuf};
 
-use crate::{ast, builder::BuilderError, ccexpr_parser::ParserErrorType, error_msg, Loc, StringVal};
+use crate::{ast, builder::BuilderError, ccexpr_parser::tokenizer::ParserErrorType, error_msg, Loc, StringVal};
 
 
 

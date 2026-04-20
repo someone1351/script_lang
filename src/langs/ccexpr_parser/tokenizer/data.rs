@@ -1,8 +1,8 @@
 
 
-use crate::ccexpr_parser::PrimitiveIterContainer;
+use super::container::PrimitiveIterContainer;
 
-use super::super::super::build::Loc;
+use crate::build::Loc;
 
 #[derive(Debug,Clone,PartialEq)]
 pub enum PrimitiveType {

@@ -33,10 +33,10 @@ pub fn parse<'a>(src:&'a str, ) -> Result<Parsed,ParseError> {
         } else if let Some(primitive)=parse_number(&mut input, true, &mut text_map) {
             cur_primitives.push(primitive);
             continue;
-        } else if let Some(primitive)=parse_char_symbol(&mut input, &mut text_map) {
+        } else if let Some(primitive)=parse_ident_symbol(&mut input, &mut text_map) {
             cur_primitives.push(primitive);
             continue;
-        } else if let Some(primitive)=parse_ident_symbol(&mut input, &mut text_map) {
+        } else if let Some(primitive)=parse_char_symbol(&mut input, &mut text_map) { //needs to go last to catch "_"
             cur_primitives.push(primitive);
             continue;
         } else if input.is_end() {
@@ -219,7 +219,10 @@ fn parse_char_symbol(
     // texts:&mut Vec<String>,
     text_map:&mut HashMap<String,usize>,
 ) -> Option<Primitive> {
-    if let Some(x)=input.hasc(0, ['!','&','|','*','-','+','=','<','>','/',',','.',';',':','(',')','[',']','{','}'],[]) { //'?','^',
+    if let Some(x)=input.hasc(0, [
+        '!','&','|','*','-','+','=','<','>','/',',','.',';',':','(',')','[',']','{','}',
+        '~','`','@','#','$','%','^','?','_',
+    ],[]) { //'?','^',
         let start_loc=input.loc();
 
         let text_map_size=text_map.len();
@@ -245,11 +248,15 @@ fn parse_ident_symbol(
 
     let mut i=0;
 
-    if input.hasc(i,['_'],['a'..='z','A'..='Z']).is_some() {
+    if input.hasc(i,['_'],[]).is_some() {
         i+=1;
     }
 
-    if i==0 {
+    if input.hasc(i,[],['a'..='z','A'..='Z']).is_some() {
+        i+=1;
+    }
+
+    if i==0 || (i==1 && input.hasc(i,['_'],[]).is_some()) {
         return None;
     }
 
@@ -257,20 +264,17 @@ fn parse_ident_symbol(
         i+=1;
     }
 
-    if i==0 {
-        None
-    } else {
-        let start_loc=input.loc();
-        let val=input.get(0, i).unwrap().to_string();
+    //
+    let start_loc=input.loc();
+    let val=input.get(0, i).unwrap().to_string();
 
-        let text_map_size=text_map.len();
-        let text_ind=*text_map.entry(val).or_insert(text_map_size);
+    let text_map_size=text_map.len();
+    let text_ind=*text_map.entry(val).or_insert(text_map_size);
 
-        input.next(i);
-        let end_loc=input.loc();
-        let primitive_type=PrimitiveType::Identifier(text_ind);
-        Some(Primitive { primitive_type, start_loc, end_loc })
-    }
+    input.next(i);
+    let end_loc=input.loc();
+    let primitive_type=PrimitiveType::Identifier(text_ind);
+    Some(Primitive { primitive_type, start_loc, end_loc })
 }
 
 fn parse_eol(input:&mut Input) -> Option<Primitive> {
