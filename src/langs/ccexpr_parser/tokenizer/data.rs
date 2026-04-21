@@ -1,6 +1,6 @@
 
 
-use super::container::PrimitiveIterContainer;
+use super::container::TokenIterContainer;
 
 use crate::build::Loc;
 
@@ -27,8 +27,8 @@ pub struct Parsed {
 }
 
 impl Parsed {
-    pub fn primitives(&self) -> PrimitiveIterContainer<'_> {
-        PrimitiveIterContainer { last_loc:Loc::one(),start: 0, end: self.primitives.len(), parsed: self }
+    pub fn primitives(&self) -> TokenIterContainer<'_> {
+        TokenIterContainer { last_loc:Loc::one(),start: 0, end: self.primitives.len(), parsed: self }
     }
     pub fn print(&self) {
         // println!("prims {:?}",self.primitives);

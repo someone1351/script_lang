@@ -6,7 +6,7 @@ use super::super::super::tokenizer::data::Parsed;
 use super::*;
 
 #[derive(Copy,Clone)]
-pub struct PrimitiveIterContainer<'a> {
+pub struct TokenIterContainer<'a> {
     pub start : usize, //if 0, then 0 hasnt been traversed yet
     pub end : usize, //if last_ind then last_ind has been traversed
     pub last_loc:Loc,
@@ -14,7 +14,7 @@ pub struct PrimitiveIterContainer<'a> {
 
 }
 
-impl<'a> PrimitiveIterContainer<'a> {
+impl<'a> TokenIterContainer<'a> {
     pub fn inds(&self) -> Range<usize> {
         self.start..self.end
     }
@@ -25,17 +25,17 @@ impl<'a> PrimitiveIterContainer<'a> {
         self.first().map(|p|p.start_loc()).unwrap_or(self.last_loc)
     }
 
-    pub fn pop_front(&mut self) -> Result<PrimitiveContainer<'a>,Loc> {
+    pub fn pop_front(&mut self) -> Result<TokenContainer<'a>,Loc> {
         if self.start < self.end {
             let primitive_ind=self.start;
             self.start+=1;
             self.last_loc=self.loc();
-            Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,}) //last_loc:self.last_loc,
+            Ok(TokenContainer { parsed: self.parsed, primitive_ind,}) //last_loc:self.last_loc,
         } else {
             Err(self.last_loc)
         }
     }
-    pub fn pop_back(&mut self) -> Result<PrimitiveContainer<'a>,Loc> {
+    pub fn pop_back(&mut self) -> Result<TokenContainer<'a>,Loc> {
         if self.start < self.end {
             self.end-=1;
             let primitive_ind=self.end;
@@ -46,13 +46,13 @@ impl<'a> PrimitiveIterContainer<'a> {
             //     self.parsed.primitives[self.end-1].end_loc
             // };
 
-            Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,}) //last_loc
+            Ok(TokenContainer { parsed: self.parsed, primitive_ind,}) //last_loc
         } else {
             Err(self.last_loc)
         }
     }
 
-    pub fn pop_front_amount(&mut self,amount:usize) -> Option<PrimitiveIterContainer<'a>> {
+    pub fn pop_front_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'a>> {
         if self.start+amount > self.end || amount==0 {
             None
         } else {
@@ -60,10 +60,10 @@ impl<'a> PrimitiveIterContainer<'a> {
             self.start+=amount;
             let end2=self.start;
 
-            Some(PrimitiveIterContainer{last_loc:self.last_loc, start: start2, end: end2, parsed: self.parsed })
+            Some(TokenIterContainer{last_loc:self.last_loc, start: start2, end: end2, parsed: self.parsed })
         }
     }
-    pub fn pop_back_amount(&mut self,amount:usize) -> Option<PrimitiveIterContainer<'a>> {
+    pub fn pop_back_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'a>> {
         if self.start+amount > self.end || amount==0 {
             None
         } else {
@@ -77,7 +77,7 @@ impl<'a> PrimitiveIterContainer<'a> {
                 self.parsed.primitives[self.end-1].start_loc
             };
 
-            Some(PrimitiveIterContainer{last_loc, start: start2, end: end2, parsed: self.parsed })
+            Some(TokenIterContainer{last_loc, start: start2, end: end2, parsed: self.parsed })
         }
     }
 
@@ -85,7 +85,7 @@ impl<'a> PrimitiveIterContainer<'a> {
         self.end-self.start
     }
 
-    pub fn get(&self, ind:usize) -> Result<PrimitiveContainer<'a>,Loc> {
+    pub fn get(&self, ind:usize) -> Result<TokenContainer<'a>,Loc> {
         let primitive_ind= self.start+ind;
 
         if primitive_ind < self.end {
@@ -95,7 +95,7 @@ impl<'a> PrimitiveIterContainer<'a> {
             //     self.parsed.primitives[primitive_ind-1].end_loc
             // };
 
-            Ok(PrimitiveContainer { parsed: self.parsed, primitive_ind,}) //last_loc
+            Ok(TokenContainer { parsed: self.parsed, primitive_ind,}) //last_loc
         } else {
             let last_loc=if self.len()==0 {
                 self.last_loc
@@ -107,7 +107,7 @@ impl<'a> PrimitiveIterContainer<'a> {
         }
     }
 
-    pub fn get_range<R:RangeBounds<usize>>(&self,r:R) -> PrimitiveIterContainer<'a> {
+    pub fn get_range<R:RangeBounds<usize>>(&self,r:R) -> TokenIterContainer<'a> {
 
         let range_start=match r.start_bound() {
             Bound::Included(x)=>*x,
@@ -122,13 +122,13 @@ impl<'a> PrimitiveIterContainer<'a> {
         };
 
         if range_start>range_end { //if range start==end is same as empty iter
-            return PrimitiveIterContainer {last_loc:Loc::zero(),start: 0, end: 0, parsed: self.parsed};
+            return TokenIterContainer {last_loc:Loc::zero(),start: 0, end: 0, parsed: self.parsed};
         }
 
         let x_len=range_end-range_start;
 
         if x_len>self.len() {
-            return PrimitiveIterContainer {last_loc:Loc::zero(),start: 0, end: 0, parsed: self.parsed};
+            return TokenIterContainer {last_loc:Loc::zero(),start: 0, end: 0, parsed: self.parsed};
         }
 
         let x_start=self.start+range_start;
@@ -140,24 +140,24 @@ impl<'a> PrimitiveIterContainer<'a> {
             self.parsed.primitives[range_start].start_loc
         };
 
-        PrimitiveIterContainer {last_loc,start: x_start, end: x_end, parsed: self.parsed}
+        TokenIterContainer {last_loc,start: x_start, end: x_end, parsed: self.parsed}
     }
 
     pub fn is_empty(&self) -> bool {
         self.start==self.end
     }
 
-    pub fn first(&self) -> Result<PrimitiveContainer<'a>,Loc> {
+    pub fn first(&self) -> Result<TokenContainer<'a>,Loc> {
         self.get(0)
     }
-    pub fn last(&self) -> Result<PrimitiveContainer<'a>,Loc> {
+    pub fn last(&self) -> Result<TokenContainer<'a>,Loc> {
         self.get(if self.is_empty() {0} else{self.len()-1})
 
     }
 
     fn pop_get<T,F>(&mut self,skip_eols:bool,func:F) -> Result<ValueContainer<'a,T>,Loc>
     where
-        F:FnOnce(PrimitiveContainer<'a>)->Result<ValueContainer<'a,T>,Loc>,
+        F:FnOnce(TokenContainer<'a>)->Result<ValueContainer<'a,T>,Loc>,
     {
         if skip_eols {
             while let Ok(x)=self.first() {
@@ -218,15 +218,15 @@ impl<'a> PrimitiveIterContainer<'a> {
     }
 }
 
-impl<'a> Iterator for PrimitiveIterContainer<'a> {
-    type Item = PrimitiveContainer<'a>;
+impl<'a> Iterator for TokenIterContainer<'a> {
+    type Item = TokenContainer<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
             // let last_loc2=self.last_loc;
             self.last_loc=self.parsed.primitives[self.start].end_loc;
 
-            let x=PrimitiveContainer {primitive_ind: self.start,parsed: self.parsed,}; //last_loc:last_loc2
+            let x=TokenContainer {primitive_ind: self.start,parsed: self.parsed,}; //last_loc:last_loc2
             self.start+=1;
 
             Some(x)
@@ -236,8 +236,8 @@ impl<'a> Iterator for PrimitiveIterContainer<'a> {
     }
 }
 
-impl<'a> DoubleEndedIterator for PrimitiveIterContainer<'a> {
-    fn next_back(&mut self) -> Option<PrimitiveContainer<'a>> {
+impl<'a> DoubleEndedIterator for TokenIterContainer<'a> {
+    fn next_back(&mut self) -> Option<TokenContainer<'a>> {
         if self.end > self.start {
             self.end-=1;
             let primitive_ind=self.end;
@@ -248,14 +248,14 @@ impl<'a> DoubleEndedIterator for PrimitiveIterContainer<'a> {
             //     self.parsed.primitives[primitive_ind-1].end_loc
             // };
 
-            Some(PrimitiveContainer {primitive_ind,parsed: self.parsed,}) //last_loc
+            Some(TokenContainer {primitive_ind,parsed: self.parsed,}) //last_loc
         } else {
             None
         }
     }
 }
 
-impl<'a> std::fmt::Debug for PrimitiveIterContainer<'a> {
+impl<'a> std::fmt::Debug for TokenIterContainer<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 
         f.write_fmt(format_args!("[{}]", self.clone().map(|p|format!("{p:?}")).collect::<Vec<String>>().join(", ")))

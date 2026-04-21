@@ -4,11 +4,11 @@
 use super::*;
 
 #[derive(Clone,Copy)]
-pub enum PrimitiveTypeContainer<'a> {
+pub enum TokenTypeContainer<'a> {
     // Root(BlockContainer<'a>),
-    CurlyBlock(PrimitiveIterContainer<'a>),
-    SquareBlock(PrimitiveIterContainer<'a>),
-    ParenthesesBlock(PrimitiveIterContainer<'a>),
+    CurlyBlock(TokenIterContainer<'a>),
+    SquareBlock(TokenIterContainer<'a>),
+    ParenthesesBlock(TokenIterContainer<'a>),
     Float(f64),
     Int(i64),
     String(&'a str),
@@ -17,7 +17,7 @@ pub enum PrimitiveTypeContainer<'a> {
     Eol,
 }
 
-impl<'a> std::fmt::Debug for PrimitiveTypeContainer<'a> {
+impl<'a> std::fmt::Debug for TokenTypeContainer<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::CurlyBlock(_) => f.debug_tuple("CurlyBlock").finish(),

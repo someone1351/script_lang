@@ -66,6 +66,12 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
             Int,
         ].and(),
 
+        "test11" => [
+            NonTerm("ending").many0(),
+            NonTerm("for"),
+            NonTerm("ending").many0(),
+        ].and(),
+
         "start" => [
             NonTerm("stmts"),
             NonTerm("ending").many0(),
@@ -82,11 +88,15 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
             NonTerm("var"),
             NonTerm("set"),
             NonTerm("func"),
-            NonTerm("while"),NonTerm("for_in"),NonTerm("for_to"),
-            NonTerm("break"), NonTerm("continue"),
+            NonTerm("while"),
+            NonTerm("for"),
+            NonTerm("break"),
+            NonTerm("continue"),
             NonTerm("return"),
             NonTerm("include"),
-            NonTerm("format"),NonTerm("print"),NonTerm("println"),
+            NonTerm("format"),
+            NonTerm("print"),
+            NonTerm("println"),
             NonTerm("expr"),
             // NonTerm("block"), //after expr, so dict can use the empty {} //put as expr or stmt?
             // NonTerm("if"),
@@ -112,14 +122,20 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
             NonTerm("expr"),
         ].and(),
 
-        "cond" => [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
+        "cond" => [
+            // NonTerm("lparen"),
+            NonTerm("expr"),
+            // NonTerm("rparen"),
+        ].and(),
         "block" => [NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
         "if" => [
             [Keyword("if").d(), NonTerm("cond"), NonTerm("block")].and().group(""),
             [Keyword("elif").d(),NonTerm("cond"),NonTerm("block"),].and().group("").many0(),
             [Keyword("else").d(),NonTerm("block"),].and().group("").opt(),
         ].and().group("if"),
-        "while" => [Keyword("while").d(), NonTerm("cond"), NonTerm("block"),].and().group("while"),
+        "while" => [
+            Keyword("while").d(), NonTerm("cond"), NonTerm("block"),
+        ].and().group("while"),
         // "for_init" => [
         //     NonTerm("var"),
         //     [NonTerm("set"), [NonTerm("comma"),NonTerm("set")].and().many0(),].and(),
@@ -140,26 +156,26 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
         //     NonTerm("rparen"),
         //     NonTerm("block"),
         // ].and(),
-        "for_in" => [
+        "for" => [
             Keyword("for"),
-            NonTerm("lparen"),
+            // NonTerm("lparen"),
             Identifier,
             Keyword("in").d(),
-            [NonTerm("val"),NonTerm("call"),].and(),
-            NonTerm("rparen"),
+            [NonTerm("val"),NonTerm("call").take(),].and(),
+            // NonTerm("rparen"),
             NonTerm("block"),
             ].and(),
-        "for_to" => [
-            Keyword("for"),
-            NonTerm("lparen"),
-            Identifier,
-            Keyword("in").d(),
-            NonTerm("expr"),
-            Keyword("to").d(),
-            NonTerm("expr"),
-            NonTerm("rparen"),
-            NonTerm("block"),
-        ].and(),
+        // "for_to" => [
+        //     Keyword("for"),
+        //     NonTerm("lparen"),
+        //     Identifier,
+        //     Keyword("in").d(),
+        //     NonTerm("expr"),
+        //     Keyword("to").d(),
+        //     NonTerm("expr"),
+        //     NonTerm("rparen"),
+        //     NonTerm("block"),
+        // ].and(),
         "call" => [
             NonTerm("lparen"),
             [
@@ -207,7 +223,7 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
 
         "prefix" => [NonTerm("add"),NonTerm("sub"),NonTerm("not"),].or(),
         "val_field_index" => [ NonTerm("val_index"), NonTerm("val_field"), ].or(),
-        "val_field_index_call" => [ NonTerm("val_field_index").cede(), NonTerm("call"), ].or(),
+        "val_field_index_call" => [ NonTerm("val_field_index").cede(), NonTerm("call").cede(), ].or(),
 
 
         "val_field" => [NonTerm("dot"),[Identifier,Int,].or(),].and(),

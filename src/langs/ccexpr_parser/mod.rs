@@ -1,4 +1,4 @@
-use crate::ccexpr_parser::{grammar::walk::GrammarWalker, grammar_rules::grammar_decl, tokenizer::PrimitiveIterContainer};
+use crate::ccexpr_parser::{grammar::walk::GrammarWalker, grammar_rules::grammar_decl, tokenizer::TokenIterContainer};
 
 
 pub mod tokenizer;
@@ -7,7 +7,7 @@ pub mod tokenizer;
 pub mod grammar;
 pub mod grammar_rules;
 
-pub fn grammar_run<'a>( top_primitives:PrimitiveIterContainer<'a>) {
+pub fn grammar_run<'a>( top_primitives:TokenIterContainer<'a>) {
     /*
     abc|ab with "ab" => "" //abc will fail, but then tries ab, which succeeds
     ab|abc with "abc" => "c" //will consume ab, and then fail to consume c, there is no backtracking

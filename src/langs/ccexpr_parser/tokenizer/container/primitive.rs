@@ -7,15 +7,13 @@ use super::*;
 
 
 #[derive(Clone,Copy)]
-pub struct PrimitiveContainer<'a> {
+pub struct TokenContainer<'a> {
     pub parsed:&'a Parsed,
     pub primitive_ind:usize,
     // pub last_loc:Loc,
 }
 
-
-
-impl<'a> PrimitiveContainer<'a> {
+impl<'a> TokenContainer<'a> {
     fn primitive(&self) -> &'a Primitive {
         &self.parsed.primitives[self.primitive_ind]
     }
@@ -30,15 +28,15 @@ impl<'a> PrimitiveContainer<'a> {
         self.primitive().end_loc
     }
 
-    pub fn primitive_type(&self) -> PrimitiveTypeContainer<'a> {
+    pub fn primitive_type(&self) -> TokenTypeContainer<'a> {
         match self.primitive().primitive_type {
-            PrimitiveType::Float(x, _) => PrimitiveTypeContainer::Float(x),
-            PrimitiveType::Int(x, _) => PrimitiveTypeContainer::Int(x),
-            PrimitiveType::String(x) => PrimitiveTypeContainer::String(self.parsed.texts[x].as_str()),
-            PrimitiveType::Symbol(x) => PrimitiveTypeContainer::Symbol(self.parsed.texts[x].as_str()),
-            PrimitiveType::Identifier(x) => PrimitiveTypeContainer::Identifier(self.parsed.texts[x].as_str()),
+            PrimitiveType::Float(x, _) => TokenTypeContainer::Float(x),
+            PrimitiveType::Int(x, _) => TokenTypeContainer::Int(x),
+            PrimitiveType::String(x) => TokenTypeContainer::String(self.parsed.texts[x].as_str()),
+            PrimitiveType::Symbol(x) => TokenTypeContainer::Symbol(self.parsed.texts[x].as_str()),
+            PrimitiveType::Identifier(x) => TokenTypeContainer::Identifier(self.parsed.texts[x].as_str()),
             // PrimitiveType::End => PrimitiveTypeContainer::End,
-            PrimitiveType::Eol => PrimitiveTypeContainer::Eol,
+            PrimitiveType::Eol => TokenTypeContainer::Eol,
         }
     }
 
@@ -164,7 +162,7 @@ impl<'a> PrimitiveContainer<'a> {
 }
 
 
-impl<'a> std::fmt::Debug for PrimitiveContainer<'a> {
+impl<'a> std::fmt::Debug for TokenContainer<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!("{}::{:?}", &self.primitive_ind,&self.primitive_type()))
         // f.wr

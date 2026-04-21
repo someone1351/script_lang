@@ -4,7 +4,7 @@ use super::temp_data::*;
 use std::collections::HashSet;
 
 use crate::build::Loc;
-use super::super::tokenizer::{PrimitiveIterContainer, ValueContainer};
+use super::super::tokenizer::{TokenIterContainer, ValueContainer};
 
 use super::node::*;
 
@@ -14,12 +14,12 @@ use super::node::*;
 
 
 pub struct GrammarWalker<'a,F> {
-    top_primitives:PrimitiveIterContainer<'a>,
-    primitives_remaining: PrimitiveIterContainer<'a>,
+    top_primitives:TokenIterContainer<'a>,
+    primitives_remaining: TokenIterContainer<'a>,
 
-    temp_primtives : Vec<PrimitiveInfo>,
-    temp_groups3 : Vec<GroupInfo<'a>>,
-    takeable_starts:Vec<(GrammarNode<'a>,PrimitiveIterContainer<'a>)>, //[(g,output_ind_start)]
+    primitive_infos : Vec<PrimitiveInfo>,
+    group_infos : Vec<GroupInfo<'a>>,
+    takeable_starts:Vec<(GrammarNode<'a>,TokenIterContainer<'a>)>, //[(g,output_ind_start)]
     grammar_func:F,
 
     stk: Vec<Work<'a>>,
@@ -33,10 +33,10 @@ impl<'a,F> GrammarWalker<'a,F>
 where
     F: Fn(&'a str)->GrammarNode<'a>,
 {
-    pub fn new(top_primitives:PrimitiveIterContainer<'a>, grammar_func:F) -> Self {
+    pub fn new(top_primitives:TokenIterContainer<'a>, grammar_func:F) -> Self {
         Self {
-            temp_primtives :  Default::default(),
-            temp_groups3 : Default::default(),
+            primitive_infos :  Default::default(),
+            group_infos : Default::default(),
             takeable_starts: Default::default(),
             stk:Default::default(),
             c:Default::default(),
@@ -71,8 +71,8 @@ where
         });
 
         //
-        self.temp_primtives.clear();
-        self.temp_groups3=vec![GroupInfo{ name: "", parent: 0, primitive_ind_start:0, }];
+        self.primitive_infos.clear();
+        self.group_infos=vec![GroupInfo{ name: "", parent: 0, primitive_ind_start:0, }];
         self.takeable_starts.clear();
 
         // self.primitives_remaining:top_primitives.clone(),
@@ -107,21 +107,24 @@ where
 
 
         //
-        println!("groups={:?}",self.temp_groups3);
-        println!("outputs={:?}",self.temp_primtives);
+        println!("groups={:?}",self.group_infos);
+        println!("outputs={:?}",self.primitive_infos);
 
         if !self.primitives_remaining.is_empty() {
-            println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
+            // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
+            println!("error, failed to parse all tokens {}",self.expected.0);
+        } else {
+            println!("parsed ok");
         }
 
-        println!("===");
+        println!("===a {}",self.primitives_remaining.is_empty());
 
 
         let mut groups_visited: HashSet<usize>=HashSet::new();
 
         for p in self.top_primitives {
             let i=p.ind();
-            let Some(output)=self.temp_primtives.get(i) else {
+            let Some(output)=self.primitive_infos.get(i) else {
                 break;
             };
 
@@ -130,7 +133,7 @@ where
             let mut gs: Vec<usize>=Vec::new();
             while g!=0 {
                 gs.push(g);
-                let gg=&self.temp_groups3[g];
+                let gg=&self.group_infos[g];
 
                 depth+=1;
 
@@ -139,7 +142,7 @@ where
             }
 
             for (d,&g) in gs.iter().rev().enumerate() {
-                let gg=&self.temp_groups3[g];
+                let gg=&self.group_infos[g];
 
                 if !groups_visited.contains(&g) {
                     println!("{}{:?}",
@@ -174,8 +177,8 @@ where
                 let Work { grammar, success_len, fail_len, primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt}=&cur;
                 println!("{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
                 println!("         -takeable_starts={:?}",self.takeable_starts);
-                println!("         -temp_primtives={:?}",self.temp_primtives);
-                println!("         -temp_groups3={:?}",self.temp_groups3);
+                println!("         -temp_primtives={:?}",self.primitive_infos);
+                println!("         -temp_groups3={:?}",self.group_infos);
             }
 
             for (i,Work { grammar:g, success_len:s, fail_len:f, primitives:ps, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt }) in self.stk.iter()
@@ -190,7 +193,7 @@ where
         match cur.grammar {
             GrammarNode::Group(name, g) => {
                 let new_group_ind=self.new_group(name, cur.group_ind, cur.primitives);
-                let new_group_len=self.temp_groups3.len();
+                let new_group_len=self.group_infos.len();
 
                 // if cur.opt {
                 //     self.takeable_starts.push((*g.clone(),cur.primitives.clone()));
@@ -399,7 +402,7 @@ where
                 if let Some(taken_ps_start)=cur.takeables.get(&g).cloned() {
 
                     if self.debug {
-                        println!("---the groups are {:?}",self.temp_groups3);
+                        println!("---the groups are {:?}",self.group_infos);
                     }
                     //how to remove no longer used groups, and fix inds of the used group that ccomes after the removed one?
 
@@ -407,7 +410,7 @@ where
 
 
                     //clear outputs to start of taken
-                    self.temp_primtives.truncate(taken_ps_start.inds().start);
+                    self.primitive_infos.truncate(taken_ps_start.inds().start);
 
                     //
                     // if cur.opt {
@@ -424,7 +427,7 @@ where
                         output_len: taken_ps_start.inds().start,
 
                         group_ind: cur_group_ind,
-                        group_len: self.temp_groups3.len(),
+                        group_len: self.group_infos.len(),
 
                         discard: cur.discard,
                         takeable_starts_len: cur.takeable_starts_len,//cur.takeable_starts_len, // ??
@@ -439,7 +442,7 @@ where
 
                     //
                     if let Some(last)=self.stk.last() {
-                        self.temp_primtives.truncate(last.output_len);
+                        self.primitive_infos.truncate(last.output_len);
                         self.takeable_starts.truncate(last.takeable_starts_len);
                     }
                 }
@@ -670,7 +673,7 @@ where
 
     fn do_primtive<Q,P>(&mut self,mut cur:Work<'a>,prim_func:Q) -> Option<P>
     where
-        Q:Fn(&mut PrimitiveIterContainer<'a>)->Result<ValueContainer<'a,P>,Loc>,
+        Q:Fn(&mut TokenIterContainer<'a>)->Result<ValueContainer<'a,P>,Loc>,
     {
         match prim_func(&mut cur.primitives) {
             Ok(v) => {
@@ -680,13 +683,13 @@ where
 
                 self.stk.truncate(cur.success_len);
 
-                self.temp_primtives.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
-                self.temp_primtives.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+                self.primitive_infos.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                self.primitive_infos.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
 
                 if let Some(last)=self.stk.last_mut() {
                     last.primitives=cur.primitives;
                     last.group_len=cur.group_len;
-                    last.output_len=self.temp_primtives.len();
+                    last.output_len=self.primitive_infos.len();
                 }
 
                 //
@@ -709,7 +712,7 @@ where
 
                 //
                 if let Some(last)=self.stk.last() {
-                    self.temp_primtives.truncate(last.output_len);
+                    self.primitive_infos.truncate(last.output_len);
 
                     self.takeable_starts.truncate(last.takeable_starts_len);
                 }
@@ -730,7 +733,7 @@ where
 
     fn do_non_term_visiteds(&mut self,
         t:&'a str,
-        cur_primitives:PrimitiveIterContainer<'a>,
+        cur_primitives:TokenIterContainer<'a>,
         cur_visiteds: HashSet<(&'a str, usize)>,
     ) -> Result<HashSet<(&'a str, usize)>,GrammarWalkError<'a>> {
         let v=(t,cur_primitives.inds().start);
@@ -781,10 +784,10 @@ where
             self.expected.1=vec![g];
         }
     }
-    fn new_group(&mut self,name : &'a str, parent:usize, ps:PrimitiveIterContainer<'a>) -> usize {
-        let new_group_ind=self.temp_groups3.len();
+    fn new_group(&mut self,name : &'a str, parent:usize, ps:TokenIterContainer<'a>) -> usize {
+        let new_group_ind=self.group_infos.len();
 
-        self.temp_groups3.push(GroupInfo {
+        self.group_infos.push(GroupInfo {
             name,
             parent,
             primitive_ind_start: ps.inds().start,
@@ -793,14 +796,14 @@ where
         new_group_ind
     }
 
-    fn set_remaining_prims(&mut self,cur_primitives:PrimitiveIterContainer<'a>,) {
+    fn set_remaining_prims(&mut self,cur_primitives:TokenIterContainer<'a>,) {
         if self.stk.is_empty() {
             self.primitives_remaining=cur_primitives;
         }
     }
 
     fn remove_groups_at_except(&mut self,
-        taken_ps_start:PrimitiveIterContainer<'a>,
+        taken_ps_start:TokenIterContainer<'a>,
         cur_group_ind:usize,
     ) -> usize{
 
@@ -824,17 +827,17 @@ where
                     break;
                 }
 
-                let group=&self.temp_groups3[group_ind];
+                let group=&self.group_infos[group_ind];
                 group_ind=group.parent;
 
             }
         }
 
         //get first group ind with prim ind >= taken.inds().start
-        let mut after_group_ind = self.temp_groups3.len();
+        let mut after_group_ind = self.group_infos.len();
 
         while after_group_ind > 0 {
-            let group=self.temp_groups3.get(after_group_ind-1).unwrap();
+            let group=self.group_infos.get(after_group_ind-1).unwrap();
 
             if group.primitive_ind_start < taken_ps_start.inds().start {
                 break;
@@ -846,7 +849,7 @@ where
         //get num of groups to remove
         let mut remove_groups_num=0;
 
-        for i in after_group_ind..self.temp_groups3.len() {
+        for i in after_group_ind..self.group_infos.len() {
             if cur_used_group_inds.contains(&i) {
                 break;
             }
@@ -855,10 +858,10 @@ where
         }
 
         //remove unused groups
-        self.temp_groups3.drain(after_group_ind..after_group_ind+remove_groups_num);
+        self.group_infos.drain(after_group_ind..after_group_ind+remove_groups_num);
 
         //
-        for group in &mut self.temp_groups3[after_group_ind..] {
+        for group in &mut self.group_infos[after_group_ind..] {
             if group.parent>=after_group_ind {
                 group.parent-=remove_groups_num;
             }
@@ -882,7 +885,7 @@ where
 
     fn last_remove_groups_at(&mut self,
         // last_group_len:usize ,
-        cur_group_len:usize,cur_primitives:PrimitiveIterContainer<'a>)
+        cur_group_len:usize,cur_primitives:TokenIterContainer<'a>)
         // -> usize
     {
 
@@ -893,18 +896,18 @@ where
 
             //
             for group_ind in last.group_len .. cur_group_len {
-                let group=&self.temp_groups3[group_ind];
+                let group=&self.group_infos[group_ind];
 
                 if self.debug {
                     println!("===hmmm {group_ind}");
                 }
 
                 if group.primitive_ind_start==cur_primitives.inds().start {
-                    self.temp_groups3.truncate(group_ind); //removes this group and ones after
+                    self.group_infos.truncate(group_ind); //removes this group and ones after
                     last.group_len=group_ind;
 
                     if self.debug {
-                        println!("====== {group_ind} {}",self.temp_groups3.len(), );
+                        println!("====== {group_ind} {}",self.group_infos.len(), );
                     }
                     break;
                     // return group_ind;

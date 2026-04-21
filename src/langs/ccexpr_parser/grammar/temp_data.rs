@@ -2,7 +2,7 @@
 use std::collections::{HashMap, HashSet};
 
 // use crate::build::Loc;
-use crate::ccexpr_parser::tokenizer::PrimitiveIterContainer;
+use crate::ccexpr_parser::tokenizer::TokenIterContainer;
 
 use super::node::*;
 
@@ -25,7 +25,7 @@ pub struct Work<'a> {
     pub grammar:GrammarNode<'a>,
     pub success_len:usize,
     pub fail_len:usize,
-    pub primitives:PrimitiveIterContainer<'a>,
+    pub primitives:TokenIterContainer<'a>,
     pub group_ind:usize,
 
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
@@ -39,6 +39,6 @@ pub struct Work<'a> {
 
     pub visiteds:HashSet<(&'a str,usize)>, //used for checking recursive nonterms
 
-    pub takeables:HashMap<GrammarNode<'a>,PrimitiveIterContainer<'a>>, //[non_term]
+    pub takeables:HashMap<GrammarNode<'a>,TokenIterContainer<'a>>, //[non_term]
 }
 

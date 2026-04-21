@@ -1,1 +1,22 @@
 a.x.y.z=5
+
+
+for x in range(0,4,1) {
+
+}
+
+while i<5 {
+
+}
+
+if i<5 {
+
+} elif i==6 {
+
+} else {
+
+}
+
+if if 1<2 {} else {} {}
+
+if (if 1<2 {} else {}) {}
