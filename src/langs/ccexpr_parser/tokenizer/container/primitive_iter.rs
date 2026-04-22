@@ -53,7 +53,7 @@ impl<'a> TokenIterContainer<'a> {
     }
 
     pub fn pop_front_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'a>> {
-        if self.start+amount > self.end || amount==0 {
+        if self.start+amount > self.end { //|| amount==0
             None
         } else {
             let start2=self.start;

@@ -1,5 +1,5 @@
 
-use std::collections::{HashMap, HashSet};
+use std::{collections::{HashMap, HashSet}, fmt::Debug};
 
 // use crate::build::Loc;
 use crate::ccexpr_parser::tokenizer::TokenIterContainer;
@@ -7,18 +7,30 @@ use crate::ccexpr_parser::tokenizer::TokenIterContainer;
 use super::node::*;
 
 #[derive(Clone, Copy, Default, Debug)]
-pub struct PrimitiveInfo {
+pub struct TempPrimitiveInfo {
     // name:&'a str,
     // depth:usize,
     pub group:usize,
     pub discard:bool,
 }
 
-#[derive(Debug)]
-pub struct GroupInfo<'a> {
+#[derive(Clone)]
+pub struct TempGroupInfo<'a> {
     pub name:&'a str,
     pub parent:usize, //group
-    pub primitive_ind_start:usize,
+    // pub primitive_ind_start:usize,
+    pub primitives:TokenIterContainer<'a>,
+}
+
+impl<'a> Debug for  TempGroupInfo<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TempGroupInfo")
+        .field("name", &self.name)
+        .field("parent", &self.parent)
+        // .field("primitives", &self.primitives)
+        .field("primitive_ind_start", &self.primitives.inds().start)
+        .finish()
+    }
 }
 
 pub struct Work<'a> {

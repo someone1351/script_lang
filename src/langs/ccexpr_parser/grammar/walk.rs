@@ -4,6 +4,8 @@ use super::temp_data::*;
 use std::collections::HashSet;
 
 use crate::build::Loc;
+use crate::ccexpr_parser::grammar::data::Walk;
+use crate::ccexpr_parser::grammar::data::WalkGroup;
 use super::super::tokenizer::{TokenIterContainer, ValueContainer};
 
 use super::node::*;
@@ -17,8 +19,8 @@ pub struct GrammarWalker<'a,F> {
     top_primitives:TokenIterContainer<'a>,
     primitives_remaining: TokenIterContainer<'a>,
 
-    primitive_infos : Vec<PrimitiveInfo>,
-    group_infos : Vec<GroupInfo<'a>>,
+    primitive_infos : Vec<TempPrimitiveInfo>,
+    group_infos : Vec<TempGroupInfo<'a>>,
     takeable_starts:Vec<(GrammarNode<'a>,TokenIterContainer<'a>)>, //[(g,output_ind_start)]
     grammar_func:F,
 
@@ -72,7 +74,12 @@ where
 
         //
         self.primitive_infos.clear();
-        self.group_infos=vec![GroupInfo{ name: "", parent: 0, primitive_ind_start:0, }];
+        self.group_infos=vec![TempGroupInfo{
+            name: "",
+            parent: 0,
+            // primitive_ind_start:0,
+            primitives:self.top_primitives,
+        }];
         self.takeable_starts.clear();
 
         // self.primitives_remaining:top_primitives.clone(),
@@ -577,24 +584,17 @@ where
                 }
 
                 //
-                // last.group_len=
-                self.last_remove_groups_at(cur.group_len,cur.primitives);
+                self.do_groups_primtives_clamp(cur.group_ind,cur.primitives);
 
+                //
+                self.last_remove_groups_at(cur.group_len,cur.primitives);
 
                 //
                 self.last_insert_start_takeables();
 
-                //
-                // if self.stk.is_empty() {
-                //     self.primitives_remaining=cur.primitives;
-                // }
-
                 self.set_remaining_prims(cur.primitives);
 
-                // expected=Default::default();
-
                 self.clear_expected();
-
             }
 
             GrammarNode::Error(e) => {
@@ -683,14 +683,17 @@ where
 
                 self.stk.truncate(cur.success_len);
 
-                self.primitive_infos.resize(v.primitive.ind(), PrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
-                self.primitive_infos.push(PrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+                self.primitive_infos.resize(v.primitive.ind(), TempPrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                self.primitive_infos.push(TempPrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
 
                 if let Some(last)=self.stk.last_mut() {
                     last.primitives=cur.primitives;
                     last.group_len=cur.group_len;
                     last.output_len=self.primitive_infos.len();
                 }
+
+                //
+                self.do_groups_primtives_clamp(cur.group_ind,cur.primitives);
 
                 //
                 self.last_remove_old_takeables();
@@ -729,6 +732,24 @@ where
         //
 
 
+    }
+
+    fn do_groups_primtives_clamp(&mut self,
+        cur_group_ind:usize,
+        mut cur_primitives:TokenIterContainer<'a>,
+    ) {
+        if let Some(last)=self.stk.last_mut() {
+            let last_group_prim_len=last.primitives.len();
+            let group_prims=cur_primitives.pop_front_amount(last_group_prim_len-cur_primitives.len()).unwrap();
+
+            let mut g=cur_group_ind;
+
+            while last.group_ind!=g && g!=0 {
+                let group=&mut self.group_infos[g];
+                group.primitives=group_prims;
+                g=group.parent;
+            }
+        }
     }
 
     fn do_non_term_visiteds(&mut self,
@@ -787,10 +808,11 @@ where
     fn new_group(&mut self,name : &'a str, parent:usize, ps:TokenIterContainer<'a>) -> usize {
         let new_group_ind=self.group_infos.len();
 
-        self.group_infos.push(GroupInfo {
+        self.group_infos.push(TempGroupInfo {
             name,
             parent,
-            primitive_ind_start: ps.inds().start,
+            // primitive_ind_start: ps.inds().start,
+            primitives:ps,
         });
 
         new_group_ind
@@ -839,7 +861,10 @@ where
         while after_group_ind > 0 {
             let group=self.group_infos.get(after_group_ind-1).unwrap();
 
-            if group.primitive_ind_start < taken_ps_start.inds().start {
+            if
+                // group.primitive_ind_start
+                group.primitives.inds().start
+                < taken_ps_start.inds().start {
                 break;
             }
 
@@ -902,7 +927,10 @@ where
                     println!("===hmmm {group_ind}");
                 }
 
-                if group.primitive_ind_start==cur_primitives.inds().start {
+                if
+                    // group.primitive_ind_start
+                    group.primitives.inds().start
+                    ==cur_primitives.inds().start {
                     self.group_infos.truncate(group_ind); //removes this group and ones after
                     last.group_len=group_ind;
 
@@ -936,5 +964,40 @@ where
     }
     pub fn last_loc(&self) -> Loc {
         self.expected.0
+    }
+
+    pub fn get_walk(&self) -> Walk<'a> {
+        let mut groups: Vec<WalkGroup<'a>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
+        // groups.resize_with(new_len, f);
+
+        let mut group_infos2 = self.group_infos.iter().enumerate().map(|(i,g)|(i,g.parent,0)).collect::<Vec<_>>();
+
+        //count children for each group
+        for i in 1..group_infos2.len() {
+            let p=group_infos2[i].1;
+            group_infos2[p].2+=1;
+        }
+
+        //sort groups to breadth first
+        group_infos2.sort_by(|&(g1,p1,_),&(g2,p2,_)|{
+            match p1.cmp(&p2) {
+                std::cmp::Ordering::Equal => g1.cmp(&g2),
+                x=>x,
+            }
+        });
+
+        //
+        let mut csum=0;
+
+        //
+        for (_i,&(g,_p,c)) in group_infos2.iter().enumerate() {
+            let gg=&self.group_infos[g];
+            groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives });
+            csum+=c;
+        }
+
+        //
+        let walk=Walk{ groups };
+        walk
     }
 }
