@@ -1,3 +1,3 @@
 
-pub mod sexpr_compiler;
-pub mod sexpr_parser;
+pub mod compiler;
+pub mod parser;

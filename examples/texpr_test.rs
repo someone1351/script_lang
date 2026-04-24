@@ -1,5 +1,5 @@
 
-use script_lang::langs::texpr_compiler::Compiler;
+use script_lang::langs::texpr::compiler::Compiler;
 
 use std::{collections::BTreeMap, path::Path};
 

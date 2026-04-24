@@ -19,7 +19,3 @@ path = "examples/texpr_test.rs"
 [[example]]
 name = "cexpr_test"
 path = "examples/cexpr_test.rs"
-
-[[example]]
-name = "ccexpr_test"
-path = "examples/ccexpr_test.rs"

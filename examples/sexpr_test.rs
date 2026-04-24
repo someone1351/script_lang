@@ -1,6 +1,6 @@
 
 use std::path::Path;
-use script_lang::langs::sexpr_compiler::Compiler;
+use script_lang::langs::sexpr::compiler::Compiler;
 
 pub fn test_script<P:AsRef<Path>>(path:P) {
 

@@ -1,4 +1,4 @@
 
 
-pub mod texpr_compiler;
-pub mod texpr_parser;
+pub mod compiler;
+pub mod parser;

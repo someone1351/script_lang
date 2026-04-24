@@ -1,0 +1,50 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {},
+	"launch": {
+		"configurations": [
+			{
+				"name": "cexpr_test (Debug)",
+				"type": "lldb",
+				"request": "launch",
+				"program": "cargo",
+				"args": ["run", "--example", "cexpr_test"],
+				"cwd": "${workspaceRoot}",
+				"env" : { "RUST_BACKTRACE" : "full",}
+			},
+
+			{
+				"name": "texpr_test (Debug)",
+				"type": "lldb",
+				"request": "launch",
+				"program": "cargo",
+				"args": ["run", "--example", "texpr_test"],
+				"cwd": "${workspaceRoot}",
+				"env" : { "RUST_BACKTRACE" : "full",}
+			},
+
+			{
+				"name": "sexpr_test (Debug)",
+				"type": "lldb",
+				"request": "launch",
+				"program": "cargo",
+				"args": ["run", "--example", "sexpr_test"],
+				"cwd": "${workspaceRoot}",
+				"env" : { "RUST_BACKTRACE" : "full",}
+			},
+			{
+				"name": "texpr_test (Release)",
+				"type": "lldb",
+				"request": "launch",
+				"program": "cargo",
+				"args": [ "run", "--release", "--example", "texpr_test"],
+				"cwd": "${workspaceRoot}",
+				"env" : {"RUST_BACKTRACE" : "1",}
+			}
+		]
+	}
+}
