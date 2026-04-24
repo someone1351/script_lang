@@ -36,15 +36,15 @@ impl<'a> WalkGroupIterContainer<'a> {
 
     pub fn get_range<R:RangeBounds<usize>>(&self,r:R) -> WalkGroupIterContainer<'a> {
 
-        let range_start=match r.start_bound() {
-            Bound::Included(x)=>*x,
+        let range_start=match r.start_bound().cloned() {
+            Bound::Included(x)=>x,
             Bound::Excluded(_)=>panic!(""),
-            Bound:: Unbounded=>0,
+            Bound::Unbounded=>0,
         };
 
-        let range_end=match r.end_bound() {
-            Bound::Included(x)=>*x+1,
-            Bound::Excluded(x)=>*x,
+        let range_end=match r.end_bound().cloned() {
+            Bound::Included(x)=>x+1,
+            Bound::Excluded(x)=>x,
             Bound::Unbounded=>self.len(),
         };
 
