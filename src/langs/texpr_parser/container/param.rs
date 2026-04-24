@@ -79,7 +79,7 @@ impl<'a> ParamContainer<'a> {
             Bound:: Unbounded=>0,
         };
 
-        let range_end=match r.start_bound() {
+        let range_end=match r.end_bound() {
             Bound::Included(x)=>*x+1,
             Bound::Excluded(x)=>*x,
             Bound:: Unbounded=>param.fields.len(),

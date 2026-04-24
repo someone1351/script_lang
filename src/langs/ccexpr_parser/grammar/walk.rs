@@ -751,15 +751,17 @@ where
             // let last_group_prim_len=last.primitives.len();
 
             let mut g=cur_group_ind;
-            println!("--- cur_group_ind={g}, last.group_ind={}",last.group_ind);
+            // println!("--- cur_group_ind={g}, last.group_ind={}",last.group_ind);
 
+            // println!("---g={g} to lg={}",last.group_ind);
             while g>last.group_ind {
-                println!("g={g}");
                 let group=&mut self.group_infos[g];
                 // let mut last_primitives=group.primitives;
 
-                println!("g={g} lg={} : {} {}",last.group_ind,group.primitives.len(),cur_primitives.len(),);
+                // println!("\tg={g} lg={} : {} {}",last.group_ind,group.primitives.len(),cur_primitives.len(),);
                 let n=group.primitives.len()-cur_primitives.len();
+                // println!("\tn={n} {:?}",group.primitives.get_range(0..n).unwrap());
+                // println!("\t{:?}",group.primitives);
                 let group_prims=group.primitives.get_range(0..n).unwrap();
 
                 group.primitives=group_prims;

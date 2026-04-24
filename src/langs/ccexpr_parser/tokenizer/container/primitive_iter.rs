@@ -110,18 +110,17 @@ impl<'a> TokenIterContainer<'a> {
 
     pub fn get_range<R:RangeBounds<usize>>(&self,r:R) -> Result<TokenIterContainer<'a>,Loc> {
 
-        let range_start=match r.start_bound() {
-            Bound::Included(x)=>*x,
+        let range_start=match r.start_bound().cloned() {
+            Bound::Included(x)=>x,
             Bound::Excluded(_)=>panic!(""),
             Bound:: Unbounded=>0,
         };
 
-        let range_end=match r.start_bound() {
-            Bound::Included(x)=>*x+1,
-            Bound::Excluded(x)=>*x,
+        let range_end=match r.end_bound().cloned() {
+            Bound::Included(x)=>x+1,
+            Bound::Excluded(x)=>x,
             Bound::Unbounded=>self.len(),
         };
-
 
         let last_loc=self.last().map(|x|x.end_loc()).unwrap_or(self.last_loc);
 
@@ -145,6 +144,8 @@ impl<'a> TokenIterContainer<'a> {
         } else {
             self.parsed.primitives[range_start].start_loc
         };
+
+        // println!("~~~~ x_len={x_len} x_start={x_start} x_end={x_end}, len={}, range_start={range_start}, range_end={range_end}",self.len());
 
         Ok(TokenIterContainer {last_loc,start: x_start, end: x_end, parsed: self.parsed})
     }
