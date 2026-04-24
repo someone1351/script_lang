@@ -35,6 +35,7 @@ impl<'a,F> GrammarWalker<'a,F>
 where
     F: Fn(&'a str)->GrammarNode<'a>,
 {
+
     pub fn new(top_primitives:TokenIterContainer<'a>, grammar_func:F) -> Self {
         Self {
             primitive_infos :  Default::default(),
@@ -114,62 +115,67 @@ where
 
 
         //
-        println!("groups={:?}",self.group_infos);
-        println!("outputs={:?}",self.primitive_infos);
-
-        if !self.primitives_remaining.is_empty() {
-            // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
-            println!("error, failed to parse all tokens {}",self.expected.0);
-        } else {
-            println!("parsed ok");
+        if self.debug {
+            println!("groups={:?}",self.group_infos);
+            println!("outputs={:?}",self.primitive_infos);
         }
-
-        println!("===a {}",self.primitives_remaining.is_empty());
-
-
-        let mut groups_visited: HashSet<usize>=HashSet::new();
-
-        for p in self.top_primitives {
-            let i=p.ind();
-            let Some(output)=self.primitive_infos.get(i) else {
-                break;
-            };
-
-            let mut g=output.group;
-            let mut depth=0;
-            let mut gs: Vec<usize>=Vec::new();
-            while g!=0 {
-                gs.push(g);
-                let gg=&self.group_infos[g];
-
-                depth+=1;
-
-                g=gg.parent;
-
+            if !self.primitives_remaining.is_empty() {
+                // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
+                println!("error, failed to parse all tokens {}",self.expected.0);
+            } else {
+                println!("parsed ok");
             }
 
-            for (d,&g) in gs.iter().rev().enumerate() {
-                let gg=&self.group_infos[g];
+        // if self.debug {
+            println!("===a {}",self.primitives_remaining.is_empty());
+        // }
 
-                if !groups_visited.contains(&g) {
-                    println!("{}{:?}",
-                        "  ".repeat(d),
-                        gg.name,
-                    );
-                    groups_visited.insert(g);
+            let mut groups_visited: HashSet<usize>=HashSet::new();
+
+            for p in self.top_primitives {
+                let i=p.ind();
+                let Some(output)=self.primitive_infos.get(i) else {
+                    break;
+                };
+
+                let mut g=output.group;
+                let mut depth=0;
+                let mut gs: Vec<usize>=Vec::new();
+                while g!=0 {
+                    gs.push(g);
+                    let gg=&self.group_infos[g];
+
+                    depth+=1;
+
+                    g=gg.parent;
+
                 }
+
+                for (d,&g) in gs.iter().rev().enumerate() {
+                    let gg=&self.group_infos[g];
+
+                    if !groups_visited.contains(&g) {
+                        println!("{}{:?} : {:?}",
+                            "  ".repeat(d),
+                            gg.name,
+                            gg.primitives.inds(),
+                        );
+                        groups_visited.insert(g);
+                    }
+                }
+
+                println!("{}{}{p:?}",
+                    "  ".repeat(depth),
+                    if output.discard {"-"}else{""}
+                );
             }
+            println!("===");
 
-            println!("{}{}{p:?}",
-                "  ".repeat(depth),
-                if output.discard {"-"}else{""}
-            );
+        if self.debug {
+            //
+            println!("top_primitives={:?}", self.top_primitives );
+            // println!("output={outputs:?}",  );
         }
-        println!("===");
-
-        //
-        println!("top_primitives={:?}", self.top_primitives );
-        // println!("output={outputs:?}",  );
 
     }
 
@@ -554,6 +560,8 @@ where
             GrammarNode::Always => {
                 self.stk.truncate(cur.success_len);
 
+                //
+                //
                 if let Some(last)=self.stk.last_mut() {
                     if last.grammar.is_many() && last.primitives.len()==cur.primitives.len() { //if not parsing anything, exit the many
                         last.grammar=GrammarNode::Always;
@@ -584,7 +592,7 @@ where
                 }
 
                 //
-                self.do_groups_primtives_clamp(cur.group_ind,cur.primitives);
+                self.do_groups_primitives_clamp(cur.group_ind,cur.primitives);
 
                 //
                 self.last_remove_groups_at(cur.group_len,cur.primitives);
@@ -686,6 +694,7 @@ where
                 self.primitive_infos.resize(v.primitive.ind(), TempPrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
                 self.primitive_infos.push(TempPrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
 
+                //
                 if let Some(last)=self.stk.last_mut() {
                     last.primitives=cur.primitives;
                     last.group_len=cur.group_len;
@@ -693,7 +702,7 @@ where
                 }
 
                 //
-                self.do_groups_primtives_clamp(cur.group_ind,cur.primitives);
+                self.do_groups_primitives_clamp(cur.group_ind,cur.primitives);
 
                 //
                 self.last_remove_old_takeables();
@@ -734,18 +743,25 @@ where
 
     }
 
-    fn do_groups_primtives_clamp(&mut self,
+    fn do_groups_primitives_clamp(&mut self,
         cur_group_ind:usize,
-        mut cur_primitives:TokenIterContainer<'a>,
+        cur_primitives:TokenIterContainer<'a>,
     ) {
         if let Some(last)=self.stk.last_mut() {
-            let last_group_prim_len=last.primitives.len();
-            let group_prims=cur_primitives.pop_front_amount(last_group_prim_len-cur_primitives.len()).unwrap();
+            // let last_group_prim_len=last.primitives.len();
 
             let mut g=cur_group_ind;
+            println!("--- cur_group_ind={g}, last.group_ind={}",last.group_ind);
 
-            while last.group_ind!=g && g!=0 {
+            while g>last.group_ind {
+                println!("g={g}");
                 let group=&mut self.group_infos[g];
+                // let mut last_primitives=group.primitives;
+
+                println!("g={g} lg={} : {} {}",last.group_ind,group.primitives.len(),cur_primitives.len(),);
+                let n=group.primitives.len()-cur_primitives.len();
+                let group_prims=group.primitives.get_range(0..n).unwrap();
+
                 group.primitives=group_prims;
                 g=group.parent;
             }
@@ -993,6 +1009,7 @@ where
         for (_i,&(g,_p,c)) in group_infos2.iter().enumerate() {
             let gg=&self.group_infos[g];
             groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives });
+            println!("{_i} name: {:?}, children: {:?}, tokens: {:?}",gg.name,csum..csum+c,gg.primitives.inds());
             csum+=c;
         }
 

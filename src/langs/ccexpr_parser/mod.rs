@@ -20,6 +20,22 @@ pub fn grammar_run<'a>( top_primitives:TokenIterContainer<'a>) {
     //  on success, only clear if >= than loc
 
     let mut walker=GrammarWalker::new(top_primitives, grammar_decl);
-    walker.set_debug(true);
+    // walker.set_debug(true);
     walker.run("start");
+
+    // walker.get_walk();
+
+    // // println!("{}",walker.get_walk().root());
+
+    // let mut top_primitives=top_primitives;
+    // println!("====");
+    // println!("{top_primitives:?}",);
+
+    // let a=top_primitives.pop_front_amount(10);
+
+    // println!("=\n{top_primitives:?}\n=\n{a:?}");
+
+    // let a=top_primitives.pop_front_amount(10);
+    // println!("=\n{top_primitives:?}\n=\n{a:?}");
+
 }
