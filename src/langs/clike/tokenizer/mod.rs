@@ -1,10 +1,10 @@
 mod error;
 mod input;
 mod data;
-mod parse;
+mod tokenize;
 
 mod container;
 
-pub use parse::tokenize;
+pub use tokenize::tokenize;
 pub use error::*;
 pub use container::*;

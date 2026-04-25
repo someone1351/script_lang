@@ -17,5 +17,5 @@ name = "texpr_test"
 path = "examples/texpr_test.rs"
 
 [[example]]
-name = "cexpr_test"
-path = "examples/cexpr_test.rs"
+name = "clike_test"
+path = "examples/clike_test.rs"

@@ -70,6 +70,8 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
             NonTerm("ending").many0(),
         ].and(),
 
+        // =============================================================
+
         "start" => [
             NonTerm("stmts"),
             NonTerm("ending").many0(),
@@ -163,15 +165,19 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
         //     // NonTerm("rparen"),
         //     NonTerm("block"),
         //     ].and(),
-        "for" => [
-            Keyword("for"),
-            // NonTerm("lparen"),
+        "for_body" => [
             Identifier,
             Keyword("in").d(),
             NonTerm("expr"),
             Keyword("to").d(),
             NonTerm("expr"),
-            // NonTerm("rparen"),
+        ].and(),
+        "for" => [
+            Keyword("for"),
+            [
+                NonTerm("for_body"),
+                [NonTerm("lparen"),NonTerm("for_body"),NonTerm("rparen"),].and(),
+            ].or(),
             NonTerm("block"),
         ].and(),
         "call" => [

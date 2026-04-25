@@ -89,7 +89,7 @@ where
         self.expected=Default::default();
     }
 
-    pub fn run(&mut self,start_non_term:&'a str,) {
+    pub fn run(&mut self,start_non_term:&'a str,) -> bool {
         self.init(start_non_term);
 
         while let Some(cur)=self.stk.pop() {
@@ -108,7 +108,8 @@ where
                     }
                 }
 
-                break;
+                // break;
+                return false;
            }
         }
 
@@ -118,12 +119,14 @@ where
             println!("groups={:?}",self.group_infos);
             println!("outputs={:?}",self.primitive_infos);
         }
-            if !self.primitives_remaining.is_empty() {
-                // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
-                println!("error, failed to parse all tokens {}",self.expected.0);
-            } else {
-                println!("parsed ok");
-            }
+
+        if !self.primitives_remaining.is_empty() {
+            // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
+            println!("error, failed to parse all tokens {}",self.expected.0);
+            return false;
+        } else {
+            println!("parsed ok");
+        }
 
         // if self.debug {
             println!("===a {}",self.primitives_remaining.is_empty());
@@ -175,6 +178,8 @@ where
             println!("top_primitives={:?}", self.top_primitives );
             // println!("output={outputs:?}",  );
         }
+
+        true
 
     }
 

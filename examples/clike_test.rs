@@ -6,7 +6,7 @@
 // #![allow(unused_assignments)]
 // #[allow(unused_parens)]
 
-use langs::cexpr::compiler::*;
+use langs::clike::compiler::*;
 
 use std::path::Path;
 

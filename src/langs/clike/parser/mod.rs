@@ -4,7 +4,7 @@ use super::tokenizer::TokenIterContainer;
 
 pub mod rules;
 
-pub fn grammar_run<'a>( top_primitives:TokenIterContainer<'a>) {
+pub fn parse<'a>( top_primitives:TokenIterContainer<'a>) {
     /*
     abc|ab with "ab" => "" //abc will fail, but then tries ab, which succeeds
     ab|abc with "abc" => "c" //will consume ab, and then fail to consume c, there is no backtracking
@@ -18,11 +18,16 @@ pub fn grammar_run<'a>( top_primitives:TokenIterContainer<'a>) {
 
     let mut walker=GrammarWalker::new(top_primitives, grammar_decl);
     // walker.set_debug(true);
-    walker.run("start");
 
-    // walker.get_walk();
+    if walker.run("start") {
 
-    // // println!("{}",walker.get_walk().root());
+    } else {
+
+    }
+
+    // let walk=walker.get_walk();
+
+    // println!("{}",walk.root());
 
     // let mut top_primitives=top_primitives;
     // println!("====");

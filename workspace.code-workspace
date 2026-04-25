@@ -8,11 +8,11 @@
 	"launch": {
 		"configurations": [
 			{
-				"name": "cexpr_test (Debug)",
+				"name": "clike_test (Debug)",
 				"type": "lldb",
 				"request": "launch",
 				"program": "cargo",
-				"args": ["run", "--example", "cexpr_test"],
+				"args": ["run", "--example", "clike_test"],
 				"cwd": "${workspaceRoot}",
 				"env" : { "RUST_BACKTRACE" : "full",}
 			},

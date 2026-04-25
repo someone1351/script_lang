@@ -2,11 +2,18 @@
 a.x.y.z=5
 
 
-for x in range(0,4,1) {
+for x in 0 to 4 {
 
 }
 
+for (x in 2 to 5) {
+
+}
 while i<5 {
+
+}
+
+while (j<15) {
 
 }
 
@@ -20,4 +27,4 @@ if i<5 {
 
 if if 1<2 {} else {} {}
 
-if (if 1<2 {} else {}) {}
+if (if (1<2) {} else {}) {}

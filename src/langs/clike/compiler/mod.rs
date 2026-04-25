@@ -6,8 +6,8 @@ mod error;
 
 // use crate::ccexpr_compiler::grammar::grammar_run;
 // use std::path::PathBuf;
-use super::parser::grammar_run;
-use crate::cexpr::tokenizer::tokenize;
+use super::parser::parse;
+use crate::clike::tokenizer::tokenize;
 use crate::primitive_types::StringVal;
 
 use crate::build::*;
@@ -80,7 +80,7 @@ impl Compiler {
         parsed.print();
 
         println!("===");
-        grammar_run(parsed.primitives());
+        parse(parsed.primitives());
         println!("===");
 
         // parsed.print();
