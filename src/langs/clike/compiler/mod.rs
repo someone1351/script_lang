@@ -72,7 +72,7 @@ impl Compiler {
         let parsed=tokenize(src.as_str(),  );
 
         if let Err(e)=parsed {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Parser(e.error_type)});
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Tokenizer(e.error_type)});
         }
 
         let parsed=parsed.unwrap();
@@ -80,7 +80,11 @@ impl Compiler {
         parsed.print();
 
         println!("===");
-        parse(parsed.primitives());
+        let walk=parse(parsed.primitives());
+
+        if let Err(e)= walk {
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Parser(e.msg)});
+        }
         println!("===");
 
         // parsed.print();

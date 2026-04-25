@@ -1,10 +1,17 @@
+
+pub mod rules;
+pub mod error;
+
+use crate::clike::grammar::data::Walk;
+use crate::clike::grammar::GrammarWalkError;
+use error::ParserError;
+
 use super::parser::rules::grammar_decl;
 use super::grammar::walk::GrammarWalker;
 use super::tokenizer::TokenIterContainer;
 
-pub mod rules;
 
-pub fn parse<'a>( top_primitives:TokenIterContainer<'a>) {
+pub fn parse<'a>( top_primitives:TokenIterContainer<'a>) -> Result<Walk<'a>,ParserError>{
     /*
     abc|ab with "ab" => "" //abc will fail, but then tries ab, which succeeds
     ab|abc with "abc" => "c" //will consume ab, and then fail to consume c, there is no backtracking
@@ -19,13 +26,21 @@ pub fn parse<'a>( top_primitives:TokenIterContainer<'a>) {
     let mut walker=GrammarWalker::new(top_primitives, grammar_decl);
     // walker.set_debug(true);
 
-    if walker.run("start") {
-
-    } else {
-
+    if let Err(e)=walker.run("start") {
+        match e {
+            GrammarWalkError::FailedParse => {
+                return Err(ParserError{ loc: walker.last_loc(), msg: walker.expecteds_string() });
+            }
+            _ => {
+                println!("{:?} {:?}",walker.expecteds_string(),walker.last_loc());
+                panic!("{e:?}");
+            }
+        }
     }
 
-    // let walk=walker.get_walk();
+    let walk=walker.get_walk();
+    Ok(walk)
+
 
     // println!("{}",walk.root());
 
@@ -40,4 +55,5 @@ pub fn parse<'a>( top_primitives:TokenIterContainer<'a>) {
     // let a=top_primitives.pop_front_amount(10);
     // println!("=\n{top_primitives:?}\n=\n{a:?}");
 
+    // Err(())
 }

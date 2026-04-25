@@ -89,7 +89,7 @@ where
         self.expected=Default::default();
     }
 
-    pub fn run(&mut self,start_non_term:&'a str,) -> bool {
+    pub fn run(&mut self,start_non_term:&'a str,) -> Result<(),GrammarWalkError<'a>> {
         self.init(start_non_term);
 
         while let Some(cur)=self.stk.pop() {
@@ -105,11 +105,12 @@ where
                         GrammarWalkError::FailedParse => {
                             println!("Failed parse, At {}, expected {:?}",self.expected.0,self.expecteds_string());
                         }
+                        GrammarWalkError::Unfinished =>{}
                     }
                 }
 
                 // break;
-                return false;
+                return Err(e);
            }
         }
 
@@ -123,7 +124,7 @@ where
         if !self.primitives_remaining.is_empty() {
             // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
             println!("error, failed to parse all tokens {}",self.expected.0);
-            return false;
+            return Err(GrammarWalkError::Unfinished);
         } else {
             println!("parsed ok");
         }
@@ -179,7 +180,7 @@ where
             // println!("output={outputs:?}",  );
         }
 
-        true
+        Ok(())
 
     }
 
@@ -1015,7 +1016,7 @@ where
         for (_i,&(g,_p,c)) in group_infos2.iter().enumerate() {
             let gg=&self.group_infos[g];
             groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives });
-            println!("{_i} name: {:?}, children: {:?}, tokens: {:?}",gg.name,csum..csum+c,gg.primitives.inds());
+            // println!("{_i} name: {:?}, children: {:?}, tokens: {:?}",gg.name,csum..csum+c,gg.primitives.inds());
             csum+=c;
         }
 

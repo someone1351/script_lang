@@ -1,6 +1,7 @@
 
 #[derive(Debug,Clone,Hash,PartialEq, Eq)]
 pub enum GrammarWalkError<'a> {
+    Unfinished,
     RecursiveNonTerm(&'a str),
     FailedParse,//((Loc,Vec<GrammarItem<'a>>,)),
     MissingNonTerm(&'a str),

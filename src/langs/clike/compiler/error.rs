@@ -1,7 +1,7 @@
 use std::{fmt::Debug, path::PathBuf};
 
 use crate::{ast, compiler::builder::BuilderError, error_msg, Loc, StringVal};
-use super::super::tokenizer::TokenizeErrorType;
+use super::super::tokenizer::TokenizerErrorType;
 
 
 #[derive(Debug,Clone,Copy)]
@@ -78,8 +78,9 @@ impl BuilderErrorType {
 
 #[derive(Debug,Clone)]
 pub enum CompileErrorType {
+    Tokenizer(TokenizerErrorType),
+    Parser(String),
     Builder(BuilderErrorType),
-    Parser(TokenizeErrorType),
     AstVar(ast::error::AstVarErrorType),
 }
 

@@ -11,7 +11,7 @@ use super::input::*;
 // use super::super::super::build::Loc;
 
 
-pub fn tokenize<'a>(src:&'a str, ) -> Result<Tokenized,TokenizeError> {
+pub fn tokenize<'a>(src:&'a str, ) -> Result<Tokenized,TokenizerError> {
 
     let mut input = Input::new(src);
     let mut cur_primitives = Vec::new();
@@ -49,7 +49,7 @@ pub fn tokenize<'a>(src:&'a str, ) -> Result<Tokenized,TokenizeError> {
         }
 
         if !input.is_end() {
-            return Err(TokenizeError { loc: input.loc(), error_type: TokenizeErrorType::Unexpected });
+            return Err(TokenizerError { loc: input.loc(), error_type: TokenizerErrorType::Unexpected });
         }
     }
 
@@ -136,7 +136,7 @@ fn parse_string<'a>(
     // texts:&mut Vec<String>,
     // src:&'a str,
     // path:Option<&'a Path>,
-) -> Result<Option<Primitive>,TokenizeError> {
+) -> Result<Option<Primitive>,TokenizerError> {
     let quotes=["\"\"\"","'''","\"","'"];
 
     for quote in quotes {
@@ -193,10 +193,10 @@ fn parse_string<'a>(
             }
 
             //
-            return Err(TokenizeError {
+            return Err(TokenizerError {
                 // path:path.map(|p|p.to_path_buf()),
                 loc: input.loc(),
-                error_type: TokenizeErrorType::ClosingQuoteExpected(quote),
+                error_type: TokenizerErrorType::ClosingQuoteExpected(quote),
             });
 
         }
@@ -287,7 +287,7 @@ fn parse_eol(input:&mut Input) -> Option<Primitive> {
     }
 }
 
-fn parse_cmnt(input:&mut Input) -> Result<bool,TokenizeError> {
+fn parse_cmnt(input:&mut Input) -> Result<bool,TokenizerError> {
     if let Some(x)=input.has(0, ["//"]) {
         input.next(x.len());
 
@@ -315,9 +315,9 @@ fn parse_cmnt(input:&mut Input) -> Result<bool,TokenizeError> {
             }
 
             if input.is_end() {
-                return Err(TokenizeError {
+                return Err(TokenizerError {
                     loc: input.loc(),
-                    error_type: TokenizeErrorType::ClosingCommentExpected,
+                    error_type: TokenizerErrorType::ClosingCommentExpected,
                 });
             }
 
@@ -339,7 +339,7 @@ fn parse_space(input:&mut Input) -> bool {
     found
 }
 
-fn parse_ws(input:&mut Input) -> Result<Option<Primitive>,TokenizeError> {
+fn parse_ws(input:&mut Input) -> Result<Option<Primitive>,TokenizerError> {
     let mut first_end : Option<Primitive> = None;
 
     while !input.is_end() {

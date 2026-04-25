@@ -4,12 +4,12 @@
 use crate::build::Loc;
 
 #[derive(Debug,Clone)]
-pub enum  TokenizeErrorType {
+pub enum  TokenizerErrorType {
     Unexpected,
     ClosingQuoteExpected(&'static str),
-    UnexpectedChar,
-    ClosingBracketExpected(&'static str),
-    NoMatchingOpeningBracket(&'static str),
+    // UnexpectedChar,
+    // ClosingBracketExpected(&'static str),
+    // NoMatchingOpeningBracket(&'static str),
     ClosingCommentExpected,
 
     // ExpectingClosingCurlyBracket,
@@ -19,7 +19,7 @@ pub enum  TokenizeErrorType {
 
 
 #[derive(Debug,Clone)]
-pub struct TokenizeError {
+pub struct TokenizerError {
     pub loc : Loc,
-    pub error_type : TokenizeErrorType,
+    pub error_type : TokenizerErrorType,
 }
