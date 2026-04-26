@@ -222,17 +222,32 @@ impl<'a> TokenIterContainer<'a> {
         self.pop_get(true,|p|p.get_identifier())
     }
 
-    pub fn pop_with_identifiers<'b,I>(&mut self,idns:I) -> Result<ValueContainer<'a,&'a str>,Loc>
-    where
-        I:IntoIterator<Item = &'b str>,
-    {
-        self.pop_get(true,move|p|p.has_identifiers(idns))
+    pub fn pop_keyword(&mut self) -> Result<ValueContainer<'a,&'a str>,Loc> {
+        self.pop_get(true,|p|p.get_keyword())
     }
-    pub fn pop_with_symbols<'b,I>(&mut self,symbols:I) -> Result<ValueContainer<'a,&'a str>,Loc>
-    where
-        I:IntoIterator<Item = &'b str>,
+    // pub fn pop_with_identifiers<'b,I>(&mut self,idns:I) -> Result<ValueContainer<'a,&'a str>,Loc>
+    // where
+    //     I:IntoIterator<Item = &'b str>,
+    // {
+    //     self.pop_get(true,move|p|p.has_identifiers(idns))
+    // }
+
+    // pub fn pop_with_symbols<'b,I>(&mut self,symbols:I) -> Result<ValueContainer<'a,&'a str>,Loc>
+    // where
+    //     I:IntoIterator<Item = &'b str>,
+    // {
+    //     self.pop_get(true,move|p|p.has_symbols(symbols))
+    // }
+
+
+    pub fn pop_with_keyword<'b>(&mut self,keyword:&'b str) -> Result<ValueContainer<'a,&'a str>,Loc>
     {
-        self.pop_get(true,move|p|p.has_symbols(symbols))
+        self.pop_get(true,move|p|p.has_keyword(keyword))
+    }
+
+    pub fn pop_with_symbol<'b,>(&mut self,symbol:&'b str) -> Result<ValueContainer<'a,&'a str>,Loc>
+    {
+        self.pop_get(true,move|p|p.has_symbol(symbol))
     }
 }
 

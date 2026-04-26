@@ -1,7 +1,21 @@
 use super::super::grammar::{GrammarWalkError,node::*};
 
+pub fn is_keyword(n:& str) -> bool {
+    match n {
+        "for"|"in"| //"to"|
+        "while"|"continue"|"break"|
+        "goto"|"label"|
+        "include"|
+        "true"|"false"|"nil"|"void"|
+        "print"|"println"|"format"|
+        "var"|"fn"|"return"|
+        "if"|"elif"|"else"
+        => true,
+        _=>false,
+    }
+}
 
-pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
+pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
     /*
     this:
         if(cond) {1} else {2}
@@ -19,7 +33,7 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
     if traversing same terminal and pos is the same, fail
     */
     use GrammarNode::*;
-    match n {
+    Some(match n {
         // "test" => [Int].and(),
         "test" => [Int,Float.opt()].and().many0(),
         "test2" => [Int,Float.opt()].and(),
@@ -60,7 +74,7 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
                 NonTerm("val_field").cede().many0().group("a"), //.opt(),
                 NonTerm("val_field").take().group("b"),
             ].and(),
-            NonTerm("set_equal"),
+            NonTerm("equals"),
             Int,
         ].and(),
 
@@ -106,7 +120,7 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
         "break" => Keyword("break"),
         "return" => [Keyword("return"), NonTerm("expr").opt(),].and(),
 
-        "var_set" => [Identifier, NonTerm("set_equal"),NonTerm("expr")].and(),
+        "var_set" => [Identifier, NonTerm("equals"),NonTerm("expr")].and(),
         "var" => [
             Keyword("var"), NonTerm("var_set"),
             [NonTerm("comma"),NonTerm("var_set"),].and().many0(),
@@ -118,7 +132,7 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
                 Identifier,
             ].or(),
             [NonTerm("add"),NonTerm("sub"),NonTerm("mul"),NonTerm("div"),NonTerm("not")].or().opt(),
-            NonTerm("set_equal"),
+            NonTerm("equals"),
             NonTerm("expr"),
         ].and(),
 
@@ -169,7 +183,11 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
             Identifier,
             Keyword("in").d(),
             NonTerm("expr"),
-            Keyword("to").d(),
+            // Keyword("to").d(),
+
+            [NonTerm("dot"),NonTerm("dot"),NonTerm("equals").opt(),].and(),
+
+
             NonTerm("expr"),
         ].and(),
         "for" => [
@@ -240,7 +258,7 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
                 Int,
                 Float,
                 String,
-                Keyword("bool"),
+                NonTerm("bool"),
                 Keyword("nil"),
                 Keyword("void"),
                 NonTerm("if"),
@@ -260,7 +278,7 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
                 Identifier,
                 [NonTerm("sub").opt(),Int,].and(),
                 String,
-                Keyword("bool"),
+                NonTerm("bool"),
                 Keyword("nil"),
             ].or(),
             NonTerm("colon"),
@@ -315,7 +333,7 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
         "ellipsis" => [NonTerm("dot"),NonTerm("dot"),NonTerm("dot"),].and(),
         "comma" => Symbol(","),
 
-        "set_equal" => Symbol("="),
+        "equals" => Symbol("="),
 
         "not" => Symbol("!").group("not"),
         "add" => Symbol("+"),
@@ -332,7 +350,8 @@ pub fn grammar_decl<'a>(n:&'a str) -> GrammarNode<'a> {
         "ge" => [Symbol(">"),Symbol("="),].and().group("ge"),
         "eq" => [Symbol("="),Symbol("="),].and().group("eq"),
         "ne" => [Symbol("!"),Symbol("="),].and().group("ne"),
-        _ => Error(GrammarWalkError::MissingNonTerm(n)),
-    }
+        // _ => Error(GrammarWalkError::MissingNonTerm(n)),
+        _ => {return None;}
+    })
 
 }

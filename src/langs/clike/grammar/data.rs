@@ -3,17 +3,19 @@ use std::ops::Range;
 use super::super::{grammar::container::WalkGroupContainer, tokenizer::TokenIterContainer};
 
 
-pub struct WalkGroup<'a> {
-    pub name:&'a str,
+pub struct WalkGroup<'g> {
+    pub name:&'g str,
     pub children:Range<usize>,
-    pub tokens:TokenIterContainer<'a>,
+    // pub tokens:TokenIterContainer<'a>,
+    pub tokens : Range<usize>,
 }
-pub struct Walk<'a> {
-    pub groups : Vec<WalkGroup<'a>>,
+pub struct Walk<'g> {
+    pub groups : Vec<WalkGroup<'g>>,
+    // pub tokenizer:&'a Tokenizer
 }
 
-impl<'a> Walk<'a> {
-    pub fn root(&'a self) -> WalkGroupContainer<'a> {
+impl<'g> Walk<'g> {
+    pub fn root(&'g self) -> WalkGroupContainer<'g> {
         WalkGroupContainer { walk: self, group_ind: 0 }
     }
 }

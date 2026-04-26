@@ -3,15 +3,15 @@ use super::super::grammar::error::GrammarWalkError;
 
 
 #[derive(Clone,Debug,Hash,PartialEq,Eq)]
-pub enum GrammarNode<'a> {
-    Many(Box<GrammarNode<'a>>),
+pub enum GrammarNode<'g> {
+    Many(Box<GrammarNode<'g>>),
     // Many1(Box<GrammarItem<'a>>),
-    And(Vec<GrammarNode<'a>>), //should store reversed?
-    Or(Vec<GrammarNode<'a>>), //should store reversed?
-    Opt(Box<GrammarNode<'a>>),
-    Cede(Box<GrammarNode<'a>>),
-    Take(Box<GrammarNode<'a>>),
-    Group(&'a str,Box<GrammarNode<'a>>),
+    And(Vec<GrammarNode<'g>>), //should store reversed?
+    Or(Vec<GrammarNode<'g>>), //should store reversed?
+    Opt(Box<GrammarNode<'g>>),
+    Cede(Box<GrammarNode<'g>>),
+    Take(Box<GrammarNode<'g>>),
+    Group(&'g str,Box<GrammarNode<'g>>),
 
     // List(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
     // ListNoTrail(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
@@ -20,43 +20,43 @@ pub enum GrammarNode<'a> {
     Identifier,
     Int,
     Float,
-    Symbol(&'a str),
-    Keyword(&'a str),
+    Symbol(&'g str),
+    Keyword(&'g str),
     Eol,
 
-    NonTerm(&'a str),
+    NonTerm(&'g str),
     Always, //always succeeds
     // Never, //replace with Error ?
-    Error(GrammarWalkError<'a>),
+    Error(GrammarWalkError<'g>),
     // Not(Box<GrammarItem<'a>>), //todo, needed? better to have NotIdentifier etc?
-    Discard(Box<GrammarNode<'a>>), //todo, removes token from output (via just hding it, ie have hashmap of tokens to hide)
+    Discard(Box<GrammarNode<'g>>), //todo, removes token from output (via just hding it, ie have hashmap of tokens to hide)
 }
 
-impl<'a> GrammarNode<'a> {
-    pub fn many0(self) -> GrammarNode<'a> {
+impl<'g> GrammarNode<'g> {
+    pub fn many0(self) -> GrammarNode<'g> {
         Self::Many(self.into())
     }
-    pub fn many1(self) -> GrammarNode<'a> {
+    pub fn many1(self) -> GrammarNode<'g> {
         let x=self.clone();
         [x,self.many0(),].and()
         // Self::Many1(self.into())
     }
-    pub fn opt(self) -> GrammarNode<'a> {
+    pub fn opt(self) -> GrammarNode<'g> {
         Self::Opt(self.into())
     }
-    pub fn group(self,name: &'a str) -> GrammarNode<'a> {
+    pub fn group(self,name: &'g str) -> GrammarNode<'g> {
         Self::Group(name,self.into())
     }
-    pub fn discard(self,) -> GrammarNode<'a> {
+    pub fn discard(self,) -> GrammarNode<'g> {
         Self::Discard(self.into())
     }
-    pub fn cede(self,) -> GrammarNode<'a> {
+    pub fn cede(self,) -> GrammarNode<'g> {
         Self::Cede(self.into())
     }
-    pub fn take(self,) -> GrammarNode<'a> {
+    pub fn take(self,) -> GrammarNode<'g> {
         Self::Take(self.into())
     }
-    pub fn d(self,) -> GrammarNode<'a> {
+    pub fn d(self,) -> GrammarNode<'g> {
         self.discard()
     }
     pub fn is_many(&self) -> bool {
@@ -97,9 +97,9 @@ impl<'a> GrammarNode<'a> {
 // }
 
 //todo have array stored in rev for or/and
-pub trait GrammarArrayTrait<'a> {
-    fn and(&self) -> GrammarNode<'a>;
-    fn or(&self) -> GrammarNode<'a>;
+pub trait GrammarArrayTrait<'g> {
+    fn and(&self) -> GrammarNode<'g>;
+    fn or(&self) -> GrammarNode<'g>;
 }
 impl<'a,const N: usize> GrammarArrayTrait <'a> for [GrammarNode<'a>; N] {
     fn and(&self) -> GrammarNode<'a> {

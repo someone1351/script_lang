@@ -2,6 +2,7 @@
 pub use super::error::*;
 
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 use super::data::*;
 
@@ -11,7 +12,14 @@ use super::input::*;
 // use super::super::super::build::Loc;
 
 
-pub fn tokenize<'a>(src:&'a str, ) -> Result<Tokenized,TokenizerError> {
+pub fn tokenize<'a, K>(
+    src:&'a str,
+    // keywords:&'a HashSet<&'a str>
+    is_keyword:K
+) -> Result<Tokenized,TokenizerError>
+where
+    K : Fn(&str)->bool,
+{
 
     let mut input = Input::new(src);
     let mut cur_primitives = Vec::new();

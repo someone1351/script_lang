@@ -8,3 +8,4 @@ mod container;
 pub use tokenize::tokenize;
 pub use error::*;
 pub use container::*;
+pub use data::Tokenized;

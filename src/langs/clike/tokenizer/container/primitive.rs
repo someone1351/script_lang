@@ -28,13 +28,14 @@ impl<'a> TokenContainer<'a> {
         self.primitive().end_loc
     }
 
-    pub fn primitive_type(&self) -> TokenTypeContainer<'a> {
+    pub fn token_type(&self) -> TokenTypeContainer<'a> {
         match self.primitive().primitive_type {
             PrimitiveType::Float(x, _) => TokenTypeContainer::Float(x),
             PrimitiveType::Int(x, _) => TokenTypeContainer::Int(x),
             PrimitiveType::String(x) => TokenTypeContainer::String(self.parsed.texts[x].as_str()),
             PrimitiveType::Symbol(x) => TokenTypeContainer::Symbol(self.parsed.texts[x].as_str()),
             PrimitiveType::Identifier(x) => TokenTypeContainer::Identifier(self.parsed.texts[x].as_str()),
+            PrimitiveType::Keyword(x) => TokenTypeContainer::Keyword(self.parsed.texts[x].as_str()),
             // PrimitiveType::End => PrimitiveTypeContainer::End,
             PrimitiveType::Eol => TokenTypeContainer::Eol,
         }
@@ -76,6 +77,14 @@ impl<'a> TokenContainer<'a> {
             Err(self.start_loc())
         }
     }
+
+    pub fn get_keyword(&self) -> Result<ValueContainer<'a,&'a str>,Loc> {
+        if let PrimitiveType::Keyword(x)=self.primitive().primitive_type {
+            Ok(ValueContainer{ primitive: self.clone(), value: self.parsed.texts[x].as_str() })
+        } else {
+            Err(self.start_loc())
+        }
+    }
     pub fn get_eol(&self) -> Result<ValueContainer<'a,()>,Loc> {
         if let PrimitiveType::Eol=self.primitive().primitive_type {
             Ok(ValueContainer{ primitive: self.clone(), value: () })
@@ -84,36 +93,36 @@ impl<'a> TokenContainer<'a> {
         }
     }
 
-    pub fn has_identifiers<'b,I>(&self,idns:I) -> Result<ValueContainer<'a,&'a str>,Loc>
-    where
-        I:IntoIterator<Item = &'b str>,
-    {
-        let g=self.get_identifier()?;
+    // pub fn has_identifiers<'b,I>(&self,idns:I) -> Result<ValueContainer<'a,&'a str>,Loc>
+    // where
+    //     I:IntoIterator<Item = &'b str>,
+    // {
+    //     let g=self.get_identifier()?;
 
-        for idn in idns.into_iter() {
-            if idn.eq(g.value) {
-                return Ok(g);
-            }
-        }
+    //     for idn in idns.into_iter() {
+    //         if idn.eq(g.value) {
+    //             return Ok(g);
+    //         }
+    //     }
 
-        Err(self.start_loc())
-    }
+    //     Err(self.start_loc())
+    // }
 
 
-    pub fn has_symbols<'b,I>(&self,symbols:I) -> Result<ValueContainer<'a,&'a str>,Loc>
-    where
-        I:IntoIterator<Item = &'b str>,
-    {
-        let g=self.get_symbol()?;
+    // pub fn has_symbols<'b,I>(&self,symbols:I) -> Result<ValueContainer<'a,&'a str>,Loc>
+    // where
+    //     I:IntoIterator<Item = &'b str>,
+    // {
+    //     let g=self.get_symbol()?;
 
-        for idn in symbols.into_iter() {
-            if idn.eq(g.value) {
-                return Ok(g);
-            }
-        }
+    //     for idn in symbols.into_iter() {
+    //         if idn.eq(g.value) {
+    //             return Ok(g);
+    //         }
+    //     }
 
-        Err(self.start_loc())
-    }
+    //     Err(self.start_loc())
+    // }
 
     pub fn is_eol(&self) -> bool {
         match self.primitive().primitive_type {
@@ -131,8 +140,16 @@ impl<'a> TokenContainer<'a> {
         }
     }
 
-    pub fn is_symbol(&self) -> bool {
-        if let PrimitiveType::Symbol(_)=self.primitive().primitive_type {
+    pub fn is_symbol(&self,) -> bool {
+        if let TokenTypeContainer::Symbol(_)=self.token_type() {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn is_keyword(&self, ) -> bool {
+        if let TokenTypeContainer::Keyword(_)=self.token_type() {
             true
         } else {
             false
@@ -159,12 +176,32 @@ impl<'a> TokenContainer<'a> {
             false
         }
     }
+
+    pub fn has_symbol(&self,symbol:& str) -> Result<ValueContainer<'a,&'a str>,Loc> {
+        if let TokenTypeContainer::Symbol(s)=self.token_type() {
+            if symbol==s {
+                return self.get_symbol();
+            }
+        }
+
+        Err(self.start_loc())
+    }
+
+    pub fn has_keyword(&self, keyword:&str) -> Result<ValueContainer<'a,&'a str>,Loc> {
+        if let TokenTypeContainer::Keyword(k)=self.token_type() {
+            if k==keyword {
+                return self.get_keyword();
+            }
+        }
+
+        Err(self.start_loc())
+    }
 }
 
 
 impl<'a> std::fmt::Debug for TokenContainer<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}::{:?}", &self.primitive_ind,&self.primitive_type()))
+        f.write_fmt(format_args!("{}::{:?}", &self.primitive_ind,&self.token_type()))
         // f.wr
         // f.debug_struct("Primitive")
         // // .field("parsed", &self.parsed)

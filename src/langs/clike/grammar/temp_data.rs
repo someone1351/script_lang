@@ -15,14 +15,14 @@ pub struct TempPrimitiveInfo {
 }
 
 #[derive(Clone)]
-pub struct TempGroupInfo<'a> {
-    pub name:&'a str,
+pub struct TempGroupInfo<'a,'f> {
+    pub name:&'f str,
     pub parent:usize, //group
     // pub primitive_ind_start:usize,
     pub primitives:TokenIterContainer<'a>,
 }
 
-impl<'a> Debug for  TempGroupInfo<'a> {
+impl<'a,'f> Debug for  TempGroupInfo<'a,'f> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("TempGroupInfo")
         .field("name", &self.name)
@@ -33,8 +33,8 @@ impl<'a> Debug for  TempGroupInfo<'a> {
     }
 }
 
-pub struct Work<'a> {
-    pub grammar:GrammarNode<'a>,
+pub struct Work<'a,'f> {
+    pub grammar:GrammarNode<'f>,
     pub success_len:usize,
     pub fail_len:usize,
     pub primitives:TokenIterContainer<'a>,
@@ -49,8 +49,8 @@ pub struct Work<'a> {
     pub takeable_starts_len:usize,
     pub opt:bool,
 
-    pub visiteds:HashSet<(&'a str,usize)>, //used for checking recursive nonterms
+    pub visiteds:HashSet<(&'f str,usize)>, //used for checking recursive nonterms
 
-    pub takeables:HashMap<GrammarNode<'a>,TokenIterContainer<'a>>, //[non_term]
+    pub takeables:HashMap<GrammarNode<'f>,TokenIterContainer<'a>>, //[non_term]
 }
 

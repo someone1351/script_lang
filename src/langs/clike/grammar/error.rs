@@ -1,19 +1,19 @@
 
 #[derive(Debug,Clone,Hash,PartialEq, Eq)]
-pub enum GrammarWalkError<'a> {
+pub enum GrammarWalkError<'g> {
     Unfinished,
-    RecursiveNonTerm(&'a str),
+    RecursiveNonTerm(&'g str),
     FailedParse,//((Loc,Vec<GrammarItem<'a>>,)),
-    MissingNonTerm(&'a str),
+    MissingNonTerm(&'g str),
 }
 
-impl<'a> std::fmt::Display for GrammarWalkError<'a> {
+impl<'g> std::fmt::Display for GrammarWalkError<'g> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f,"{self:?}",)
     }
 }
 
-impl<'a> std::error::Error for GrammarWalkError<'a> {
+impl<'g> std::error::Error for GrammarWalkError<'g> {
     fn description(&self) -> &str {
         "GrammarWalkError"
     }

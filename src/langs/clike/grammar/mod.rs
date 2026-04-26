@@ -12,12 +12,12 @@ TODO
 use std::{collections::{BTreeMap, HashMap, HashSet}, ops::Range};
 
 use crate::{build::Loc, };
-use super::grammar::walk::GrammarWalker;
+use super::grammar::walker::GrammarWalker;
 
 use super::tokenizer::{TokenContainer, TokenIterContainer, ValueContainer};
 
 pub mod node;
-pub mod walk;
+pub mod walker;
 pub mod container;
 pub mod error;
 pub mod data;

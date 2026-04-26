@@ -14,6 +14,7 @@ pub enum TokenTypeContainer<'a> {
     String(&'a str),
     Symbol(&'a str),
     Identifier(&'a str),
+    Keyword(&'a str),
     Eol,
 }
 
@@ -28,6 +29,7 @@ impl<'a> std::fmt::Debug for TokenTypeContainer<'a> {
             Self::String(arg0) => f.debug_tuple("String").field(arg0).finish(),
             Self::Symbol(arg0) => f.debug_tuple("Symbol").field(arg0).finish(),
             Self::Identifier(arg0) => f.debug_tuple("Identifier").field(arg0).finish(),
+            Self::Keyword(arg0) => f.debug_tuple("Keyword").field(arg0).finish(),
             Self::Eol => write!(f, "Eol"),
         }
     }

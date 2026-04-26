@@ -11,6 +11,7 @@ pub enum PrimitiveType {
     String(usize),//text_ind
     Symbol(usize), //text_ind
     Identifier(usize), //text_ind
+    Keyword(usize), //text_ind
     Eol,
 }
 
@@ -27,13 +28,13 @@ pub struct Tokenized {
 }
 
 impl Tokenized {
-    pub fn primitives(&self) -> TokenIterContainer<'_> {
+    pub fn tokens(&self) -> TokenIterContainer<'_> {
         TokenIterContainer { last_loc:Loc::one(),start: 0, end: self.primitives.len(), parsed: self }
     }
     pub fn print(&self) {
         // println!("prims {:?}",self.primitives);
 
-        for p in self.primitives() {
+        for p in self.tokens() {
             println!("{p:?}");
         }
     }

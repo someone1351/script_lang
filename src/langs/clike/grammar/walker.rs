@@ -14,28 +14,42 @@ use super::node::*;
 // use error::*;
 
 
-pub struct GrammarWalker<'a,F> {
-    top_primitives:TokenIterContainer<'a>,
-    primitives_remaining: TokenIterContainer<'a>,
+pub struct GrammarWalker<'t,'g,G>
+where
+    G: Fn(&str)->Option<GrammarNode<'g>>,
+{
+    top_primitives:TokenIterContainer<'t>,
+    primitives_remaining: TokenIterContainer<'t>,
 
     primitive_infos : Vec<TempPrimitiveInfo>,
-    group_infos : Vec<TempGroupInfo<'a>>,
-    takeable_starts:Vec<(GrammarNode<'a>,TokenIterContainer<'a>)>, //[(g,output_ind_start)]
-    grammar_func:F,
+    group_infos : Vec<TempGroupInfo<'t,'g>>,
+    takeable_starts:Vec<(GrammarNode<'g>,TokenIterContainer<'t>)>, //[(g,output_ind_start)]
+    grammar_func:G,
 
-    stk: Vec<Work<'a>>,
+    stk: Vec<Work<'t,'g>>,
     c:usize,
-    expected: (Loc,Vec<GrammarNode<'a>>,),
+    expected: (Loc,Vec<GrammarNode<'g>>,),
     debug:bool,
+    // keywords : HashSet<&'a str>,
+    // keywords : &'a HashSet<&'a str>,
+    // tokenized:Tokenized<'a>,
 }
 
 
-impl<'a,F> GrammarWalker<'a,F>
+impl<'t,'g,G> GrammarWalker<'t,'g,G>
 where
-    F: Fn(&'a str)->GrammarNode<'a>,
+    G: Fn(&str)->Option<GrammarNode<'g>>,
 {
 
-    pub fn new(top_primitives:TokenIterContainer<'a>, grammar_func:F) -> Self {
+    pub fn new
+        // <K>
+        (top_primitives:TokenIterContainer<'t>, grammar_func:G,
+        // keywords:K,
+        // keywords:&'a HashSet<&'a str>,
+    ) -> Self
+    // where
+    //     K:IntoIterator<Item = &'a str>,
+    {
         Self {
             primitive_infos :  Default::default(),
             group_infos : Default::default(),
@@ -47,10 +61,12 @@ where
             primitives_remaining:top_primitives.clone(),
             top_primitives,
             debug:false,
+            // keywords:HashSet::from_iter(keywords.into_iter()),
+            // keywords,
         }
     }
 
-    fn init(&mut self,start_non_term:&'a str,) {
+    fn init(&mut self,start_non_term:&'g str,) {
         self.stk.clear();
 
         self.stk.push(Work{
@@ -62,15 +78,24 @@ where
             takeables:Default::default(),
             opt:false,
         });
-        self.stk.push(Work{
-            grammar:(self.grammar_func)(start_non_term),success_len:0,fail_len:1,primitives:self.top_primitives,
-            group_ind: 0, group_len: 1, output_len: 0, discard:false,
-            // takeable_starts:Default::default(),
-            takeable_starts_len:0,
-            visiteds:Default::default(),
-            takeables:Default::default(),
-            opt:false,
-        });
+        {
+            let grammar=if let Some(g)=(self.grammar_func)(start_non_term) {
+                g
+            } else {
+                GrammarNode::Error(GrammarWalkError::MissingNonTerm(start_non_term))
+            };
+
+            self.stk.push(Work{
+                grammar, //:(self.grammar_func)(start_non_term),
+                success_len:0,fail_len:1,primitives:self.top_primitives,
+                group_ind: 0, group_len: 1, output_len: 0, discard:false,
+                // takeable_starts:Default::default(),
+                takeable_starts_len:0,
+                visiteds:Default::default(),
+                takeables:Default::default(),
+                opt:false,
+            });
+        }
 
         //
         self.primitive_infos.clear();
@@ -89,7 +114,7 @@ where
         self.expected=Default::default();
     }
 
-    pub fn run(&mut self,start_non_term:&'a str,) -> Result<(),GrammarWalkError<'a>> {
+    pub fn run(&mut self,start_non_term:&'g str,) -> Result<(),GrammarWalkError<'g>> {
         self.init(start_non_term);
 
         while let Some(cur)=self.stk.pop() {
@@ -184,7 +209,7 @@ where
 
     }
 
-    fn step(&mut self,cur:Work<'a>) -> Result<(),GrammarWalkError<'a>> {
+    fn step(&mut self,cur:Work<'t,'g>) -> Result<(),GrammarWalkError<'g>> {
         if self.debug {
             self.c+=1;
 
@@ -540,14 +565,19 @@ where
 
                 // let mut takeable_starts_len=cur.takeable_starts_len;
                 // self.takeable_starts.insert((cur.grammar,cur.primitives.inds().start));
-                // let g=(self.grammar_func)(t);
 
                 // if cur.opt {
                 //     self.takeable_starts.push((g.clone(),cur.primitives.clone()));
                 // }
 
+                let grammar=if let Some(g)=(self.grammar_func)(t) {
+                    g
+                } else {
+                    GrammarNode::Error(GrammarWalkError::MissingNonTerm(t))
+                };
+
                 self.stk.push(Work {
-                    grammar: (self.grammar_func)(t), //should return err on not found, instead of grammar never, should have error
+                    grammar, //: (self.grammar_func)(t), //should return err on not found, instead of grammar never, should have error
                     success_len: cur.success_len,
                     fail_len: cur.fail_len,
                     primitives: cur.primitives,
@@ -659,14 +689,14 @@ where
                 }
             }
             GrammarNode::Symbol(s) => {
-                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_symbols([s])) {
+                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_symbol(s)) {
                     if self.debug {
                         println!("--- symbol {v:?}");
                     }
                 }
             }
             GrammarNode::Keyword(s) => {
-                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_identifiers([s])) {
+                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_keyword(s)) {
                     if self.debug {
                         println!("--- keyword {v:?}");
                     }
@@ -684,9 +714,9 @@ where
         Ok(())
     }
 
-    fn do_primtive<Q,P>(&mut self,mut cur:Work<'a>,prim_func:Q) -> Option<P>
+    fn do_primtive<Q,P>(&mut self,mut cur:Work<'t,'g>,prim_func:Q) -> Option<P>
     where
-        Q:Fn(&mut TokenIterContainer<'a>)->Result<ValueContainer<'a,P>,Loc>,
+        Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
     {
         match prim_func(&mut cur.primitives) {
             Ok(v) => {
@@ -750,7 +780,7 @@ where
 
     fn do_groups_primitives_clamp(&mut self,
         cur_group_ind:usize,
-        cur_primitives:TokenIterContainer<'a>,
+        cur_primitives:TokenIterContainer<'t>,
     ) {
         if let Some(last)=self.stk.last_mut() {
             // let last_group_prim_len=last.primitives.len();
@@ -776,10 +806,10 @@ where
     }
 
     fn do_non_term_visiteds(&mut self,
-        t:&'a str,
-        cur_primitives:TokenIterContainer<'a>,
-        cur_visiteds: HashSet<(&'a str, usize)>,
-    ) -> Result<HashSet<(&'a str, usize)>,GrammarWalkError<'a>> {
+        t:&'g str,
+        cur_primitives:TokenIterContainer<'t>,
+        cur_visiteds: HashSet<(&'g str, usize)>,
+    ) -> Result<HashSet<(&'g str, usize)>,GrammarWalkError<'g>> {
         let v=(t,cur_primitives.inds().start);
 
         if cur_visiteds.contains(&v) {
@@ -820,7 +850,7 @@ where
         self.expected.0=Loc::zero();
         self.expected.1.clear();
     }
-    fn add_expected(&mut self,loc:Loc,g:GrammarNode<'a>) {
+    fn add_expected(&mut self,loc:Loc,g:GrammarNode<'g>) {
         if loc==self.expected.0 {
             self.expected.1.push(g);
         } else if loc>self.expected.0 {
@@ -828,7 +858,7 @@ where
             self.expected.1=vec![g];
         }
     }
-    fn new_group(&mut self,name : &'a str, parent:usize, ps:TokenIterContainer<'a>) -> usize {
+    fn new_group(&mut self,name : &'g str, parent:usize, ps:TokenIterContainer<'t>) -> usize {
         let new_group_ind=self.group_infos.len();
 
         self.group_infos.push(TempGroupInfo {
@@ -841,14 +871,14 @@ where
         new_group_ind
     }
 
-    fn set_remaining_prims(&mut self,cur_primitives:TokenIterContainer<'a>,) {
+    fn set_remaining_prims(&mut self,cur_primitives:TokenIterContainer<'t>,) {
         if self.stk.is_empty() {
             self.primitives_remaining=cur_primitives;
         }
     }
 
     fn remove_groups_at_except(&mut self,
-        taken_ps_start:TokenIterContainer<'a>,
+        taken_ps_start:TokenIterContainer<'t>,
         cur_group_ind:usize,
     ) -> usize{
 
@@ -933,7 +963,7 @@ where
 
     fn last_remove_groups_at(&mut self,
         // last_group_len:usize ,
-        cur_group_len:usize,cur_primitives:TokenIterContainer<'a>)
+        cur_group_len:usize,cur_primitives:TokenIterContainer<'t>)
         // -> usize
     {
 
@@ -989,8 +1019,8 @@ where
         self.expected.0
     }
 
-    pub fn get_walk(&self) -> Walk<'a> {
-        let mut groups: Vec<WalkGroup<'a>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
+    pub fn get_walk(&self) -> Walk<'g> {
+        let mut groups: Vec<WalkGroup<'g>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
         // groups.resize_with(new_len, f);
 
         let mut group_infos2 = self.group_infos.iter().enumerate().map(|(i,g)|(i,g.parent,0)).collect::<Vec<_>>();
@@ -1015,7 +1045,8 @@ where
         //
         for (_i,&(g,_p,c)) in group_infos2.iter().enumerate() {
             let gg=&self.group_infos[g];
-            groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives });
+            groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives.inds() });
+            // groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives });
             // println!("{_i} name: {:?}, children: {:?}, tokens: {:?}",gg.name,csum..csum+c,gg.primitives.inds());
             csum+=c;
         }

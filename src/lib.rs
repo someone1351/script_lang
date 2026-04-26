@@ -184,6 +184,12 @@ TODO
 * use call for function calls
 ** if used not on a func, then call method "call"
 ** disable $ prefix
+
+TODO
+* could add null, for iterator funcs, to return at end of iteration
+** so arrays with nil can still be iterated
+** but make it not storeable like void? eg cant store in variables, pass to funcs?
+** or call it empty?
 */
 
 pub mod compiler;
