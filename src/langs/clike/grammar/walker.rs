@@ -30,6 +30,8 @@ where
     c:usize,
     expected: (Loc,Vec<GrammarNode<'g>>,),
     debug:bool,
+
+    grammar_debug_stk:Vec<TempGrammarNodeDebug<'t,'g>>,
     // keywords : HashSet<&'a str>,
     // keywords : &'a HashSet<&'a str>,
     // tokenized:Tokenized<'a>,
@@ -63,6 +65,7 @@ where
             debug:false,
             // keywords:HashSet::from_iter(keywords.into_iter()),
             // keywords,
+            grammar_debug_stk:Vec::new(),
         }
     }
 
@@ -77,6 +80,8 @@ where
             visiteds:Default::default(),
             takeables:Default::default(),
             opt:false,
+            grammar_debug_len: 0,
+            grammar_debug_no_add: false,
         });
         {
             let grammar=if let Some(g)=(self.grammar_func)(start_non_term) {
@@ -94,6 +99,8 @@ where
                 visiteds:Default::default(),
                 takeables:Default::default(),
                 opt:false,
+                grammar_debug_len: 0,
+                grammar_debug_no_add: false,
             });
         }
 
@@ -112,6 +119,7 @@ where
 
         self.c=0;
         self.expected=Default::default();
+        self.grammar_debug_stk.clear();
     }
 
     pub fn run(&mut self,start_non_term:&'g str,) -> Result<(),GrammarWalkError<'g>> {
@@ -147,9 +155,13 @@ where
         }
 
         if !self.primitives_remaining.is_empty() {
+            self.expected.0=self.primitives_remaining.loc();
             // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
-            println!("error, failed to parse all tokens {}",self.expected.0);
+            println!("error, failed to parse all tokens, at {}",self.expected.0);
+            println!("{:?}",self.expected.1); //self.expected.1 should be empty?
             return Err(GrammarWalkError::Unfinished);
+
+            //need to store grammar that was traversed ...
         } else {
             println!("parsed ok");
         }
@@ -210,6 +222,36 @@ where
     }
 
     fn step(&mut self,cur:Work<'t,'g>) -> Result<(),GrammarWalkError<'g>> {
+
+
+        self.group_infos.truncate(cur.group_len);
+
+        //
+        if !cur.grammar_debug_no_add {
+            self.grammar_debug_stk.push(match cur.grammar {
+                GrammarNode::Many(_) => TempGrammarNodeDebug::Many(vec![]),
+                GrammarNode::And(_) => TempGrammarNodeDebug::And(vec![]),
+                GrammarNode::Or(_) => TempGrammarNodeDebug::Or(vec![]),
+                GrammarNode::Opt(_) => TempGrammarNodeDebug::Opt(None),
+                GrammarNode::Cede(_) => TempGrammarNodeDebug::Cede(None),
+                GrammarNode::Take(_) => TempGrammarNodeDebug::Take(None),
+                GrammarNode::Group(g, _) => TempGrammarNodeDebug::Group(g,None),
+                GrammarNode::String => TempGrammarNodeDebug::String(None),
+                GrammarNode::Identifier => TempGrammarNodeDebug::Identifier(None),
+                GrammarNode::Int => TempGrammarNodeDebug::Int(None),
+                GrammarNode::Float => TempGrammarNodeDebug::Float(None),
+                GrammarNode::Symbol(_) => TempGrammarNodeDebug::Symbol(None),
+                GrammarNode::Keyword(_) => TempGrammarNodeDebug::Keyword(None),
+                GrammarNode::Eol => TempGrammarNodeDebug::Eol(None),
+                GrammarNode::NonTerm(t) => TempGrammarNodeDebug::NonTerm(t,None),
+                GrammarNode::Always => TempGrammarNodeDebug::Always,
+                GrammarNode::Error(_) => TempGrammarNodeDebug::Error,
+                GrammarNode::Discard(_) => TempGrammarNodeDebug::Discard(None),
+            });
+        }
+
+
+        //
         if self.debug {
             self.c+=1;
 
@@ -217,14 +259,14 @@ where
             // // println!(": {cur:?} || {} && {primitives:?}", self.stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
             {
                 let c=self.c;
-                let Work { grammar, success_len, fail_len, primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt}=&cur;
-                println!("{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
+                let Work { grammar, success_len, fail_len, primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt,grammar_debug_len, grammar_debug_no_add }=&cur;
+                println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
                 println!("         -takeable_starts={:?}",self.takeable_starts);
                 println!("         -temp_primtives={:?}",self.primitive_infos);
-                println!("         -temp_groups3={:?}",self.group_infos);
+                println!("         -temp_groups3={:?}",self.group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
             }
 
-            for (i,Work { grammar:g, success_len:s, fail_len:f, primitives:ps, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt }) in self.stk.iter()
+            for (i,Work { grammar:g, success_len:s, fail_len:f, primitives:ps, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt, grammar_debug_len, grammar_debug_no_add }) in self.stk.iter()
                 // .rev()
                 .enumerate() {
                 // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
@@ -256,6 +298,8 @@ where
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:cur.opt,
+                    grammar_debug_len: cur.grammar_debug_len+1,
+                    grammar_debug_no_add: false,
                 });
             }
             GrammarNode::Discard(g) => {
@@ -278,6 +322,8 @@ where
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:cur.opt,
+                    grammar_debug_len: cur.grammar_debug_len+1,
+                    grammar_debug_no_add: false,
                 });
 
 
@@ -307,6 +353,9 @@ where
                         takeables:cur.takeables.clone(),
                         opt:false, //opt isnt passed to individual items in And
 
+                        grammar_debug_len: cur.grammar_debug_len,
+                        grammar_debug_no_add: true,
+
                     });
                 }
 
@@ -330,6 +379,9 @@ where
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:false, //opt isnt passed to individual items in And
+
+                    grammar_debug_len: cur.grammar_debug_len+1,
+                    grammar_debug_no_add: false,
                 });
             }
             GrammarNode::Or(gs) => {
@@ -353,6 +405,9 @@ where
                         visiteds:cur.visiteds.clone(),
                         takeables:cur.takeables.clone(),
                         opt:cur.opt,
+
+                        grammar_debug_len: cur.grammar_debug_len,
+                        grammar_debug_no_add: true,
                     });
                 }
 
@@ -376,6 +431,9 @@ where
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:cur.opt,
+
+                    grammar_debug_len: cur.grammar_debug_len+1,
+                    grammar_debug_no_add: false,
                 });
             }
 
@@ -394,6 +452,8 @@ where
                     visiteds:cur.visiteds.clone(),
                     takeables:cur.takeables.clone(),
                     opt:false, //not used on always
+                    grammar_debug_len: cur.grammar_debug_len,
+                    grammar_debug_no_add: true,
                 });
 
                 let fail_len=self.stk.len();
@@ -416,6 +476,8 @@ where
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:true,
+                    grammar_debug_len: cur.grammar_debug_len+1,
+                    grammar_debug_no_add: false,
                 });
             }
             GrammarNode::Cede(g) => {
@@ -439,6 +501,8 @@ where
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:cur.opt,
+                    grammar_debug_len: cur.grammar_debug_len+1,
+                    grammar_debug_no_add: false,
                 });
             }
             GrammarNode::Take(g) => {
@@ -477,6 +541,8 @@ where
                         visiteds: cur.visiteds, //
                         takeables: Default::default(),
                         opt:cur.opt,
+                        grammar_debug_len: cur.grammar_debug_len+1,
+                        grammar_debug_no_add: false,
                     });
                 } else {
 
@@ -506,6 +572,8 @@ where
                     visiteds:cur.visiteds.clone(),
                     takeables:cur.takeables.clone(),
                     opt:true,
+                    grammar_debug_len: cur.grammar_debug_len,
+                    grammar_debug_no_add: true,
                 });
 
                 let success_len2=self.stk.len();
@@ -524,6 +592,8 @@ where
                     visiteds:cur.visiteds.clone(),
                     takeables:cur.takeables.clone(),
                     opt:false, //not used
+                    grammar_debug_len: cur.grammar_debug_len,
+                    grammar_debug_no_add: true,
                 });
 
                 let fail_len=self.stk.len();
@@ -547,6 +617,8 @@ where
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
                     opt:true,
+                    grammar_debug_len: cur.grammar_debug_len+1,
+                    grammar_debug_no_add: false,
                 });
             }
 
@@ -590,6 +662,9 @@ where
                     takeables:cur.takeables,
                     takeable_starts_len:cur.takeable_starts_len,
                     opt:cur.opt,
+
+                    grammar_debug_len: cur.grammar_debug_len+1,
+                    grammar_debug_no_add: false,
                 });
             }
             GrammarNode::Always => {
@@ -622,6 +697,39 @@ where
 
                     //
                     last.takeables=cur.takeables;
+
+                    // let grammar_debug_len_dif=cur.grammar_debug_len-last.grammar_debug_len;
+
+                    if cur.grammar_debug_len!=last.grammar_debug_len {
+
+                        let mut last_gd= self.grammar_debug_stk.pop().unwrap();
+
+                        for i in last.grammar_debug_len..cur.grammar_debug_len-1 {
+                            match self.grammar_debug_stk.last_mut().unwrap() {
+                                TempGrammarNodeDebug::Many(gs)
+                                |TempGrammarNodeDebug::And(gs)
+                                |TempGrammarNodeDebug::Or(gs)
+                                => {gs.push(last_gd);}
+
+                                TempGrammarNodeDebug::Opt(g)
+                                |TempGrammarNodeDebug::Cede(g)
+                                |TempGrammarNodeDebug::Take(g)
+                                |TempGrammarNodeDebug::Group(_, g)
+                                |TempGrammarNodeDebug::NonTerm(_, g)
+                                |TempGrammarNodeDebug::Discard(g)
+                                => {*g=Some(last_gd.into())}
+
+                                _=>{panic!("");}
+                            }
+
+                            if i==last.grammar_debug_len {
+                                break;
+                            }
+
+                            last_gd=self.grammar_debug_stk.pop().unwrap();
+                        }
+                    }
+
 
 
                 }
@@ -665,6 +773,9 @@ where
                     if self.debug {
                         println!("--- string {v:?}");
                     }
+
+                    let Some(TempGrammarNodeDebug::String(Some(x)))=self.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=v;
                 }
             }
             GrammarNode::Identifier => {
@@ -672,6 +783,9 @@ where
                     if self.debug {
                         println!("--- identifier {v:?}");
                     }
+
+                    let Some(TempGrammarNodeDebug::Identifier(Some(x)))=self.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=v;
                 }
             }
             GrammarNode::Int => {
@@ -679,6 +793,9 @@ where
                     if self.debug {
                         println!("--- int {v:?}");
                     }
+
+                    let Some(TempGrammarNodeDebug::Int(Some(x)))=self.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=v;
                 }
             }
             GrammarNode::Float => {
@@ -686,6 +803,9 @@ where
                     if self.debug {
                         println!("--- float {v:?}");
                     }
+
+                    let Some(TempGrammarNodeDebug::Float(Some(x)))=self.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=v;
                 }
             }
             GrammarNode::Symbol(s) => {
@@ -693,6 +813,9 @@ where
                     if self.debug {
                         println!("--- symbol {v:?}");
                     }
+
+                    let Some(TempGrammarNodeDebug::Symbol(Some(x)))=self.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=v;
                 }
             }
             GrammarNode::Keyword(s) => {
@@ -700,13 +823,19 @@ where
                     if self.debug {
                         println!("--- keyword {v:?}");
                     }
+
+                    let Some(TempGrammarNodeDebug::Keyword(Some(x)))=self.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=v;
                 }
             }
             GrammarNode::Eol => {
-                if let Some(_)=self.do_primtive(cur,|ps|ps.pop_eol()) {
+                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_eol()) {
                     if self.debug {
                         println!("--- eol");
                     }
+
+                    let Some(TempGrammarNodeDebug::Eol(Some(x)))=self.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=v;
                 }
             }
         }
@@ -714,7 +843,7 @@ where
         Ok(())
     }
 
-    fn do_primtive<Q,P>(&mut self,mut cur:Work<'t,'g>,prim_func:Q) -> Option<P>
+    fn do_primtive<Q,P>(&mut self,mut cur:Work<'t,'g>,prim_func:Q) -> Option<ValueContainer<'t,P>>
     where
         Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
     {
@@ -749,7 +878,7 @@ where
                 // }
                 self.set_remaining_prims(cur.primitives);
 
-                Some(v.value)
+                Some(v)
             }
             Err(loc) => {
                 self.add_expected(loc,cur.grammar);
@@ -1019,8 +1148,8 @@ where
         self.expected.0
     }
 
-    pub fn get_walk(&self) -> Walk<'g> {
-        let mut groups: Vec<WalkGroup<'g>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
+    pub fn get_walk(&self) -> Walk<'t,'g> {
+        let mut groups: Vec<WalkGroup<'t,'g>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
         // groups.resize_with(new_len, f);
 
         let mut group_infos2 = self.group_infos.iter().enumerate().map(|(i,g)|(i,g.parent,0)).collect::<Vec<_>>();
@@ -1045,8 +1174,8 @@ where
         //
         for (_i,&(g,_p,c)) in group_infos2.iter().enumerate() {
             let gg=&self.group_infos[g];
-            groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives.inds() });
-            // groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives });
+            // groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives.inds() });
+            groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives });
             // println!("{_i} name: {:?}, children: {:?}, tokens: {:?}",gg.name,csum..csum+c,gg.primitives.inds());
             csum+=c;
         }

@@ -1,6 +1,8 @@
 
 use std::{collections::{HashMap, HashSet}, fmt::Debug};
 
+use crate::clike::tokenizer::{TokenContainer, ValueContainer};
+
 // use crate::build::Loc;
 use super::super::tokenizer::TokenIterContainer;
 
@@ -52,5 +54,35 @@ pub struct Work<'a,'f> {
     pub visiteds:HashSet<(&'f str,usize)>, //used for checking recursive nonterms
 
     pub takeables:HashMap<GrammarNode<'f>,TokenIterContainer<'a>>, //[non_term]
+    pub grammar_debug_len:usize,
+    pub grammar_debug_no_add:bool,
 }
 
+
+
+#[derive(Clone,Debug,)]
+pub enum TempGrammarNodeDebug<'t,'g> {
+    Many(
+        // Option<Box<Self>>
+        Vec<Self>
+    ),
+    And(Vec<Self>),
+    Or(Vec<Self>),
+    Opt(Option<Box<Self>>),
+    Cede(Option<Box<Self>>),
+    Take(Option<Box<Self>>),
+    Group(&'g str,Option<Box<Self>>),
+
+    String(Option<ValueContainer<'t,&'t str>>),
+    Identifier(Option<ValueContainer<'t,&'t str>>),
+    Int(Option<ValueContainer<'t,i64>>),
+    Float(Option<ValueContainer<'t,f64>>),
+    Symbol(Option<ValueContainer<'t,&'t str>>),
+    Keyword(Option<ValueContainer<'t,&'t str>>),
+    Eol(Option<ValueContainer<'t,()>>),
+
+    NonTerm(&'g str,Option<Box<Self>>),
+    Always,
+    Error,
+    Discard(Option<Box<Self>>),
+}

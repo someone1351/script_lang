@@ -3,14 +3,14 @@ use std::ops::{Bound, RangeBounds};
 use super::super::super::grammar::{container::WalkGroupContainer, data::Walk};
 
 #[derive(Clone, Copy)]
-pub struct WalkGroupIterContainer<'a> {
-    pub walk:&'a Walk<'a>,
+pub struct WalkGroupIterContainer<'t,'g> {
+    pub walk:&'g Walk<'t,'g>,
     pub start:usize,
     pub end:usize,
 }
 
-impl<'a> WalkGroupIterContainer<'a> {
-    pub fn pop_front(&mut self) -> Option<WalkGroupContainer<'a>,> {
+impl<'t,'g> WalkGroupIterContainer<'t,'g> {
+    pub fn pop_front(&mut self) -> Option<WalkGroupContainer<'t,'g>,> {
         if self.start < self.end {
             let group_ind=self.start;
             self.start+=1;
@@ -24,7 +24,7 @@ impl<'a> WalkGroupIterContainer<'a> {
         self.end-self.start
     }
 
-    pub fn get(&self, ind:usize) -> Option<WalkGroupContainer<'a>,> {
+    pub fn get(&self, ind:usize) -> Option<WalkGroupContainer<'t,'g>,> {
         let group_ind= self.start+ind;
 
         if group_ind < self.end {
@@ -34,7 +34,7 @@ impl<'a> WalkGroupIterContainer<'a> {
         }
     }
 
-    pub fn get_range<R:RangeBounds<usize>>(&self,r:R) -> WalkGroupIterContainer<'a> {
+    pub fn get_range<R:RangeBounds<usize>>(&self,r:R) -> WalkGroupIterContainer<'t,'g> {
 
         let range_start=match r.start_bound().cloned() {
             Bound::Included(x)=>x,
@@ -68,14 +68,14 @@ impl<'a> WalkGroupIterContainer<'a> {
         self.start==self.end
     }
 
-    pub fn first(&self) -> Option<WalkGroupContainer<'a>,> {
+    pub fn first(&self) -> Option<WalkGroupContainer<'t,'g>,> {
         self.get(0)
     }
 }
 
 
-impl<'a> Iterator for WalkGroupIterContainer<'a> {
-    type Item = WalkGroupContainer<'a>;
+impl<'t,'g> Iterator for WalkGroupIterContainer<'t,'g> {
+    type Item = WalkGroupContainer<'t,'g>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
@@ -90,8 +90,8 @@ impl<'a> Iterator for WalkGroupIterContainer<'a> {
     }
 }
 
-impl<'a> DoubleEndedIterator for WalkGroupIterContainer<'a> {
-    fn next_back(&mut self) -> Option<WalkGroupContainer<'a>> {
+impl<'t,'g> DoubleEndedIterator for WalkGroupIterContainer<'t,'g> {
+    fn next_back(&mut self) -> Option<WalkGroupContainer<'t,'g>> {
         if self.end > self.start {
             self.end-=1;
             let group_ind=self.end;
@@ -103,7 +103,7 @@ impl<'a> DoubleEndedIterator for WalkGroupIterContainer<'a> {
     }
 }
 
-impl<'a> std::fmt::Debug for WalkGroupIterContainer<'a> {
+impl<'t,'g> std::fmt::Debug for WalkGroupIterContainer<'t,'g> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 
         f.write_fmt(format_args!("[{}]", self.clone().map(|p|format!("{p:?}")).collect::<Vec<String>>().join(", ")))

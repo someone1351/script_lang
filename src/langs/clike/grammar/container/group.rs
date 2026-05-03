@@ -3,19 +3,19 @@ use std::fmt::Display;
 use super::super::super::{grammar::{container::WalkGroupIterContainer, data::{Walk, WalkGroup}}, tokenizer::{TokenContainer, TokenIterContainer}};
 
 #[derive(Clone, Copy)]
-pub struct WalkGroupContainer<'a> {
-    pub walk:&'a Walk<'a>,
+pub struct WalkGroupContainer<'t,'g> {
+    pub walk:&'g Walk<'t,'g>,
     pub group_ind:usize,
 }
 
-impl<'a> WalkGroupContainer<'a> {
-    fn group(&self) -> &WalkGroup<'a> {
+impl<'t,'g> WalkGroupContainer<'t,'g> {
+    fn group(&self) -> &WalkGroup<'t,'g> {
         &self.walk.groups[self.group_ind]
     }
-    pub fn name(&self) -> &'a str {
+    pub fn name(&self) -> &'g str {
         self.group().name
     }
-    pub fn children(&self) -> WalkGroupIterContainer<'a> {
+    pub fn children(&self) -> WalkGroupIterContainer<'t,'g> {
         let group=self.group();
         WalkGroupIterContainer{ walk: self.walk, start: group.children.start, end: group.children.end }
 
@@ -26,7 +26,7 @@ impl<'a> WalkGroupContainer<'a> {
 
 }
 
-impl<'a> std::fmt::Debug for WalkGroupContainer<'a> {
+impl<'t,'g> std::fmt::Debug for WalkGroupContainer<'t,'g> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!("{}::{:?}", &self.group_ind,&self.name()))
         // f.wr
@@ -39,7 +39,7 @@ impl<'a> std::fmt::Debug for WalkGroupContainer<'a> {
     }
 }
 
-impl<'a> Display for WalkGroupContainer<'a> {
+impl<'t,'g> Display for WalkGroupContainer<'t,'g> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 
         // enum Thing<'a> {

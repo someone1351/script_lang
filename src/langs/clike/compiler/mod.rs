@@ -3,11 +3,14 @@
 // #![allow(unused)]
 mod error;
 // mod cmds;
+mod rules;
 
+use crate::clike::grammar::walker::GrammarWalker;
+use crate::clike::grammar::GrammarWalkError;
 // use crate::ccexpr_compiler::grammar::grammar_run;
 // use std::path::PathBuf;
-use super::parser::parse;
-use crate::clike::tokenizer::tokenize;
+// use super::parser::parse;
+use crate::clike::tokenizer::{tokenize, TokenizerErrorType};
 use crate::primitive_types::StringVal;
 
 use crate::build::*;
@@ -69,11 +72,54 @@ impl Compiler {
         let src= StringVal::new(src);
         let pathbuf=path.map(|x|x.to_path_buf());
 
-        let parsed=parse(src.as_str());
 
-        if let Err(e)=parsed {
-            // return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Tokenizer(e.error_type)});
+        //
+        let tokenized=tokenize(src.as_str(), rules::is_keyword );
+
+        //
+        let Ok(tokenized)=tokenized else {
+            let e=tokenized.err().unwrap();
+
+            match e.error_type {
+                TokenizerErrorType::Unexpected => {
+                    panic!("TokenizerErrorType::Unexpected");
+                }
+                _ => {
+                    // return Err(ParserError { loc: e.loc, error_type: ParserErrorType::Tokenizer(e.error_type) });
+                    return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Tokenizer(e.error_type)});
+                }
+            }
+        };
+
+        //
+        let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
+        walker.set_debug(true);
+
+        //
+        if let Err(e)=walker.run("start") {
+            match e {
+                GrammarWalkError::FailedParse => {
+                    return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::Parser(walker.expecteds_string())});
+                }
+                // GrammarWalkError::Unfinished => todo!(),
+                // GrammarWalkError::RecursiveNonTerm(_) => todo!(),
+                // GrammarWalkError::MissingNonTerm(_) => todo!(),
+                _ => {
+                    // println!("{:?} {:?}",walker.expecteds_string(),walker.last_loc());
+                    panic!("{e:?}");
+                }
+            }
         }
+
+        //
+        // let walk=walker.get_walk();
+        //
+
+        // let parsed=parse(src.as_str());
+
+        // if let Err(e)=parsed {
+        //     // return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Tokenizer(e.error_type)});
+        // }
         // let parsed=tokenize(src.as_str(),  );
 
         // if let Err(e)=parsed {

@@ -194,7 +194,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             Keyword("for"),
             [
                 NonTerm("for_body"),
-                [NonTerm("lparen"),NonTerm("for_body"),NonTerm("rparen"),].and(),
+                // [NonTerm("lparen"),NonTerm("for_body"),NonTerm("rparen"),].and(),
             ].or(),
             NonTerm("block"),
         ].and(),
