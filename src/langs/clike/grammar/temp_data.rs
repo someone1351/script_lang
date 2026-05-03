@@ -55,7 +55,7 @@ pub struct Work<'a,'f> {
 
     pub takeables:HashMap<GrammarNode<'f>,TokenIterContainer<'a>>, //[non_term]
     pub grammar_debug_len:usize,
-    pub grammar_debug_no_add:bool,
+    // pub grammar_debug_no_add:bool,
 }
 
 
