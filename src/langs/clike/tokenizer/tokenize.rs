@@ -41,7 +41,7 @@ where
         } else if let Some(primitive)=parse_number(&mut input, true, &mut text_map) {
             cur_primitives.push(primitive);
             continue;
-        } else if let Some(primitive)=parse_ident_symbol(&mut input, &mut text_map) {
+        } else if let Some(primitive)=parse_ident_symbol(&mut input, &mut text_map,&is_keyword) {
             cur_primitives.push(primitive);
             continue;
         } else if let Some(primitive)=parse_char_symbol(&mut input, &mut text_map) { //needs to go last to catch "_"
@@ -248,11 +248,16 @@ fn parse_char_symbol(
 }
 
 
-fn parse_ident_symbol(
+fn parse_ident_symbol<K>(
     input:&mut Input,
     // texts:&mut Vec<String>,
     text_map:&mut HashMap<String,usize>,
-) -> Option<Primitive> {
+    is_keyword:K
+
+) -> Option<Primitive>
+where
+    K : Fn(&str)->bool,
+{
 
     let mut i=0;
 
@@ -275,13 +280,15 @@ fn parse_ident_symbol(
     //
     let start_loc=input.loc();
     let val=input.get(0, i).unwrap().to_string();
+    let kw=is_keyword(val.as_str());
 
     let text_map_size=text_map.len();
     let text_ind=*text_map.entry(val).or_insert(text_map_size);
 
     input.next(i);
     let end_loc=input.loc();
-    let primitive_type=PrimitiveType::Identifier(text_ind);
+
+    let primitive_type=if kw {PrimitiveType::Keyword(text_ind)} else {PrimitiveType::Identifier(text_ind)};
     Some(Primitive { primitive_type, start_loc, end_loc })
 }
 

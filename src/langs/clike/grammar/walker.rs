@@ -250,7 +250,7 @@ where
                 GrammarNode::Error(_) => TempGrammarNodeDebug::Error,
                 GrammarNode::Discard(_) => TempGrammarNodeDebug::Discard(None),
             };
-            println!("===x={x:?}");
+            println!("===x={x}");
             self.grammar_debug_stk.push(x);
         } else {
             println!("===no-x");
@@ -267,17 +267,51 @@ where
             {
                 let c=self.c;
                 let Work { grammar, success_len, fail_len, primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt,grammar_debug_len,  }=&cur;
-                println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
-                println!("         -takeable_starts={:?}",self.takeable_starts);
-                println!("         -temp_primtives={:?}",self.primitive_infos);
-                println!("         -temp_groups3={:?}",self.group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
+                // println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
+                // println!("         -takeable_starts={:?}",self.takeable_starts);
+                // println!("         -temp_primtives={:?}",self.primitive_infos);
+                // println!("         -temp_groups3={:?}",self.group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
+                 println!("=>{c:4}: {grammar:?}, ps={:?}, success={success_len}, fail={fail_len},  ",primitives.inds());
+
             }
 
-            for (i,Work { grammar:g, success_len:s, fail_len:f, primitives:ps, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt, grammar_debug_len,  }) in self.stk.iter()
+            {
+                // for (i,x) in self.grammar_debug_stk.iter().enumerate() {
+                //     println!("      {i}{x:?}");
+                // }
+                // println!("        {:?}",self.grammar_debug_stk);
+                let mut grammar_debug_stk=self.grammar_debug_stk.clone();
+                for i in (1 .. grammar_debug_stk.len()).rev() {
+                    let x=grammar_debug_stk.pop().unwrap();
+                    match grammar_debug_stk.last_mut().unwrap() {
+                        TempGrammarNodeDebug::Many(gs)
+                        |TempGrammarNodeDebug::And(gs)
+                        |TempGrammarNodeDebug::Or(gs)
+                        => {gs.push(x);}
+
+                        TempGrammarNodeDebug::Opt(g)
+                        |TempGrammarNodeDebug::Cede(g)
+                        |TempGrammarNodeDebug::Take(g)
+                        |TempGrammarNodeDebug::Group(_, g)
+                        |TempGrammarNodeDebug::NonTerm(_, g)
+                        |TempGrammarNodeDebug::Discard(g)
+                        => {*g=Some(x.into())}
+
+                        _=>{panic!("");}
+                    }
+                }
+
+                println!("        {}",grammar_debug_stk.first().unwrap());
+
+            }
+
+            for (i,Work { grammar:g, success_len:s, fail_len:f, primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt, grammar_debug_len,  }) in self.stk.iter()
                 // .rev()
                 .enumerate() {
                 // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
-                println!("\t{i:3}: {g:?}, ps={ps:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
+                // println!("\t{i:3}: {g:?}, ps={primitives:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
+                println!("    {i:3}: {g:?}, ps={:?}, success={s}, fail={f}, ",primitives.inds());
+
             }
         }
 
@@ -756,57 +790,61 @@ where
 
             }
             GrammarNode::String => {
-                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_string()) {
+                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_string(),|v,self2|{
+                    let Some(TempGrammarNodeDebug::String(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=Some(v);
+                }) {
                     if self.debug {
                         println!("--- string {v:?}");
                     }
-
-                    let Some(TempGrammarNodeDebug::String(x))=self.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
                 }
             }
             GrammarNode::Identifier => {
-                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_identifier()) {
+                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_identifier(),|v,self2|{
+                    let Some(TempGrammarNodeDebug::Identifier(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=Some(v);
+                }) {
                     if self.debug {
                         println!("--- identifier {v:?}");
                     }
-                    println!("==={:?}",self.grammar_debug_stk.last());
-                    let Some(TempGrammarNodeDebug::Identifier(x))=self.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
+                    println!("==={}",self.grammar_debug_stk.last().map(|x|format!("{x}")).unwrap_or("None".to_string()));
                 }
             }
             GrammarNode::Int => {
-                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_int()) {
+                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_int(),|v,self2|{
+                    let Some(TempGrammarNodeDebug::Int(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=Some(v);
+                }) {
                     if self.debug {
                         println!("--- int {v:?}");
                     }
-
-                    let Some(TempGrammarNodeDebug::Int(x))=self.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
                 }
             }
             GrammarNode::Float => {
-                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_float()) {
+                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_float(),|v,self2|{
+                    let Some(TempGrammarNodeDebug::Float(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=Some(v);
+                }) {
                     if self.debug {
                         println!("--- float {v:?}");
                     }
-
-                    let Some(TempGrammarNodeDebug::Float(x))=self.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
                 }
             }
             GrammarNode::Symbol(s) => {
-                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_symbol(s)) {
+                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_symbol(s),|v,self2|{
+                    let Some(TempGrammarNodeDebug::Symbol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=Some(v);
+                }) {
                     if self.debug {
                         println!("--- symbol {v:?}");
                     }
-
-                    let Some(TempGrammarNodeDebug::Symbol(x))=self.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
                 }
             }
             GrammarNode::Keyword(s) => {
-                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_keyword(s)) {
+                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_keyword(s),|v,self2|{
+                    let Some(TempGrammarNodeDebug::Keyword(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=Some(v);
+                }) {
                     if self.debug {
                         println!("--- keyword {v:?}");
                     }
@@ -816,13 +854,13 @@ where
                 }
             }
             GrammarNode::Eol => {
-                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_eol()) {
+                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_eol(),|v,self2|{
+                    let Some(TempGrammarNodeDebug::Eol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=Some(v);
+                }) {
                     if self.debug {
                         println!("--- eol");
                     }
-
-                    let Some(TempGrammarNodeDebug::Eol(x))=self.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
                 }
             }
         }
@@ -830,19 +868,36 @@ where
         Ok(())
     }
 
-    fn do_primtive<Q,P>(&mut self,mut cur:Work<'t,'g>,prim_func:Q) -> Option<ValueContainer<'t,P>>
+    fn do_primtive<Q,P,K>(&mut self,mut cur:Work<'t,'g>,prim_func:Q,on_ok:K) -> Option<ValueContainer<'t,P>>
     where
+        P:Clone,
         Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
+        K: Fn(ValueContainer<'t,P>,&mut Self),
     {
         match prim_func(&mut cur.primitives) {
             Ok(v) => {
-                if v.primitive.start_loc() >= self.expected.0 {
+                let vprim=v.primitive;
+                on_ok(v.clone(),self);
+                // match cur.grammar {
+
+                //     GrammarNode::String => todo!(),
+                //     GrammarNode::Identifier => todo!(),
+                //     GrammarNode::Int => todo!(),
+                //     GrammarNode::Float => todo!(),
+                //     GrammarNode::Symbol(_) => todo!(),
+                //     GrammarNode::Keyword(_) => todo!(),
+                //     GrammarNode::Eol => todo!(),
+                //     _=>panic!("")
+                // }
+                // let Some(TempGrammarNodeDebug::Identifier(x))=self.grammar_debug_stk.last_mut() else {panic!("");};
+
+                if vprim.start_loc() >= self.expected.0 {
                     self.clear_expected();
                 }
 
                 self.stk.truncate(cur.success_len);
 
-                self.primitive_infos.resize(v.primitive.ind(), TempPrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                self.primitive_infos.resize(vprim.ind(), TempPrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
                 self.primitive_infos.push(TempPrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
 
                 //

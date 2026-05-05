@@ -60,18 +60,18 @@ pub struct Work<'a,'f> {
 
 
 
-#[derive(Clone,Debug,)]
+#[derive(Clone,)]
 pub enum TempGrammarNodeDebug<'t,'g> {
-    Many(
-        // Option<Box<Self>>
-        Vec<Self>
-    ),
+    Many(Vec<Self>),
     And(Vec<Self>),
     Or(Vec<Self>),
+
     Opt(Option<Box<Self>>),
     Cede(Option<Box<Self>>),
     Take(Option<Box<Self>>),
     Group(&'g str,Option<Box<Self>>),
+    Discard(Option<Box<Self>>),
+    NonTerm(&'g str,Option<Box<Self>>),
 
     String(Option<ValueContainer<'t,&'t str>>),
     Identifier(Option<ValueContainer<'t,&'t str>>),
@@ -81,8 +81,130 @@ pub enum TempGrammarNodeDebug<'t,'g> {
     Keyword(Option<ValueContainer<'t,&'t str>>),
     Eol(Option<ValueContainer<'t,()>>),
 
-    NonTerm(&'g str,Option<Box<Self>>),
     Always,
     Error,
-    Discard(Option<Box<Self>>),
+}
+
+// impl<'t,'g> TempGrammarNodeDebug<'t,'g> {
+//     pub fn token_val_mut(&mut self)
+// }
+
+
+// impl<'t,'g> Into for Option<TempGrammarNodeDebug<'t,'g>> {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         match self {
+//             Some(x) => write!(f,"{x}"),
+//             None => write!(f,"_"),
+//         }
+//     }
+// }
+
+impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        enum Work<'t, 'g, 'a> {
+            Node(&'a TempGrammarNodeDebug<'t, 'g>),
+            Write(&'a str),
+        }
+        let mut stk: Vec<Work<'t, 'g,'_>>=vec![Work::Node(self)];
+
+        while let Some(cur)=stk.pop() {
+            match cur {
+                Work::Node(n) => {
+                    match n {
+                        Self::Many(arg0) => {
+                            stk.push(Work::Write(")"));
+                            for (i,x) in arg0.into_iter().enumerate().rev() {
+                                stk.push(Work::Node(x));
+                                if i!=0 { stk.push(Work::Write(",")); }
+                            }
+                            write!(f,"Many(")?;
+                        }
+                        Self::And(arg0) => {
+                            stk.push(Work::Write(")"));
+                            for (i,x) in arg0.into_iter().enumerate().rev() {
+
+                                stk.push(Work::Node(x));
+                                if i!=0{ stk.push(Work::Write(",")); }
+
+                            }
+                            write!(f,"And(")?;
+                        }
+                        Self::Or(arg0) => {
+                            stk.push(Work::Write(")"));
+                            for (i,x) in arg0.into_iter().enumerate().rev() {
+                                stk.push(Work::Node(x));
+                                if i!=0 { stk.push(Work::Write(",")); }
+                            }
+                            write!(f,"Or(")?;
+                        }
+                        Self::Opt(arg0) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"Opt(")?;
+                        }
+                        Self::Cede(arg0) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"Cede(")?;
+                        }
+                        Self::Take(arg0) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"Take(")?;
+                        }
+                        Self::Group(arg0, arg1) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg1 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"Group({arg0:?},")?;
+                        }
+                        Self::Discard(arg0) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"Discard(")?;
+                        }
+                        Self::NonTerm(arg0, arg1) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg1 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"NonTerm({arg0:?},")?;
+                        }
+                        Self::String(arg0) => {
+                            write!(f,"String({})",if let Some(x)=arg0{format!("{}:{:?}",x.primitive.ind(),x.value)}else{"_".into()})?;
+
+                        }
+                        Self::Identifier(arg0) => {
+                            write!(f,"Identifier({})",if let Some(x)=arg0{format!("{}:{:?}",x.primitive.ind(),x.value)}else{"_".into()})?;
+                        }
+                        Self::Int(arg0) => {
+                            write!(f,"Int({})",if let Some(x)=arg0{format!("{}:{}",x.primitive.ind(),x.value)}else{"_".into()})?;
+                        }
+                        Self::Float(arg0) => {
+                            write!(f,"Float({})",if let Some(x)=arg0{format!("{}:{}",x.primitive.ind(),x.value)}else{"_".into()})?;
+
+                        }
+                        Self::Symbol(arg0) => {
+                            write!(f,"Symbol({})",if let Some(x)=arg0{format!("{}:{}",x.primitive.ind(),x.value)}else{"_".into()})?;
+                        }
+                        Self::Keyword(arg0) => {
+                            write!(f,"Keyword({})",if let Some(x)=arg0{format!("{}:{}",x.primitive.ind(),x.value)}else{"_".into()})?;
+                        }
+                        Self::Eol(arg0) => {
+                            write!(f,"Eol({})",if let Some(x)=arg0{format!("{}:",x.primitive.ind(),)}else{"_".into()})?;
+                        }
+                        Self::Always => {
+                            write!(f, "Always")?;
+                        }
+                        Self::Error => {
+                            write!(f, "Error")?;
+                        }
+                    }
+                }
+                Work::Write(s) => {
+                    write!(f,"{s}")?;
+                }
+            }
+        }
+
+        writeln!(f,"")?;
+        Ok(())
+    }
 }

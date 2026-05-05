@@ -1,16 +1,16 @@
-use super::super::grammar::{GrammarWalkError,node::*};
+use super::super::grammar::node::*;
 
 pub fn is_keyword(n:& str) -> bool {
     match n {
-        "for"|"in"| //"to"|
-        "while"|"continue"|"break"|
-        "goto"|"label"|
-        "include"|
-        "true"|"false"|"nil"|"void"|
-        "print"|"println"|"format"|
-        "var"|"fn"|"return"|
-        "if"|"elif"|"else"
-        => true,
+        // "for"|"in"| //"to"|
+        // "while"|"continue"|"break"|
+        // "goto"|"label"|
+        // "include"|
+        // "true"|"false"|"nil"|"void"|
+        // "print"|"println"|"format"|
+        // "var"|"fn"|"return"|
+        // "if"|"elif"|"else"
+        // => true,
         _=>false,
     }
 }
