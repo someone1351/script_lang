@@ -250,10 +250,10 @@ where
                 GrammarNode::Error(_) => TempGrammarNodeDebug::Error,
                 GrammarNode::Discard(_) => TempGrammarNodeDebug::Discard(None),
             };
-            println!("===x={x}");
+            // println!("===x={x}");
             self.grammar_debug_stk.push(x);
         } else {
-            println!("===no-x");
+            // println!("===no-x");
 
         }
 
@@ -271,17 +271,14 @@ where
                 // println!("         -takeable_starts={:?}",self.takeable_starts);
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
                 // println!("         -temp_groups3={:?}",self.group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
-                 println!("=>{c:4}: {grammar:?}, ps={:?}, success={success_len}, fail={fail_len},  ",primitives.inds());
+                 println!("=>{c:4}: {grammar:?}, ps={:?}, success={success_len}, fail={fail_len}, takeables={takeables:?},  ",primitives.inds());
 
             }
 
             {
-                // for (i,x) in self.grammar_debug_stk.iter().enumerate() {
-                //     println!("      {i}{x:?}");
-                // }
-                // println!("        {:?}",self.grammar_debug_stk);
+
                 let mut grammar_debug_stk=self.grammar_debug_stk.clone();
-                for i in (1 .. grammar_debug_stk.len()).rev() {
+                for _i in (1 .. grammar_debug_stk.len()).rev() {
                     let x=grammar_debug_stk.pop().unwrap();
                     match grammar_debug_stk.last_mut().unwrap() {
                         TempGrammarNodeDebug::Many(gs)
@@ -301,7 +298,23 @@ where
                     }
                 }
 
-                println!("        {}",grammar_debug_stk.first().unwrap());
+                if let Some(x)=grammar_debug_stk.first() {
+
+                    println!("      {x}",);
+                } else {
+                    println!("      _",);
+
+                }
+
+                //
+                println!("        [{}]",
+                    self.grammar_debug_stk.iter().enumerate().map(|(i,d)|format!("{i}:{d}")).collect::<Vec<_>>().join(", ")
+                );
+
+                // for (i,d) in self.grammar_debug_stk.iter().enumerate() {
+                //     println!("        {i}:{d}");
+                // }
+
 
             }
 
@@ -594,6 +607,7 @@ where
                     if let Some(last)=self.stk.last() {
                         self.primitive_infos.truncate(last.output_len);
                         self.takeable_starts.truncate(last.takeable_starts_len);
+                        self.grammar_debug_stk.truncate(last.grammar_debug_len);
                     }
                 }
             }
@@ -800,6 +814,9 @@ where
                 }
             }
             GrammarNode::Identifier => {
+
+                println!("--- try identifier {:?}",cur.primitives.first());
+
                 if let Some(v)=self.do_primtive(cur,|ps|ps.pop_identifier(),|v,self2|{
                     let Some(TempGrammarNodeDebug::Identifier(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
                     *x=Some(v);
@@ -807,7 +824,7 @@ where
                     if self.debug {
                         println!("--- identifier {v:?}");
                     }
-                    println!("==={}",self.grammar_debug_stk.last().map(|x|format!("{x}")).unwrap_or("None".to_string()));
+                    // println!("==={}",self.grammar_debug_stk.last().map(|x|format!("{x}")).unwrap_or("None".to_string()));
                 }
             }
             GrammarNode::Int => {
@@ -849,8 +866,6 @@ where
                         println!("--- keyword {v:?}");
                     }
 
-                    let Some(TempGrammarNodeDebug::Keyword(x))=self.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
                 }
             }
             GrammarNode::Eol => {
@@ -940,7 +955,10 @@ where
 
                     self.takeable_starts.truncate(last.takeable_starts_len);
 
+                    // println!("===---==--- gdb_stk_len cur={}, last={}",cur.grammar_debug_len,last.grammar_debug_len);
+                    // println!("\tcur={:?}",self.grammar_debug_stk);
                     self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                    // println!("\tlast={:?}",self.grammar_debug_stk);
                 }
 
                 // if self.stk.is_empty() {

@@ -60,7 +60,7 @@ pub struct Work<'a,'f> {
 
 
 
-#[derive(Clone,)]
+#[derive(Clone,Debug)]
 pub enum TempGrammarNodeDebug<'t,'g> {
     Many(Vec<Self>),
     And(Vec<Self>),
@@ -118,6 +118,7 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                                 if i!=0 { stk.push(Work::Write(",")); }
                             }
                             write!(f,"Many(")?;
+                            if arg0.is_empty() {write!(f,"_")?;}
                         }
                         Self::And(arg0) => {
                             stk.push(Work::Write(")"));
@@ -128,6 +129,7 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
 
                             }
                             write!(f,"And(")?;
+                            if arg0.is_empty() {write!(f,"_")?;}
                         }
                         Self::Or(arg0) => {
                             stk.push(Work::Write(")"));
@@ -136,6 +138,7 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                                 if i!=0 { stk.push(Work::Write(",")); }
                             }
                             write!(f,"Or(")?;
+                            if arg0.is_empty() {write!(f,"_")?;}
                         }
                         Self::Opt(arg0) => {
                             stk.push(Work::Write(")"));
@@ -204,7 +207,6 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
             }
         }
 
-        writeln!(f,"")?;
         Ok(())
     }
 }

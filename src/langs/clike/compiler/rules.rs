@@ -2,15 +2,15 @@ use super::super::grammar::node::*;
 
 pub fn is_keyword(n:& str) -> bool {
     match n {
-        // "for"|"in"| //"to"|
-        // "while"|"continue"|"break"|
-        // "goto"|"label"|
-        // "include"|
-        // "true"|"false"|"nil"|"void"|
-        // "print"|"println"|"format"|
-        // "var"|"fn"|"return"|
-        // "if"|"elif"|"else"
-        // => true,
+        "for"|"in"| //"to"|
+        "while"|"continue"|"break"|
+        "goto"|"label"|
+        "include"|
+        "true"|"false"|"nil"|"void"|
+        "print"|"println"|"format"|
+        "var"|"fn"|"return"|
+        "if"|"elif"|"else"
+        => true,
         _=>false,
     }
 }
@@ -84,6 +84,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("ending").many0(),
         ].and(),
 
+        "test12" => [Identifier, NonTerm("test12_int").cede(),NonTerm("test12_int").take(), Identifier].and(),
+        "test12_int" => Int,
+
         // =============================================================
 
         "start" => [
@@ -91,7 +94,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("ending").many0(),
         ].and(),
 
-        "ending" => [NonTerm("semicolon"),Eol].or().many1().d(),
+        "ending" => [NonTerm("semicolon"),Eol].or().many1(),
         "stmts" => [
             NonTerm("stmt"),
             [NonTerm("ending"), NonTerm("stmt"),].and().many0(),
@@ -143,12 +146,12 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         ].and(),
         "block" => [NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
         "if" => [
-            [Keyword("if").d(), NonTerm("cond"), NonTerm("block")].and().group(""),
-            [Keyword("elif").d(),NonTerm("cond"),NonTerm("block"),].and().group("").many0(),
-            [Keyword("else").d(),NonTerm("block"),].and().group("").opt(),
+            [Keyword("if"), NonTerm("cond"), NonTerm("block")].and().group(""),
+            [Keyword("elif"),NonTerm("cond"),NonTerm("block"),].and().group("").many0(),
+            [Keyword("else"),NonTerm("block"),].and().group("").opt(),
         ].and().group("if"),
         "while" => [
-            Keyword("while").d(), NonTerm("cond"), NonTerm("block"),
+            Keyword("while"), NonTerm("cond"), NonTerm("block"),
         ].and().group("while"),
         // "for_init" => [
         //     NonTerm("var"),
@@ -174,16 +177,16 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         //     Keyword("for"),
         //     // NonTerm("lparen"),
         //     Identifier,
-        //     Keyword("in").d(),
+        //     Keyword("in"),
         //     [NonTerm("val"),NonTerm("call").take(),].and(),
         //     // NonTerm("rparen"),
         //     NonTerm("block"),
         //     ].and(),
         "for_body" => [
             Identifier,
-            Keyword("in").d(),
+            Keyword("in"),
             NonTerm("expr"),
-            // Keyword("to").d(),
+            // Keyword("to"),
 
             [NonTerm("dot"),NonTerm("dot"),NonTerm("equals").opt(),].and(),
 
@@ -202,12 +205,12 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("lparen"),
             [
                 NonTerm("expr"),
-                [NonTerm("comma").d(),NonTerm("expr"),].and().many0(),
-                NonTerm("comma").opt().d(),
+                [NonTerm("comma"),NonTerm("expr"),].and().many0(),
+                NonTerm("comma").opt(),
             ].and().opt(),
             NonTerm("rparen"),
         ].and(),
-        "include" => [Keyword("include").d(),String,].and().group("include"),
+        "include" => [Keyword("include"),String,].and().group("include"),
 
         "func_params" => [
             NonTerm("lparen"),
@@ -318,12 +321,12 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "print" => [Keyword("print"),NonTerm("format_params"),].and(),
         "println" => [Keyword("println"),NonTerm("format_params"),].and(),
 
-        "lcurly" => Symbol("{").d(),
-        "rcurly" => Symbol("}").d(),
-        "lsquare" => Symbol("[").d(),
-        "rsquare" => Symbol("]").d(),
-        "lparen" => Symbol("(").d(),
-        "rparen" => Symbol(")").d(),
+        "lcurly" => Symbol("{"),
+        "rcurly" => Symbol("}"),
+        "lsquare" => Symbol("["),
+        "rsquare" => Symbol("]"),
+        "lparen" => Symbol("("),
+        "rparen" => Symbol(")"),
 
         "colon" => Symbol(":"),
         "semicolon" => Symbol(";"),
