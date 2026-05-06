@@ -20,9 +20,9 @@ impl<'t,'g> WalkGroupContainer<'t,'g> {
         WalkGroupIterContainer{ walk: self.walk, start: group.children.start, end: group.children.end }
 
     }
-    // pub fn tokens(&self) -> TokenIterContainer<'a> {
-    //     self.group().tokens
-    // }
+    pub fn tokens(&self) -> TokenIterContainer<'t> {
+        self.group().tokens
+    }
 
 }
 
@@ -42,53 +42,80 @@ impl<'t,'g> std::fmt::Debug for WalkGroupContainer<'t,'g> {
 impl<'t,'g> Display for WalkGroupContainer<'t,'g> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 
-        // enum Thing<'a> {
-        //     Token(TokenContainer<'a>),
-        //     Group(WalkGroupContainer<'a>),
-        // }
+        enum Thing<'t,'g> {
+            Token(TokenContainer<'t>),
+            Group(WalkGroupContainer<'t,'g>),
+        }
 
-        // let mut stk = vec![(Thing::Group(*self),0)];
+        let mut stk = vec![(Thing::Group(*self),0)];
 
-        // while let Some((cur,depth))=stk.pop() {
-        //     let indent="    ".repeat(depth);
+        while let Some((cur,depth))=stk.pop() {
+            let indent="    ".repeat(depth);
 
 
-        //     match cur {
-        //         Thing::Group(cur) => {
-        //             // println!("a{indent}{}:",cur.name());
-        //             println!("a");
+            match cur {
+                Thing::Group(cur) => {
+                    // println!("a{indent}{}:",cur.name());
+                    println!("{indent}group: {:?} {:?}",cur.name(),cur.tokens().inds());
+                    // println!("group {}",cur.group_ind);
 
-        //             let mut todos=Vec::new();
-        //             let mut cur_tokens = cur.tokens();
+                    // let mut todos=Vec::new();
+                    let mut cur_tokens = cur.tokens();
+                    println!("\tcur_tokens={cur_tokens:?}");
 
-        //             // if let Some(first_group)=cur.children().first() {
-        //             //     while cur_tokens.inds().start != first_group.tokens().inds().start {
-        //             //         todos.push(Thing::Token(cur_tokens.pop_front().unwrap()));
-        //             //     }
-        //             // }
+                    // let mut last_tokens_end= cur_tokens.inds().end;
+                    // let mut c=cur.children().len();
+                    for child_group in cur.children().rev() {
+                        println!("{indent}cg{} {:?} {}..{}, {}..{}",
+                            child_group.group_ind,child_group.name(),
+                            child_group.tokens().inds().start,child_group.tokens().inds().end,
+                            cur_tokens.inds().start,cur_tokens.inds().end,
+                        );
 
-        //             for child_group in cur.children() {
-        //                 // println!("hmmm  ",);
-        //                 let ps_amount=child_group.tokens().inds().start-cur_tokens.inds().start;
-        //                 let ps=cur_tokens.pop_front_amount(ps_amount).unwrap();
-        //                 todos.extend(ps.map(|p|Thing::Token(p)));
+                        // println!("cg {}",child_group.group_ind);
+                    //     // println!("hmmm  ",);
 
-        //                 // while cur_tokens.inds().start < child_group.tokens().inds().start {
-        //                 //     todos.push(Thing::Token(cur_tokens.pop_front().unwrap()));
-        //                 // }
-        //                 todos.push(Thing::Group(child_group));
-        //             }
+                        let child_tokens=child_group.tokens();
+                        println!("\t\t1 child_tokens={child_tokens:?}");
+                        println!("\t\t1 cur_tokens={cur_tokens:?}");
+                        // let ps_start=child_tokens.inds().end;
+                        // let ps_end=cur_tokens.inds().end;
+                        // println!("{ps_start} {ps_end}");
+                        // let ps_len=ps_end-ps_start;
+                        println!("cur_tokens.end={} child_tokens.end={}",cur_tokens.end,child_tokens.end);
 
-        //             todos.extend(cur_tokens.map(|p|Thing::Token(p)));
+                        let ps_len=cur_tokens.end-child_tokens.end;
+                        println!("ps_len={ps_len}");
 
-        //             stk.extend(todos.into_iter().rev().map(|x|(x,depth+1)));
-        //         }
-        //         Thing::Token(cur) => {
-        //             // println!("b{indent}{cur:?}");
-        //             println!("b");
-        //         }
-        //     }
-        // }
+                        let ps=cur_tokens.pop_back_amount(ps_len).unwrap();
+
+                        println!("\t\t2 cur_tokens={cur_tokens:?}");
+                        // println!("c{} {ps_start} .. {ps_end}, {}, {}..{}",c-1,cur_tokens.inds().start,child_tokens.inds().start,child_tokens.inds().end);
+
+                        // let ps=cur_tokens.get_range(ps_start .. ps_end).unwrap();
+                        stk.extend(ps.map(|t|(Thing::Token(t),depth+1)).rev());
+                        stk.push((Thing::Group(child_group),depth+1));
+
+                        cur_tokens.pop_back_amount(child_tokens.len()).unwrap();
+
+                        println!("\t\t3 cur_tokens={cur_tokens:?}");
+                        // last_tokens_end=child_tokens.start;
+                        // c-=1;
+                    }
+
+                    //
+                    // let ps_start= cur_tokens.start;
+                    // let ps_end=ps_start+last_tokens_end-cur_tokens.start;
+                    // println!("{ps_start} .. {ps_end}, {}..{}",cur_tokens.inds().start,cur_tokens.inds().end);
+                    // let ps=cur_tokens.get_range(ps_start .. ps_end).unwrap();
+                    stk.extend(cur_tokens.map(|t|(Thing::Token(t),depth+1)).rev());
+                }
+                Thing::Token(cur) => {
+                    // println!("{indent}{:?}",cur.ind());
+                    println!("{indent}{cur:?}");
+                }
+            }
+        }
 
         Ok(())
     }

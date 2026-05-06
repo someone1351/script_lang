@@ -34,6 +34,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
     */
     use GrammarNode::*;
     Some(match n {
+        "test0" => [
+            Int.opt().group("i"),
+            String.group("s"),
+        ].and(),
 
         "start" => [
             NonTerm("stmts"),
@@ -96,7 +100,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "if" => [
             [Keyword("if"), NonTerm("if_cond_block"), ].and(),
             [Keyword("elif"),NonTerm("if_cond_block"), ].and().many0(),
-            [Keyword("else"),NonTerm("block"),].and().group("else").opt(),
+            [Keyword("else"),NonTerm("block"),].and().opt().group("else"),
         ].and().group("if"),
         "while" => [
             Keyword("while"), NonTerm("cond"), NonTerm("block"),

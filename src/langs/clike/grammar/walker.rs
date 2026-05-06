@@ -125,6 +125,8 @@ where
     pub fn run(&mut self,start_non_term:&'g str,) -> Result<(),GrammarWalkError<'g>> {
         self.init(start_non_term);
 
+        let mut result: Result<(), GrammarWalkError<'g>>=Ok(());
+
         while let Some(cur)=self.stk.pop() {
            if let Err(e)=self.step(cur) {
                 if self.debug {
@@ -142,8 +144,10 @@ where
                     }
                 }
 
-                // break;
-                return Err(e);
+
+                result=Err(e);
+                break;
+                // return Err(e);
            }
         }
 
@@ -154,7 +158,7 @@ where
             println!("outputs={:?}",self.primitive_infos);
         }
 
-        if !self.primitives_remaining.is_empty() {
+        if !result.is_err() && !self.primitives_remaining.is_empty() {
             self.expected.0=self.primitives_remaining.loc();
 
             if self.debug {
@@ -163,7 +167,9 @@ where
                 println!("{:?}",self.expected.1); //self.expected.1 should be empty?
             }
 
-            return Err(GrammarWalkError::Unfinished);
+            // return Err(GrammarWalkError::Unfinished);
+
+            result=Err(GrammarWalkError::Unfinished);
 
             //need to store grammar that was traversed ...
         } else {
@@ -176,6 +182,15 @@ where
         if self.debug {
             println!("===a {}",self.primitives_remaining.is_empty());
         }
+
+
+        //
+        if self.debug {
+            for (i,g) in self.group_infos.iter().enumerate() {
+                println!("g{i}: {:?} {:?}",g.name,g.primitives);
+            }
+        }
+
 
         //
         if self.debug {
@@ -190,6 +205,7 @@ where
                 let mut g=output.group;
                 let mut depth=0;
                 let mut gs: Vec<usize>=Vec::new();
+
                 while g!=0 {
                     gs.push(g);
                     let gg=&self.group_infos[g];
@@ -215,7 +231,7 @@ where
 
                 println!("{}{}{p:?}",
                     "  ".repeat(depth),
-                    if output.discard {"-"}else{""}
+                    if output.discard {"-----"}else{""}
                 );
             }
             println!("===");
@@ -226,45 +242,51 @@ where
             println!("top_primitives={:?}", self.top_primitives );
             // println!("output={outputs:?}",  );
         }
-
-        Ok(())
+        // if result.is_err() {
+        //     return result;
+        // }
+        // Ok(())
+        result
 
     }
 
     fn step(&mut self,cur:Work<'t,'g>) -> Result<(),GrammarWalkError<'g>> {
 
 
-
+        self.group_infos.truncate(cur.group_len);
         //
-        if
-            // !cur.grammar_debug_no_add
-            cur.grammar_debug_len> self.grammar_debug_stk.len()
-        {
-            let x=match cur.grammar {
-                GrammarNode::Many(_) => TempGrammarNodeDebug::Many(vec![]),
-                GrammarNode::And(_) => TempGrammarNodeDebug::And(vec![]),
-                GrammarNode::Or(_) => TempGrammarNodeDebug::Or(vec![]),
-                GrammarNode::Opt(_) => TempGrammarNodeDebug::Opt(None),
-                GrammarNode::Cede(_) => TempGrammarNodeDebug::Cede(None),
-                GrammarNode::Take(_) => TempGrammarNodeDebug::Take(None),
-                GrammarNode::Group(g, _) => TempGrammarNodeDebug::Group(g,None),
-                GrammarNode::String => TempGrammarNodeDebug::String(None),
-                GrammarNode::Identifier => TempGrammarNodeDebug::Identifier(None),
-                GrammarNode::Int => TempGrammarNodeDebug::Int(None),
-                GrammarNode::Float => TempGrammarNodeDebug::Float(None),
-                GrammarNode::Symbol(_) => TempGrammarNodeDebug::Symbol(None),
-                GrammarNode::Keyword(_) => TempGrammarNodeDebug::Keyword(None),
-                GrammarNode::Eol => TempGrammarNodeDebug::Eol(None),
-                GrammarNode::NonTerm(t) => TempGrammarNodeDebug::NonTerm(t,None),
-                GrammarNode::Always => TempGrammarNodeDebug::Always,
-                GrammarNode::Error(_) => TempGrammarNodeDebug::Error,
-                GrammarNode::Discard(_) => TempGrammarNodeDebug::Discard(None),
-            };
-            // println!("===x={x}");
-            self.grammar_debug_stk.push(x);
-        } else {
-            // println!("===no-x");
 
+        if self.debug {
+            if
+                // !cur.grammar_debug_no_add
+                cur.grammar_debug_len> self.grammar_debug_stk.len()
+            {
+                let x=match cur.grammar {
+                    GrammarNode::Many(_) => TempGrammarNodeDebug::Many(vec![]),
+                    GrammarNode::And(_) => TempGrammarNodeDebug::And(vec![]),
+                    GrammarNode::Or(_) => TempGrammarNodeDebug::Or(vec![]),
+                    GrammarNode::Opt(_) => TempGrammarNodeDebug::Opt(None),
+                    GrammarNode::Cede(_) => TempGrammarNodeDebug::Cede(None),
+                    GrammarNode::Take(_) => TempGrammarNodeDebug::Take(None),
+                    GrammarNode::Group(g, _) => TempGrammarNodeDebug::Group(g,None),
+                    GrammarNode::String => TempGrammarNodeDebug::String(None),
+                    GrammarNode::Identifier => TempGrammarNodeDebug::Identifier(None),
+                    GrammarNode::Int => TempGrammarNodeDebug::Int(None),
+                    GrammarNode::Float => TempGrammarNodeDebug::Float(None),
+                    GrammarNode::Symbol(_) => TempGrammarNodeDebug::Symbol(None),
+                    GrammarNode::Keyword(_) => TempGrammarNodeDebug::Keyword(None),
+                    GrammarNode::Eol => TempGrammarNodeDebug::Eol(None),
+                    GrammarNode::NonTerm(t) => TempGrammarNodeDebug::NonTerm(t,None),
+                    GrammarNode::Always => TempGrammarNodeDebug::Always,
+                    GrammarNode::Error(_) => TempGrammarNodeDebug::Error,
+                    GrammarNode::Discard(_) => TempGrammarNodeDebug::Discard(None),
+                };
+                // println!("===x={x}");
+                self.grammar_debug_stk.push(x);
+            } else {
+                // println!("===no-x");
+
+            }
         }
 
 
@@ -617,7 +639,10 @@ where
                     if let Some(last)=self.stk.last() {
                         self.primitive_infos.truncate(last.output_len);
                         self.takeable_starts.truncate(last.takeable_starts_len);
-                        self.grammar_debug_stk.truncate(last.grammar_debug_len);
+
+                        if self.debug {
+                            self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                        }
                     }
                 }
             }
@@ -772,13 +797,15 @@ where
                 }
 
                 //
-                self.consolidate_grammar_debug_stk();
+                if self.debug {
+                    self.consolidate_grammar_debug_stk();
+                }
 
                 //
                 self.do_groups_primitives_clamp(cur.group_ind,cur.primitives);
 
                 //
-                self.last_remove_groups_at(cur.group_len,cur.primitives);
+                // self.last_remove_groups_at(cur.group_len,cur.primitives);
 
                 //
                 self.last_insert_start_takeables();
@@ -787,7 +814,7 @@ where
 
                 self.clear_expected();
 
-                self.group_infos.truncate(cur.group_len);
+                // self.group_infos.truncate(cur.group_len);
             }
 
             GrammarNode::Error(e) => {
@@ -807,7 +834,7 @@ where
                 self.set_remaining_prims(cur.primitives);
 
 
-                self.group_infos.truncate(cur.group_len);
+                // self.group_infos.truncate(cur.group_len);
 
                 // break;
                 return Err(e);
@@ -815,8 +842,10 @@ where
             }
             GrammarNode::String => {
                 if let Some(v)=self.do_primtive(cur,|ps|ps.pop_string(),|v,self2|{
-                    let Some(TempGrammarNodeDebug::String(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
+                    if self2.debug {
+                        let Some(TempGrammarNodeDebug::String(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                        *x=Some(v);
+                    }
                 }) {
                     if self.debug {
                         println!("--- string {v:?}");
@@ -828,8 +857,10 @@ where
                 // println!("--- try identifier {:?}",cur.primitives.first());
 
                 if let Some(v)=self.do_primtive(cur,|ps|ps.pop_identifier(),|v,self2|{
-                    let Some(TempGrammarNodeDebug::Identifier(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
+                    if self2.debug {
+                        let Some(TempGrammarNodeDebug::Identifier(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                        *x=Some(v);
+                    }
                 }) {
                     if self.debug {
                         println!("--- identifier {v:?}");
@@ -839,8 +870,10 @@ where
             }
             GrammarNode::Int => {
                 if let Some(v)=self.do_primtive(cur,|ps|ps.pop_int(),|v,self2|{
-                    let Some(TempGrammarNodeDebug::Int(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
+                    if self2.debug {
+                        let Some(TempGrammarNodeDebug::Int(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                        *x=Some(v);
+                    }
                 }) {
                     if self.debug {
                         println!("--- int {v:?}");
@@ -849,8 +882,10 @@ where
             }
             GrammarNode::Float => {
                 if let Some(v)=self.do_primtive(cur,|ps|ps.pop_float(),|v,self2|{
-                    let Some(TempGrammarNodeDebug::Float(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
+                    if self2.debug {
+                        let Some(TempGrammarNodeDebug::Float(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                        *x=Some(v);
+                    }
                 }) {
                     if self.debug {
                         println!("--- float {v:?}");
@@ -859,8 +894,10 @@ where
             }
             GrammarNode::Symbol(s) => {
                 if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_symbol(s),|v,self2|{
-                    let Some(TempGrammarNodeDebug::Symbol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
+                    if self2.debug {
+                        let Some(TempGrammarNodeDebug::Symbol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                        *x=Some(v);
+                    }
                 }) {
                     if self.debug {
                         println!("--- symbol {v:?}");
@@ -869,8 +906,10 @@ where
             }
             GrammarNode::Keyword(s) => {
                 if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_keyword(s),|v,self2|{
-                    let Some(TempGrammarNodeDebug::Keyword(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
+                    if self2.debug {
+                        let Some(TempGrammarNodeDebug::Keyword(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                        *x=Some(v);
+                    }
                 }) {
                     if self.debug {
                         println!("--- keyword {v:?}");
@@ -880,8 +919,10 @@ where
             }
             GrammarNode::Eol => {
                 if let Some(v)=self.do_primtive(cur,|ps|ps.pop_eol(),|v,self2|{
-                    let Some(TempGrammarNodeDebug::Eol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
+                    if self2.debug {
+                        let Some(TempGrammarNodeDebug::Eol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                        *x=Some(v);
+                    }
                 }) {
                     if self.debug {
                         println!("--- eol");
@@ -933,8 +974,9 @@ where
                 }
 
                 //
-                self.consolidate_grammar_debug_stk();
-
+                if self.debug {
+                    self.consolidate_grammar_debug_stk();
+                }
                 //
                 self.do_groups_primitives_clamp(cur.group_ind,cur.primitives);
 
@@ -949,7 +991,7 @@ where
                 self.set_remaining_prims(cur.primitives);
 
 
-                self.group_infos.truncate(cur.group_len);
+                // self.group_infos.truncate(cur.group_len);
 
                 Some(v)
             }
@@ -965,10 +1007,12 @@ where
 
                     self.takeable_starts.truncate(last.takeable_starts_len);
 
-                    // println!("===---==--- gdb_stk_len cur={}, last={}",cur.grammar_debug_len,last.grammar_debug_len);
-                    // println!("\tcur={:?}",self.grammar_debug_stk);
-                    self.grammar_debug_stk.truncate(last.grammar_debug_len);
-                    // println!("\tlast={:?}",self.grammar_debug_stk);
+                    if self.debug {
+                        // println!("===---==--- gdb_stk_len cur={}, last={}",cur.grammar_debug_len,last.grammar_debug_len);
+                        // println!("\tcur={:?}",self.grammar_debug_stk);
+                        self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                        // println!("\tlast={:?}",self.grammar_debug_stk);
+                    }
                 }
 
                 // if self.stk.is_empty() {
@@ -977,7 +1021,7 @@ where
                 self.set_remaining_prims(cur.primitives);
 
 
-                self.group_infos.truncate(cur.group_len);
+                // self.group_infos.truncate(cur.group_len);
 
 
                 None
@@ -1210,7 +1254,9 @@ where
 
     fn last_remove_groups_at(&mut self,
         // last_group_len:usize ,
-        cur_group_len:usize,cur_primitives:TokenIterContainer<'t>)
+        cur_group_len:usize,
+        cur_primitives:TokenIterContainer<'t>
+    )
         // -> usize
     {
 
@@ -1230,7 +1276,7 @@ where
                 if
                     // group.primitive_ind_start
                     group.primitives.inds().start
-                    ==cur_primitives.inds().start {
+                        ==cur_primitives.inds().start {
                     self.group_infos.truncate(group_ind); //removes this group and ones after
                     last.group_len=group_ind;
 
@@ -1287,14 +1333,14 @@ where
         });
 
         //
-        let mut csum=0;
+        let mut csum=1;
 
         //
         for (_i,&(g,_p,c)) in group_infos2.iter().enumerate() {
             let gg=&self.group_infos[g];
             // groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives.inds() });
             groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives });
-            // println!("{_i} name: {:?}, children: {:?}, tokens: {:?}",gg.name,csum..csum+c,gg.primitives.inds());
+            println!("{_i} name: {:?}, children: {:?}, tokens: {:?}",gg.name,csum..csum+c,gg.primitives.inds());
             csum+=c;
         }
 

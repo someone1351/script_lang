@@ -54,6 +54,7 @@ impl<'a> TokenIterContainer<'a> {
 
     pub fn pop_front_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'a>> {
         if self.start+amount > self.end { //|| amount==0
+            // println!("{}+{} > {}", self.start,amount,self.end);
             None
         } else {
             let start2=self.start;
@@ -64,7 +65,11 @@ impl<'a> TokenIterContainer<'a> {
         }
     }
     pub fn pop_back_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'a>> {
-        if self.start+amount > self.end || amount==0 {
+        if self.start+amount > self.end
+        // || amount==0
+        {
+            println!("{}+{} > {}", self.start,amount,self.end);
+
             None
         } else {
             let end2=self.end;
@@ -108,7 +113,10 @@ impl<'a> TokenIterContainer<'a> {
         }
     }
 
-    pub fn get_range<R:RangeBounds<usize>>(&self,r:R) -> Result<TokenIterContainer<'a>,Loc> {
+    pub fn get_range<R:RangeBounds<usize>>(&self,r:R) ->
+    // Result<TokenIterContainer<'a>,Loc>
+    Option<TokenIterContainer<'a>>
+    {
 
         let range_start=match r.start_bound().cloned() {
             Bound::Included(x)=>x,
@@ -126,28 +134,40 @@ impl<'a> TokenIterContainer<'a> {
 
         if range_start>range_end { //if range start==end is same as empty iter
             // return TokenIterContainer {last_loc:Loc::zero(),start: 0, end: 0, parsed: self.parsed};
-            return Err(last_loc);
+            // return Err(last_loc);
+            println!("rs>re {:?} {:?}",r.start_bound(),r.end_bound());
+            return None;
         }
 
         let x_len=range_end-range_start;
 
         if x_len>self.len() {
             // return TokenIterContainer {last_loc:Loc::zero(),start: 0, end: 0, parsed: self.parsed};
-            return Err(last_loc);
+            // return Err(last_loc);
+            println!("xl>l {:?} {:?}",r.start_bound(),r.end_bound());
+            return  None;
         }
 
         let x_start=self.start+range_start;
         let x_end = x_start+x_len;
 
-        let last_loc=if range_start==0 {
-            self.last_loc
-        } else {
-            self.parsed.primitives[range_start].start_loc
-        };
+        // if x_start<self.start || x_end>self.end
+        //     || x_end<self.start || x_start > self.end
+        // {
+        //     return None
+        // }
+
+        // let last_loc=if range_start==0 {
+        //     self.last_loc
+        // } else if range_start==self.parsed.primitives.len() {
+        //     self.parsed.primitives[range_start-1].start_loc
+        // } else {
+        //     self.parsed.primitives[range_start].start_loc
+        // };
 
         // println!("~~~~ x_len={x_len} x_start={x_start} x_end={x_end}, len={}, range_start={range_start}, range_end={range_end}",self.len());
 
-        Ok(TokenIterContainer {last_loc,start: x_start, end: x_end, parsed: self.parsed})
+        Some(TokenIterContainer {last_loc,start: x_start, end: x_end, parsed: self.parsed})
     }
 
     pub fn is_empty(&self) -> bool {
