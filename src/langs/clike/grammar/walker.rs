@@ -156,20 +156,29 @@ where
 
         if !self.primitives_remaining.is_empty() {
             self.expected.0=self.primitives_remaining.loc();
-            // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
-            println!("error, failed to parse all tokens, at {}",self.expected.0);
-            println!("{:?}",self.expected.1); //self.expected.1 should be empty?
+
+            if self.debug {
+                // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
+                println!("error, failed to parse all tokens, at {}",self.expected.0);
+                println!("{:?}",self.expected.1); //self.expected.1 should be empty?
+            }
+
             return Err(GrammarWalkError::Unfinished);
 
             //need to store grammar that was traversed ...
         } else {
-            println!("parsed ok");
+
+            if self.debug {
+                println!("parsed ok");
+            }
         }
 
-        // if self.debug {
+        if self.debug {
             println!("===a {}",self.primitives_remaining.is_empty());
-        // }
+        }
 
+        //
+        if self.debug {
             let mut groups_visited: HashSet<usize>=HashSet::new();
 
             for p in self.top_primitives {
@@ -210,6 +219,7 @@ where
                 );
             }
             println!("===");
+        }
 
         if self.debug {
             //
@@ -815,7 +825,7 @@ where
             }
             GrammarNode::Identifier => {
 
-                println!("--- try identifier {:?}",cur.primitives.first());
+                // println!("--- try identifier {:?}",cur.primitives.first());
 
                 if let Some(v)=self.do_primtive(cur,|ps|ps.pop_identifier(),|v,self2|{
                     let Some(TempGrammarNodeDebug::Identifier(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};

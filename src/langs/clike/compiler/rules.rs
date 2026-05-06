@@ -34,60 +34,6 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
     */
     use GrammarNode::*;
     Some(match n {
-        // "test" => [Int].and(),
-        "test" => [Int,Float.opt()].and().many0(),
-        "test2" => [Int,Float.opt()].and(),
-        "test3" => [ Int.many0() ].and().opt(),
-
-        "test4" => [[Int,String.opt(),].and(),Identifier,].or().opt(), //or(and(int,str?),idn)?
-        "test5" =>  Int.many0(),
-        "test6" =>  Int.many0().opt(),
-        // "test7" =>  [ [ Int,String ].and(), Float, ].or(), //or(and(int,str),float)
-        "test7" =>  [ Int.many0(), String, ].or().many0(), //.opt(), // many0(or(many0(int),str))
-
-        "test8" => [
-            Symbol("+"),
-            Int,
-        ].and(),
-
-        "test9" => [
-            // // Int.many0().group("a"),
-            // // Float.many0().group("b"),
-            // // // String.many0().group("c"),
-            // NonTerm("x").many0(), //.group("a"),
-            // NonTerm("x").take(), //.group("b"),
-            Int.cede().many0().group("a"),
-            Int.take().group("b"),
-            // Eol.many0(),
-        ].and(),
-        // "x" => Int,
-
-        "test10" => [
-            [
-                Identifier,
-                // NonTerm("val_field_index").offer(),
-                // // [ NonTerm("val_index"), NonTerm("val_field"), ].or(),
-                // // NonTerm("val_field_index_call").many0(),
-                // // [ NonTerm("val_field_index").offer(), NonTerm("call"), ].or(),
-                // NonTerm("val_field_index").take(),
-
-                NonTerm("val_field").cede().many0().group("a"), //.opt(),
-                NonTerm("val_field").take().group("b"),
-            ].and(),
-            NonTerm("equals"),
-            Int,
-        ].and(),
-
-        "test11" => [
-            NonTerm("ending").many0(),
-            NonTerm("for"),
-            NonTerm("ending").many0(),
-        ].and(),
-
-        "test12" => [Identifier, NonTerm("test12_int").cede(),NonTerm("test12_int").take(), Identifier].and(),
-        "test12_int" => Int,
-
-        // =============================================================
 
         "start" => [
             NonTerm("stmts"),
@@ -145,43 +91,17 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             // NonTerm("rparen"),
         ].and(),
         "block" => [NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
+        "if_cond_block" => [NonTerm("cond"), NonTerm("block")].and().group("if_cond_block"),
+
         "if" => [
-            [Keyword("if"), NonTerm("cond"), NonTerm("block")].and().group(""),
-            [Keyword("elif"),NonTerm("cond"),NonTerm("block"),].and().group("").many0(),
-            [Keyword("else"),NonTerm("block"),].and().group("").opt(),
+            [Keyword("if"), NonTerm("if_cond_block"), ].and(),
+            [Keyword("elif"),NonTerm("if_cond_block"), ].and().many0(),
+            [Keyword("else"),NonTerm("block"),].and().group("else").opt(),
         ].and().group("if"),
         "while" => [
             Keyword("while"), NonTerm("cond"), NonTerm("block"),
         ].and().group("while"),
-        // "for_init" => [
-        //     NonTerm("var"),
-        //     [NonTerm("set"), [NonTerm("comma"),NonTerm("set")].and().many0(),].and(),
-        // ].or(),
-        // "for_incr_stmt" => [NonTerm("set"),NonTerm("call"),].or(),
-        // "for_incr" => [
-        //     NonTerm("for_incr_stmt"),
-        //     [NonTerm("comma"),NonTerm("for_incr_stmt")].and().many0(),
-        // ].and(),
-        // "for" => [
-        //     Keyword("for"),
-        //     NonTerm("lparen"),
-        //     NonTerm("for_init"),
-        //     NonTerm("semicolon"),
-        //     NonTerm("expr"),
-        //     NonTerm("semicolon"),
-        //     NonTerm("for_incr"),
-        //     NonTerm("rparen"),
-        //     NonTerm("block"),
-        // ].and(),
-        // "for" => [
-        //     Keyword("for"),
-        //     // NonTerm("lparen"),
-        //     Identifier,
-        //     Keyword("in"),
-        //     [NonTerm("val"),NonTerm("call").take(),].and(),
-        //     // NonTerm("rparen"),
-        //     NonTerm("block"),
-        //     ].and(),
+
         "for_body" => [
             Identifier,
             Keyword("in"),
@@ -201,36 +121,54 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             ].or(),
             NonTerm("block"),
         ].and(),
+
         "call" => [
             NonTerm("lparen"),
             [
                 NonTerm("expr"),
-                [NonTerm("comma"),NonTerm("expr"),].and().many0(),
+                [
+                    NonTerm("comma"),
+                    NonTerm("expr"),
+                ].and().many0(),
                 NonTerm("comma").opt(),
             ].and().opt(),
             NonTerm("rparen"),
         ].and(),
+
         "include" => [Keyword("include"),String,].and().group("include"),
 
         "func_params" => [
             NonTerm("lparen"),
             [
                 Identifier,
-                [NonTerm("comma"),Identifier,].and().many0(),
+                [
+                    NonTerm("comma"),
+                    Identifier,
+                ].and().many0(),
                 NonTerm("ellipsis").opt(),
                 NonTerm("comma").opt(),
             ].and().opt(),
             NonTerm("rparen"),
         ].and(),
+
         "func" => [
             Keyword("fn"),
             [Identifier, NonTerm("val_field_index").many0()].and(),
             NonTerm("func_params"),
-            NonTerm("lcurly"),
-            NonTerm("stmts"),
-            NonTerm("rcurly"),
+            NonTerm("block"),
+            // NonTerm("lcurly"),
+            // NonTerm("stmts"),
+            // NonTerm("rcurly"),
         ].and(),
-        "lambda" => [Keyword("fn"),NonTerm("func_params"),NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
+
+        "lambda" => [
+            Keyword("fn"),
+            NonTerm("func_params"),
+            NonTerm("block"),
+            // NonTerm("lcurly"),
+            // NonTerm("stmts"),
+            // NonTerm("rcurly"),
+        ].and(),
 
         "infix" => [
             NonTerm("add"),NonTerm("sub"),
@@ -243,37 +181,66 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
 
         "expr" => [
             NonTerm("val"),
-            [NonTerm("infix"),NonTerm("val"),].and().many0(),
+            [
+                NonTerm("infix"),
+                NonTerm("val"),
+            ].and().many0(),
         ].and().group("expr"),
 
-        "prefix" => [NonTerm("add"),NonTerm("sub"),NonTerm("not"),].or(),
+        "prefix" => [
+            NonTerm("add"),
+            NonTerm("sub"),
+            NonTerm("not"),
+        ].or(),
+
         "val_field_index" => [ NonTerm("val_index"), NonTerm("val_field"), ].or(),
-        "val_field_index_call" => [ NonTerm("val_field_index").cede(), NonTerm("call").cede(), ].or(),
+        "val_field_index_call" => [ NonTerm("val_field_index").cede(), NonTerm("call"), ].or(),
 
+        "val_field" => [
+            NonTerm("dot"),
+            [Identifier,Int,].or(),
+        ].and(),
 
-        "val_field" => [NonTerm("dot"),[Identifier,Int,].or(),].and(),
-        "val_index" => [NonTerm("lsquare"),NonTerm("expr"),NonTerm("rsquare"),].and(),
-        "bool" => [Keyword("true"),Keyword("false"),].or(),
+        "val_index" => [
+            NonTerm("lsquare"),
+            NonTerm("expr"),
+            NonTerm("rsquare"),
+        ].and(),
+
+        "bool" => [
+            Keyword("true"),
+            Keyword("false"),
+        ].or(),
+
         "nil" => Keyword("nil"),
+        "void" => Keyword("void"),
+
         "val" => [
             NonTerm("prefix").many0(),
             [
                 Int,
                 Float,
                 String,
+                Identifier,
+
                 NonTerm("bool"),
-                Keyword("nil"),
-                Keyword("void"),
+                NonTerm("nil"),
+                NonTerm("void"),
+
+                NonTerm("array"),
+                NonTerm("dict"), //empty dict supercedes empty block
+
                 NonTerm("if"),
                 NonTerm("lambda"),
-                NonTerm("array"),
-                NonTerm("dict"),
-                NonTerm("block"), //allow code blocks?
-                Identifier,
-                [NonTerm("lparen"),NonTerm("expr"),NonTerm("rparen"),].and(),
+                NonTerm("block"), //allow code blocks for  exprs?
+
+                [
+                    NonTerm("lparen"),
+                    NonTerm("expr"),
+                    NonTerm("rparen"),
+                ].and(),
             ].or(),
             NonTerm("val_field_index_call").many0(),
-            // [NonTerm("val_field_index").offer(),NonTerm("call"),].or().many0(),
         ].and(),
 
         "dict_key_val" => [
@@ -287,6 +254,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("colon"),
             NonTerm("expr"),
         ].and(),
+
         "dict" => [
             NonTerm("lcurly"),
             [
@@ -296,6 +264,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             ].and().opt(),
             NonTerm("rcurly"),
         ].and(),
+
         "array" => [
             NonTerm("lsquare"),
             [
@@ -317,9 +286,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("rparen"),
         ].and(),
 
-        "format" => [Keyword("format"),NonTerm("format_params"),].and(),
-        "print" => [Keyword("print"),NonTerm("format_params"),].and(),
-        "println" => [Keyword("println"),NonTerm("format_params"),].and(),
+        "format" => [Keyword("format"),NonTerm("format_params"),].and().group("format"),
+        "print" => [Keyword("print"),NonTerm("format_params"),].and().group("print"),
+        "println" => [Keyword("println"),NonTerm("format_params"),].and().group("println"),
 
         "lcurly" => Symbol("{"),
         "rcurly" => Symbol("}"),
@@ -330,19 +299,17 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
 
         "colon" => Symbol(":"),
         "semicolon" => Symbol(";"),
-        "end" => [NonTerm("semicolon"),].or(),
 
         "dot" => Symbol("."),
         "ellipsis" => [NonTerm("dot"),NonTerm("dot"),NonTerm("dot"),].and(),
         "comma" => Symbol(","),
-
         "equals" => Symbol("="),
 
         "not" => Symbol("!").group("not"),
-        "add" => Symbol("+"),
-        "sub" => Symbol("-"),
-        "mul" => Symbol("*"),
-        "div" => Symbol("/"),
+        "add" => Symbol("+").group("add"),
+        "sub" => Symbol("-").group("sub"),
+        "mul" => Symbol("*").group("mul"),
+        "div" => Symbol("/").group("div"),
 
         "and" => [Symbol("&"),Symbol("&"),].and().group("and"),
         "or" => [Symbol("|"),Symbol("|"),].and().group("or"),

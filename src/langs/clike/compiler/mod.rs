@@ -93,7 +93,7 @@ impl Compiler {
 
         //
         let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
-        walker.set_debug(true);
+        // walker.set_debug(true);
 
         //
         if let Err(e)=walker.run("start") {
@@ -110,6 +110,12 @@ impl Compiler {
                 }
             }
         }
+
+        //
+        println!("-----------------");
+        let walk=walker.get_walk();
+
+        println!("{}",walk.root());
 
         //
         // let walk=walker.get_walk();
