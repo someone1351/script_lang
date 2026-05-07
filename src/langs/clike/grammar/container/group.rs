@@ -57,7 +57,7 @@ impl<'t,'g> Display for WalkGroupContainer<'t,'g> {
                 Thing::Group(cur) => {
                     // println!("a{indent}{}:",cur.name());
                     // println!("{indent}group{}: {:?} {:?} {:?}",cur.group_ind,cur.name(),cur.tokens().inds(), cur.tokens());
-                    println!("{indent}group{}: {:?}",cur.group_ind,cur.name(),);
+                    println!("{indent}group: {:?}",cur.name(),);
 
                     // println!("group {}",cur.group_ind);
 
