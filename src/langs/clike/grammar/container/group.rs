@@ -56,7 +56,9 @@ impl<'t,'g> Display for WalkGroupContainer<'t,'g> {
             match cur {
                 Thing::Group(cur) => {
                     // println!("a{indent}{}:",cur.name());
-                    println!("{indent}group{}: {:?} {:?} {:?}",cur.group_ind,cur.name(),cur.tokens().inds(), cur.tokens());
+                    // println!("{indent}group{}: {:?} {:?} {:?}",cur.group_ind,cur.name(),cur.tokens().inds(), cur.tokens());
+                    println!("{indent}group{}: {:?}",cur.group_ind,cur.name(),);
+
                     // println!("group {}",cur.group_ind);
 
                     // let mut todos=Vec::new();
@@ -85,19 +87,19 @@ impl<'t,'g> Display for WalkGroupContainer<'t,'g> {
                         // // let ps_len=ps_end-ps_start;
                         // println!("\t\t  cur_tokens.end={} child_tokens.end={}",cur_tokens.end,child_tokens.end);
 
-                        // let ps_len=cur_tokens.end-child_tokens.end;
+                        let ps_len=cur_tokens.end-child_tokens.end;
                         // // println!("ps_len={ps_len}");
 
-                        // let ps=cur_tokens.pop_back_amount(ps_len).unwrap();
+                        let ps=cur_tokens.pop_back_amount(ps_len).unwrap();
 
                         // println!("\t\t2 cur_tokens={cur_tokens:?}");
                         // // println!("c{} {ps_start} .. {ps_end}, {}, {}..{}",c-1,cur_tokens.inds().start,child_tokens.inds().start,child_tokens.inds().end);
 
                         // // let ps=cur_tokens.get_range(ps_start .. ps_end).unwrap();
-                        // stk.extend(ps.map(|t|(Thing::Token(t),depth+1)).rev());
+                        stk.extend(ps.map(|t|(Thing::Token(t),depth+1)).rev());
                         stk.push((Thing::Group(child_group),depth+1));
 
-                        // cur_tokens.pop_back_amount(child_tokens.len()).unwrap();
+                        cur_tokens.pop_back_amount(child_tokens.len()).unwrap();
 
                         // println!("\t\t3 cur_tokens={cur_tokens:?}");
                         // // last_tokens_end=child_tokens.start;
@@ -109,7 +111,7 @@ impl<'t,'g> Display for WalkGroupContainer<'t,'g> {
                     // // let ps_end=ps_start+last_tokens_end-cur_tokens.start;
                     // // println!("{ps_start} .. {ps_end}, {}..{}",cur_tokens.inds().start,cur_tokens.inds().end);
                     // // let ps=cur_tokens.get_range(ps_start .. ps_end).unwrap();
-                    // stk.extend(cur_tokens.map(|t|(Thing::Token(t),depth+1)).rev());
+                    stk.extend(cur_tokens.map(|t|(Thing::Token(t),depth+1)).rev());
                 }
                 Thing::Token(cur) => {
                     // println!("{indent}{:?}",cur.ind());
