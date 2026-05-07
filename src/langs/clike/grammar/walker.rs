@@ -1,6 +1,7 @@
 
 use super::error::*;
 use super::temp_data::*;
+use std::collections::HashMap;
 use std::collections::HashSet;
 
 use crate::build::Loc;
@@ -1316,32 +1317,50 @@ where
         let mut groups: Vec<WalkGroup<'t,'g>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
         // groups.resize_with(new_len, f);
 
-        let mut group_infos2 = self.group_infos.iter().enumerate().map(|(i,g)|(i,g.parent,0)).collect::<Vec<_>>();
+        let mut group_infos2 = self.group_infos.iter().enumerate()
+            .map(|(i,g)|(i,g.parent,))
+            .collect::<Vec<_>>(); //(grouo_ind,parent_ind,child_num)
 
-        //count children for each group
-        for i in 1..group_infos2.len() {
-            let p=group_infos2[i].1;
-            group_infos2[p].2+=1;
-        }
+        // //count children for each group
+        // for i in 1..group_infos2.len() {
+        //     let p=group_infos2[i].1;
+        //     group_infos2[p].2+=1;
+        // }
 
         //sort groups to breadth first
-        group_infos2.sort_by(|&(g1,p1,_),&(g2,p2,_)|{
+        group_infos2[1..].sort_by(|&(g1,p1,),&(g2,p2,)|{
             match p1.cmp(&p2) {
                 std::cmp::Ordering::Equal => g1.cmp(&g2),
                 x=>x,
             }
         });
 
+        // println!("groups2 {:?}",group_infos2.iter().enumerate().collect::<Vec<_>>());
+        // for (i,&(g,p,)) in group_infos2.iter().enumerate() {
+        //     println!("\t{i}: {g}, {p}, {:?}",self.group_infos[g].name);
+        // }
         //
-        let mut csum=1;
-
+        // let mut csum=1;
+        let ind_map: HashMap<usize, usize> = HashMap::from_iter(group_infos2.iter().enumerate().map(|(i,&(g,_p,))|(g,i)));
         //
-        for (_i,&(g,_p,c)) in group_infos2.iter().enumerate() {
-            let gg=&self.group_infos[g];
+        for (i,&(gind,p,)) in group_infos2.iter().enumerate() {
+            let g=&self.group_infos[gind];
             // groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives.inds() });
-            groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives });
-            println!("{_i} name: {:?}, children: {:?}, tokens: {:?}",gg.name,csum..csum+c,gg.primitives.inds());
-            csum+=c;
+            groups.push(WalkGroup { name: g.name,
+                children:
+                    // csum..csum+c
+                    0..0
+                    ,
+                tokens: g.primitives });
+            // println!("{_i} name: {:?}, children: {:?}, tokens: {:?} {:?}",g.name,csum..csum+c,g.primitives.inds(),g.primitives);
+            // println!("{i} name: {:?}, c={c}, children: {:?}, ",g.name,csum..csum+c,);
+            // csum+=c;
+
+            let ind=ind_map.get(&p).cloned().unwrap();
+            let c= &mut groups[ind].children;
+            if c.start==0 {c.start=i;}
+            c.start=c.start.min(i);
+            c.end=c.end.max(i+1);
         }
 
         //
