@@ -89,6 +89,7 @@ where
             opt:false,
             grammar_debug_len: 0,
             // grammar_debug_no_add: true,
+            expected_non_term:None,
         });
         {
             let grammar=if let Some(g)=(self.grammar_func)(start_non_term) {
@@ -108,6 +109,7 @@ where
                 opt:false,
                 grammar_debug_len: 1,
                 // grammar_debug_no_add: false,
+                expected_non_term:None,
             });
         }
 
@@ -313,12 +315,12 @@ where
             // // println!(": {cur:?} || {} && {primitives:?}", self.stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
             {
                 let c=self.c;
-                let Work { grammar, success_len, fail_len, tokens: primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt,grammar_debug_len,  }=&cur;
+                let Work { grammar, success_len, fail_len, tokens: primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt,grammar_debug_len, expected_non_term }=&cur;
                 // println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
                 // println!("         -takeable_starts={:?}",self.takeable_starts);
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
                 // println!("         -temp_groups3={:?}",self.group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
-                 println!("=>{c:4}: {grammar:?}, ps={:?}, success={success_len}, fail={fail_len}, takeables={takeables:?},  ",primitives.inds());
+                 println!("=>{c:4}: {grammar:?}, ps={:?}, success={success_len}, fail={fail_len}, expected_non_term={expected_non_term:?},  ",primitives.inds());
 
                 //
                 println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
@@ -402,6 +404,7 @@ where
                     opt:cur.opt,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
+                    expected_non_term:cur.expected_non_term,
                 });
             }
             GrammarNode::Discard(g) => {
@@ -426,6 +429,7 @@ where
                     opt:cur.opt,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
+                    expected_non_term:cur.expected_non_term,
                 });
 
 
@@ -457,6 +461,7 @@ where
 
                         grammar_debug_len: cur.grammar_debug_len,
                         // grammar_debug_no_add: true,
+                        expected_non_term:cur.expected_non_term,
 
                     });
                 }
@@ -484,6 +489,7 @@ where
 
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
+                    expected_non_term:cur.expected_non_term,
                 });
             }
             GrammarNode::Or(gs) => {
@@ -510,6 +516,7 @@ where
 
                         grammar_debug_len: cur.grammar_debug_len,
                         // grammar_debug_no_add: true,
+                        expected_non_term:cur.expected_non_term,
                     });
                 }
 
@@ -536,6 +543,7 @@ where
 
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
+                    expected_non_term:cur.expected_non_term,
                 });
             }
 
@@ -556,6 +564,7 @@ where
                     opt:false, //not used on always
                     grammar_debug_len: cur.grammar_debug_len,
                     // grammar_debug_no_add: true,
+                    expected_non_term:cur.expected_non_term,
                 });
 
                 let fail_len=self.stk.len();
@@ -580,6 +589,7 @@ where
                     opt:true,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
+                    expected_non_term:cur.expected_non_term,
                 });
             }
             GrammarNode::Cede(g) => {
@@ -605,6 +615,7 @@ where
                     opt:cur.opt,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
+                    expected_non_term:cur.expected_non_term,
                 });
             }
             GrammarNode::Take(g) => {
@@ -645,6 +656,7 @@ where
                         opt:cur.opt,
                         grammar_debug_len: cur.grammar_debug_len+1,
                         // grammar_debug_no_add: false,
+                        expected_non_term:cur.expected_non_term,
                     });
                 } else {
 
@@ -680,6 +692,7 @@ where
                     opt:true,
                     grammar_debug_len: cur.grammar_debug_len,
                     // grammar_debug_no_add: true,
+                    expected_non_term:cur.expected_non_term,
                 });
 
                 let success_len2=self.stk.len();
@@ -700,6 +713,7 @@ where
                     opt:false, //not used
                     grammar_debug_len: cur.grammar_debug_len,
                     // grammar_debug_no_add: true,
+                    expected_non_term:cur.expected_non_term,
                 });
 
                 let fail_len=self.stk.len();
@@ -725,6 +739,7 @@ where
                     opt:true,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
+                    expected_non_term:cur.expected_non_term,
                 });
             }
 
@@ -748,7 +763,7 @@ where
                 //     self.takeable_starts.push((g.clone(),cur.primitives.clone()));
                 // }
 
-                self.add_expected(cur.tokens.loc(), cur.grammar);
+                // self.add_expected(cur.tokens.loc(), cur.grammar);
 
                 let grammar=if let Some(g)=(self.grammar_func)(t) {
                     g
@@ -773,6 +788,8 @@ where
 
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
+                    // expected_non_term:cur.expected_non_term,
+                    expected_non_term:cur.expected_non_term.or(Some(t)),
                 });
             }
             GrammarNode::Always => {
@@ -809,6 +826,10 @@ where
                     // let grammar_debug_len_dif=cur.grammar_debug_len-last.grammar_debug_len;
 
 
+                    if cur.expected_non_term==last.expected_non_term {
+
+                    }
+                    // last.expected_non_term=None;
 
 
 
@@ -989,6 +1010,8 @@ where
                     last.tokens=cur.tokens;
                     last.group_len=cur.group_len;
                     last.output_len=self.primitive_infos.len();
+
+                    // last.expected_non_term=None;
                 }
 
                 //
@@ -1014,13 +1037,16 @@ where
                 Some(v)
             }
             Err(loc) => {
-                self.add_expected(loc,cur.grammar);
+                // if cur.expected_non_term.is_none()
+                {
+                    self.add_expected(loc,cur.grammar);
+                }
 
                 //
                 self.stk.truncate(cur.fail_len);
 
                 //
-                if let Some(last)=self.stk.last() {
+                if let Some(last)=self.stk.last_mut() {
                     self.primitive_infos.truncate(last.output_len);
 
                     self.takeable_starts.truncate(last.takeable_starts_len);
@@ -1031,6 +1057,12 @@ where
                         self.grammar_debug_stk.truncate(last.grammar_debug_len);
                         // println!("\tlast={:?}",self.grammar_debug_stk);
                     }
+
+                    // if let Some(x)=cur.expected_non_term {
+                    //     last.expected_non_term=None;
+                    //     self.add_expected(loc, GrammarNode::NonTerm(x));
+
+                    // }
                 }
 
                 // if self.stk.is_empty() {

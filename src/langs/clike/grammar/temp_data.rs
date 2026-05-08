@@ -35,11 +35,11 @@ impl<'a,'f> Debug for  TempGroupInfo<'a,'f> {
     }
 }
 
-pub struct Work<'a,'f> {
-    pub grammar:GrammarNode<'f>,
+pub struct Work<'t,'g> {
+    pub grammar:GrammarNode<'g>,
     pub success_len:usize,
     pub fail_len:usize,
-    pub tokens:TokenIterContainer<'a>,
+    pub tokens:TokenIterContainer<'t>,
     pub group_ind:usize,
 
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
@@ -51,11 +51,12 @@ pub struct Work<'a,'f> {
     pub takeable_starts_len:usize,
     pub opt:bool,
 
-    pub visiteds:HashSet<(&'f str,usize)>, //used for checking recursive nonterms
+    pub visiteds:HashSet<(&'g str,usize)>, //used for checking recursive nonterms
 
-    pub takeables:HashMap<GrammarNode<'f>,TokenIterContainer<'a>>, //[non_term]
+    pub takeables:HashMap<GrammarNode<'g>,TokenIterContainer<'t>>, //[non_term]
     pub grammar_debug_len:usize,
     // pub grammar_debug_no_add:bool,
+    pub expected_non_term:Option<&'g str>,
 }
 
 
