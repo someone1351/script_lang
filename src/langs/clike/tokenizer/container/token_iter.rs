@@ -22,7 +22,7 @@ impl<'a> TokenIterContainer<'a> {
         self.last_loc
     }
     pub fn loc(&self) -> Loc {
-        self.first().map(|p|p.start_loc()).unwrap_or(self.last_loc)
+        self.first().map(|p|p.end_loc()).unwrap_or(self.last_loc)
     }
 
     pub fn pop_front(&mut self) -> Result<TokenContainer<'a>,Loc> {
