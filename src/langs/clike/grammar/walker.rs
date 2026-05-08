@@ -31,6 +31,7 @@ where
     c:usize,
     expected_loc:Loc,
     expecteds:Vec<GrammarNode<'g>>,
+    // expected_in_non_term:bool,
     // expected: (Loc,Vec<GrammarNode<'g>>,),
     debug:bool,
 
@@ -64,6 +65,7 @@ where
             // expected:Default::default(),
             expected_loc:Loc::zero(),
             expecteds:Vec::new(),
+            // expected_in_non_term:false,
             grammar_func,
             primitives_remaining:top_primitives.clone(),
             top_primitives,
@@ -126,6 +128,7 @@ where
         // self.expected=Default::default();
         self.expected_loc=Loc::zero();
         self.expecteds.clear();
+        // self.expected_in_non_term=false;
 
         self.grammar_debug_stk.clear();
     }
@@ -1327,11 +1330,16 @@ where
             GrammarNode::Symbol(s) => format!("'{s}'"),
             GrammarNode::Keyword(s) => format!("'{s}'"),
             GrammarNode::Eol => "eol".to_string(),
+            GrammarNode::NonTerm(s) => format!("'{s}'"),
             _ =>"".to_string(),
         }).collect::<Vec<_>>().join(", ")
     }
     pub fn last_loc(&self) -> Loc {
-        self.expected_loc
+        if self.expected_loc.is_zero() {
+            self.primitives_remaining.loc()
+        } else {
+            self.expected_loc
+        }
     }
 
     pub fn get_walk(&self) -> Walk<'t,'g> {
