@@ -745,6 +745,8 @@ where
                 //     self.takeable_starts.push((g.clone(),cur.primitives.clone()));
                 // }
 
+                self.add_expected(cur.tokens.loc(), cur.grammar);
+
                 let grammar=if let Some(g)=(self.grammar_func)(t) {
                     g
                 } else {

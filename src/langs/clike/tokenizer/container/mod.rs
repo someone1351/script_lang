@@ -1,12 +1,12 @@
 
-mod primitive;
-mod primitive_type;
-mod primitive_iter;
+mod token;
+mod token_type;
+mod token_iter;
 mod value;
 
-pub use primitive::*;
-pub use primitive_type::*;
-pub use primitive_iter::*;
+pub use token::*;
+pub use token_type::*;
+pub use token_iter::*;
 pub use value::*;
 
 // use std::ops::Range;
