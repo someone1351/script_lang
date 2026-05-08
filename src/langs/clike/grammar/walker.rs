@@ -29,7 +29,9 @@ where
 
     stk: Vec<Work<'t,'g>>,
     c:usize,
-    expected: (Loc,Vec<GrammarNode<'g>>,),
+    expected_loc:Loc,
+    expecteds:Vec<GrammarNode<'g>>,
+    // expected: (Loc,Vec<GrammarNode<'g>>,),
     debug:bool,
 
     grammar_debug_stk:Vec<TempGrammarNodeDebug<'t,'g>>,
@@ -59,7 +61,9 @@ where
             takeable_starts: Default::default(),
             stk:Default::default(),
             c:Default::default(),
-            expected:Default::default(),
+            // expected:Default::default(),
+            expected_loc:Loc::zero(),
+            expecteds:Vec::new(),
             grammar_func,
             primitives_remaining:top_primitives.clone(),
             top_primitives,
@@ -74,7 +78,7 @@ where
         self.stk.clear();
 
         self.stk.push(Work{
-            grammar:GrammarNode::Error(GrammarWalkError::FailedParse),success_len:0,fail_len:0,primitives:self.top_primitives,
+            grammar:GrammarNode::Error(GrammarWalkError::FailedParse),success_len:0,fail_len:0,tokens:self.top_primitives,
             group_ind: 0, group_len: 1, output_len: 0, discard:false,
             // takeable_starts:Default::default(),
             takeable_starts_len:0,
@@ -93,7 +97,7 @@ where
 
             self.stk.push(Work{
                 grammar, //:(self.grammar_func)(start_non_term),
-                success_len:0,fail_len:1,primitives:self.top_primitives,
+                success_len:0,fail_len:1,tokens:self.top_primitives,
                 group_ind: 0, group_len: 1, output_len: 0, discard:false,
                 // takeable_starts:Default::default(),
                 takeable_starts_len:0,
@@ -119,7 +123,10 @@ where
         // self.top_primitives,
 
         self.c=0;
-        self.expected=Default::default();
+        // self.expected=Default::default();
+        self.expected_loc=Loc::zero();
+        self.expecteds.clear();
+
         self.grammar_debug_stk.clear();
     }
 
@@ -133,13 +140,13 @@ where
                 if self.debug {
                     match e {
                         GrammarWalkError::RecursiveNonTerm(t) => {
-                            println!("Recursive NonTerm {t:?}, At {}",self.expected.0);
+                            println!("Recursive NonTerm {t:?}, At {}",self.expected_loc);
                         }
                         GrammarWalkError::MissingNonTerm(t) => {
-                            println!("Missing NonTerm {t:?}, At {}",self.expected.0);
+                            println!("Missing NonTerm {t:?}, At {}",self.expected_loc);
                         }
                         GrammarWalkError::FailedParse => {
-                            println!("Failed parse, At {}, expected {:?}",self.expected.0,self.expecteds_string());
+                            println!("Failed parse, At {}, expected {:?}",self.expected_loc,self.expecteds_string());
                         }
                         GrammarWalkError::Unfinished =>{}
                     }
@@ -160,17 +167,21 @@ where
         }
 
         if !result.is_err() && !self.primitives_remaining.is_empty() {
-            self.expected.0=self.primitives_remaining.loc();
+            // self.expected_loc=self.primitives_remaining.loc();
 
             if self.debug {
                 // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
-                println!("error, failed to parse all tokens, at {}",self.expected.0);
-                println!("{:?}",self.expected.1); //self.expected.1 should be empty?
+                println!("error, failed to parse all tokens, at {}",self.expected_loc);
+                println!("{:?}",self.expecteds); //self.expected.1 should be empty?
             }
 
             // return Err(GrammarWalkError::Unfinished);
 
-            result=Err(GrammarWalkError::Unfinished);
+            if self.expecteds.is_empty() {
+                result=Err(GrammarWalkError::Unfinished);
+            } else {
+                result=Err(GrammarWalkError::FailedParse);
+            }
 
             //need to store grammar that was traversed ...
         } else {
@@ -299,16 +310,19 @@ where
             // // println!(": {cur:?} || {} && {primitives:?}", self.stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
             {
                 let c=self.c;
-                let Work { grammar, success_len, fail_len, primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt,grammar_debug_len,  }=&cur;
+                let Work { grammar, success_len, fail_len, tokens: primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt,grammar_debug_len,  }=&cur;
                 // println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
                 // println!("         -takeable_starts={:?}",self.takeable_starts);
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
                 // println!("         -temp_groups3={:?}",self.group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
                  println!("=>{c:4}: {grammar:?}, ps={:?}, success={success_len}, fail={fail_len}, takeables={takeables:?},  ",primitives.inds());
 
+                //
+                println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
+                println!("        tokens {:?}", cur.tokens);
             }
 
-            {
+            if false {
 
                 let mut grammar_debug_stk=self.grammar_debug_stk.clone();
                 for _i in (1 .. grammar_debug_stk.len()).rev() {
@@ -344,27 +358,25 @@ where
                     self.grammar_debug_stk.iter().enumerate().map(|(i,d)|format!("{i}:{d}")).collect::<Vec<_>>().join(", ")
                 );
 
-                // for (i,d) in self.grammar_debug_stk.iter().enumerate() {
-                //     println!("        {i}:{d}");
-                // }
 
 
             }
 
-            for (i,Work { grammar:g, success_len:s, fail_len:f, primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt, grammar_debug_len,  }) in self.stk.iter()
-                // .rev()
-                .enumerate() {
-                // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
-                // println!("\t{i:3}: {g:?}, ps={primitives:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
-                println!("    {i:3}: {g:?}, ps={:?}, success={s}, fail={f}, ",primitives.inds());
+            //
+            // for (i,Work { grammar:g, success_len:s, fail_len:f, primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt, grammar_debug_len,  }) in self.stk.iter()
+            //     // .rev()
+            //     .enumerate() {
+            //     // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
+            //     // println!("\t{i:3}: {g:?}, ps={primitives:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
+            //     println!("    {i:3}: {g:?}, ps={:?}, success={s}, fail={f}, ",primitives.inds());
 
-            }
+            // }
         }
 
         //
         match cur.grammar {
             GrammarNode::Group(name, g) => {
-                let new_group_ind=self.new_group(name, cur.group_ind, cur.primitives);
+                let new_group_ind=self.new_group(name, cur.group_ind, cur.tokens);
                 let new_group_len=self.group_infos.len();
 
                 // if cur.opt {
@@ -375,7 +387,7 @@ where
                     grammar: *g,
                     success_len: cur.success_len,
                     fail_len: cur.fail_len,
-                    primitives: cur.primitives,
+                    tokens: cur.tokens,
 
                     group_ind: new_group_ind,
                     group_len: new_group_len,
@@ -399,7 +411,7 @@ where
                     grammar: *g,
                     success_len: cur.success_len,
                     fail_len: cur.fail_len,
-                    primitives: cur.primitives,
+                    tokens: cur.tokens,
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
@@ -428,7 +440,7 @@ where
                         fail_len: cur.fail_len,
 
                         //not really necessary? since gets updated by always/primtitives
-                        primitives: cur.primitives,
+                        tokens: cur.tokens,
 
                         group_ind: cur.group_ind,
                         group_len: cur.group_len,
@@ -456,7 +468,7 @@ where
                     grammar: first,
                     success_len,
                     fail_len: cur.fail_len,
-                    primitives: cur.primitives,
+                    tokens: cur.tokens,
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
@@ -482,7 +494,7 @@ where
                         grammar: GrammarNode::Or(rest.into()),
                         success_len: cur.success_len,
                         fail_len: cur.fail_len,
-                        primitives: cur.primitives,
+                        tokens: cur.tokens,
 
                         group_ind: cur.group_ind,
                         group_len: cur.group_len,
@@ -508,7 +520,7 @@ where
                     grammar: first,
                     success_len: cur.success_len,
                     fail_len,
-                    primitives: cur.primitives,
+                    tokens: cur.tokens,
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
@@ -529,7 +541,7 @@ where
                     grammar: GrammarNode::Always,
                     success_len: cur.success_len,
                     fail_len: 0, //fail is not used
-                    primitives: cur.primitives,
+                    tokens: cur.tokens,
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
@@ -553,7 +565,7 @@ where
                     grammar: *g,
                     success_len: cur.success_len,
                     fail_len,
-                    primitives: cur.primitives,
+                    tokens: cur.tokens,
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
@@ -572,14 +584,14 @@ where
                 //  or just don't rquire at all
 
                 // if cur.opt {
-                self.takeable_starts.push((*g.clone(),cur.primitives.clone()));
+                self.takeable_starts.push((*g.clone(),cur.tokens.clone()));
                 // }
 
                 self.stk.push(Work {
                     grammar: *g,
                     success_len: cur.success_len,
                     fail_len: cur.fail_len,
-                    primitives: cur.primitives,
+                    tokens: cur.tokens,
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     output_len: cur.output_len,
@@ -617,7 +629,7 @@ where
                         success_len: cur.success_len,
                         fail_len: cur.fail_len,
 
-                        primitives: taken_ps_start.clone(),
+                        tokens: taken_ps_start.clone(),
                         output_len: taken_ps_start.inds().start,
 
                         group_ind: cur_group_ind,
@@ -653,7 +665,7 @@ where
                     grammar: GrammarNode::Many(g.clone()),
                     success_len: cur.success_len,
                     fail_len: cur.fail_len,
-                    primitives: cur.primitives,
+                    tokens: cur.tokens,
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
@@ -673,7 +685,7 @@ where
                     grammar: GrammarNode::Always,
                     success_len: cur.success_len,
                     fail_len: 0, //fail is not used
-                    primitives: cur.primitives,
+                    tokens: cur.tokens,
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
@@ -698,7 +710,7 @@ where
                     grammar: *g,
                     success_len: success_len2,
                     fail_len,
-                    primitives: cur.primitives,
+                    tokens: cur.tokens,
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
@@ -724,7 +736,7 @@ where
                 // let mut visiteds=cur.visiteds;
                 // visiteds.insert(v);
 
-                let visiteds=self.do_non_term_visiteds(t,cur.primitives,cur.visiteds)?;
+                let visiteds=self.do_non_term_visiteds(t,cur.tokens,cur.visiteds)?;
 
                 // let mut takeable_starts_len=cur.takeable_starts_len;
                 // self.takeable_starts.insert((cur.grammar,cur.primitives.inds().start));
@@ -743,7 +755,7 @@ where
                     grammar, //: (self.grammar_func)(t), //should return err on not found, instead of grammar never, should have error
                     success_len: cur.success_len,
                     fail_len: cur.fail_len,
-                    primitives: cur.primitives,
+                    tokens: cur.tokens,
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
@@ -764,11 +776,11 @@ where
                 //
                 //
                 if let Some(last)=self.stk.last_mut() {
-                    if last.grammar.is_many() && last.primitives.len()==cur.primitives.len() { //if not parsing anything, exit the many
+                    if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //if not parsing anything, exit the many
                         last.grammar=GrammarNode::Always;
                     }
 
-                    last.primitives=cur.primitives;
+                    last.tokens=cur.tokens;
 
                     // self.temp_primtives.resize(cur.output_len+1, PrimitiveInfo{ group: cur.group_ind }); //discard:true,
 
@@ -803,7 +815,7 @@ where
                 }
 
                 //
-                self.do_groups_primitives_clamp(cur.group_ind,cur.primitives);
+                self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
 
                 //
                 // self.last_remove_groups_at(cur.group_len,cur.primitives);
@@ -811,28 +823,28 @@ where
                 //
                 self.last_insert_start_takeables();
 
-                self.set_remaining_prims(cur.primitives);
+                self.set_remaining_prims(cur.tokens);
 
-                self.clear_expected();
+                // self.clear_expected();
 
                 // self.group_infos.truncate(cur.group_len);
             }
 
             GrammarNode::Error(e) => {
                 if self.debug {
-                    println!("====error {:?}",self.expected);
+                    println!("====error {:?} {:?}",self.expected_loc,self.expecteds,);
                 }
                 //necesaary? any point to it?
-                if
-                    // self.expected.0.is_zero()
-                    self.expected.1.is_empty()
-                {
-                    self.expected.0=cur.primitives.loc();
-                }
+                // if
+                //     // self.expected.0.is_zero()
+                //     self.expecteds.is_empty()
+                // {
+                //     self.expected_loc=cur.primitives.loc();
+                // }
 
 
                 //
-                self.set_remaining_prims(cur.primitives);
+                self.set_remaining_prims(cur.tokens);
 
 
                 // self.group_infos.truncate(cur.group_len);
@@ -941,7 +953,7 @@ where
         Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
         K: Fn(ValueContainer<'t,P>,&mut Self),
     {
-        match prim_func(&mut cur.primitives) {
+        match prim_func(&mut cur.tokens) {
             Ok(v) => {
                 let vprim=v.primitive;
                 on_ok(v.clone(),self);
@@ -958,7 +970,7 @@ where
                 // }
                 // let Some(TempGrammarNodeDebug::Identifier(x))=self.grammar_debug_stk.last_mut() else {panic!("");};
 
-                if vprim.start_loc() >= self.expected.0 {
+                if vprim.start_loc() >= self.expected_loc {
                     self.clear_expected();
                 }
 
@@ -969,7 +981,7 @@ where
 
                 //
                 if let Some(last)=self.stk.last_mut() {
-                    last.primitives=cur.primitives;
+                    last.tokens=cur.tokens;
                     last.group_len=cur.group_len;
                     last.output_len=self.primitive_infos.len();
                 }
@@ -979,7 +991,7 @@ where
                     self.consolidate_grammar_debug_stk();
                 }
                 //
-                self.do_groups_primitives_clamp(cur.group_ind,cur.primitives);
+                self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
 
                 //
                 self.last_remove_old_takeables();
@@ -989,7 +1001,7 @@ where
                 // if self.stk.is_empty() {
                 //     self.primitives_remaining=cur.primitives;
                 // }
-                self.set_remaining_prims(cur.primitives);
+                self.set_remaining_prims(cur.tokens);
 
 
                 // self.group_infos.truncate(cur.group_len);
@@ -1019,7 +1031,7 @@ where
                 // if self.stk.is_empty() {
                 //     self.primitives_remaining=cur.primitives;
                 // }
-                self.set_remaining_prims(cur.primitives);
+                self.set_remaining_prims(cur.tokens);
 
 
                 // self.group_infos.truncate(cur.group_len);
@@ -1134,20 +1146,27 @@ where
     fn last_remove_old_takeables(&mut self) {
         if let Some(last)=self.stk.last_mut() {
             last.takeables.retain(|_k,v|{
-                v.inds().start >= last.primitives.inds().start
+                v.inds().start >= last.tokens.inds().start
             });
         }
     }
     fn clear_expected(&mut self) {
-        self.expected.0=Loc::zero();
-        self.expected.1.clear();
+        // println!("-------==== expected cleared, {}",self.expected_loc);
+
+        self.expected_loc=Loc::zero();
+        self.expecteds.clear();
     }
     fn add_expected(&mut self,loc:Loc,g:GrammarNode<'g>) {
-        if loc==self.expected.0 {
-            self.expected.1.push(g);
-        } else if loc>self.expected.0 {
-            self.expected.0=loc;
-            self.expected.1=vec![g];
+
+        if loc==self.expected_loc {
+            self.expecteds.push(g.clone());
+            // println!("-------==== expected added {g:?}, {loc}=={}",self.expected_loc);
+        } else if loc>self.expected_loc  { //|| self.expecteds.is_empty()
+            self.expected_loc=loc;
+            self.expecteds=vec![g.clone()];
+            // println!("-------==== expected new {g:?}, {loc}=={}",self.expected_loc);
+        } else {
+            // println!("-------==== expected not added {g:?}, {loc}=={}",self.expected_loc);
         }
     }
     fn new_group(&mut self,name : &'g str, parent:usize, ps:TokenIterContainer<'t>) -> usize {
@@ -1298,19 +1317,19 @@ where
         self.debug=debug;
     }
     pub fn expecteds_string(&self) -> String {
-        self.expected.1.iter().map(|g|match g {
+        self.expecteds.iter().map(|g|match g {
             GrammarNode::String => "string".to_string(),
             GrammarNode::Identifier => "identifier".to_string(),
             GrammarNode::Int => "int".to_string(),
             GrammarNode::Float => "float".to_string(),
-            GrammarNode::Symbol(s) => format!("symbol({s})"),
-            GrammarNode::Keyword(s) => format!("keyword({s})"),
+            GrammarNode::Symbol(s) => format!("'{s}'"),
+            GrammarNode::Keyword(s) => format!("'{s}'"),
             GrammarNode::Eol => "eol".to_string(),
             _ =>"".to_string(),
         }).collect::<Vec<_>>().join(", ")
     }
     pub fn last_loc(&self) -> Loc {
-        self.expected.0
+        self.expected_loc
     }
 
     pub fn get_walk(&self) -> Walk<'t,'g> {

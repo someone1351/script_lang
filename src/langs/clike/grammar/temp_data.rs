@@ -39,7 +39,7 @@ pub struct Work<'a,'f> {
     pub grammar:GrammarNode<'f>,
     pub success_len:usize,
     pub fail_len:usize,
-    pub primitives:TokenIterContainer<'a>,
+    pub tokens:TokenIterContainer<'a>,
     pub group_ind:usize,
 
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
