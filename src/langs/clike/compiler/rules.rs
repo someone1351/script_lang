@@ -35,8 +35,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
     use GrammarNode::*;
     Some(match n {
         "test0" => [
-            Int.opt().group("i"),
-            String.group("s"),
+            Int.opt(),
+            String,
         ].and(),
 
         "start" => [
@@ -67,7 +67,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("expr"),
             // NonTerm("block"), //after expr, so dict can use the empty {} //put as expr or stmt?
             // NonTerm("if"),
-        ].or().group("stmt"),
+        ].or(),
 
         "continue" => Keyword("continue"),
         "break" => Keyword("break"),
@@ -95,16 +95,16 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             // NonTerm("rparen"),
         ].and(),
         "block" => [NonTerm("lcurly"),NonTerm("stmts"),NonTerm("rcurly"),].and(),
-        "if_cond_block" => [NonTerm("cond"), NonTerm("block")].and().group("if_cond_block"),
+        "if_cond_block" => [NonTerm("cond"), NonTerm("block")].and(),
 
         "if" => [
-            [Keyword("if"), [NonTerm("cond"), NonTerm("block")].and().group("if_cond_block"), ].and(),
-            [Keyword("elif"),[NonTerm("cond"), NonTerm("block")].and().group("if_cond_block"), ].and().many0(),
-            [Keyword("else"),NonTerm("block"),].and().opt().group("else"),
-        ].and().group("if"),
+            [Keyword("if"), NonTerm("if_cond_block"), ].and(),
+            [Keyword("elif"),NonTerm("if_cond_block"), ].and().many0(),
+            [Keyword("else"),NonTerm("block"),].and().opt(),
+        ].and(),
         "while" => [
             Keyword("while"), NonTerm("cond"), NonTerm("block"),
-        ].and().group("while"),
+        ].and(),
 
         "for_body" => [
             Identifier,
@@ -139,7 +139,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("rparen"),
         ].and(),
 
-        "include" => [Keyword("include"),String,].and().group("include"),
+        "include" => [Keyword("include"),String,].and(),
 
         "func_params" => [
             NonTerm("lparen"),
@@ -189,7 +189,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 NonTerm("infix"),
                 NonTerm("val"),
             ].and().many0(),
-        ].and().group("expr"),
+        ].and(),
 
         "prefix" => [
             NonTerm("add"),
@@ -290,9 +290,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("rparen"),
         ].and(),
 
-        "format" => [Keyword("format"),NonTerm("format_params"),].and().group("format"),
-        "print" => [Keyword("print"),NonTerm("format_params"),].and().group("print"),
-        "println" => [Keyword("println"),NonTerm("format_params"),].and().group("println"),
+        "format" => [Keyword("format"),NonTerm("format_params"),].and(),
+        "print" => [Keyword("print"),NonTerm("format_params"),].and(),
+        "println" => [Keyword("println"),NonTerm("format_params"),].and(),
 
         "lcurly" => Symbol("{"),
         "rcurly" => Symbol("}"),
@@ -309,21 +309,21 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "comma" => Symbol(","),
         "equals" => Symbol("="),
 
-        "not" => Symbol("!").group("not"),
-        "add" => Symbol("+").group("add"),
-        "sub" => Symbol("-").group("sub"),
-        "mul" => Symbol("*").group("mul"),
-        "div" => Symbol("/").group("div"),
+        "not" => Symbol("!"),
+        "add" => Symbol("+"),
+        "sub" => Symbol("-"),
+        "mul" => Symbol("*"),
+        "div" => Symbol("/"),
 
-        "and" => [Symbol("&"),Symbol("&"),].and().group("and"),
-        "or" => [Symbol("|"),Symbol("|"),].and().group("or"),
+        "and" => [Symbol("&"),Symbol("&"),].and(),
+        "or" => [Symbol("|"),Symbol("|"),].and(),
 
-        "lt" => Symbol("<").group("lt"),
-        "gt" => Symbol(">").group("gt"),
-        "le" => [Symbol("<"),Symbol("="),].and().group("le"),
-        "ge" => [Symbol(">"),Symbol("="),].and().group("ge"),
-        "eq" => [Symbol("="),Symbol("="),].and().group("eq"),
-        "ne" => [Symbol("!"),Symbol("="),].and().group("ne"),
+        "lt" => Symbol("<"),
+        "gt" => Symbol(">"),
+        "le" => [Symbol("<"),Symbol("="),].and(),
+        "ge" => [Symbol(">"),Symbol("="),].and(),
+        "eq" => [Symbol("="),Symbol("="),].and(),
+        "ne" => [Symbol("!"),Symbol("="),].and(),
         // _ => Error(GrammarWalkError::MissingNonTerm(n)),
         _ => {return None;}
     })

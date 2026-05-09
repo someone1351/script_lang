@@ -58,7 +58,7 @@ impl<'t,'g> Display for WalkGroupContainer<'t,'g> {
                     // writeln!(f,"a{indent}{}:",cur.name());
                     // writeln!(f,"{indent}group{}: {:?} {:?} {:?}",cur.group_ind,cur.name(),cur.tokens().inds(), cur.tokens());
                     writeln!(f,"{indent}group: {:?}",cur.name(),)?;
-
+                    // writeln!(f, "{indent}    {:?}",cur.children().map(|g|g.group_ind).collect::<Vec<_>>());
                     // writeln!(f,"group {}",cur.group_ind);
 
                     // let mut todos=Vec::new();

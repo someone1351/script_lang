@@ -1,4 +1,5 @@
 
+
 use super::error::*;
 use super::temp_data::*;
 use std::collections::HashMap;
@@ -1419,11 +1420,13 @@ where
             // println!("{i} name: {:?}, c={c}, children: {:?}, ",g.name,csum..csum+c,);
             // csum+=c;
 
-            let ind=ind_map.get(&p).cloned().unwrap();
-            let c= &mut groups[ind].children;
-            if c.start==0 {c.start=i;}
-            c.start=c.start.min(i);
-            c.end=c.end.max(i+1);
+            if i!=0 { //as root's parent is 0, ie itself, which is incorrect
+                let ind=ind_map.get(&p).cloned().unwrap();
+                let c= &mut groups[ind].children;
+                if c.start==0 {c.start=i;}
+                c.start=c.start.min(i);
+                c.end=c.end.max(i+1);
+            }
         }
 
         //
