@@ -56,7 +56,7 @@ pub struct Work<'t,'g> {
     pub takeables:HashMap<GrammarNode<'g>,TokenIterContainer<'t>>, //[non_term]
     pub grammar_debug_len:usize,
     // pub grammar_debug_no_add:bool,
-    pub expected_non_term:Option<&'g str>,
+    pub expected:Option<&'g str>,
 }
 
 
@@ -72,7 +72,7 @@ pub enum TempGrammarNodeDebug<'t,'g> {
     Take(Option<Box<Self>>),
     Group(&'g str,Option<Box<Self>>),
     Expect(&'g str,Option<Box<Self>>),
-    Discard(Option<Box<Self>>),
+    // Discard(Option<Box<Self>>),
     NonTerm(&'g str,Option<Box<Self>>),
 
     String(Option<ValueContainer<'t,&'t str>>),
@@ -167,11 +167,11 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                             stk.push(if let Some(x)=arg1 {Work::Node(x)} else {Work::Write("_")});
                             write!(f,"Expect({arg0:?},")?;
                         }
-                        Self::Discard(arg0) => {
-                            stk.push(Work::Write(")"));
-                            stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
-                            write!(f,"Discard(")?;
-                        }
+                        // Self::Discard(arg0) => {
+                        //     stk.push(Work::Write(")"));
+                        //     stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
+                        //     write!(f,"Discard(")?;
+                        // }
                         Self::NonTerm(arg0, arg1) => {
                             stk.push(Work::Write(")"));
                             stk.push(if let Some(x)=arg1 {Work::Node(x)} else {Work::Write("_")});

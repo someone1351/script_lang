@@ -30,7 +30,9 @@ pub enum GrammarNode<'g> {
     // Never, //replace with Error ?
     Error(GrammarWalkError<'g>),
     // Not(Box<GrammarItem<'a>>), //todo, needed? better to have NotIdentifier etc?
-    Discard(Box<GrammarNode<'g>>), //todo, removes token from output (via just hding it, ie have hashmap of tokens to hide)
+
+    //todo remove:
+    // Discard(Box<GrammarNode<'g>>), //todo, removes token from output (via just hding it, ie have hashmap of tokens to hide)
 }
 
 impl<'g> GrammarNode<'g> {
@@ -48,18 +50,21 @@ impl<'g> GrammarNode<'g> {
     pub fn group(self,name: &'g str) -> GrammarNode<'g> {
         Self::Group(name,self.into())
     }
-    pub fn discard(self,) -> GrammarNode<'g> {
-        Self::Discard(self.into())
+    pub fn expect(self,name: &'g str) -> GrammarNode<'g> {
+        Self::Expect(name,self.into())
     }
+    // pub fn discard(self,) -> GrammarNode<'g> {
+    //     Self::Discard(self.into())
+    // }
     pub fn cede(self,) -> GrammarNode<'g> {
         Self::Cede(self.into())
     }
     pub fn take(self,) -> GrammarNode<'g> {
         Self::Take(self.into())
     }
-    pub fn d(self,) -> GrammarNode<'g> {
-        self.discard()
-    }
+    // pub fn d(self,) -> GrammarNode<'g> {
+    //     self.discard()
+    // }
     pub fn is_many(&self) -> bool {
         if let GrammarNode::Many(_)=self {
             true
