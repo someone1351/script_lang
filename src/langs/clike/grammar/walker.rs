@@ -1011,7 +1011,7 @@ where
                     last.group_len=cur.group_len;
                     last.output_len=self.primitive_infos.len();
 
-                    // last.expected_non_term=None;
+                    last.expected_non_term=None;
                 }
 
                 //
@@ -1037,7 +1037,7 @@ where
                 Some(v)
             }
             Err(loc) => {
-                // if cur.expected_non_term.is_none()
+                // if self.stk.last().map(|last|!last.expected_non_term.is_none() ).unwrap_or_default()
                 {
                     self.add_expected(loc,cur.grammar);
                 }
@@ -1059,9 +1059,11 @@ where
                     }
 
                     // if let Some(x)=cur.expected_non_term {
-                    //     last.expected_non_term=None;
-                    //     self.add_expected(loc, GrammarNode::NonTerm(x));
+                    //     if last.expected_non_term.is_none() {
+                    //         self.add_expected(loc, GrammarNode::NonTerm(x));
 
+                    //     }
+                    // //     last.expected_non_term=None;
                     // }
                 }
 

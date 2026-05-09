@@ -98,8 +98,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "if_cond_block" => [NonTerm("cond"), NonTerm("block")].and().group("if_cond_block"),
 
         "if" => [
-            [Keyword("if"), NonTerm("if_cond_block"), ].and(),
-            [Keyword("elif"),NonTerm("if_cond_block"), ].and().many0(),
+            [Keyword("if"), [NonTerm("cond"), NonTerm("block")].and().group("if_cond_block"), ].and(),
+            [Keyword("elif"),[NonTerm("cond"), NonTerm("block")].and().group("if_cond_block"), ].and().many0(),
             [Keyword("else"),NonTerm("block"),].and().opt().group("else"),
         ].and().group("if"),
         "while" => [
