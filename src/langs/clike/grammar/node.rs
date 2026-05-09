@@ -12,6 +12,7 @@ pub enum GrammarNode<'g> {
     Cede(Box<GrammarNode<'g>>),
     Take(Box<GrammarNode<'g>>),
     Group(&'g str,Box<GrammarNode<'g>>),
+    Expect(&'g str,Box<GrammarNode<'g>>),
 
     // List(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
     // ListNoTrail(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep

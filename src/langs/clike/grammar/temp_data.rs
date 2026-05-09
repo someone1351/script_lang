@@ -71,6 +71,7 @@ pub enum TempGrammarNodeDebug<'t,'g> {
     Cede(Option<Box<Self>>),
     Take(Option<Box<Self>>),
     Group(&'g str,Option<Box<Self>>),
+    Expect(&'g str,Option<Box<Self>>),
     Discard(Option<Box<Self>>),
     NonTerm(&'g str,Option<Box<Self>>),
 
@@ -160,6 +161,11 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                             stk.push(Work::Write(")"));
                             stk.push(if let Some(x)=arg1 {Work::Node(x)} else {Work::Write("_")});
                             write!(f,"Group({arg0:?},")?;
+                        }
+                        Self::Expect(arg0, arg1) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg1 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"Expect({arg0:?},")?;
                         }
                         Self::Discard(arg0) => {
                             stk.push(Work::Write(")"));

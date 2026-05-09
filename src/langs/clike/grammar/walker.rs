@@ -287,6 +287,7 @@ where
                     GrammarNode::Cede(_) => TempGrammarNodeDebug::Cede(None),
                     GrammarNode::Take(_) => TempGrammarNodeDebug::Take(None),
                     GrammarNode::Group(g, _) => TempGrammarNodeDebug::Group(g,None),
+                    GrammarNode::Expect(g, _) => TempGrammarNodeDebug::Expect(g,None),
                     GrammarNode::String => TempGrammarNodeDebug::String(None),
                     GrammarNode::Identifier => TempGrammarNodeDebug::Identifier(None),
                     GrammarNode::Int => TempGrammarNodeDebug::Int(None),
@@ -381,6 +382,26 @@ where
 
         //
         match cur.grammar {
+            GrammarNode::Expect(name, g) => {
+                //TODO
+                self.stk.push(Work {
+                    grammar: *g,
+                    success_len: cur.success_len,
+                    fail_len: cur.fail_len,
+                    tokens: cur.tokens,
+
+                    group_ind: cur.group_ind,
+                    group_len: cur.group_len,
+                    output_len: cur.output_len,
+                    discard:cur.discard,
+                    takeable_starts_len:cur.takeable_starts_len,
+                    visiteds:cur.visiteds,
+                    takeables:cur.takeables,
+                    opt:cur.opt,
+                    grammar_debug_len: cur.grammar_debug_len+1,
+                    expected_non_term:cur.expected_non_term,
+                });
+            }
             GrammarNode::Group(name, g) => {
                 let new_group_ind=self.new_group(name, cur.group_ind, cur.tokens);
                 let new_group_len=self.group_infos.len();

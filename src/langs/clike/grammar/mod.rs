@@ -35,5 +35,8 @@ TODO
 * add Expected grammar node eg
     "val" => [..].or().expect("val"),
     "block" => [..].and().expect("block"),
+** add the expects after second eg
+    val_field => [".", Identifier.expect("field") ].and()
 
+    so that if you  have "if i", it willsay expecting "block" instead of infix/field/call/index etc
 */
