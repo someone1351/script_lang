@@ -97,9 +97,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
 
         "block" => [
             NonTerm("lcurly"),
-            NonTerm("stmts").group("block").expect("block"),
+            NonTerm("stmts").group("block"),
             NonTerm("rcurly"),
-        ].and(),
+        ].and().expected("block"),
 
         "if_cond_block" => [NonTerm("cond"), NonTerm("block")].and(),
 
@@ -195,7 +195,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 NonTerm("infix"),
                 NonTerm("val"),
             ].and().many0(),
-        ].and().group("expr").expect("expr"),
+        ].and().group("expr").expected("expr"),
 
         "prefix" => [
             NonTerm("add"),
@@ -208,12 +208,12 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
 
         "val_field" => [
             NonTerm("dot"),
-            [Identifier,Int,].or().group("field").expect("field"),
+            [Identifier,Int,].or().group("field").expected("field"),
         ].and(),
 
         "val_index" => [
             NonTerm("lsquare"),
-            NonTerm("expr").group("index").expect("index"),
+            NonTerm("expr").group("index").expected("index"),
             NonTerm("rsquare"),
         ].and(),
 
@@ -251,7 +251,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 ].and(),
             ].or(),
             NonTerm("val_field_index_call").many0(),
-        ].and().group("val").expect("val"),
+        ].and().group("val").expected("val"),
 
         "dict_key_val" => [
             [

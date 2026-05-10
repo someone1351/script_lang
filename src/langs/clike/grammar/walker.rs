@@ -40,6 +40,8 @@ where
     // keywords : HashSet<&'a str>,
     // keywords : &'a HashSet<&'a str>,
     // tokenized:Tokenized<'a>,
+
+    non_term_recursive_check:bool,
 }
 
 
@@ -74,7 +76,12 @@ where
             // keywords:HashSet::from_iter(keywords.into_iter()),
             // keywords,
             grammar_debug_stk:Vec::new(),
+            non_term_recursive_check:true,
         }
+    }
+
+    pub fn set_non_term_recursive_check(&mut self,non_term_recursive_check:bool) {
+        self.non_term_recursive_check=non_term_recursive_check;
     }
 
     fn init(&mut self,start_non_term:&'g str,) {
@@ -287,7 +294,7 @@ where
                     GrammarNode::Cede(_) => TempGrammarNodeDebug::Cede(None),
                     GrammarNode::Take(_) => TempGrammarNodeDebug::Take(None),
                     GrammarNode::Group(g, _) => TempGrammarNodeDebug::Group(g,None),
-                    GrammarNode::Expect(g, _) => TempGrammarNodeDebug::Expect(g,None),
+                    GrammarNode::Expected(g, _) => TempGrammarNodeDebug::Expected(g,None),
                     GrammarNode::String => TempGrammarNodeDebug::String(None),
                     GrammarNode::Identifier => TempGrammarNodeDebug::Identifier(None),
                     GrammarNode::Int => TempGrammarNodeDebug::Int(None),
@@ -382,7 +389,7 @@ where
 
         //
         match cur.grammar {
-            GrammarNode::Expect(name, g) => {
+            GrammarNode::Expected(name, g) => {
                 //TODO
                 self.stk.push(Work {
                     grammar: *g,
@@ -1127,7 +1134,7 @@ where
                     |TempGrammarNodeDebug::Cede(g)
                     |TempGrammarNodeDebug::Take(g)
                     |TempGrammarNodeDebug::Group(_, g)
-                    |TempGrammarNodeDebug::Expect(_, g)
+                    |TempGrammarNodeDebug::Expected(_, g)
                     |TempGrammarNodeDebug::NonTerm(_, g)
                     // |TempGrammarNodeDebug::Discard(g)
                     => {*g=Some(last_gd.into())}
@@ -1177,6 +1184,10 @@ where
         cur_primitives:TokenIterContainer<'t>,
         cur_visiteds: HashSet<(&'g str, usize)>,
     ) -> Result<HashSet<(&'g str, usize)>,GrammarWalkError<'g>> {
+        if !self.non_term_recursive_check {
+            return  Ok(Default::default());
+        }
+
         let v=(t,cur_primitives.inds().start);
 
         if cur_visiteds.contains(&v) {
