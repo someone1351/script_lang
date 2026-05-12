@@ -136,18 +136,19 @@ impl Compiler {
         if let Err(e)=builder.generate_ast(&mut ast,|builder,groups|{
             self.run(builder, groups,&mut next_anon_id)
         }) {
-            // return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::CexprBuilder(e.error_type)});
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Builder(e.error_type)});
         }
 
-        // if let Err(e)=ast.calc_vars(false) {
-        //     return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
-        // }
+        if let Err(e)=ast.calc_vars(false) {
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
+        }
 
-        // if let Err(e)=ast.calc_labels_gotos() {
-        //     return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
-        // }
+        if let Err(e)=ast.calc_labels_gotos() {
+            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
+        }
 
-        // // if print_ast { ast.print(); }
+        // if print_ast { ast.print(); }
+        ast.print();
 
         //
         let kept_src=if keep_src {Some(src.clone())} else {None};
@@ -162,7 +163,7 @@ impl Compiler {
     pub fn run<'a,'t,'g>(&self,
         // builder:&mut CExprBuilder<'a>,
         builder:&mut Builder<'a,WalkGroupIterContainer<'t,'g>,BuilderErrorType>,
-        mut top_group:WalkGroupIterContainer<'t,'g>,
+        mut top_groups:WalkGroupIterContainer<'t,'g>,
         next_anon_id:&mut usize,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
     //     let prefixes : HashSet<&'static str>=["+","-","!"].into();
