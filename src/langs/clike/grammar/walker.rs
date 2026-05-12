@@ -334,7 +334,8 @@ where
                 // println!("         -takeable_starts={:?}",self.takeable_starts);
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
                 // println!("         -temp_groups3={:?}",self.group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
-                 println!("=>{c:4}: {grammar:?}, ps={:?}, success={success_len}, fail={fail_len}, expected={expected:?},  ",primitives.inds());
+                let expected=if expected.0==0 {"None".to_string()}else{format!("{}:{}",expected.0,expected.1)};
+                 println!("=>{c:4}: {grammar:?}, ps={:?}, success={success_len}, fail={fail_len}, expected={expected},  ",primitives.inds());
 
                 //
                 println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
@@ -1078,7 +1079,7 @@ where
             }
             Err(loc) => {
                 // if self.stk.last().map(|last|!last.expected_non_term.is_none() ).unwrap_or_default()
-                if cur.expected.0!=0{
+                if cur.expected.0==0{
                     self.add_expected(loc,cur.grammar);
                 }
 
