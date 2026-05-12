@@ -31,7 +31,8 @@ where
     stk: Vec<Work<'t,'g>>,
     c:usize,
     expected_loc:Loc,
-    expecteds:Vec<GrammarNode<'g>>,
+    expecteds:Vec<GrammarNode<'g>>, //(u64,GrammarNode<'g>) //(id,grammar) //todo change grammar to &'g
+    expected_count:u64,
     // expected_in_non_term:bool,
     // expected: (Loc,Vec<GrammarNode<'g>>,),
     debug:bool,
@@ -77,6 +78,7 @@ where
             // keywords,
             grammar_debug_stk:Vec::new(),
             non_term_recursive_check:true,
+            expected_count: 0,
         }
     }
 
@@ -97,7 +99,8 @@ where
             opt:false,
             grammar_debug_len: 0,
             // grammar_debug_no_add: true,
-            expected:None,
+            // expected:None,
+            expected:Default::default(),
         });
         {
             let grammar=if let Some(g)=(self.grammar_func)(start_non_term) {
@@ -117,7 +120,8 @@ where
                 opt:false,
                 grammar_debug_len: 1,
                 // grammar_debug_no_add: false,
-                expected:None,
+                // expected:None,
+                expected:Default::default(),
             });
         }
 
@@ -138,6 +142,7 @@ where
         // self.expected=Default::default();
         self.expected_loc=Loc::zero();
         self.expecteds.clear();
+        self.expected_count=0;
         // self.expected_in_non_term=false;
 
         self.grammar_debug_stk.clear();
@@ -390,6 +395,8 @@ where
         //
         match cur.grammar {
             GrammarNode::Expected(name, g) => {
+                self.expected_count+=1;
+
                 //TODO
                 self.stk.push(Work {
                     grammar: *g,
@@ -407,7 +414,8 @@ where
                     opt:cur.opt,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // expected_non_term:cur.expected_non_term,
-                    expected:Some(name),
+                    // expected:Some(name),
+                    expected:(self.expected_count,name),
                 });
             }
             GrammarNode::Group(name, g) => {
@@ -819,7 +827,8 @@ where
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
                     // expected_non_term:cur.expected_non_term,
-                    expected:cur.expected.or(Some(t)),
+                    // expected:cur.expected.or(Some(t)),
+                    expected:cur.expected,
                 });
             }
             GrammarNode::Always => {
@@ -1041,7 +1050,8 @@ where
                     last.group_len=cur.group_len;
                     last.output_len=self.primitive_infos.len();
 
-                    last.expected=None;
+                    // last.expected=None;
+                    last.expected=Default::default();
                 }
 
                 //

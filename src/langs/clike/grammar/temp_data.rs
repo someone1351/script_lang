@@ -56,7 +56,8 @@ pub struct Work<'t,'g> {
     pub takeables:HashMap<GrammarNode<'g>,TokenIterContainer<'t>>, //[non_term]
     pub grammar_debug_len:usize,
     // pub grammar_debug_no_add:bool,
-    pub expected:Option<&'g str>,
+    // pub expected:Option<&'g str>,
+    pub expected:(u64,&'g str),
 }
 
 
