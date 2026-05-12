@@ -1,10 +1,14 @@
 
 // // #![allow(unused_variables)]
 // #![allow(unused)]
-mod error;
+mod compiler_error;
 // mod cmds;
 mod rules;
+mod builder_error;
 
+use crate::builder::{Builder, BuilderError};
+use crate::clike::compiler::builder_error::BuilderErrorType;
+use crate::clike::grammar::container::WalkGroupIterContainer;
 use crate::clike::grammar::walker::GrammarWalker;
 use crate::clike::grammar::GrammarWalkError;
 // use crate::ccexpr_compiler::grammar::grammar_run;
@@ -13,7 +17,7 @@ use crate::clike::grammar::GrammarWalkError;
 use crate::clike::tokenizer::{tokenize, TokenizerErrorType};
 use crate::primitive_types::StringVal;
 
-use crate::build::*;
+use crate::{build::*, compiler::builder};
 // use super::ccexpr_tokenizer::*;
 
 use std::path::Path;
@@ -21,7 +25,7 @@ use std::path::Path;
 use crate::compiler::ast;
 
 
-pub use error::*;
+pub use compiler_error::*;
 
 // use super::super::builder::*;
 
@@ -117,39 +121,11 @@ impl Compiler {
 
         println!("{}",walk.root());
 
-        //
-        // let walk=walker.get_walk();
-        //
-
-        // let parsed=parse(src.as_str());
-
-        // if let Err(e)=parsed {
-        //     // return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Tokenizer(e.error_type)});
-        // }
-        // let parsed=tokenize(src.as_str(),  );
-
-        // if let Err(e)=parsed {
-        //     return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Tokenizer(e.error_type)});
-        // }
-
-        // let parsed=parsed.unwrap();
-
-        // parsed.print();
-
-        // println!("===");
-        // let walk=parse(parsed.tokens());
-
-        // if let Err(e)= walk {
-        //     return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Parser(e.msg)});
-        // }
-        // println!("===");
-
-        // parsed.print();
 
         //
-        // let mut builder = builder::Builder::new();
+        let mut builder = builder::Builder::new();
         // // // builder.eval(parsed.root_block_primitive().get_block().unwrap().primitives());
-        // // builder.eval(parsed.root_primitives());
+        builder.eval(walk.root().children());
 
 
         //builder needs to be passed a primitive_iter instead of primitive?
@@ -157,11 +133,11 @@ impl Compiler {
         //
         let mut ast = ast::Ast::new(false,true);
 
-        // if let Err(e)=builder.generate_ast(&mut ast,|builder,primitive_iter|{
-        //     self.run(builder, primitive_iter,&mut next_anon_id)
-        // }) {
-        //     return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::CexprBuilder(e.error_type)});
-        // }
+        if let Err(e)=builder.generate_ast(&mut ast,|builder,groups|{
+            self.run(builder, groups,&mut next_anon_id)
+        }) {
+            // return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::CexprBuilder(e.error_type)});
+        }
 
         // if let Err(e)=ast.calc_vars(false) {
         //     return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
@@ -183,11 +159,12 @@ impl Compiler {
     }
 
 
-    // pub fn run<'a>(&self,
-    //     builder:&mut CExprBuilder<'a>,
-    //     mut top_primitive_iter:PrimitiveIterContainer<'a>,
-    //     next_anon_id:&mut usize,
-    // ) -> Result<(),BuilderError<BuilderErrorType>> {
+    pub fn run<'a,'t,'g>(&self,
+        // builder:&mut CExprBuilder<'a>,
+        builder:&mut Builder<'a,WalkGroupIterContainer<'t,'g>,BuilderErrorType>,
+        mut top_group:WalkGroupIterContainer<'t,'g>,
+        next_anon_id:&mut usize,
+    ) -> Result<(),BuilderError<BuilderErrorType>> {
     //     let prefixes : HashSet<&'static str>=["+","-","!"].into();
     //     let infixes : HashSet<&'static str>=["+","-","*","/","&&","||","^","==","!=",">=","<=","<",">","^","%"].into();
     //     let setters  : HashSet<&'static str>=["=","+=","-=","*=","/="].into();
@@ -351,7 +328,7 @@ impl Compiler {
     //     //handle exprs
 
     //     //
-    //     Ok(())
-    // }
+        Ok(())
+    }
 
 }

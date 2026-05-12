@@ -209,7 +209,7 @@ pub use build::*;
 // pub use sexpr_lang::sexpr_compiler::*;
 pub use interpreter::*;
 
-pub use compiler::*;
+// pub use compiler::*;
 
 
 pub use langs::*;
