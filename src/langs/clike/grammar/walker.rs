@@ -398,6 +398,11 @@ where
         match cur.grammar {
             GrammarNode::Expected(name, g) => {
                 self.expected_count+=1;
+                let expected=if cur.expected.0==0 {
+                    (self.expected_count,name)
+                } else {
+                    cur.expected
+                };
 
                 //TODO
                 self.stk.push(Work {
@@ -417,7 +422,8 @@ where
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // expected_non_term:cur.expected_non_term,
                     // expected:Some(name),
-                    expected:(self.expected_count,name),
+                    // expected:(self.expected_count,name),
+                    expected,
                 });
             }
             GrammarNode::Group(name, g) => {

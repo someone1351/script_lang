@@ -252,7 +252,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                     NonTerm("expr"),
                     NonTerm("rparen"),
                 ].and(),
-            ].or(),
+            ].or().expected("val"),
             NonTerm("val_field_index_call").many0(),
         ].and().group("val").expected("val"),
 
