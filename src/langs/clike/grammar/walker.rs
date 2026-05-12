@@ -329,12 +329,12 @@ where
             // // println!(": {cur:?} || {} && {primitives:?}", self.stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
             {
                 let c=self.c;
-                let Work { grammar, success_len, fail_len, tokens: primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt,grammar_debug_len, expected: expected_non_term }=&cur;
+                let Work { grammar, success_len, fail_len, tokens: primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt,grammar_debug_len, expected}=&cur;
                 // println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
                 // println!("         -takeable_starts={:?}",self.takeable_starts);
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
                 // println!("         -temp_groups3={:?}",self.group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
-                 println!("=>{c:4}: {grammar:?}, ps={:?}, success={success_len}, fail={fail_len}, expected_non_term={expected_non_term:?},  ",primitives.inds());
+                 println!("=>{c:4}: {grammar:?}, ps={:?}, success={success_len}, fail={fail_len}, expected={expected:?},  ",primitives.inds());
 
                 //
                 println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
@@ -865,8 +865,8 @@ where
                     // let grammar_debug_len_dif=cur.grammar_debug_len-last.grammar_debug_len;
 
 
-                    if cur.expected==last.expected {
-
+                    if cur.expected!=last.expected {
+                        last.expected=Default::default();
                     }
                     // last.expected_non_term=None;
 
@@ -1078,7 +1078,7 @@ where
             }
             Err(loc) => {
                 // if self.stk.last().map(|last|!last.expected_non_term.is_none() ).unwrap_or_default()
-                {
+                if cur.expected.0!=0{
                     self.add_expected(loc,cur.grammar);
                 }
 
@@ -1105,6 +1105,11 @@ where
                     //     }
                     // //     last.expected_non_term=None;
                     // }
+
+                    if cur.expected.0!=last.expected.0 {
+                        last.expected=Default::default();
+                        self.add_expected(loc, GrammarNode::NonTerm(cur.expected.1));
+                    }
                 }
 
                 // if self.stk.is_empty() {
