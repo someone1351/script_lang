@@ -96,10 +96,13 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         ].and(),
 
         "block" => [
-            NonTerm("lcurly"),
+            NonTerm("lcurly").expected("block")
+            ,
             NonTerm("stmts").group("block"),
-            NonTerm("rcurly"),
-        ].and().expected("block"),
+            NonTerm("rcurly").expected("closing brace")
+            ,
+        ].and() //.expected("block")
+        ,
 
         "if_cond_block" => [NonTerm("cond"), NonTerm("block")].and(),
 

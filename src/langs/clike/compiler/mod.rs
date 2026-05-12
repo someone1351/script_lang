@@ -99,7 +99,7 @@ impl Compiler {
         if let Err(e)=walker.run("start") {
             match e {
                 GrammarWalkError::FailedParse => {
-                    return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::Parser(walker.expecteds_string())});
+                    return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expecteds_string())});
                 }
                 // GrammarWalkError::Unfinished => todo!(),
                 // GrammarWalkError::RecursiveNonTerm(_) => todo!(),

@@ -79,7 +79,7 @@ impl BuilderErrorType {
 #[derive(Debug,Clone)]
 pub enum CompileErrorType {
     Tokenizer(TokenizerErrorType),
-    Parser(String),
+    ParserExpected(String),
     Builder(BuilderErrorType),
     AstVar(ast::error::AstVarErrorType),
 }
