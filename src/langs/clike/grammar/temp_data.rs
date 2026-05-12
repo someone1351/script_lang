@@ -35,6 +35,12 @@ impl<'a,'f> Debug for  TempGroupInfo<'a,'f> {
     }
 }
 
+#[derive(Default,Copy,Clone)]
+pub struct WorkExpected<'g> {
+    pub id:u64,
+    pub priority:u32,
+    pub name:&'g str,
+}
 pub struct Work<'t,'g> {
     pub grammar:GrammarNode<'g>,
     pub success_len:usize,
@@ -57,7 +63,7 @@ pub struct Work<'t,'g> {
     pub grammar_debug_len:usize,
     // pub grammar_debug_no_add:bool,
     // pub expected:Option<&'g str>,
-    pub expected:(u64,&'g str),
+    pub expected:WorkExpected<'g>, //(u64,u32,&'g str), //id,priority,expected
 }
 
 
@@ -72,7 +78,7 @@ pub enum TempGrammarNodeDebug<'t,'g> {
     Cede(Option<Box<Self>>),
     Take(Option<Box<Self>>),
     Group(&'g str,Option<Box<Self>>),
-    Expected(&'g str,Option<Box<Self>>),
+    Expected(u32,&'g str,Option<Box<Self>>),
     // Discard(Option<Box<Self>>),
     NonTerm(&'g str,Option<Box<Self>>),
 
@@ -163,10 +169,10 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                             stk.push(if let Some(x)=arg1 {Work::Node(x)} else {Work::Write("_")});
                             write!(f,"Group({arg0:?},")?;
                         }
-                        Self::Expected(arg0, arg1) => {
+                        Self::Expected(arg0, arg1, arg2) => {
                             stk.push(Work::Write(")"));
-                            stk.push(if let Some(x)=arg1 {Work::Node(x)} else {Work::Write("_")});
-                            write!(f,"Expect({arg0:?},")?;
+                            stk.push(if let Some(x)=arg2 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"Expect({arg0}:{arg1:?},")?;
                         }
                         // Self::Discard(arg0) => {
                         //     stk.push(Work::Write(")"));

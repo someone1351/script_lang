@@ -31,7 +31,7 @@ where
     stk: Vec<Work<'t,'g>>,
     c:usize,
     expected_loc:Loc,
-    expecteds:Vec<GrammarNode<'g>>, //(u64,GrammarNode<'g>) //(id,grammar) //todo change grammar to &'g
+    expecteds:Vec<(u32,GrammarNode<'g>)>, //(priority,gramamr)//(u64,GrammarNode<'g>) //(id,grammar) //todo change grammar to &'g
     expected_count:u64,
     // expected_in_non_term:bool,
     // expected: (Loc,Vec<GrammarNode<'g>>,),
@@ -299,7 +299,7 @@ where
                     GrammarNode::Cede(_) => TempGrammarNodeDebug::Cede(None),
                     GrammarNode::Take(_) => TempGrammarNodeDebug::Take(None),
                     GrammarNode::Group(g, _) => TempGrammarNodeDebug::Group(g,None),
-                    GrammarNode::Expected(g, _) => TempGrammarNodeDebug::Expected(g,None),
+                    GrammarNode::Expected(p,g, _) => TempGrammarNodeDebug::Expected(p,g,None),
                     GrammarNode::String => TempGrammarNodeDebug::String(None),
                     GrammarNode::Identifier => TempGrammarNodeDebug::Identifier(None),
                     GrammarNode::Int => TempGrammarNodeDebug::Int(None),
@@ -335,7 +335,7 @@ where
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
                 // println!("         -temp_groups3={:?}",self.group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
                 let ps=tokens.inds();
-                let expected=if expected.0==0 {"None".to_string()}else{format!("{}:{}",expected.0,expected.1)};
+                let expected=if expected.id==0 {"None".to_string()}else{format!("{}:{}",expected.id,expected.name)};
                  println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, expected={expected},  ",);
 
                 //
@@ -396,10 +396,12 @@ where
 
         //
         match cur.grammar {
-            GrammarNode::Expected(name, g) => {
+            GrammarNode::Expected(priority, name, g) => {
                 self.expected_count+=1;
-                let expected=if cur.expected.0==0 {
-                    (self.expected_count,name)
+                let expected=if cur.expected.id==0 {
+                    // (self.expected_count,name)
+                    let priority=priority+1; //so primitives/tokens are at priority 0, expected(s) are 1+
+                    WorkExpected{ id: self.expected_count, priority, name }
                 } else {
                     cur.expected
                 };
@@ -873,7 +875,7 @@ where
                     // let grammar_debug_len_dif=cur.grammar_debug_len-last.grammar_debug_len;
 
 
-                    if cur.expected!=last.expected {
+                    if cur.expected.id!=last.expected.id {
                         last.expected=Default::default();
                     }
                     // last.expected_non_term=None;
@@ -1086,8 +1088,8 @@ where
             }
             Err(loc) => {
                 // if self.stk.last().map(|last|!last.expected_non_term.is_none() ).unwrap_or_default()
-                if cur.expected.0==0{
-                    // self.add_expected(loc,cur.grammar);
+                if cur.expected.id==0{
+                    self.add_expected(loc,0,cur.grammar);
                 }
 
                 //
@@ -1114,9 +1116,9 @@ where
                     // //     last.expected_non_term=None;
                     // }
 
-                    if cur.expected.0!=last.expected.0 && cur.expected.0!=0 {
+                    if cur.expected.id!=last.expected.id && cur.expected.id!=0 {
                         last.expected=Default::default();
-                        self.add_expected(loc, GrammarNode::NonTerm(cur.expected.1));
+                        self.add_expected(loc, cur.expected.priority,GrammarNode::NonTerm(cur.expected.name));
                     }
                 }
 
@@ -1157,7 +1159,7 @@ where
                     |TempGrammarNodeDebug::Cede(g)
                     |TempGrammarNodeDebug::Take(g)
                     |TempGrammarNodeDebug::Group(_, g)
-                    |TempGrammarNodeDebug::Expected(_, g)
+                    |TempGrammarNodeDebug::Expected(_,_, g)
                     |TempGrammarNodeDebug::NonTerm(_, g)
                     // |TempGrammarNodeDebug::Discard(g)
                     => {*g=Some(last_gd.into())}
@@ -1253,14 +1255,14 @@ where
         self.expected_loc=Loc::zero();
         self.expecteds.clear();
     }
-    fn add_expected(&mut self,loc:Loc,g:GrammarNode<'g>) {
+    fn add_expected(&mut self,loc:Loc,p:u32,g:GrammarNode<'g>) {
 
         if loc==self.expected_loc {
-            self.expecteds.push(g.clone());
+            self.expecteds.push((p,g.clone()));
             // println!("-------==== expected added {g:?}, {loc}=={}",self.expected_loc);
         } else if loc>self.expected_loc  { //|| self.expecteds.is_empty()
             self.expected_loc=loc;
-            self.expecteds=vec![g.clone()];
+            self.expecteds=vec![(p,g.clone())];
             // println!("-------==== expected new {g:?}, {loc}=={}",self.expected_loc);
         } else {
             // println!("-------==== expected not added {g:?}, {loc}=={}",self.expected_loc);
@@ -1414,7 +1416,9 @@ where
         self.debug=debug;
     }
     pub fn expecteds_string(&self) -> String {
-        self.expecteds.iter().map(|g|match g {
+        let max_priority=self.expecteds.iter().map(|&(p,_)|p).max().unwrap_or(0);
+
+        self.expecteds.iter().filter_map(|(p,g)|(*p==max_priority).then_some(g)).map(|g|match g {
             GrammarNode::String => "string".to_string(),
             GrammarNode::Identifier => "identifier".to_string(),
             GrammarNode::Int => "int".to_string(),

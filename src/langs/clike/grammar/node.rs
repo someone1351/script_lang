@@ -12,7 +12,7 @@ pub enum GrammarNode<'g> {
     Cede(Box<GrammarNode<'g>>),
     Take(Box<GrammarNode<'g>>),
     Group(&'g str,Box<GrammarNode<'g>>),
-    Expected(&'g str,Box<GrammarNode<'g>>),
+    Expected(u32,&'g str,Box<GrammarNode<'g>>), //priority, expected,
 
     // List(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
     // ListNoTrail(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
@@ -50,8 +50,20 @@ impl<'g> GrammarNode<'g> {
     pub fn group(self,name: &'g str) -> GrammarNode<'g> {
         Self::Group(name,self.into())
     }
-    pub fn expected(self,name: &'g str) -> GrammarNode<'g> {
-        Self::Expected(name,self.into())
+    pub fn expected(self,name: &'g str,priority:u32,) -> GrammarNode<'g> {
+        Self::Expected(priority,name,self.into())
+    }
+    pub fn expected0(self,name: &'g str) -> GrammarNode<'g> {
+        Self::Expected(0,name,self.into())
+    }
+    pub fn expected1(self,name: &'g str) -> GrammarNode<'g> {
+        Self::Expected(1,name,self.into())
+    }
+    pub fn expected2(self,name: &'g str) -> GrammarNode<'g> {
+        Self::Expected(2,name,self.into())
+    }
+    pub fn expected3(self,name: &'g str) -> GrammarNode<'g> {
+        Self::Expected(3,name,self.into())
     }
     // pub fn discard(self,) -> GrammarNode<'g> {
     //     Self::Discard(self.into())
