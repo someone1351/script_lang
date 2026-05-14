@@ -8,7 +8,7 @@ mod builder_error;
 
 use crate::builder::{Builder, BuilderError};
 use crate::clike::compiler::builder_error::BuilderErrorType;
-use crate::clike::grammar::container::WalkGroupIterContainer;
+use crate::clike::grammar::container::{WalkGroupContainer, WalkGroupIterContainer};
 use crate::clike::grammar::walker::GrammarWalker;
 use crate::clike::grammar::GrammarWalkError;
 // use crate::ccexpr_compiler::grammar::grammar_run;
@@ -125,7 +125,9 @@ impl Compiler {
         //
         let mut builder = builder::Builder::new();
         // // // builder.eval(parsed.root_block_primitive().get_block().unwrap().primitives());
-        builder.eval(walk.root().children());
+        for g in walk.root().children() {
+            builder.eval(g);
+        }
 
 
         //builder needs to be passed a primitive_iter instead of primitive?
@@ -133,8 +135,8 @@ impl Compiler {
         //
         let mut ast = ast::Ast::new(false,true);
 
-        if let Err(e)=builder.generate_ast(&mut ast,|builder,groups|{
-            self.run(builder, groups,&mut next_anon_id)
+        if let Err(e)=builder.generate_ast(&mut ast,|builder,group|{
+            self.run(builder, group,&mut next_anon_id)
         }) {
             return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Builder(e.error_type)});
         }
@@ -162,26 +164,26 @@ impl Compiler {
 
     pub fn run<'a,'t,'g>(&self,
         // builder:&mut CExprBuilder<'a>,
-        builder:&mut Builder<'a,WalkGroupIterContainer<'t,'g>,BuilderErrorType>,
-        mut top_groups:WalkGroupIterContainer<'t,'g>,
+        builder:&mut Builder<'a,WalkGroupContainer<'t,'g>,BuilderErrorType>,
+        mut top_group:WalkGroupContainer<'t,'g>,
         next_anon_id:&mut usize,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
-    //     let prefixes : HashSet<&'static str>=["+","-","!"].into();
-    //     let infixes : HashSet<&'static str>=["+","-","*","/","&&","||","^","==","!=",">=","<=","<",">","^","%"].into();
-    //     let setters  : HashSet<&'static str>=["=","+=","-=","*=","/="].into();
+        match top_group.name() {
+            "expr" => {
 
-    //     enum ExprVal<'b> {
-    //         Builder(CExprBuilderTaken<'b>),
-    //         Symbol(PrimitiveContainer<'b>),
-    //         Identifier(PrimitiveContainer<'b>),
-    //     }
+            }
+            "val" => {
+
+            }
+            _ => {panic!("");}
+        }
 
     //     let mut cur_exprs: Vec<ExprVal>= Vec::new();
 
     //     //
-    //     // while let Ok(first_primitive)=top_primitive_iter.pop_front()
-    //     loop
-    //     {
+        // while let Ok(first_primitive)=top_primitive_iter.pop_front()
+        loop
+        {
     //         match top_primitive_iter.first().map(|p|p.primitive_type()) {
     //             Ok(PrimitiveTypeContainer::Eob) => {
 
@@ -324,7 +326,7 @@ impl Compiler {
     //             }
     //         }
 
-    //     }
+        }
 
     //     //handle exprs
 

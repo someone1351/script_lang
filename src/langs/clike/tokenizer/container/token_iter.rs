@@ -90,84 +90,99 @@ impl<'a> TokenIterContainer<'a> {
         self.end-self.start
     }
 
-    pub fn get(&self, ind:usize) -> Result<TokenContainer<'a>,Loc> {
-        let primitive_ind= self.start+ind;
+    // pub fn get(&self, ind:usize) -> Result<TokenContainer<'a>,Loc> {
+    //     let primitive_ind= self.start+ind;
 
-        if primitive_ind < self.end {
-            // let last_loc=if ind==0 {
-            //     self.last_loc
-            // } else {
-            //     self.parsed.primitives[primitive_ind-1].end_loc
-            // };
+    //     if primitive_ind < self.end {
+    //         // let last_loc=if ind==0 {
+    //         //     self.last_loc
+    //         // } else {
+    //         //     self.parsed.primitives[primitive_ind-1].end_loc
+    //         // };
 
-            Ok(TokenContainer { parsed: self.parsed, primitive_ind,}) //last_loc
-        } else {
-            // let last_loc=if self.len()==0 {
-            //     self.last_loc
-            // } else {
-            //     self.get(self.len()-1).unwrap().end_loc()
-            // };
+    //         Ok(TokenContainer { parsed: self.parsed, primitive_ind,}) //last_loc
+    //     } else {
+    //         // let last_loc=if self.len()==0 {
+    //         //     self.last_loc
+    //         // } else {
+    //         //     self.get(self.len()-1).unwrap().end_loc()
+    //         // };
 
-            let last_loc=self.last().map(|x|x.end_loc()).unwrap_or(self.last_loc);
-            Err(last_loc)
-        }
-    }
+    //         let last_loc=self.last().map(|x|x.end_loc()).unwrap_or(self.last_loc);
+    //         Err(last_loc)
+    //     }
+    // }
 
-    pub fn get_range<R:RangeBounds<usize>>(&self,r:R) ->
-    // Result<TokenIterContainer<'a>,Loc>
-    Option<TokenIterContainer<'a>>
-    {
+    // pub fn get_range<R:RangeBounds<usize>>(&self,r:R) ->
+    // // Result<TokenIterContainer<'a>,Loc>
+    // Option<TokenIterContainer<'a>>
+    // {
 
-        let range_start=match r.start_bound().cloned() {
-            Bound::Included(x)=>x,
-            Bound::Excluded(_)=>panic!(""),
-            Bound:: Unbounded=>0,
-        };
+    //     let range_start=match r.start_bound().cloned() {
+    //         Bound::Included(x)=>x,
+    //         Bound::Excluded(_)=>panic!(""),
+    //         Bound:: Unbounded=>0,
+    //     };
 
-        let range_end=match r.end_bound().cloned() {
-            Bound::Included(x)=>x+1,
-            Bound::Excluded(x)=>x,
-            Bound::Unbounded=>self.len(),
-        };
+    //     let range_end=match r.end_bound().cloned() {
+    //         Bound::Included(x)=>x+1,
+    //         Bound::Excluded(x)=>x,
+    //         Bound::Unbounded=>self.len(),
+    //     };
 
-        let last_loc=self.last().map(|x|x.end_loc()).unwrap_or(self.last_loc);
+    //     let last_loc=self.last().map(|x|x.end_loc()).unwrap_or(self.last_loc);
 
-        if range_start>range_end { //if range start==end is same as empty iter
-            // return TokenIterContainer {last_loc:Loc::zero(),start: 0, end: 0, parsed: self.parsed};
-            // return Err(last_loc);
-            println!("rs>re {:?} {:?}",r.start_bound(),r.end_bound());
+    //     if range_start>range_end { //if range start==end is same as empty iter
+    //         // return TokenIterContainer {last_loc:Loc::zero(),start: 0, end: 0, parsed: self.parsed};
+    //         // return Err(last_loc);
+    //         println!("rs>re {:?} {:?}",r.start_bound(),r.end_bound());
+    //         return None;
+    //     }
+
+    //     let x_len=range_end-range_start;
+
+    //     if x_len>self.len() {
+    //         // return TokenIterContainer {last_loc:Loc::zero(),start: 0, end: 0, parsed: self.parsed};
+    //         // return Err(last_loc);
+    //         println!("xl>l {:?} {:?}",r.start_bound(),r.end_bound());
+    //         return  None;
+    //     }
+
+    //     let x_start=self.start+range_start;
+    //     let x_end = x_start+x_len;
+
+    //     // if x_start<self.start || x_end>self.end
+    //     //     || x_end<self.start || x_start > self.end
+    //     // {
+    //     //     return None
+    //     // }
+
+    //     // let last_loc=if range_start==0 {
+    //     //     self.last_loc
+    //     // } else if range_start==self.parsed.primitives.len() {
+    //     //     self.parsed.primitives[range_start-1].start_loc
+    //     // } else {
+    //     //     self.parsed.primitives[range_start].start_loc
+    //     // };
+
+    //     // println!("~~~~ x_len={x_len} x_start={x_start} x_end={x_end}, len={}, range_start={range_start}, range_end={range_end}",self.len());
+
+    //     Some(TokenIterContainer {last_loc,start: x_start, end: x_end, parsed: self.parsed})
+    // }
+
+    pub fn get_amount(&self,amount:usize) -> Option<TokenIterContainer<'a>> {
+        if amount > self.len() {
             return None;
         }
 
-        let x_len=range_end-range_start;
+        // None
 
-        if x_len>self.len() {
-            // return TokenIterContainer {last_loc:Loc::zero(),start: 0, end: 0, parsed: self.parsed};
-            // return Err(last_loc);
-            println!("xl>l {:?} {:?}",r.start_bound(),r.end_bound());
-            return  None;
-        }
-
-        let x_start=self.start+range_start;
-        let x_end = x_start+x_len;
-
-        // if x_start<self.start || x_end>self.end
-        //     || x_end<self.start || x_start > self.end
-        // {
-        //     return None
-        // }
-
-        // let last_loc=if range_start==0 {
-        //     self.last_loc
-        // } else if range_start==self.parsed.primitives.len() {
-        //     self.parsed.primitives[range_start-1].start_loc
-        // } else {
-        //     self.parsed.primitives[range_start].start_loc
-        // };
-
-        // println!("~~~~ x_len={x_len} x_start={x_start} x_end={x_end}, len={}, range_start={range_start}, range_end={range_end}",self.len());
-
-        Some(TokenIterContainer {last_loc,start: x_start, end: x_end, parsed: self.parsed})
+        Some(TokenIterContainer {
+            last_loc:self.last_loc,
+            start: self.start,
+            end: self.start+amount,
+            parsed: self.parsed,
+        })
     }
 
     pub fn is_empty(&self) -> bool {
@@ -183,15 +198,15 @@ impl<'a> TokenIterContainer<'a> {
             Ok(TokenContainer { parsed: self.parsed, primitive_ind:self.start,})
         }
     }
-    pub fn last(&self) -> Result<TokenContainer<'a>,Loc> {
-        // self.get(if self.is_empty() {0} else{self.len()-1})
+    // pub fn last(&self) -> Result<TokenContainer<'a>,Loc> {
+    //     // self.get(if self.is_empty() {0} else{self.len()-1})
 
-        if self.is_empty() {
-            Err(self.last_loc)
-        } else {
-            Ok(TokenContainer { parsed: self.parsed, primitive_ind:self.end-1,})
-        }
-    }
+    //     if self.is_empty() {
+    //         Err(self.last_loc)
+    //     } else {
+    //         Ok(TokenContainer { parsed: self.parsed, primitive_ind:self.end-1,})
+    //     }
+    // }
 
     fn pop_get<T,F>(&mut self,skip_eols:bool,func:F) -> Result<ValueContainer<'a,T>,Loc>
     where

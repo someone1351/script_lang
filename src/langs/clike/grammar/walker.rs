@@ -1196,7 +1196,8 @@ where
                 let n=group.primitives.len()-cur_primitives.len();
                 // println!("\tn={n} {:?}",group.primitives.get_range(0..n).unwrap());
                 // println!("\t{:?}",group.primitives);
-                let group_prims=group.primitives.get_range(0..n).unwrap();
+                // let group_prims=group.primitives.get_range(0..n).unwrap();
+                let group_prims=group.primitives.get_amount(n).unwrap();
 
                 group.primitives=group_prims;
                 g=group.parent;
