@@ -34,7 +34,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .any().end();
 
     //add(str,str), add(any,str), add(str,any)
-    lib_scope.method("+",|context|{
+    lib_scope.method("add",|context|{
         let s0=context.param(0).as_string();
         let s1=context.param(1).as_string();
         Ok(Value::string(format!("{s0}{s1}")))
@@ -43,7 +43,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .str().str().or_any().end();
 
     //eq(str,str), eq(any,str), eq(str,any)
-    lib_scope.method("=",|context|{
+    lib_scope.method("eq",|context|{
         let s0=context.param(0).as_string();
         let s1=context.param(1).as_string();
         Ok(Value::Bool(s0.eq(&s1)))

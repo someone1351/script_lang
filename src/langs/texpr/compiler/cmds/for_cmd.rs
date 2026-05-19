@@ -48,7 +48,7 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
                     .param_push()
                     .get_var(idn) //shouldn't this be anon var i?
                     .param_push()
-                    .call_method("<", 2)
+                    .call_method("lt", 2)
                     // .to_block_end_label(Some(false),"loop", None)
                     .to_block_end(JmpCond::False, 1)
 
@@ -62,7 +62,7 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
                 .param_push()
                 .get_var(idn)
                 .param_push()
-                .call_method("+", 2)
+                .call_method("add", 2)
 
                 .set_var(idn)
 

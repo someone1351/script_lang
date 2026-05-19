@@ -21,7 +21,7 @@ pub fn div_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
             .eval(record.param(i).unwrap().as_primitive())
             .param_push()
             // .swap()
-            .call_method("/",2); //,loc
+            .call_method("div",2); //,loc
     }
 
     Ok(())

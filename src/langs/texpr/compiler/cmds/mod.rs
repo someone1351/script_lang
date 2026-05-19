@@ -14,6 +14,13 @@ pub mod add_cmd;
 pub mod sub_cmd;
 pub mod mul_cmd;
 pub mod div_cmd;
+
+pub mod lt_cmd;
+pub mod gt_cmd;
+pub mod le_cmd;
+pub mod ge_cmd;
+pub mod eq_cmd;
+
 pub mod include_cmd;
 pub mod format_cmd;
 pub mod print_cmd;
@@ -43,6 +50,14 @@ pub use add_cmd::*;
 pub use sub_cmd::*;
 pub use mul_cmd::*;
 pub use div_cmd::*;
+
+
+pub use lt_cmd::*;
+pub use gt_cmd::*;
+pub use le_cmd::*;
+pub use ge_cmd::*;
+pub use eq_cmd::*;
+
 pub use include_cmd::*;
 pub use format_cmd::*;
 pub use print_cmd::*;

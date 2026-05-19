@@ -111,7 +111,7 @@ pub fn for_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
                     .param_push()
                     .get_var(idn)
                     .param_push()
-                    .call_method("<", 2)
+                    .call_method("lt", 2)
                     // .to_block_end_label(Some(false),"loop", None)
                     .to_block_end(JmpCond::False, 1)
 
@@ -130,7 +130,7 @@ pub fn for_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
                 .param_push()
                 .get_var(idn)
                 .param_push()
-                .call_method("+", 2)
+                .call_method("add", 2)
 
                 .set_var(idn)
 
@@ -672,7 +672,7 @@ pub fn add_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
             .eval(sexpr.get(i).unwrap())
             .param_push()
             .swap()
-            .call_method("+",2); //,loc
+            .call_method("add",2); //,loc
     }
 
     Ok(())
@@ -692,7 +692,7 @@ pub fn sub_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
     if sexpr.len()==2 {
         builder
             .param_push()
-            .call_method("-",1); //,loc
+            .call_method("neg",1); //,loc
     } else {
         for i in 2 .. sexpr.len() {
             builder
@@ -700,7 +700,7 @@ pub fn sub_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
                 .eval(sexpr.get(i).unwrap())
                 .param_push()
                 .swap()
-                .call_method("-",2); //,loc
+                .call_method("sub",2); //,loc
         }
     }
 
@@ -726,7 +726,7 @@ pub fn mul_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
             .eval(sexpr.get(i).unwrap())
             .param_push()
             // .swap()
-            .call_method("*",2); //,loc
+            .call_method("mul",2); //,loc
     }
 
     Ok(())
@@ -749,7 +749,7 @@ pub fn div_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
             .eval(sexpr.get(i).unwrap())
             .param_push()
             // .swap()
-            .call_method("/",2); //,loc
+            .call_method("div",2); //,loc
     }
 
     Ok(())
@@ -883,7 +883,7 @@ pub fn format_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
                     .result_string(text_str)
                     .param_push()
                     .swap()
-                    .call_method("+", 2)
+                    .call_method("add", 2)
                     .param_push()
                     ;
             }
@@ -906,7 +906,7 @@ pub fn format_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
 
                     .param_push()
                     .swap()
-                    .call_method("+", 2)
+                    .call_method("add", 2)
 
                     .param_push();
             }
@@ -921,7 +921,7 @@ pub fn format_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
 
                 .param_push()
                 .swap()
-                .call_method("+", 2)
+                .call_method("add", 2)
                 .param_push();
         }
 
@@ -935,7 +935,7 @@ pub fn format_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
 
             .param_push()
             .swap()
-            .call_method("+", 2)
+            .call_method("add", 2)
 
             .param_push();
     }
@@ -946,4 +946,96 @@ pub fn format_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExpr
 //
     return Ok(());
 
+}
+
+
+pub fn lt_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprContainer<'a>,SexprBuilderErrorType>) -> Result<(),BuilderError<SexprBuilderErrorType>> {
+    if sexpr.len() != 3 {
+        return Err(BuilderError::new(sexpr.last().unwrap().start_loc(), SexprBuilderErrorType::IncorrectParamsNum));
+    }
+
+    let loc = sexpr.get(0).unwrap().start_loc();
+
+    builder
+        .eval(sexpr.get(2).unwrap())
+        .param_push()
+        .eval(sexpr.get(1).unwrap())
+        .param_push()
+        .loc(loc)
+        .call_method("lt", 2)
+        ;
+
+    Ok(())
+}
+pub fn gt_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprContainer<'a>,SexprBuilderErrorType>) -> Result<(),BuilderError<SexprBuilderErrorType>> {
+    if sexpr.len() != 3 {
+        return Err(BuilderError::new(sexpr.last().unwrap().start_loc(), SexprBuilderErrorType::IncorrectParamsNum));
+    }
+
+    let loc = sexpr.get(0).unwrap().start_loc();
+
+    builder
+        .eval(sexpr.get(2).unwrap())
+        .param_push()
+        .eval(sexpr.get(1).unwrap())
+        .param_push()
+        .loc(loc)
+        .call_method("gt", 2)
+        ;
+
+    Ok(())
+}
+pub fn le_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprContainer<'a>,SexprBuilderErrorType>) -> Result<(),BuilderError<SexprBuilderErrorType>> {
+    if sexpr.len() != 3 {
+        return Err(BuilderError::new(sexpr.last().unwrap().start_loc(), SexprBuilderErrorType::IncorrectParamsNum));
+    }
+
+    let loc = sexpr.get(0).unwrap().start_loc();
+
+    builder
+        .eval(sexpr.get(2).unwrap())
+        .param_push()
+        .eval(sexpr.get(1).unwrap())
+        .param_push()
+        .loc(loc)
+        .call_method("le", 2)
+        ;
+
+    Ok(())
+}
+pub fn ge_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprContainer<'a>,SexprBuilderErrorType>) -> Result<(),BuilderError<SexprBuilderErrorType>> {
+    if sexpr.len() != 3 {
+        return Err(BuilderError::new(sexpr.last().unwrap().start_loc(), SexprBuilderErrorType::IncorrectParamsNum));
+    }
+
+    let loc = sexpr.get(0).unwrap().start_loc();
+
+    builder
+        .eval(sexpr.get(2).unwrap())
+        .param_push()
+        .eval(sexpr.get(1).unwrap())
+        .param_push()
+        .loc(loc)
+        .call_method("ge", 2)
+        ;
+
+    Ok(())
+}
+pub fn eq_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprContainer<'a>,SexprBuilderErrorType>) -> Result<(),BuilderError<SexprBuilderErrorType>> {
+    if sexpr.len() != 3 {
+        return Err(BuilderError::new(sexpr.last().unwrap().start_loc(), SexprBuilderErrorType::IncorrectParamsNum));
+    }
+
+    let loc = sexpr.get(0).unwrap().start_loc();
+
+    builder
+        .eval(sexpr.get(2).unwrap())
+        .param_push()
+        .eval(sexpr.get(1).unwrap())
+        .param_push()
+        .loc(loc)
+        .call_method("eq", 2)
+        ;
+
+    Ok(())
 }

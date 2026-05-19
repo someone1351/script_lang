@@ -128,6 +128,11 @@ impl Compiler {
         cmd_scope.insert("-", sub_cmd);
         cmd_scope.insert("*", mul_cmd);
         cmd_scope.insert("/", div_cmd);
+        cmd_scope.insert("<", lt_cmd);
+        cmd_scope.insert(">", gt_cmd);
+        cmd_scope.insert("<=", le_cmd);
+        cmd_scope.insert(">=", ge_cmd);
+        cmd_scope.insert("=", eq_cmd);
         cmd_scope.insert("block", block_cmd);
         cmd_scope.insert("include", include_cmd);
         cmd_scope.insert("print", print_cmd);

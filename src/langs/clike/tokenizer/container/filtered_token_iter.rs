@@ -11,6 +11,14 @@ pub struct FilteredTokenIterContainer<'a> {
     pub parsed :&'a Tokenized,
 }
 
+impl<'a> FilteredTokenIterContainer<'a> {
+    pub fn first(&self) -> Option<TokenContainer<'a>> {
+        self.clone().next()
+    }
+    pub fn to_vec(&self) -> Vec<TokenContainer<'a>> {
+        self.collect::<Vec<_>>()
+    }
+}
 
 impl<'a> Iterator for FilteredTokenIterContainer<'a> {
     type Item = TokenContainer<'a>;

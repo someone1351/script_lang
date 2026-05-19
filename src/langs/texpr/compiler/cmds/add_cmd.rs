@@ -33,7 +33,7 @@ pub fn add_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
             .eval(x)
             .param_push()
             .swap()
-            .call_method("+",2); //,loc
+            .call_method("add",2); //,loc
     }
 
     Ok(())

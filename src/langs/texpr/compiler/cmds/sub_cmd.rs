@@ -18,7 +18,7 @@ pub fn sub_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
     if record.params_num()==2 {
         builder
             .param_push()
-            .call_method("-",1); //,loc
+            .call_method("neg",1); //,loc
     } else {
         for i in 2 .. record.params_num() {
             builder
@@ -26,7 +26,7 @@ pub fn sub_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
                 .eval(record.param(i).unwrap().as_primitive())
                 .param_push()
                 .swap()
-                .call_method("-",2); //,loc
+                .call_method("sub",2); //,loc
         }
     }
 

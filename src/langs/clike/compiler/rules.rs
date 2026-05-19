@@ -201,9 +201,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         ].and().group("expr").expected0("expr"),
 
         "prefixes" => [
-            NonTerm("add"),
-            NonTerm("sub"),
-            NonTerm("not"),
+            NonTerm("add").group("pos"),
+            NonTerm("sub").group("neg"),
+            NonTerm("not").group("not"),
         ].or().many1().group("prefixes"),
 
         "val_field_index" => [ NonTerm("val_index"), NonTerm("val_field"), ].or(),
@@ -221,21 +221,22 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         ].and(),
 
         "bool" => [
-            Keyword("true"),
-            Keyword("false"),
+            Keyword("true").group("true"),
+            Keyword("false").group("false"),
         ].or(),
 
-        "nil" => Keyword("nil"),
-        "void" => Keyword("void"),
+        "nil" => Keyword("nil").group("nil"),
+        "void" => Keyword("void").group("void"),
 
         "val" => [
             NonTerm("prefixes").opt(),
             [
-                Int,
-                Float,
-                String,
-                Identifier,
-
+                [
+                    Int,
+                    Float,
+                    String,
+                    Identifier,
+                ].or().group("primitive"),
                 NonTerm("bool"),
                 NonTerm("nil"),
                 NonTerm("void"),

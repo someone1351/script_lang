@@ -85,7 +85,7 @@ pub fn format_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
                     .result_string(text_str)
                     .param_push()
                     .swap()
-                    .call_method("+", 2)
+                    .call_method("add", 2)
                     .param_push()
                     ;
             }
@@ -115,7 +115,7 @@ pub fn format_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
 
                     .param_push()
                     .swap()
-                    .call_method("+", 2)
+                    .call_method("add", 2)
 
                     .param_push();
             }
@@ -130,7 +130,7 @@ pub fn format_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
 
                 .param_push()
                 .swap()
-                .call_method("+", 2)
+                .call_method("add", 2)
                 .param_push();
         }
 
@@ -144,7 +144,7 @@ pub fn format_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
 
             .param_push()
             .swap()
-            .call_method("+", 2)
+            .call_method("add", 2)
 
             .param_push();
     }

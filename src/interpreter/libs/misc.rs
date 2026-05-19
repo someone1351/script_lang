@@ -68,19 +68,19 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .end();
 
     //eq(any,any)
-    lib_scope.method("=",|_|Ok(Value::Bool(false)))
+    lib_scope.method("eq",|_|Ok(Value::Bool(false)))
         .any()
         .any()
         .end();
 
     //eq(nil,any)
-    lib_scope.method("=",|context|Ok(Value::Bool(context.param(1).is_nil())))
+    lib_scope.method("eq",|context|Ok(Value::Bool(context.param(1).is_nil())))
         .nil()
         .any()
         .end();
 
     //eq(any,nil)
-    lib_scope.method("=",|context|Ok(Value::Bool(context.param(0).is_nil())))
+    lib_scope.method("eq",|context|Ok(Value::Bool(context.param(0).is_nil())))
         .any()
         .nil()
         .end();

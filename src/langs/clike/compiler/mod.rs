@@ -126,6 +126,8 @@ impl Compiler {
         let mut builder = builder::Builder::new();
         // // // builder.eval(parsed.root_block_primitive().get_block().unwrap().primitives());
         for g in walk.root().children() {
+            println!("={:?}",g.name());
+
             builder.eval(g);
         }
 
@@ -168,170 +170,248 @@ impl Compiler {
         mut top_group:WalkGroupContainer<'t,'g>,
         next_anon_id:&mut usize,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
+        println!("{:?}:",top_group.name());
         match top_group.name() {
+            "primitive" => {
+                let p=top_group.tokens().first().unwrap();
+                builder.loc(p.start_loc());
+                println!("\t{:?}",p.token_type());
+                match p.token_type() {
+                    super::tokenizer::TokenTypeContainer::Float(x) => {
+                        builder.result_float(x);
+                    },
+                    super::tokenizer::TokenTypeContainer::Int(x) => {
+                        builder.result_int(x);
+                    },
+                    super::tokenizer::TokenTypeContainer::String(x) => {
+                        builder.result_string(x);
+                    },
+                    super::tokenizer::TokenTypeContainer::Identifier(x) => {
+                        builder.get_var(x);
+                    },
+                    _ => {panic!("");}
+                }
+            }
+            "nil" => {
+                let p=top_group.tokens().first().unwrap();
+                builder.loc(p.start_loc());
+                builder.result_nil();
+            }
+            "void" => {
+                let p=top_group.tokens().first().unwrap();
+                builder.loc(p.start_loc());
+                builder.result_void();
+            }
+            "true" => {
+                let p=top_group.tokens().first().unwrap();
+                builder.loc(p.start_loc());
+                builder.result_bool(true);
+            }
+            "false" => {
+                let p=top_group.tokens().first().unwrap();
+                builder.loc(p.start_loc());
+                builder.result_bool(false);
+            }
             "expr" => {
-
+                builder.eval(top_group.children().first().unwrap());
+            }
+            "pos" => {}
+            "neg" => {
+                builder.param_push();
+                builder.call_method("neg", 1);
+            }
+            "not" => {
+                builder.param_push();
+                builder.call_method("not", 1);
             }
             "val" => {
+                let mut groups=top_group.children();
+
+                //prefixes
+                let prefixes= if groups.first().unwrap().name()=="prefixes" {
+                    groups.pop_front()
+                } else {
+                    None
+                };
+
+                //val
+                let val=groups.pop_front().unwrap();
+                // println!("val is {}",val.name());
+                builder.eval(val);
+
+
+                //
+                if let Some(prefixes)=prefixes {
+                    for c in prefixes.children().rev() {
+                        builder.eval(c);
+                    }
+                }
+            }
+            _ => {
+                panic!("{}",top_group.name());
+                // builder.eval(primitive)
+                // top_group.children()
 
             }
-            _ => {panic!("");}
         }
+
+
+        Ok(())
+    }
+
+}
+
 
     //     let mut cur_exprs: Vec<ExprVal>= Vec::new();
 
     //     //
         // while let Ok(first_primitive)=top_primitive_iter.pop_front()
-        loop
-        {
-    //         match top_primitive_iter.first().map(|p|p.primitive_type()) {
-    //             Ok(PrimitiveTypeContainer::Eob) => {
+    //     loop
+    //     {
+    // //         match top_primitive_iter.first().map(|p|p.primitive_type()) {
+    // //             Ok(PrimitiveTypeContainer::Eob) => {
 
-    //             }
-    //             Ok(PrimitiveTypeContainer::Eol) => {
+    // //             }
+    // //             Ok(PrimitiveTypeContainer::Eol) => {
 
-    //             }
-    //             Ok(PrimitiveTypeContainer::Symbol(";")) => {
+    // //             }
+    // //             Ok(PrimitiveTypeContainer::Symbol(";")) => {
 
-    //             }
-    //             Ok(PrimitiveTypeContainer::Identifier(idn)) => {
-    //                 match cur_exprs.last() {
-    //                     Some(ExprVal::Identifier(_)) => {
+    // //             }
+    // //             Ok(PrimitiveTypeContainer::Identifier(idn)) => {
+    // //                 match cur_exprs.last() {
+    // //                     Some(ExprVal::Identifier(_)) => {
 
-    //                     }
-    //                     Some(ExprVal::Builder(_)) => {
+    // //                     }
+    // //                     Some(ExprVal::Builder(_)) => {
 
-    //                     }
-    //                     _ => {
+    // //                     }
+    // //                     _ => {
 
-    //                     }
-    //                 }
-    //                 if let Some(ExprVal::Identifier(_))=cur_exprs.last() {
+    // //                     }
+    // //                 }
+    // //                 if let Some(ExprVal::Identifier(_))=cur_exprs.last() {
 
-    //                 }
+    // //                 }
 
-    //             }
-    //             Err(_) => {break;}
-    //             _ => {}
-    //         }
-
-
-    //         let Ok(first_primitive)=top_primitive_iter.pop_front() else {break;};
-    //         // let Ok(first_primitive)=top_primitive_iter.first() else { return Ok(()) };
-    //         builder.loc(first_primitive.start_loc());
-    //         println!("hmm {first_primitive:?}",);
-
-    //         let mut done=false;
+    // //             }
+    // //             Err(_) => {break;}
+    // //             _ => {}
+    // //         }
 
 
-    //         builder.mark();
+    // //         let Ok(first_primitive)=top_primitive_iter.pop_front() else {break;};
+    // //         // let Ok(first_primitive)=top_primitive_iter.first() else { return Ok(()) };
+    // //         builder.loc(first_primitive.start_loc());
+    // //         println!("hmm {first_primitive:?}",);
 
-    //         match first_primitive.primitive_type() {
-    //             PrimitiveTypeContainer::CurlyBlock(b) => { //code block
-    //                 builder.eval(b);
-    //                 cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
-    //             }
-    //             PrimitiveTypeContainer::SquareBlock(b) => { //array or dict
-    //                 // let is_dict=b.children().find(|p|p.get_symbol().map(|s|s.eq(":")).unwrap_or(false)).is_some();
-    //             }
-    //             PrimitiveTypeContainer::ParenthesesBlock(b) => {} //expr
+    // //         let mut done=false;
 
-    //             PrimitiveTypeContainer::Float(x) => { //float
-    //                 builder.result_float(x);
-    //             }
-    //             PrimitiveTypeContainer::Int(x) => { //int
-    //                 builder.result_int(x);
-    //             }
-    //             PrimitiveTypeContainer::String(x) => { //string
-    //                 builder.result_string(x);
-    //             }
-    //             PrimitiveTypeContainer::Symbol(x) => { //
-    //                 match x {
-    //                     ";" => {
-    //                         // done=true;
-    //                     }
-    //                     _ => {
-    //                         cur_exprs.push(ExprVal::Symbol(first_primitive));
-    //                     }
-    //                 }
-    //             }
-    //             PrimitiveTypeContainer::Identifier(x) => { //cmd or idn
-    //                 // println("")
-    //                 if let Some(cmds)=self.cmds.get(x) {
-    //                     // let mut primitives=top_primitive_iter.clone();
-    //                     let mut errors=Vec::<BuilderError<BuilderErrorType>>::new();
 
-    //                     //
-    //                     builder.set_anon_scope(*next_anon_id);
+    // //         builder.mark();
 
-    //                     //
-    //                     for cmd in cmds {
-    //                         let mut primitives=top_primitive_iter.clone();
+    // //         match first_primitive.primitive_type() {
+    // //             PrimitiveTypeContainer::CurlyBlock(b) => { //code block
+    // //                 builder.eval(b);
+    // //                 cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
+    // //             }
+    // //             PrimitiveTypeContainer::SquareBlock(b) => { //array or dict
+    // //                 // let is_dict=b.children().find(|p|p.get_symbol().map(|s|s.eq(":")).unwrap_or(false)).is_some();
+    // //             }
+    // //             PrimitiveTypeContainer::ParenthesesBlock(b) => {} //expr
 
-    //                         if let Err(e)=cmd(&mut primitives,builder) {
-    //                             errors.push(e);
-    //                             builder.discard_from_mark();
-    //                         } else { //ok
-    //                             errors.clear();
-    //                             *next_anon_id+=1;
-    //                             top_primitive_iter=primitives;
-    //                             cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
-    //                             break;
-    //                         }
-    //                     }
+    // //             PrimitiveTypeContainer::Float(x) => { //float
+    // //                 builder.result_float(x);
+    // //             }
+    // //             PrimitiveTypeContainer::Int(x) => { //int
+    // //                 builder.result_int(x);
+    // //             }
+    // //             PrimitiveTypeContainer::String(x) => { //string
+    // //                 builder.result_string(x);
+    // //             }
+    // //             PrimitiveTypeContainer::Symbol(x) => { //
+    // //                 match x {
+    // //                     ";" => {
+    // //                         // done=true;
+    // //                     }
+    // //                     _ => {
+    // //                         cur_exprs.push(ExprVal::Symbol(first_primitive));
+    // //                     }
+    // //                 }
+    // //             }
+    // //             PrimitiveTypeContainer::Identifier(x) => { //cmd or idn
+    // //                 // println("")
+    // //                 if let Some(cmds)=self.cmds.get(x) {
+    // //                     // let mut primitives=top_primitive_iter.clone();
+    // //                     let mut errors=Vec::<BuilderError<BuilderErrorType>>::new();
 
-    //                     //
-    //                     builder.set_anon_scope(0);
+    // //                     //
+    // //                     builder.set_anon_scope(*next_anon_id);
 
-    //                     //
-    //                     if errors.len()>0 {
-    //                         errors.sort_by(|a,b|a.loc.cmp(&b.loc));
-    //                         return Err(errors.last().unwrap().clone());
-    //                     }
-    //                 } else {
-    //                     match x {
-    //                         "true" => {
-    //                             builder.result_bool(true);
-    //                             cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
-    //                         }
-    //                         "false" => {
-    //                             builder.result_bool(false);
-    //                             cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
-    //                         }
-    //                         "nil" => {
-    //                             builder.result_nil();
-    //                             cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
-    //                         }
-    //                         "void" => {
-    //                             builder.result_void();
-    //                             cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
-    //                         }
-    //                         "var" => {
-    //                             //var decls ...
-    //                         }
-    //                         _ => {
-    //                             cur_exprs.push(ExprVal::Identifier(first_primitive));
-    //                             // builder.get_var(x);
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //             // PrimitiveTypeContainer::End => {} //eol or eof //ignore
-    //             PrimitiveTypeContainer::Eol|PrimitiveTypeContainer::Eob => {
-    //                 if let Some(ExprVal::Symbol(_))=cur_exprs.last() {
-    //                     //there aren't any postfix symbols, so don't need to handle
-    //                 } else {
-    //                     done=true;
-    //                 }
-    //             }
-    //         }
+    // //                     //
+    // //                     for cmd in cmds {
+    // //                         let mut primitives=top_primitive_iter.clone();
 
-        }
+    // //                         if let Err(e)=cmd(&mut primitives,builder) {
+    // //                             errors.push(e);
+    // //                             builder.discard_from_mark();
+    // //                         } else { //ok
+    // //                             errors.clear();
+    // //                             *next_anon_id+=1;
+    // //                             top_primitive_iter=primitives;
+    // //                             cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
+    // //                             break;
+    // //                         }
+    // //                     }
+
+    // //                     //
+    // //                     builder.set_anon_scope(0);
+
+    // //                     //
+    // //                     if errors.len()>0 {
+    // //                         errors.sort_by(|a,b|a.loc.cmp(&b.loc));
+    // //                         return Err(errors.last().unwrap().clone());
+    // //                     }
+    // //                 } else {
+    // //                     match x {
+    // //                         "true" => {
+    // //                             builder.result_bool(true);
+    // //                             cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
+    // //                         }
+    // //                         "false" => {
+    // //                             builder.result_bool(false);
+    // //                             cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
+    // //                         }
+    // //                         "nil" => {
+    // //                             builder.result_nil();
+    // //                             cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
+    // //                         }
+    // //                         "void" => {
+    // //                             builder.result_void();
+    // //                             cur_exprs.push(ExprVal::Builder(builder.take_from_mark()));
+    // //                         }
+    // //                         "var" => {
+    // //                             //var decls ...
+    // //                         }
+    // //                         _ => {
+    // //                             cur_exprs.push(ExprVal::Identifier(first_primitive));
+    // //                             // builder.get_var(x);
+    // //                         }
+    // //                     }
+    // //                 }
+    // //             }
+    // //             // PrimitiveTypeContainer::End => {} //eol or eof //ignore
+    // //             PrimitiveTypeContainer::Eol|PrimitiveTypeContainer::Eob => {
+    // //                 if let Some(ExprVal::Symbol(_))=cur_exprs.last() {
+    // //                     //there aren't any postfix symbols, so don't need to handle
+    // //                 } else {
+    // //                     done=true;
+    // //                 }
+    // //             }
+    // //         }
+
+    //     }
 
     //     //handle exprs
 
     //     //
-        Ok(())
-    }
-
-}

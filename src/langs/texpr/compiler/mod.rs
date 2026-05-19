@@ -120,6 +120,11 @@ impl Compiler {
         cmd_scope.add_cmd("-", sub_cmd);
         cmd_scope.add_cmd("*", mul_cmd);
         cmd_scope.add_cmd("/", div_cmd);
+        cmd_scope.add_cmd("<", lt_cmd);
+        cmd_scope.add_cmd(">", gt_cmd);
+        cmd_scope.add_cmd("<=", le_cmd);
+        cmd_scope.add_cmd(">=", ge_cmd);
+        cmd_scope.add_cmd("=", eq_cmd);
         cmd_scope.add_cmd("include", include_cmd);
         cmd_scope.add_cmd("format", format_cmd);
         cmd_scope.add_cmd("print", print_cmd);

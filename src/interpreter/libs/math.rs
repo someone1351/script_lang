@@ -33,69 +33,69 @@ pub fn register_float<X>(lib_scope : &mut LibScope<X>) {
     }).int().end();
 
     //neg(float)
-    lib_scope.method("-", |context|{
+    lib_scope.method("neg", |context|{
         let a=context.param(0).as_float();
         Ok(a.neg().into())
     }).float().end();
 
     //add(float,float), add(int,float), add(float,int)
-    lib_scope.method("+", |context|{
+    lib_scope.method("add", |context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_float();
         Ok(a.add(b).into())
     }).float().float().end().int().float().end().float().int().end();
 
     //sub(float,float), sub(int,float), sub(float,int)
-    lib_scope.method("-", |context|{
+    lib_scope.method("sub", |context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_float();
         Ok(a.sub(b).into())
     }).float().float().end().int().float().end().float().int().end();
 
     //mul(float,float), mul(int,float), mul(float,int)
-    lib_scope.method("*", |context|{
+    lib_scope.method("mul", |context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_float();
         Ok(a.mul(b).into())
     }).float().float().end().int().float().end().float().int().end();
 
     //div(float,float), div(int,float)
-    lib_scope.method("/", |context|{
+    lib_scope.method("div", |context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_float();
         Ok(a.div(b).into())
     }).float().float().end().int().float().end();
 
     //gt(float,float)
-    lib_scope.method(">", |context|{
+    lib_scope.method("gt", |context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_float();
         Ok(a.gt(&b).into())
     }).float().float().end();
 
     //lt(float,float)
-    lib_scope.method("<", |context|{
+    lib_scope.method("lt", |context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_float();
         Ok(a.lt(&b).into())
     }).float().float().end();
 
     //ge(float,float)
-    lib_scope.method(">=", |context|{
+    lib_scope.method("ge", |context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_float();
         Ok(a.ge(&b).into())
     }).float().float().end();
 
     //le(float,float)
-    lib_scope.method("<=", |context|{
+    lib_scope.method("le", |context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_float();
         Ok(a.le(&b).into())
     }).float().float().end();
 
     //eq(float,float)
-    lib_scope.method("=", |context|{
+    lib_scope.method("eq", |context|{
         let a=context.param(0).as_float();
         let b=context.param(1).as_float();
         Ok(a.eq(&b).into())
@@ -293,27 +293,27 @@ pub fn register_int<X>(lib_scope : &mut LibScope<X>) {
     }).float().end();
 
     //neg(int)
-    lib_scope.method("-", |context|{
+    lib_scope.method("neg", |context|{
         Ok(context.param(0).as_int().checked_neg()?.into())
     }).int().end();
 
 
     //add(int,int)
-    lib_scope.method("+",|context|{
+    lib_scope.method("add",|context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
         Ok(a.checked_add(b)?.into())
     }).int().int().end();
 
     //sub(int,int)
-    lib_scope.method("-",|context|{
+    lib_scope.method("sub",|context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
         Ok(a.checked_add(b)?.into())
     }).int().int().end();
 
     //mul(int,int)
-    lib_scope.method("*",|context|{
+    lib_scope.method("mul",|context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
         Ok(a.checked_mul(b)?.into())
@@ -321,7 +321,7 @@ pub fn register_int<X>(lib_scope : &mut LibScope<X>) {
 
 
     //div(int,int), div(float,int)
-    lib_scope.method("/",|context|{
+    lib_scope.method("div",|context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
         Ok(a.checked_div(b)?.into())
@@ -330,7 +330,7 @@ pub fn register_int<X>(lib_scope : &mut LibScope<X>) {
         .float().int().end();
 
     //gt(int,int)
-    lib_scope.method(">",|context|{
+    lib_scope.method("gt",|context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
         Ok(a.gt(&b).into())
@@ -338,28 +338,28 @@ pub fn register_int<X>(lib_scope : &mut LibScope<X>) {
 
 
     //lt(int,int)
-    lib_scope.method("<",|context|{
+    lib_scope.method("lt",|context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
         Ok(a.lt(&b).into())
     }).int().int().end();
 
     //ge(int,int)
-    lib_scope.method(">=",|context|{
+    lib_scope.method("ge",|context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
         Ok(a.ge(&b).into())
     }).int().int().end();
 
     //le(int,int)
-    lib_scope.method("<=",|context|{
+    lib_scope.method("le",|context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
         Ok(a.le(&b).into())
     }).int().int().end();
 
     //eq(int,int)
-    lib_scope.method("=",|context|{
+    lib_scope.method("eq",|context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
         Ok(a.eq(&b).into())
