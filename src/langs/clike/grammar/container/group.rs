@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use crate::clike::tokenizer::FilteredTokenIterContainer;
+
 use super::super::super::{grammar::{container::WalkGroupIterContainer, data::{Walk, WalkGroup}}, tokenizer::{TokenContainer, TokenIterContainer}};
 
 #[derive(Clone, Copy)]
@@ -20,21 +22,17 @@ impl<'t,'g> WalkGroupContainer<'t,'g> {
         WalkGroupIterContainer{ walk: self.walk, start: group.children.start, end: group.children.end }
 
     }
-    pub fn tokens(&self) -> TokenIterContainer<'t> {
+    fn unfiltered_tokens(&self) -> TokenIterContainer<'t> {
         self.group().tokens
+    }
+    pub fn tokens(&self) -> FilteredTokenIterContainer<'t> {
+        self.group().tokens.filtered()
     }
 }
 
 impl<'t,'g> std::fmt::Debug for WalkGroupContainer<'t,'g> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!("{}::{:?}", &self.group_ind,&self.name()))
-        // f.wr
-        // f.debug_struct("Primitive")
-        // // .field("parsed", &self.parsed)
-        // .field("primitive_ind", &self.primitive_ind)
-        // .field("loc", &self.start_loc())
-        // .field("primitive_type", &format!("{:?}",self.primitive_type()))
-        // .finish()
     }
 }
 
@@ -53,10 +51,10 @@ impl<'t,'g> Display for WalkGroupContainer<'t,'g> {
             match cur {
                 Thing::Group(cur) => {
                     writeln!(f,"{indent}group: {:?}",cur.name(),)?;
-                    let mut cur_tokens = cur.tokens();
+                    let mut cur_tokens = cur.unfiltered_tokens();
 
                     for child_group in cur.children().rev() {
-                        let child_tokens=child_group.tokens();
+                        let child_tokens=child_group.unfiltered_tokens();
                         let ps_len=cur_tokens.end-child_tokens.end;
                         let ps=cur_tokens.pop_back_amount(ps_len).unwrap();
 
