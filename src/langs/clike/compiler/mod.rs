@@ -14,7 +14,7 @@ use crate::clike::grammar::GrammarWalkError;
 // use crate::ccexpr_compiler::grammar::grammar_run;
 // use std::path::PathBuf;
 // use super::parser::parse;
-use crate::clike::tokenizer::{tokenize, TokenizerErrorType};
+use crate::clike::tokenizer::{tokenize, TokenTypeContainer, TokenizerErrorType};
 use crate::primitive_types::StringVal;
 
 use crate::{build::*, compiler::builder};
@@ -224,6 +224,40 @@ impl Compiler {
                 builder.param_push();
                 builder.call_method("not", 1);
             }
+            "index" => {
+
+            }
+            "field" => {
+                let field=top_group.tokens().first().unwrap();
+                builder
+                    .loc(field.start_loc())
+                    .param_push()
+                    ;
+
+                match field.token_type() {
+                    TokenTypeContainer::Int(x) => {
+                        builder
+                            .result_int(x)
+                            .param_push()
+                            .swap()
+                            .get_field(false)
+                            ;
+                    }
+                    TokenTypeContainer::Identifier(x) => {
+                        builder
+                            .result_string(x)
+                            .param_push()
+                            .swap()
+                            .get_field(true)
+                            ;
+                    }
+                    _=> {panic!("");}
+                }
+
+            }
+            "call" => {
+
+            }
             "val" => {
                 let mut groups=top_group.children();
 
@@ -239,6 +273,10 @@ impl Compiler {
                 // println!("val is {}",val.name());
                 builder.eval(val);
 
+                //field(s), index(s), call(s)
+                for rest in groups.rev() {
+                    builder.eval(rest);
+                }
 
                 //
                 if let Some(prefixes)=prefixes {
