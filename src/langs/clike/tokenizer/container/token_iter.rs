@@ -1,5 +1,5 @@
-use std::ops::{Bound, Range, RangeBounds};
-
+// use std::ops::{Bound, Range, RangeBounds};
+use std::ops::Range;
 use crate::build::Loc;
 use super::super::super::tokenizer::data::Tokenized;
 
@@ -30,7 +30,7 @@ impl<'a> TokenIterContainer<'a> {
             let primitive_ind=self.start;
             self.start+=1;
             self.last_loc=self.loc();
-            Ok(TokenContainer { parsed: self.parsed, primitive_ind,}) //last_loc:self.last_loc,
+            Ok(TokenContainer { parsed: self.parsed, token_ind: primitive_ind,}) //last_loc:self.last_loc,
         } else {
             Err(self.last_loc)
         }
@@ -46,7 +46,7 @@ impl<'a> TokenIterContainer<'a> {
             //     self.parsed.primitives[self.end-1].end_loc
             // };
 
-            Ok(TokenContainer { parsed: self.parsed, primitive_ind,}) //last_loc
+            Ok(TokenContainer { parsed: self.parsed, token_ind: primitive_ind,}) //last_loc
         } else {
             Err(self.last_loc)
         }
@@ -195,7 +195,7 @@ impl<'a> TokenIterContainer<'a> {
         if self.is_empty() {
             Err(self.last_loc)
         } else {
-            Ok(TokenContainer { parsed: self.parsed, primitive_ind:self.start,})
+            Ok(TokenContainer { parsed: self.parsed, token_ind:self.start,})
         }
     }
     // pub fn last(&self) -> Result<TokenContainer<'a>,Loc> {
@@ -284,6 +284,10 @@ impl<'a> TokenIterContainer<'a> {
     {
         self.pop_get(true,move|p|p.has_symbol(symbol))
     }
+
+    pub fn filtered(&self) -> FilteredTokenIterContainer<'a> {
+        FilteredTokenIterContainer { start: self.start, end: self.end, parsed: self.parsed }
+    }
 }
 
 impl<'a> Iterator for TokenIterContainer<'a> {
@@ -294,7 +298,7 @@ impl<'a> Iterator for TokenIterContainer<'a> {
             // let last_loc2=self.last_loc;
             self.last_loc=self.parsed.primitives[self.start].end_loc;
 
-            let x=TokenContainer {primitive_ind: self.start,parsed: self.parsed,}; //last_loc:last_loc2
+            let x=TokenContainer {token_ind: self.start,parsed: self.parsed,}; //last_loc:last_loc2
             self.start+=1;
 
             Some(x)
@@ -316,7 +320,7 @@ impl<'a> DoubleEndedIterator for TokenIterContainer<'a> {
             //     self.parsed.primitives[primitive_ind-1].end_loc
             // };
 
-            Some(TokenContainer {primitive_ind,parsed: self.parsed,}) //last_loc
+            Some(TokenContainer {token_ind: primitive_ind,parsed: self.parsed,}) //last_loc
         } else {
             None
         }

@@ -1,6 +1,6 @@
 
 use crate::build::Loc;
-use super::super::super::tokenizer::data::{Tokenized, Primitive, PrimitiveType};
+use super::super::super::tokenizer::data::{Tokenized, Token, TokenType};
 
 use super::*;
 
@@ -9,16 +9,16 @@ use super::*;
 #[derive(Clone,Copy)]
 pub struct TokenContainer<'a> {
     pub parsed:&'a Tokenized,
-    pub primitive_ind:usize,
+    pub token_ind:usize,
     // pub last_loc:Loc,
 }
 
 impl<'a> TokenContainer<'a> {
-    fn primitive(&self) -> &'a Primitive {
-        &self.parsed.primitives[self.primitive_ind]
+    fn primitive(&self) -> &'a Token {
+        &self.parsed.primitives[self.token_ind]
     }
     pub fn ind(&self) -> usize {
-        self.primitive_ind
+        self.token_ind
     }
 
     pub fn start_loc(&self) -> Loc {
@@ -29,34 +29,34 @@ impl<'a> TokenContainer<'a> {
     }
 
     pub fn token_type(&self) -> TokenTypeContainer<'a> {
-        match self.primitive().primitive_type {
-            PrimitiveType::Float(x, _) => TokenTypeContainer::Float(x),
-            PrimitiveType::Int(x, _) => TokenTypeContainer::Int(x),
-            PrimitiveType::String(x) => TokenTypeContainer::String(self.parsed.texts[x].as_str()),
-            PrimitiveType::Symbol(x) => TokenTypeContainer::Symbol(self.parsed.texts[x].as_str()),
-            PrimitiveType::Identifier(x) => TokenTypeContainer::Identifier(self.parsed.texts[x].as_str()),
-            PrimitiveType::Keyword(x) => TokenTypeContainer::Keyword(self.parsed.texts[x].as_str()),
+        match self.primitive().token_type {
+            TokenType::Float(x, _) => TokenTypeContainer::Float(x),
+            TokenType::Int(x, _) => TokenTypeContainer::Int(x),
+            TokenType::String(x) => TokenTypeContainer::String(self.parsed.texts[x].as_str()),
+            TokenType::Symbol(x) => TokenTypeContainer::Symbol(self.parsed.texts[x].as_str()),
+            TokenType::Identifier(x) => TokenTypeContainer::Identifier(self.parsed.texts[x].as_str()),
+            TokenType::Keyword(x) => TokenTypeContainer::Keyword(self.parsed.texts[x].as_str()),
             // PrimitiveType::End => PrimitiveTypeContainer::End,
-            PrimitiveType::Eol => TokenTypeContainer::Eol,
+            TokenType::Eol => TokenTypeContainer::Eol,
         }
     }
 
     pub fn get_float(&self) -> Result<ValueContainer<'a,f64>,Loc> {
-        if let PrimitiveType::Float(value, _)=self.primitive().primitive_type {
+        if let TokenType::Float(value, _)=self.primitive().token_type {
             Ok(ValueContainer{ primitive: self.clone(), value })
         } else {
             Err(self.start_loc())
         }
     }
     pub fn get_int(&self) -> Result<ValueContainer<'a,i64>,Loc> {
-        if let PrimitiveType::Int(value, _)=self.primitive().primitive_type {
+        if let TokenType::Int(value, _)=self.primitive().token_type {
             Ok(ValueContainer{ primitive: self.clone(), value })
         } else {
             Err(self.start_loc())
         }
     }
     pub fn get_string(&self) -> Result<ValueContainer<'a,&'a str>,Loc> {
-        if let PrimitiveType::String(x)=self.primitive().primitive_type {
+        if let TokenType::String(x)=self.primitive().token_type {
             Ok(ValueContainer{ primitive: self.clone(), value: self.parsed.texts[x].as_str() })
         } else {
             Err(self.start_loc())
@@ -64,14 +64,14 @@ impl<'a> TokenContainer<'a> {
     }
 
     pub fn get_symbol(&self) -> Result<ValueContainer<'a,&'a str>,Loc> {
-        if let PrimitiveType::Symbol(x)=self.primitive().primitive_type {
+        if let TokenType::Symbol(x)=self.primitive().token_type {
             Ok(ValueContainer{ primitive: self.clone(), value: self.parsed.texts[x].as_str() })
         } else {
             Err(self.start_loc())
         }
     }
     pub fn get_identifier(&self) -> Result<ValueContainer<'a,&'a str>,Loc> {
-        if let PrimitiveType::Identifier(x)=self.primitive().primitive_type {
+        if let TokenType::Identifier(x)=self.primitive().token_type {
             Ok(ValueContainer{ primitive: self.clone(), value: self.parsed.texts[x].as_str() })
         } else {
             Err(self.start_loc())
@@ -79,14 +79,14 @@ impl<'a> TokenContainer<'a> {
     }
 
     pub fn get_keyword(&self) -> Result<ValueContainer<'a,&'a str>,Loc> {
-        if let PrimitiveType::Keyword(x)=self.primitive().primitive_type {
+        if let TokenType::Keyword(x)=self.primitive().token_type {
             Ok(ValueContainer{ primitive: self.clone(), value: self.parsed.texts[x].as_str() })
         } else {
             Err(self.start_loc())
         }
     }
     pub fn get_eol(&self) -> Result<ValueContainer<'a,()>,Loc> {
-        if let PrimitiveType::Eol=self.primitive().primitive_type {
+        if let TokenType::Eol=self.primitive().token_type {
             Ok(ValueContainer{ primitive: self.clone(), value: () })
         } else {
             Err(self.start_loc())
@@ -125,15 +125,15 @@ impl<'a> TokenContainer<'a> {
     // }
 
     pub fn is_eol(&self) -> bool {
-        match self.primitive().primitive_type {
-            PrimitiveType::Eol => true,
+        match self.primitive().token_type {
+            TokenType::Eol => true,
             _ => false,
 
         }
     }
 
     pub fn is_string(&self) -> bool {
-        if let PrimitiveType::String(_)=self.primitive().primitive_type {
+        if let TokenType::String(_)=self.primitive().token_type {
             true
         } else {
             false
@@ -156,21 +156,21 @@ impl<'a> TokenContainer<'a> {
         }
     }
     pub fn is_identifier(&self) -> bool {
-        if let PrimitiveType::Identifier(_)=self.primitive().primitive_type {
+        if let TokenType::Identifier(_)=self.primitive().token_type {
             true
         } else {
             false
         }
     }
     pub fn is_float(&self) -> bool {
-        if let PrimitiveType::Float(..)=self.primitive().primitive_type {
+        if let TokenType::Float(..)=self.primitive().token_type {
             true
         } else {
             false
         }
     }
     pub fn is_int(&self) -> bool {
-        if let PrimitiveType::Int(..)=self.primitive().primitive_type {
+        if let TokenType::Int(..)=self.primitive().token_type {
             true
         } else {
             false
@@ -201,7 +201,7 @@ impl<'a> TokenContainer<'a> {
 
 impl<'a> std::fmt::Debug for TokenContainer<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}::{:?}", &self.primitive_ind,&self.token_type()))
+        f.write_fmt(format_args!("{}::{:?}", &self.token_ind,&self.token_type()))
         // f.wr
         // f.debug_struct("Primitive")
         // // .field("parsed", &self.parsed)

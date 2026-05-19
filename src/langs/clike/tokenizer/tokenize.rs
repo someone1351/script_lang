@@ -77,7 +77,7 @@ fn parse_number(
     input:&mut Input,
     float_aswell:bool,
     text_map:&mut HashMap<String,usize>,
-) -> Option<Primitive> {
+) -> Option<Token> {
     let mut i=0;
     let mut is_float=false;
     // let mut ok=false;
@@ -127,15 +127,15 @@ fn parse_number(
     let text_ind=*text_map.entry(token.to_string()).or_insert(text_map_size);
 
     let primitive_type=if is_float {
-        PrimitiveType::Float(token.parse().unwrap(),text_ind,)
+        TokenType::Float(token.parse().unwrap(),text_ind,)
     } else {
-        PrimitiveType::Int(token.parse().unwrap(),text_ind,)
+        TokenType::Int(token.parse().unwrap(),text_ind,)
     };
 
     input.next(i);
     let end_loc=input.loc();
 
-    Some(Primitive { start_loc, end_loc, primitive_type })
+    Some(Token { start_loc, end_loc, token_type: primitive_type })
 }
 
 fn parse_string<'a>(
@@ -144,7 +144,7 @@ fn parse_string<'a>(
     // texts:&mut Vec<String>,
     // src:&'a str,
     // path:Option<&'a Path>,
-) -> Result<Option<Primitive>,TokenizerError> {
+) -> Result<Option<Token>,TokenizerError> {
     let quotes=["\"\"\"","'''","\"","'"];
 
     for quote in quotes {
@@ -215,8 +215,8 @@ fn parse_string<'a>(
 
         //
         let end_loc=input.loc();
-        let primitive_type=PrimitiveType::String(text_ind);
-        return Ok(Some(Primitive { primitive_type, start_loc, end_loc }))
+        let primitive_type=TokenType::String(text_ind);
+        return Ok(Some(Token { token_type: primitive_type, start_loc, end_loc }))
     }
 
     Ok(None)
@@ -226,7 +226,7 @@ fn parse_char_symbol(
     input:&mut Input,
     // texts:&mut Vec<String>,
     text_map:&mut HashMap<String,usize>,
-) -> Option<Primitive> {
+) -> Option<Token> {
     if let Some(x)=input.hasc(0, [
         '!','&','|','*','-','+','=','<','>','/',',','.',';',':','(',')','[',']','{','}',
         '~','`','@','#','$','%','^','?','_',
@@ -240,8 +240,8 @@ fn parse_char_symbol(
         let end_loc=input.loc();
         // Some((text_ind,start_loc,end_loc))
 
-        let primitive_type=PrimitiveType::Symbol(text_ind);
-        Some(Primitive { primitive_type, start_loc, end_loc, })
+        let primitive_type=TokenType::Symbol(text_ind);
+        Some(Token { token_type: primitive_type, start_loc, end_loc, })
     } else {
         None
     }
@@ -254,7 +254,7 @@ fn parse_ident_symbol<K>(
     text_map:&mut HashMap<String,usize>,
     is_keyword:K
 
-) -> Option<Primitive>
+) -> Option<Token>
 where
     K : Fn(&str)->bool,
 {
@@ -288,15 +288,15 @@ where
     input.next(i);
     let end_loc=input.loc();
 
-    let primitive_type=if kw {PrimitiveType::Keyword(text_ind)} else {PrimitiveType::Identifier(text_ind)};
-    Some(Primitive { primitive_type, start_loc, end_loc })
+    let primitive_type=if kw {TokenType::Keyword(text_ind)} else {TokenType::Identifier(text_ind)};
+    Some(Token { token_type: primitive_type, start_loc, end_loc })
 }
 
-fn parse_eol(input:&mut Input) -> Option<Primitive> {
+fn parse_eol(input:&mut Input) -> Option<Token> {
     if let Some(x)=input.has(0, ["\r\n","\n"]) {
         input.next(x.len());
-        let primitive_type=PrimitiveType::Eol;
-        Some(Primitive { primitive_type, start_loc: input.prev_loc(), end_loc: input.loc() })
+        let primitive_type=TokenType::Eol;
+        Some(Token { token_type: primitive_type, start_loc: input.prev_loc(), end_loc: input.loc() })
     } else {
         None
     }
@@ -354,8 +354,8 @@ fn parse_space(input:&mut Input) -> bool {
     found
 }
 
-fn parse_ws(input:&mut Input) -> Result<Option<Primitive>,TokenizerError> {
-    let mut first_end : Option<Primitive> = None;
+fn parse_ws(input:&mut Input) -> Result<Option<Token>,TokenizerError> {
+    let mut first_end : Option<Token> = None;
 
     while !input.is_end() {
 

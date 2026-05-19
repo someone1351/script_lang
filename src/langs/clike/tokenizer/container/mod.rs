@@ -3,11 +3,13 @@ mod token;
 mod token_type;
 mod token_iter;
 mod value;
+mod filtered_token_iter;
 
 pub use token::*;
 pub use token_type::*;
 pub use token_iter::*;
 pub use value::*;
+pub use filtered_token_iter::*;
 
 // use std::ops::Range;
 

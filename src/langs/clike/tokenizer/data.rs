@@ -5,7 +5,7 @@ use super::container::TokenIterContainer;
 use crate::build::Loc;
 
 #[derive(Debug,Clone,PartialEq)]
-pub enum PrimitiveType {
+pub enum TokenType {
     Float(f64,usize,), //num,text_ind,
     Int(i64,usize,),//num,text_ind,
     String(usize),//text_ind
@@ -16,14 +16,14 @@ pub enum PrimitiveType {
 }
 
 #[derive(Debug,Clone)]
-pub struct Primitive {
-    pub primitive_type:PrimitiveType,
+pub struct Token {
+    pub token_type:TokenType,
     pub start_loc : Loc, //for block is first brace
     pub end_loc : Loc, //for block last brace, or if has param/fields then last field
 }
 
 pub struct Tokenized {
-    pub primitives : Vec<Primitive>,
+    pub primitives : Vec<Token>,
     pub texts : Vec<String>,
 }
 
