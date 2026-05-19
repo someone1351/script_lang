@@ -225,6 +225,9 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
     pub fn get_anon_scope(&self) -> usize {
         self.cur_anon_id
     }
+    pub fn get_loc(& self) ->Loc {
+        self.cur_loc.unwrap_or_default()
+    }
     pub fn loc(&mut self, loc:Loc) -> &mut Self {
         self.cur_loc=Some(loc);
         self

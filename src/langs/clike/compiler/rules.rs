@@ -98,7 +98,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "block" => [
             NonTerm("lcurly").expected0("block")
             ,
-            NonTerm("stmts").group("block"),
+            NonTerm("stmts"), //.group("block"),
             NonTerm("rcurly").expected1("closing brace")
             ,
         ].and() //.expected("block")
@@ -135,7 +135,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("block"),
         ].and().group("for"),
 
-        "call" => [
+        "call_params" => [
             NonTerm("lparen"),
             [
                 NonTerm("expr"),
@@ -144,10 +144,11 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                     NonTerm("expr"),
                 ].and().many0(),
                 NonTerm("comma").opt(),
-            ].and().opt().group("call"),
+            ].and().opt(),
             NonTerm("rparen"),
-        ].and(),
+        ].and().group("params"),
 
+        "call" => NonTerm("call_params").group("call"),
         "include" => [Keyword("include"),String,].and(),
 
         "func_params" => [
@@ -231,6 +232,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "val" => [
             NonTerm("prefixes").opt(),
             [
+
+                [Identifier.group("name"),NonTerm("call_params")].and().group("mcall"),
                 [
                     Int,
                     Float,

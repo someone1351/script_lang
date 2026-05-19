@@ -167,10 +167,11 @@ impl Compiler {
     pub fn run<'a,'t,'g>(&self,
         // builder:&mut CExprBuilder<'a>,
         builder:&mut Builder<'a,WalkGroupContainer<'t,'g>,BuilderErrorType>,
-        mut top_group:WalkGroupContainer<'t,'g>,
+        top_group:WalkGroupContainer<'t,'g>,
         next_anon_id:&mut usize,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
         println!("{:?}:",top_group.name());
+
         match top_group.name() {
             "primitive" => {
                 let p=top_group.tokens().first().unwrap();
@@ -256,7 +257,47 @@ impl Compiler {
 
             }
             "call" => {
+                let params=top_group.child(0).unwrap().children();
+                let last_loc=builder.get_loc();
 
+
+                builder.set_anon_scope(*next_anon_id); *next_anon_id+=1;
+
+                builder
+                    .decl_anon_var("f", false)
+                    .set_anon_var("f")
+                    ;
+
+                for param in params.rev() {
+                    builder
+                        .eval(param)
+                        .param_push()
+                        ;
+                }
+
+                builder
+                    .loc(last_loc)
+                    .get_anon_var("f")
+                    .call_result(params.len())
+                    ;
+            }
+            "mcall" => {
+
+                let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
+                let params=top_group.child(1).unwrap().children();
+
+                for param in params.rev() {
+                    // println!("param {:?}",param.name());
+                    builder
+                        .eval(param)
+                        .param_push()
+                        ;
+                }
+
+                builder
+                    .loc(name.token.start_loc())
+                    .call(name.value, params.len())
+                    ;
             }
             "val" => {
                 let mut groups=top_group.children();
@@ -285,6 +326,9 @@ impl Compiler {
                     }
                 }
             }
+            // "block" => {
+            //     builder.eval(primitive)
+            // }
             _ => {
                 panic!("{}",top_group.name());
                 // builder.eval(primitive)

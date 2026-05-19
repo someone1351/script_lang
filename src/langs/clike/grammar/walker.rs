@@ -1030,7 +1030,7 @@ where
     {
         match prim_func(&mut cur.tokens) {
             Ok(v) => {
-                let vprim=v.primitive;
+                let vprim=v.token;
                 on_ok(v.clone(),self);
                 // match cur.grammar {
 

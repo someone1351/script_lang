@@ -185,27 +185,27 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                             write!(f,"NonTerm({arg0:?},")?;
                         }
                         Self::String(arg0) => {
-                            write!(f,"String({})",if let Some(x)=arg0{format!("{}:{:?}",x.primitive.ind(),x.value)}else{"_".into()})?;
+                            write!(f,"String({})",if let Some(x)=arg0{format!("{}:{:?}",x.token.ind(),x.value)}else{"_".into()})?;
 
                         }
                         Self::Identifier(arg0) => {
-                            write!(f,"Identifier({})",if let Some(x)=arg0{format!("{}:{:?}",x.primitive.ind(),x.value)}else{"_".into()})?;
+                            write!(f,"Identifier({})",if let Some(x)=arg0{format!("{}:{:?}",x.token.ind(),x.value)}else{"_".into()})?;
                         }
                         Self::Int(arg0) => {
-                            write!(f,"Int({})",if let Some(x)=arg0{format!("{}:{}",x.primitive.ind(),x.value)}else{"_".into()})?;
+                            write!(f,"Int({})",if let Some(x)=arg0{format!("{}:{}",x.token.ind(),x.value)}else{"_".into()})?;
                         }
                         Self::Float(arg0) => {
-                            write!(f,"Float({})",if let Some(x)=arg0{format!("{}:{}",x.primitive.ind(),x.value)}else{"_".into()})?;
+                            write!(f,"Float({})",if let Some(x)=arg0{format!("{}:{}",x.token.ind(),x.value)}else{"_".into()})?;
 
                         }
                         Self::Symbol(arg0) => {
-                            write!(f,"Symbol({})",if let Some(x)=arg0{format!("{}:{}",x.primitive.ind(),x.value)}else{"_".into()})?;
+                            write!(f,"Symbol({})",if let Some(x)=arg0{format!("{}:{}",x.token.ind(),x.value)}else{"_".into()})?;
                         }
                         Self::Keyword(arg0) => {
-                            write!(f,"Keyword({})",if let Some(x)=arg0{format!("{}:{}",x.primitive.ind(),x.value)}else{"_".into()})?;
+                            write!(f,"Keyword({})",if let Some(x)=arg0{format!("{}:{}",x.token.ind(),x.value)}else{"_".into()})?;
                         }
                         Self::Eol(arg0) => {
-                            write!(f,"Eol({})",if let Some(x)=arg0{format!("{}:",x.primitive.ind(),)}else{"_".into()})?;
+                            write!(f,"Eol({})",if let Some(x)=arg0{format!("{}:",x.token.ind(),)}else{"_".into()})?;
                         }
                         Self::Always => {
                             write!(f, "Always")?;

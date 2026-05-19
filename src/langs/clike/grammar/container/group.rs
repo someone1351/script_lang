@@ -20,6 +20,15 @@ impl<'t,'g> WalkGroupContainer<'t,'g> {
     pub fn children(&self) -> WalkGroupIterContainer<'t,'g> {
         let group=self.group();
         WalkGroupIterContainer{ walk: self.walk, start: group.children.start, end: group.children.end }
+    }
+    pub fn child(&self,ind:usize) -> Option<WalkGroupContainer<'t,'g>> {
+        let group=self.group();
+
+        if ind < group.children.len() {
+            return Some(WalkGroupContainer{ walk: self.walk, group_ind: group.children.start+ind });
+        }
+
+        None
 
     }
     fn unfiltered_tokens(&self) -> TokenIterContainer<'t> {
