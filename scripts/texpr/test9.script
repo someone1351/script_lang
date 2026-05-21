@@ -1,0 +1,4 @@
+
+var v (array 6)
+v.push 123
+#println v

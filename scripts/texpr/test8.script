@@ -120,3 +120,7 @@ label DEF
 
 # add label_var and goto_var, eg set lbl (label_var ABC); goto_var lbl;
 # could check for label and var name conflicts, and then use goto for both labels and vars, also don't need label_var anymore
+
+#var v (dict ["a" (array 6)])
+#v.a.push 123
+#println v.a

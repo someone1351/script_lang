@@ -109,9 +109,10 @@ pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
 
 
 fn main() {
-    // // test_script3("examples/texpr/test15.script",true,false);
-    test_script("scripts/texpr/test8.script",false,false);
+    // // // test_script3("examples/texpr/test15.script",true,false);
+    // test_script("scripts/texpr/test8.script",false,false);
 
+    test_script("scripts/texpr/test9.script",true,false);
 
 }
 

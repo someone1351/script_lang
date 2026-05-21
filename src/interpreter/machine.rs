@@ -602,6 +602,8 @@ impl<'a,X> Machine<'a,X> {
                     JmpCond::False => !self.result_val().as_bool(),
                     JmpCond::Undefined => self.result_val().is_undefined(),
                     JmpCond::NotUndefined => !self.result_val().is_undefined(),
+                    JmpCond::Nil => self.result_val().is_nil(),
+                    JmpCond::NotNil => !self.result_val().is_nil(),
                 };
 
                 if b //cond.and_then(|x|Some(x==self.result_val().as_bool())).unwrap_or(true)

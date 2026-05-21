@@ -97,7 +97,7 @@ impl Compiler {
 
         //
         let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
-        // walker.set_debug(true);
+        walker.set_debug(true);
 
         //
         if let Err(e)=walker.run("start") {
@@ -121,6 +121,8 @@ impl Compiler {
 
         println!("{}",walk.root());
 
+
+        return Ok(BuildT::new(Build::default()));
 
         //
         let mut builder = builder::Builder::new();
@@ -226,7 +228,14 @@ impl Compiler {
                 builder.call_method("not", 1);
             }
             "index" => {
-
+                builder
+                    .loc(top_group.tokens().first().unwrap().start_loc())
+                    .param_push()
+                    .eval(top_group.child(0).unwrap())
+                    .param_push()
+                    .swap()
+                    .get_field(false)
+                    ;
             }
             "field" => {
                 let field=top_group.tokens().first().unwrap();
@@ -237,24 +246,52 @@ impl Compiler {
 
                 match field.token_type() {
                     TokenTypeContainer::Int(x) => {
-                        builder
-                            .result_int(x)
-                            .param_push()
-                            .swap()
-                            .get_field(false)
-                            ;
+                        builder.result_int(x);
                     }
                     TokenTypeContainer::Identifier(x) => {
-                        builder
-                            .result_string(x)
-                            .param_push()
-                            .swap()
-                            .get_field(true)
-                            ;
+                        builder.result_string(x);
                     }
                     _=> {panic!("");}
                 }
 
+                //
+                builder
+                    .param_push()
+                    .swap()
+                    .get_field(false)
+                    ;
+            }
+            "field_call" => {
+                let field=top_group.tokens().first().unwrap();
+                let call=top_group.child(0).unwrap();
+
+                builder
+                    .loc(field.start_loc())
+                    .param_push() //var
+                    ;
+
+                match field.token_type() {
+                    TokenTypeContainer::Identifier(x) => {
+                        builder.result_string(x);
+                    }
+                    _=> {panic!("");}
+                }
+
+                //
+                builder
+                    .param_push() //field
+                    .swap()
+                    .get_field(false)
+                    .block_start(None)
+                        .block_start(None)
+                            .to_block_end(JmpCond::Nil, 0)
+                            .call_result(0)
+                            .to_block_end(JmpCond::None, 1)
+                        .block_end()
+                        .call_method("name", 0)
+                    .block_end()
+
+                    ;
             }
             "call" => {
                 let params=top_group.child(0).unwrap().children();

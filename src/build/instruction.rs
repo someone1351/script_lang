@@ -45,6 +45,7 @@ pub enum JmpCond {
     None,
     True,False,
     Undefined,NotUndefined,
+    Nil, NotNil,
 }
 
 impl JmpCond {
@@ -55,6 +56,8 @@ impl JmpCond {
             Self::False => Self::True,
             Self::Undefined => Self::NotUndefined,
             Self::NotUndefined => Self::Undefined,
+            Self::Nil => Self::NotNil,
+            Self::NotNil => Self::Nil,
         }
     }
 }

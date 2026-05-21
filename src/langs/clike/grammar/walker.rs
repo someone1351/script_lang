@@ -223,49 +223,49 @@ where
 
 
         //
-        if self.debug {
-            let mut groups_visited: HashSet<usize>=HashSet::new();
+        // if self.debug {
+        //     let mut groups_visited: HashSet<usize>=HashSet::new();
 
-            for p in self.top_primitives {
-                let i=p.ind();
-                let Some(output)=self.primitive_infos.get(i) else {
-                    break;
-                };
+        //     for p in self.top_primitives {
+        //         let i=p.ind();
+        //         let Some(output)=self.primitive_infos.get(i) else {
+        //             break;
+        //         };
 
-                let mut g=output.group;
-                let mut depth=0;
-                let mut gs: Vec<usize>=Vec::new();
+        //         let mut g=output.group;
+        //         let mut depth=0;
+        //         let mut gs: Vec<usize>=Vec::new();
 
-                while g!=0 {
-                    gs.push(g);
-                    let gg=&self.group_infos[g];
+        //         while g!=0 {
+        //             gs.push(g);
+        //             let gg=&self.group_infos[g];
 
-                    depth+=1;
+        //             depth+=1;
 
-                    g=gg.parent;
+        //             g=gg.parent;
 
-                }
+        //         }
 
-                for (d,&g) in gs.iter().rev().enumerate() {
-                    let gg=&self.group_infos[g];
+        //         for (d,&g) in gs.iter().rev().enumerate() {
+        //             let gg=&self.group_infos[g];
 
-                    if !groups_visited.contains(&g) {
-                        println!("{}{:?} : {:?}",
-                            "  ".repeat(d),
-                            gg.name,
-                            gg.primitives.inds(),
-                        );
-                        groups_visited.insert(g);
-                    }
-                }
+        //             if !groups_visited.contains(&g) {
+        //                 println!("{}{:?} : {:?}",
+        //                     "  ".repeat(d),
+        //                     gg.name,
+        //                     gg.primitives.inds(),
+        //                 );
+        //                 groups_visited.insert(g);
+        //             }
+        //         }
 
-                println!("{}{}{p:?}",
-                    "  ".repeat(depth),
-                    if output.discard {"-----"}else{""}
-                );
-            }
-            println!("===");
-        }
+        //         println!("{}{}{p:?}",
+        //             "  ".repeat(depth),
+        //             if output.discard {"-----"}else{""}
+        //         );
+        //     }
+        //     println!("===");
+        // }
 
         if self.debug {
             //
@@ -333,13 +333,15 @@ where
                 // println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
                 // println!("         -takeable_starts={:?}",self.takeable_starts);
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
-                // println!("         -temp_groups3={:?}",self.group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
                 let ps=tokens.inds();
                 let expected=if expected.id==0 {"None".to_string()}else{format!("{}:{}",expected.id,expected.name)};
-                 println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, expected={expected},  ",);
+                //  println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, expected={expected},  ",);
+                println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, ",);
+                println!("        takeable_starts_len={takeable_starts_len:?}, takeables={takeables:?}, ");
+                println!("        group_ind={group_ind}, group_len={group_len}, temp_groups3={:?}",self.group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
 
                 //
-                println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
+                // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
                 println!("        tokens {tokens:?}");
             }
 
@@ -348,6 +350,7 @@ where
                 let mut grammar_debug_stk=self.grammar_debug_stk.clone();
                 for _i in (1 .. grammar_debug_stk.len()).rev() {
                     let x=grammar_debug_stk.pop().unwrap();
+                    // println!("=={:?}",grammar_debug_stk.last().unwrap());
                     match grammar_debug_stk.last_mut().unwrap() {
                         TempGrammarNodeDebug::Many(gs)
                         |TempGrammarNodeDebug::And(gs)
@@ -359,6 +362,7 @@ where
                         |TempGrammarNodeDebug::Take(g)
                         |TempGrammarNodeDebug::Group(_, g)
                         |TempGrammarNodeDebug::NonTerm(_, g)
+                        |TempGrammarNodeDebug::Expected(_,_, g)
                         // |TempGrammarNodeDebug::Discard(g)
                         => {*g=Some(x.into())}
 
@@ -384,14 +388,14 @@ where
             }
 
             //
-            // for (i,Work { grammar:g, success_len:s, fail_len:f, primitives, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt, grammar_debug_len,  }) in self.stk.iter()
-            //     // .rev()
-            //     .enumerate() {
-            //     // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
-            //     // println!("\t{i:3}: {g:?}, ps={primitives:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
-            //     println!("    {i:3}: {g:?}, ps={:?}, success={s}, fail={f}, ",primitives.inds());
+            for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt, grammar_debug_len, expected  }) in self.stk.iter()
+                // .rev()
+                .enumerate() {
+                // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
+                // println!("\t{i:3}: {g:?}, ps={primitives:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
+                println!("    {i:3}: ps={:?}, success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds()); //
 
-            // }
+            }
         }
 
         //
@@ -1461,10 +1465,10 @@ where
             }
         });
 
-        // println!("groups2 {:?}",group_infos2.iter().enumerate().collect::<Vec<_>>());
-        // for (i,&(g,p,)) in group_infos2.iter().enumerate() {
-        //     println!("\t{i}: {g}, {p}, {:?}",self.group_infos[g].name);
-        // }
+        println!("groups2 {:?}",group_infos2.iter().enumerate().collect::<Vec<_>>());
+        for (i,&(g,p,)) in group_infos2.iter().enumerate() {
+            println!("\t{i}: {g}, {p}, {:?}",self.group_infos[g].name);
+        }
         //
         // let mut csum=1;
         let ind_map: HashMap<usize, usize> = HashMap::from_iter(group_infos2.iter().enumerate().map(|(i,&(g,_p,))|(g,i)));

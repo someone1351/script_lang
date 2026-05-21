@@ -63,3 +63,13 @@ if if 1<2 {} else {} {}
 if (if (1<2) {} else {}) {}
 
 if 1
+
+
+
+
+//a()
+//{
+//    add("a", "B")
+//}
+
+//--1+2 //if 1>1 {} elif 2 {} elif i>3 {} else {} //for x in 0 .. 4 {}
