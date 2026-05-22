@@ -1,5 +1,5 @@
 
-use std::{collections::{HashMap, HashSet}, fmt::Debug};
+use std::{collections::{HashMap, HashSet}, fmt::Debug, ops::Range};
 
 use crate::clike::tokenizer::ValueContainer;
 
@@ -8,26 +8,46 @@ use super::super::tokenizer::TokenIterContainer;
 
 use super::node::*;
 
+
+
+
+#[derive(Clone, Debug)]
+pub struct TempTakeableStart<'t,'g> {
+    pub grammar:GrammarNode<'g>,
+    pub tokens_start:TokenIterContainer<'t>,
+    pub group_ind:usize,
+
+}
+
+#[derive(Clone, Debug)]
+pub struct WorkTakeable<'t> {
+    pub tokens_start:TokenIterContainer<'t>,
+    pub group_ind:usize,
+    pub inner_groups:Range<usize>,
+}
+
+
 #[derive(Clone, Default, Debug)]
 pub struct TempGroupsElement<'t,'g> {
     pub groups:Vec<TempGroupInfo<'t,'g>>,
     pub token_groups:Vec<usize>,
+    pub tokens_start:usize,
 }
 
-#[derive(Clone, Copy, Default, Debug)]
-pub struct TempPrimitiveInfo {
-    // name:&'a str,
-    // depth:usize,
-    pub group:usize,
-    pub discard:bool,
-}
+// #[derive(Clone, Copy, Default, Debug)]
+// pub struct TempPrimitiveInfo {
+//     // name:&'a str,
+//     // depth:usize,
+//     pub group:usize,
+//     pub discard:bool,
+// }
 
 #[derive(Clone)]
 pub struct TempGroupInfo<'t,'g> {
     pub name:&'g str,
     pub parent:usize, //group
     // pub primitive_ind_start:usize,
-    pub primitives:TokenIterContainer<'t>,
+    pub tokens:TokenIterContainer<'t>,
 }
 
 impl<'t,'g> Debug for  TempGroupInfo<'t,'g> {
@@ -36,7 +56,7 @@ impl<'t,'g> Debug for  TempGroupInfo<'t,'g> {
         .field("name", &self.name)
         .field("parent", &self.parent)
         // .field("primitives", &self.primitives)
-        .field("primitive_ind_start", &self.primitives.inds().start)
+        .field("primitive_ind_start", &self.tokens.inds().start)
         .finish()
     }
 }
@@ -56,6 +76,7 @@ pub struct Work<'t,'g> {
 
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
     pub output_len:usize,
+    pub groups_stk_ind:usize, //used for take
 
     pub discard:bool,
 
@@ -65,7 +86,9 @@ pub struct Work<'t,'g> {
 
     pub visiteds:HashSet<(&'g str,usize)>, //used for checking recursive nonterms
 
-    pub takeables:HashMap<GrammarNode<'g>,TokenIterContainer<'t>>, //[non_term]
+    // pub takeables:HashMap<GrammarNode<'g>,TokenIterContainer<'t>>, //[non_term]
+    pub takeables:HashMap<GrammarNode<'g>,WorkTakeable<'t>>,
+
     pub grammar_debug_len:usize,
     // pub grammar_debug_no_add:bool,
     // pub expected:Option<&'g str>,

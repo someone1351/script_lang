@@ -1,6 +1,6 @@
 use std::{fmt::Debug, path::PathBuf};
 
-use crate::{ast, clike::compiler::builder_error::BuilderErrorType, compiler::builder::BuilderError, error_msg, Loc, StringVal};
+use crate::{ast, clike::compiler::builder_error::BuilderErrorType, error_msg, Loc, StringVal};
 use super::super::tokenizer::TokenizerErrorType;
 
 

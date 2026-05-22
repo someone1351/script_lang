@@ -1,7 +1,6 @@
-use std::{fmt::Debug, path::PathBuf};
+use std::fmt::Debug;
 
-use crate::{ast, compiler::builder::BuilderError, error_msg, Loc, StringVal};
-use super::super::tokenizer::TokenizerErrorType;
+use crate::{compiler::builder::BuilderError, Loc};
 
 
 #[derive(Debug,Clone,Copy)]
