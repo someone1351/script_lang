@@ -8,6 +8,12 @@ use super::super::tokenizer::TokenIterContainer;
 
 use super::node::*;
 
+#[derive(Clone, Default, Debug)]
+pub struct TempGroupsElement<'t,'g> {
+    pub groups:Vec<TempGroupInfo<'t,'g>>,
+    pub token_groups:Vec<usize>,
+}
+
 #[derive(Clone, Copy, Default, Debug)]
 pub struct TempPrimitiveInfo {
     // name:&'a str,
@@ -17,14 +23,14 @@ pub struct TempPrimitiveInfo {
 }
 
 #[derive(Clone)]
-pub struct TempGroupInfo<'a,'f> {
-    pub name:&'f str,
+pub struct TempGroupInfo<'t,'g> {
+    pub name:&'g str,
     pub parent:usize, //group
     // pub primitive_ind_start:usize,
-    pub primitives:TokenIterContainer<'a>,
+    pub primitives:TokenIterContainer<'t>,
 }
 
-impl<'a,'f> Debug for  TempGroupInfo<'a,'f> {
+impl<'t,'g> Debug for  TempGroupInfo<'t,'g> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("TempGroupInfo")
         .field("name", &self.name)
