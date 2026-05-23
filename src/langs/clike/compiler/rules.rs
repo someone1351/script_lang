@@ -135,26 +135,6 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("block"),
         ].and().group("for"),
 
-        "call" => [
-            // [
-            //     NonTerm("field").take().group("field"),
-            //     // NonTerm("idn").take().group("idn"),
-            //     // // Always.group("other")
-            // ].or().opt(),
-            // NonTerm("field").take().group("field").opt(),
-            // Always,
-            NonTerm("field").take(),
-            NonTerm("lparen"),
-            [
-                NonTerm("expr"),
-                [
-                    NonTerm("comma"),
-                    NonTerm("expr"),
-                ].and().many0(),
-                NonTerm("comma").opt(),
-            ].and().opt().group("params"),
-            NonTerm("rparen"),
-        ].and().group("call"),
 
         "include" => [Keyword("include"),String,].and(),
 
@@ -213,6 +193,27 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("sub").group("neg"),
             NonTerm("not").group("not"),
         ].or().many1().group("prefixes"),
+
+        "call" => [
+            // [
+            //     NonTerm("field").take().group("field"),
+            //     // NonTerm("idn").take().group("idn"),
+            //     // // Always.group("other")
+            // ].or().opt(),
+            NonTerm("field").take().group("field").opt(),
+            // Always,
+            // NonTerm("field").take(),
+            NonTerm("lparen"),
+            [
+                NonTerm("expr"),
+                [
+                    NonTerm("comma"),
+                    NonTerm("expr"),
+                ].and().many0(),
+                NonTerm("comma").opt(),
+            ].and().opt().group("params"),
+            NonTerm("rparen"),
+        ].and().group("call"),
 
         "val_field_index" => [ NonTerm("val_index"), NonTerm("val_field"), ].or(),
         "val_field_index_call" => [ NonTerm("val_field_index").cede(), NonTerm("call"), ].or(),

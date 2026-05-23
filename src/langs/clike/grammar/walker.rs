@@ -844,9 +844,9 @@ where
 
                         self.takeable_starts.truncate(last.takeable_starts_len);
 
-                        // if self.debug {
-                        //     self.grammar_debug_stk.truncate(last.grammar_debug_len);
-                        // }
+                        if self.debug {
+                            self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                        }
                     }
                 } else {
 
@@ -1133,7 +1133,8 @@ where
             GrammarNode::Symbol(s) => {
                 if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_symbol(s),|v,self2|{
                     if self2.debug {
-                        let Some(TempGrammarNodeDebug::Symbol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                        println!("=={:?}",self2.grammar_debug_stk.last());
+                        let Some(TempGrammarNodeDebug::Symbol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");}; //{s:?}
                         *x=Some(v);
                     }
                 }) {
