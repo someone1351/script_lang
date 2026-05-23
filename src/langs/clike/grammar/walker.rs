@@ -368,7 +368,7 @@ where
                 let expected=if expected.id==0 {"None".to_string()}else{format!("{}:{}",expected.id,expected.name)};
                 //  println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, expected={expected},  ",);
                 println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, ",);
-                println!("        takeable_starts_len={takeable_starts_len:?}, takeables={takeables:?}, ");
+                println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
                 println!("        groups_stk_ind={groups_stk_ind}, group_ind={group_ind}, group_len={group_len}, temp_groups3={:?}",group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
 
                 //
@@ -419,13 +419,15 @@ where
             }
 
             //
-            for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt, grammar_debug_len, expected, groups_stk_ind  }) in self.stk.iter()
-                // .rev()
-                .enumerate() {
-                // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
-                // println!("\t{i:3}: {g:?}, ps={primitives:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
-                println!("    {i:3}: ps={:?}, success={s}, fail={f}, groups_stk_ind={groups_stk_ind}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds()); //
+            if false {
+                for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt, grammar_debug_len, expected, groups_stk_ind  }) in self.stk.iter()
+                    // .rev()
+                    .enumerate() {
+                    // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
+                    // println!("\t{i:3}: {g:?}, ps={primitives:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
+                    println!("    {i:3}: ps={:?}, success={s}, fail={f}, groups_stk_ind={groups_stk_ind}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds()); //
 
+                }
             }
         }
 
@@ -801,34 +803,51 @@ where
 
 
                     //
-                    self.stk.push(Work {
-                        grammar: *g,
-                        success_len: cur.success_len,
-                        fail_len: cur.fail_len,
+                    // self.stk.push(Work {
+                    //     grammar: *g,
+                    //     success_len: cur.success_len,
+                    //     fail_len: cur.fail_len,
 
-                        // // tokens: taken_ps_start.clone(),
-                        // tokens: taken_ps_start.tokens_start.clone(),
-                        // // output_len: taken_ps_start.inds().start,
-                        // output_len: taken_ps_start.tokens_start.inds().start,
+                    //     // // tokens: taken_ps_start.clone(),
+                    //     // tokens: taken_ps_start.tokens_start.clone(),
+                    //     // // output_len: taken_ps_start.inds().start,
+                    //     // output_len: taken_ps_start.tokens_start.inds().start,
 
-                        tokens: cur.tokens,
-                        output_len: cur.output_len,
+                    //     tokens: cur.tokens,
+                    //     output_len: cur.output_len,
 
 
 
-                        group_ind: cur_group_ind,
-                        group_len: group_infos.len(),
+                    //     group_ind: cur_group_ind,
+                    //     group_len: group_infos.len(),
 
-                        discard: cur.discard,
-                        takeable_starts_len: cur.takeable_starts_len,//cur.takeable_starts_len, // ??
-                        visiteds: cur.visiteds, //
-                        takeables: Default::default(),
-                        opt:cur.opt,
-                        grammar_debug_len: cur.grammar_debug_len+1,
-                        // grammar_debug_no_add: false,
-                        expected:cur.expected,
-                        groups_stk_ind: cur.groups_stk_ind,
-                    });
+                    //     discard: cur.discard,
+                    //     takeable_starts_len: cur.takeable_starts_len,//cur.takeable_starts_len, // ??
+                    //     visiteds: cur.visiteds, //
+                    //     takeables: Default::default(),
+                    //     opt:cur.opt,
+                    //     grammar_debug_len: cur.grammar_debug_len+1,
+                    //     // grammar_debug_no_add: false,
+                    //     expected:cur.expected,
+                    //     groups_stk_ind: cur.groups_stk_ind,
+                    // });
+
+
+                    //
+                    self.stk.truncate(cur.success_len);
+
+                    //
+                    if let Some(last)=self.stk.last() {
+
+                        // let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
+
+
+                        self.takeable_starts.truncate(last.takeable_starts_len);
+
+                        // if self.debug {
+                        //     self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                        // }
+                    }
                 } else {
 
                     //
@@ -1386,17 +1405,18 @@ where
         let groups_len=group_infos.len();
 
         if let Some(last)=self.stk.last_mut() {
-            for
-                // (tg,tp_ind)
-                TempTakeableStart { grammar:tg, tokens_start, group_ind }
-                in self.takeable_starts.drain(last.takeable_starts_len ..) {
-                if self.debug {
-                    println!("--- inserting takeable {tg:?} {tokens_start:?}",);
-                }
-                // last.takeables.insert(tg, tp_ind);
+            for TempTakeableStart { grammar:tg, tokens_start, group_ind }// (tg,tp_ind)
+                in self.takeable_starts.drain(last.takeable_starts_len ..)
+            {
 
                 let tokens_len=tokens_start.len()-cur_tokens.len();
                 let tokens=tokens_start.get_amount(tokens_len).unwrap();
+
+                if self.debug {
+                    println!("--- inserting takeable {tg:?} {tokens:?}",);
+                }
+                // last.takeables.insert(tg, tp_ind);
+
 
                 last.takeables.insert(tg, WorkTakeable {
                     tokens, group_ind,
