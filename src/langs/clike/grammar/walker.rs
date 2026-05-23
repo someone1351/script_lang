@@ -802,45 +802,25 @@ where
 
 
 
-                    //
-                    // self.stk.push(Work {
-                    //     grammar: *g,
-                    //     success_len: cur.success_len,
-                    //     fail_len: cur.fail_len,
-
-                    //     // // tokens: taken_ps_start.clone(),
-                    //     // tokens: taken_ps_start.tokens_start.clone(),
-                    //     // // output_len: taken_ps_start.inds().start,
-                    //     // output_len: taken_ps_start.tokens_start.inds().start,
-
-                    //     tokens: cur.tokens,
-                    //     output_len: cur.output_len,
-
-
-
-                    //     group_ind: cur_group_ind,
-                    //     group_len: group_infos.len(),
-
-                    //     discard: cur.discard,
-                    //     takeable_starts_len: cur.takeable_starts_len,//cur.takeable_starts_len, // ??
-                    //     visiteds: cur.visiteds, //
-                    //     takeables: Default::default(),
-                    //     opt:cur.opt,
-                    //     grammar_debug_len: cur.grammar_debug_len+1,
-                    //     // grammar_debug_no_add: false,
-                    //     expected:cur.expected,
-                    //     groups_stk_ind: cur.groups_stk_ind,
-                    // });
 
 
                     //
                     self.stk.truncate(cur.success_len);
 
                     //
-                    if let Some(last)=self.stk.last() {
-
+                    if let Some(last)=self.stk.last_mut() {
+                        if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //if not parsing anything, exit the many
+                            last.grammar=GrammarNode::Always;
+                        }
+                        last.tokens=cur.tokens;
+                        last.group_len=cur.group_len;
+                        last.output_len=cur.output_len;
+                        last.takeables=cur.takeables;
                         // let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
 
+                        if cur.expected.id!=last.expected.id {
+                            last.expected=Default::default();
+                        }
 
                         self.takeable_starts.truncate(last.takeable_starts_len);
 
@@ -848,6 +828,19 @@ where
                             self.grammar_debug_stk.truncate(last.grammar_debug_len);
                         }
                     }
+
+
+                    //
+                    if self.debug {
+                        self.consolidate_grammar_debug_stk();
+                    }
+
+                    //
+                    self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
+                    self.last_insert_start_takeables(cur.tokens);
+
+                    self.set_remaining_prims(cur.tokens);
+
                 } else {
 
                     //

@@ -200,7 +200,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             //     // NonTerm("idn").take().group("idn"),
             //     // // Always.group("other")
             // ].or().opt(),
-            NonTerm("field").take().group("field").opt(),
+            NonTerm("field").take().group("field2").opt(),
             // Always,
             // NonTerm("field").take(),
             NonTerm("lparen"),
