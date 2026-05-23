@@ -95,7 +95,9 @@ where
 
         self.stk.push(Work{
             grammar:GrammarNode::Error(GrammarWalkError::FailedParse),success_len:0,fail_len:0,tokens:self.top_primitives,
-            group_ind: 0, group_len: 1, output_len: 0, discard:false,
+            group_ind: 0, group_len: 1,
+            // output_len: 0,
+            discard:false,
             // takeable_starts:Default::default(),
             takeable_starts_len:0,
             visiteds:Default::default(),
@@ -118,7 +120,9 @@ where
             self.stk.push(Work{
                 grammar, //:(self.grammar_func)(start_non_term),
                 success_len:0,fail_len:1,tokens:self.top_primitives,
-                group_ind: 0, group_len: 1, output_len: 0, discard:false,
+                group_ind: 0, group_len: 1,
+                // output_len: 0,
+                discard:false,
                 // takeable_starts:Default::default(),
                 takeable_starts_len:0,
                 visiteds:Default::default(),
@@ -148,7 +152,7 @@ where
                 parent: 0,
                 tokens:self.top_primitives,
             }],
-            token_groups: Vec::new(),
+            // token_groups: Vec::new(),
             tokens_start:0,
         }];
 
@@ -201,10 +205,10 @@ where
         //
         if self.debug {
             let group_infos=&self.groups_stk.last().unwrap().groups;
-            let primitive_infos=&self.groups_stk.last().unwrap().token_groups;
+            // let primitive_infos=&self.groups_stk.last().unwrap().token_groups;
 
             println!("groups={:?}",group_infos);
-            println!("outputs={:?}",primitive_infos);
+            // println!("outputs={:?}",primitive_infos);
         }
 
         if !result.is_err() && !self.primitives_remaining.is_empty() {
@@ -360,7 +364,7 @@ where
             let group_infos=&self.groups_stk.last().unwrap().groups;
 
                 let c=self.c;
-                let Work { grammar, success_len, fail_len, tokens, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt,grammar_debug_len, expected, groups_stk_ind }=&cur;
+                let Work { grammar, success_len, fail_len, tokens, group_ind, group_len, discard, takeable_starts_len, visiteds, takeables, opt,grammar_debug_len, expected, groups_stk_ind }=&cur;
                 // println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
                 // println!("         -takeable_starts={:?}",self.takeable_starts);
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
@@ -420,7 +424,7 @@ where
 
             //
             if false {
-                for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len, output_len, discard, takeable_starts_len, visiteds, takeables, opt, grammar_debug_len, expected, groups_stk_ind  }) in self.stk.iter()
+                for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len, discard, takeable_starts_len, visiteds, takeables, opt, grammar_debug_len, expected, groups_stk_ind  }) in self.stk.iter()
                     // .rev()
                     .enumerate() {
                     // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
@@ -452,7 +456,7 @@ where
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
-                    output_len: cur.output_len,
+                    // output_len: cur.output_len,
                     discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
@@ -484,7 +488,7 @@ where
 
                     group_ind: new_group_ind,
                     group_len: new_group_len,
-                    output_len: cur.output_len,
+                    // output_len: cur.output_len,
                     discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
@@ -540,7 +544,7 @@ where
 
                         group_ind: cur.group_ind,
                         group_len: cur.group_len,
-                        output_len: cur.output_len,
+                        // output_len: cur.output_len,
                         discard:cur.discard,
 
                         takeable_starts_len:cur.takeable_starts_len,
@@ -570,7 +574,7 @@ where
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
-                    output_len: cur.output_len,
+                    // output_len: cur.output_len,
                     discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
@@ -598,7 +602,7 @@ where
 
                         group_ind: cur.group_ind,
                         group_len: cur.group_len,
-                        output_len: cur.output_len,
+                        // output_len: cur.output_len,
                         discard:cur.discard,
                         takeable_starts_len:cur.takeable_starts_len,
                         visiteds:cur.visiteds.clone(),
@@ -626,7 +630,7 @@ where
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
-                    output_len: cur.output_len,
+                    // output_len: cur.output_len,
                     discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
@@ -649,7 +653,7 @@ where
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
-                    output_len: cur.output_len,
+                    // output_len: cur.output_len,
                     discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds.clone(),
@@ -675,7 +679,7 @@ where
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
-                    output_len: cur.output_len,
+                    // output_len: cur.output_len,
                     discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
@@ -703,7 +707,7 @@ where
                     tokens: cur.tokens,
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
-                    output_len: cur.output_len,
+                    // output_len: cur.output_len,
                     discard:cur.discard,
                     takeable_starts_len:self.takeable_starts.len(),
                     visiteds:cur.visiteds,
@@ -768,16 +772,16 @@ where
                     }
 
                     //change parent of output tokens who's parent in dif_ancestor_groups
-                    for x in takeable.tokens.inds() {
-                        let g=&mut last_groups.token_groups[x];
+                    // for x in takeable.tokens.inds() {
+                    //     let g=&mut last_groups.token_groups[x];
 
-                        println!("=== x={x}, g={g}, cur.group_ind={}, contians={}",cur.group_ind,dif_ancestor_groups.contains(g));
+                    //     println!("=== x={x}, g={g}, cur.group_ind={}, contians={}",cur.group_ind,dif_ancestor_groups.contains(g));
 
-                        if dif_ancestor_groups.contains(g)
-                        {
-                            *g=cur.group_ind;
-                        }
-                    }
+                    //     if dif_ancestor_groups.contains(g)
+                    //     {
+                    //         *g=cur.group_ind;
+                    //     }
+                    // }
 
 
 
@@ -826,7 +830,7 @@ where
                         }
                         last.tokens=cur.tokens;
                         last.group_len=cur.group_len;
-                        last.output_len=cur.output_len;
+                        // last.output_len=cur.output_len;
                         last.takeables=cur.takeables;
                         // let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
 
@@ -861,10 +865,10 @@ where
                     //
                     if let Some(last)=self.stk.last() {
 
-                        let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
+                        // let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
 
 
-                        primitive_infos.truncate(last.output_len);
+                        // primitive_infos.truncate(last.output_len);
                         self.takeable_starts.truncate(last.takeable_starts_len);
 
                         if self.debug {
@@ -883,7 +887,7 @@ where
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
-                    output_len: cur.output_len,
+                    // output_len: cur.output_len,
                     discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds.clone(),
@@ -905,7 +909,7 @@ where
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
-                    output_len: cur.output_len,
+                    // output_len: cur.output_len,
                     discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds.clone(),
@@ -932,7 +936,7 @@ where
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
-                    output_len: cur.output_len,
+                    // output_len: cur.output_len,
                     discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
@@ -981,7 +985,7 @@ where
 
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
-                    output_len: cur.output_len,
+                    // output_len: cur.output_len,
                     discard:cur.discard,
                     visiteds,
                     takeables:cur.takeables,
@@ -1013,7 +1017,7 @@ where
                     // // last.group_ind=cur.group_ind;
                     // let last_group_len= last.group_len;
                     last.group_len=cur.group_len; //done below //not anymore
-                    last.output_len=cur.output_len;
+                    // last.output_len=cur.output_len;
                     // last.takeable_starts=cur.takeable_starts;
 
                     //
@@ -1209,20 +1213,20 @@ where
 
 
                 let group_infos=&mut self.groups_stk.last_mut().unwrap().groups;
-                let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
+                // let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
 
 
-                // primitive_infos.resize(vprim.ind(), TempPrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
-                // primitive_infos.push(TempPrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
+                // // primitive_infos.resize(vprim.ind(), TempPrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
+                // // primitive_infos.push(TempPrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
 
-                primitive_infos.resize(vprim.ind(), cur.group_ind);
-                primitive_infos.push(cur.group_ind);
+                // primitive_infos.resize(vprim.ind(), cur.group_ind);
+                // primitive_infos.push(cur.group_ind);
 
                 //
                 if let Some(last)=self.stk.last_mut() {
                     last.tokens=cur.tokens;
                     last.group_len=cur.group_len;
-                    last.output_len=primitive_infos.len();
+                    // last.output_len=primitive_infos.len();
 
                     // last.expected=None;
                     last.expected=Default::default();
@@ -1262,10 +1266,10 @@ where
                 //
                 if let Some(last)=self.stk.last_mut() {
 
-                    let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
+                    // let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
 
 
-                    primitive_infos.truncate(last.output_len);
+                    // primitive_infos.truncate(last.output_len);
 
                     self.takeable_starts.truncate(last.takeable_starts_len);
 
@@ -1542,7 +1546,7 @@ where
         // groups.resize_with(new_len, f);
 
         let group_infos=&self.groups_stk.last().unwrap().groups;
-        let primitive_infos=&self.groups_stk.last().unwrap().token_groups;
+        // let primitive_infos=&self.groups_stk.last().unwrap().token_groups;
 
 
         let mut group_infos2 = group_infos.iter().enumerate()

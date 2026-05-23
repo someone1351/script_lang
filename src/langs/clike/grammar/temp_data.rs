@@ -31,7 +31,7 @@ pub struct WorkTakeable<'t> {
 #[derive(Clone, Default, Debug)]
 pub struct TempGroupsElement<'t,'g> {
     pub groups:Vec<TempGroupInfo<'t,'g>>,
-    pub token_groups:Vec<usize>,
+    // pub token_groups:Vec<usize>,
     pub tokens_start:usize,
 }
 
@@ -76,7 +76,7 @@ pub struct Work<'t,'g> {
     pub group_ind:usize,
 
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
-    pub output_len:usize,
+    // pub output_len:usize,
     pub groups_stk_ind:usize, //used for take
 
     pub discard:bool,
