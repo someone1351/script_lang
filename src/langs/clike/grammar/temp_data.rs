@@ -79,11 +79,11 @@ pub struct Work<'t,'g> {
     // pub output_len:usize,
     pub groups_stk_ind:usize, //used for take
 
-    pub discard:bool,
+    // pub discard:bool,
 
     // takeable_starts:HashSet<(GrammarItem<'a>,usize)>, //[(g,output_ind_start)]
     pub takeable_starts_len:usize,
-    pub opt:bool,
+    // pub opt:bool,
 
     pub visiteds:HashSet<(&'g str,usize)>, //used for checking recursive nonterms
 

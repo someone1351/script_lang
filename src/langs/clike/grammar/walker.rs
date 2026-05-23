@@ -97,12 +97,12 @@ where
             grammar:GrammarNode::Error(GrammarWalkError::FailedParse),success_len:0,fail_len:0,tokens:self.top_primitives,
             group_ind: 0, group_len: 1,
             // output_len: 0,
-            discard:false,
+            // discard:false,
             // takeable_starts:Default::default(),
             takeable_starts_len:0,
             visiteds:Default::default(),
             takeables:Default::default(),
-            opt:false,
+            // opt:false,
             grammar_debug_len: 0,
             // grammar_debug_no_add: true,
             // expected:None,
@@ -122,12 +122,12 @@ where
                 success_len:0,fail_len:1,tokens:self.top_primitives,
                 group_ind: 0, group_len: 1,
                 // output_len: 0,
-                discard:false,
+                // discard:false,
                 // takeable_starts:Default::default(),
                 takeable_starts_len:0,
                 visiteds:Default::default(),
                 takeables:Default::default(),
-                opt:false,
+                // opt:false,
                 grammar_debug_len: 1,
                 // grammar_debug_no_add: false,
                 // expected:None,
@@ -364,7 +364,7 @@ where
             let group_infos=&self.groups_stk.last().unwrap().groups;
 
                 let c=self.c;
-                let Work { grammar, success_len, fail_len, tokens, group_ind, group_len, discard, takeable_starts_len, visiteds, takeables, opt,grammar_debug_len, expected, groups_stk_ind }=&cur;
+                let Work { grammar, success_len, fail_len, tokens, group_ind, group_len, takeable_starts_len, visiteds, takeables, grammar_debug_len, expected, groups_stk_ind }=&cur;
                 // println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
                 // println!("         -takeable_starts={:?}",self.takeable_starts);
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
@@ -424,7 +424,7 @@ where
 
             //
             if false {
-                for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len, discard, takeable_starts_len, visiteds, takeables, opt, grammar_debug_len, expected, groups_stk_ind  }) in self.stk.iter()
+                for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len,  takeable_starts_len, visiteds, takeables, grammar_debug_len, expected, groups_stk_ind  }) in self.stk.iter()
                     // .rev()
                     .enumerate() {
                     // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
@@ -457,11 +457,11 @@ where
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     // output_len: cur.output_len,
-                    discard:cur.discard,
+                    // discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
-                    opt:cur.opt,
+                    // opt:cur.opt,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // expected_non_term:cur.expected_non_term,
                     // expected:Some(name),
@@ -489,11 +489,11 @@ where
                     group_ind: new_group_ind,
                     group_len: new_group_len,
                     // output_len: cur.output_len,
-                    discard:cur.discard,
+                    // discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
-                    opt:cur.opt,
+                    // opt:cur.opt,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
@@ -545,12 +545,12 @@ where
                         group_ind: cur.group_ind,
                         group_len: cur.group_len,
                         // output_len: cur.output_len,
-                        discard:cur.discard,
+                        // discard:cur.discard,
 
                         takeable_starts_len:cur.takeable_starts_len,
                         visiteds:cur.visiteds.clone(),
                         takeables:cur.takeables.clone(),
-                        opt:false, //opt isnt passed to individual items in And
+                        // opt:false, //opt isnt passed to individual items in And
 
                         grammar_debug_len: cur.grammar_debug_len,
                         // grammar_debug_no_add: true,
@@ -575,11 +575,11 @@ where
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     // output_len: cur.output_len,
-                    discard:cur.discard,
+                    // discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
-                    opt:false, //opt isnt passed to individual items in And
+                    // opt:false, //opt isnt passed to individual items in And
 
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
@@ -603,11 +603,11 @@ where
                         group_ind: cur.group_ind,
                         group_len: cur.group_len,
                         // output_len: cur.output_len,
-                        discard:cur.discard,
+                        // discard:cur.discard,
                         takeable_starts_len:cur.takeable_starts_len,
                         visiteds:cur.visiteds.clone(),
                         takeables:cur.takeables.clone(),
-                        opt:cur.opt,
+                        // opt:cur.opt,
 
                         grammar_debug_len: cur.grammar_debug_len,
                         // grammar_debug_no_add: true,
@@ -631,11 +631,11 @@ where
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     // output_len: cur.output_len,
-                    discard:cur.discard,
+                    // discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
-                    opt:cur.opt,
+                    // opt:cur.opt,
 
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
@@ -654,11 +654,11 @@ where
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     // output_len: cur.output_len,
-                    discard:cur.discard,
+                    // discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds.clone(),
                     takeables:cur.takeables.clone(),
-                    opt:false, //not used on always
+                    // opt:false, //not used on always
                     grammar_debug_len: cur.grammar_debug_len,
                     // grammar_debug_no_add: true,
                     expected:cur.expected,
@@ -680,11 +680,11 @@ where
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     // output_len: cur.output_len,
-                    discard:cur.discard,
+                    // discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
-                    opt:true,
+                    // opt:true,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
@@ -708,11 +708,11 @@ where
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     // output_len: cur.output_len,
-                    discard:cur.discard,
+                    // discard:cur.discard,
                     takeable_starts_len:self.takeable_starts.len(),
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
-                    opt:cur.opt,
+                    // opt:cur.opt,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
@@ -888,11 +888,11 @@ where
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     // output_len: cur.output_len,
-                    discard:cur.discard,
+                    // discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds.clone(),
                     takeables:cur.takeables.clone(),
-                    opt:true,
+                    // opt:true,
                     grammar_debug_len: cur.grammar_debug_len,
                     // grammar_debug_no_add: true,
                     expected:cur.expected,
@@ -910,11 +910,11 @@ where
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     // output_len: cur.output_len,
-                    discard:cur.discard,
+                    // discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds.clone(),
                     takeables:cur.takeables.clone(),
-                    opt:false, //not used
+                    // opt:false, //not used
                     grammar_debug_len: cur.grammar_debug_len,
                     // grammar_debug_no_add: true,
                     expected:cur.expected,
@@ -937,11 +937,11 @@ where
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     // output_len: cur.output_len,
-                    discard:cur.discard,
+                    // discard:cur.discard,
                     takeable_starts_len:cur.takeable_starts_len,
                     visiteds:cur.visiteds,
                     takeables:cur.takeables,
-                    opt:true,
+                    // opt:true,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
@@ -986,11 +986,11 @@ where
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
                     // output_len: cur.output_len,
-                    discard:cur.discard,
+                    // discard:cur.discard,
                     visiteds,
                     takeables:cur.takeables,
                     takeable_starts_len:cur.takeable_starts_len,
-                    opt:cur.opt,
+                    // opt:cur.opt,
 
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
