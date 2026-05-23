@@ -714,7 +714,7 @@ where
                 });
             }
             GrammarNode::Take(g) => {
-                if let Some(taken_ps_start)=cur.takeables.get(&g).cloned() {
+                if let Some(takeable)=cur.takeables.get(&g).cloned() {
 
                     if self.debug {
                         let group_infos=&self.groups_stk.last().unwrap().groups;
@@ -723,11 +723,12 @@ where
                     }
 
                     //
-                    let taken_ancestor_groups=self.get_cur_groups(taken_ps_start.group_ind);
+                    let taken_ancestor_groups=self.get_cur_groups(takeable.group_ind);
                     let cur_ancestor_groups=self.get_cur_groups(cur.group_ind);
                     let dif_ancestor_groups=taken_ancestor_groups.difference(&cur_ancestor_groups).cloned().collect::<Vec<_>>();
 
-
+                    //
+                    let take_tokens_len=takeable.tokens.len();
 
                     //
                     self.groups_stk.push(self.groups_stk.last().unwrap().clone());
@@ -736,23 +737,27 @@ where
                     //clamp dif_ancestor_groups to taken.start
                     for &g in &dif_ancestor_groups {
                         let group=&mut last_groups.groups[g];
-                        println!("g={g}, \ngroup.tokens.len={:?} \ncur.tokens.len={:?}",group.tokens,cur.tokens);
-                        let n=group.tokens.len()-cur.tokens.len();
-                        let group_prims=group.tokens.get_amount(n).unwrap();
-                        group.tokens=group_prims;
+                        println!("g={g}, \ngroup.tokens.len={:?} \ncur.tokens.len={:?} \ntaken_ps_start={:?}",
+                            group.tokens,cur.tokens,
+                            takeable.tokens,
+                        );
+                        // let n=group.tokens.len()-cur.tokens.len();
+                        // let group_prims=group.tokens.get_amount(n).unwrap();
+                        // group.tokens=group_prims;
+                        group.tokens.pop_back_amount(take_tokens_len).unwrap();
                     }
 
                     //change parent of taken children groups to cur_group_ind
-                    for g in taken_ps_start.inner_groups {
+                    for g in takeable.inner_groups {
                         let group=&mut last_groups.groups[g];
 
-                        if group.parent == taken_ps_start.group_ind {
+                        if group.parent == takeable.group_ind {
                             group.parent=cur.group_ind;
                         }
                     }
 
                     //change parent of output tokens who's parent in dif_ancestor_groups
-                    for x in taken_ps_start.tokens_start.inds().start .. cur.tokens.start {
+                    for x in takeable.tokens.inds() {
                         let g=&mut last_groups.token_groups[x];
 
                         if dif_ancestor_groups.contains(g) {
@@ -764,7 +769,7 @@ where
 
                     //
                     // last_groups.tokens_start=taken_ps_start.inds().start;
-                    last_groups.tokens_start=taken_ps_start.tokens_start.inds().start;
+                    last_groups.tokens_start=takeable.tokens.inds().start;
 
 
                     //how to remove no longer used groups, and fix inds of the used group that ccomes after the removed one?
@@ -801,10 +806,15 @@ where
                         success_len: cur.success_len,
                         fail_len: cur.fail_len,
 
-                        // tokens: taken_ps_start.clone(),
-                        tokens: taken_ps_start.tokens_start.clone(),
-                        // output_len: taken_ps_start.inds().start,
-                        output_len: taken_ps_start.tokens_start.inds().start,
+                        // // tokens: taken_ps_start.clone(),
+                        // tokens: taken_ps_start.tokens_start.clone(),
+                        // // output_len: taken_ps_start.inds().start,
+                        // output_len: taken_ps_start.tokens_start.inds().start,
+
+                        tokens: cur.tokens,
+                        output_len: cur.output_len,
+
+
 
                         group_ind: cur_group_ind,
                         group_len: group_infos.len(),
@@ -1017,7 +1027,7 @@ where
                 // self.last_remove_groups_at(cur.group_len,cur.primitives);
 
                 //
-                self.last_insert_start_takeables();
+                self.last_insert_start_takeables(cur.tokens);
 
                 self.set_remaining_prims(cur.tokens);
 
@@ -1202,7 +1212,7 @@ where
 
                 //
                 self.last_remove_old_takeables();
-                self.last_insert_start_takeables();
+                self.last_insert_start_takeables(cur.tokens);
 
                 //
                 // if self.stk.is_empty() {
@@ -1365,6 +1375,7 @@ where
     }
 
     fn last_insert_start_takeables(&mut self,
+        cur_tokens:TokenIterContainer<'t>,
         // mut last_takeables: HashMap<GrammarItem<'a>, PrimitiveIterContainer<'a>>,last_takeable_starts_len:usize,
     )
         // -> HashMap<GrammarItem<'a>, PrimitiveIterContainer<'a>>
@@ -1377,14 +1388,18 @@ where
         if let Some(last)=self.stk.last_mut() {
             for
                 // (tg,tp_ind)
-                TempTakeableStart { grammar:tg, tokens_start:tp_ind, group_ind }
+                TempTakeableStart { grammar:tg, tokens_start, group_ind }
                 in self.takeable_starts.drain(last.takeable_starts_len ..) {
                 if self.debug {
-                    println!("--- inserting takeable {tg:?} {tp_ind:?}",);
+                    println!("--- inserting takeable {tg:?} {tokens_start:?}",);
                 }
                 // last.takeables.insert(tg, tp_ind);
+
+                let tokens_len=tokens_start.len()-cur_tokens.len();
+                let tokens=tokens_start.get_amount(tokens_len).unwrap();
+
                 last.takeables.insert(tg, WorkTakeable {
-                    tokens_start: tp_ind, group_ind,
+                    tokens, group_ind,
                     inner_groups:group_ind+1 .. groups_len,
                 });
             }
@@ -1396,7 +1411,7 @@ where
         if let Some(last)=self.stk.last_mut() {
             last.takeables.retain(|_k,v|{
                 // v.inds().start
-                v.tokens_start.inds().start
+                v.tokens.inds().start
                     >= last.tokens.inds().start
             });
         }
