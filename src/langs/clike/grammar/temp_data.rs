@@ -22,6 +22,7 @@ pub struct TempTakeableStart<'t,'g> {
 #[derive(Clone, Debug)]
 pub struct WorkTakeable<'t> {
     pub tokens:TokenIterContainer<'t>,
+    pub tokens_start:TokenIterContainer<'t>,
     pub group_ind:usize,
     pub inner_groups:Range<usize>,
 }

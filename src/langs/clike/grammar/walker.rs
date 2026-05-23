@@ -749,6 +749,15 @@ where
                         group.tokens.pop_back_amount(take_tokens_len).unwrap();
                     }
 
+                    //
+                    for &g in cur_ancestor_groups.iter() {
+                        let group=&mut last_groups.groups[g];
+                        if group.tokens.inds().start > takeable.tokens_start.inds().start {
+                            group.tokens=takeable.tokens_start;
+                        }
+
+                    }
+
                     //change parent of taken children groups to cur_group_ind
                     for g in takeable.inner_groups {
                         let group=&mut last_groups.groups[g];
@@ -762,7 +771,10 @@ where
                     for x in takeable.tokens.inds() {
                         let g=&mut last_groups.token_groups[x];
 
-                        if dif_ancestor_groups.contains(g) {
+                        println!("=== x={x}, g={g}, cur.group_ind={}, contians={}",cur.group_ind,dif_ancestor_groups.contains(g));
+
+                        if dif_ancestor_groups.contains(g)
+                        {
                             *g=cur.group_ind;
                         }
                     }
@@ -1413,7 +1425,7 @@ where
 
 
                 last.takeables.insert(tg, WorkTakeable {
-                    tokens, group_ind,
+                    tokens_start, tokens, group_ind,
                     inner_groups:group_ind+1 .. groups_len,
                 });
             }
