@@ -32,7 +32,8 @@ pub struct WorkTakeable<'t> {
 pub struct TempGroupsElement<'t,'g> {
     pub groups:Vec<TempGroupInfo<'t,'g>>,
     // pub token_groups:Vec<usize>,
-    pub tokens_start:usize,
+    pub tokens_start:usize, //not used?
+    pub fail_len:usize, //used to determine if to discard or keep this version of the groups
 }
 
 // #[derive(Clone, Copy, Default, Debug)]

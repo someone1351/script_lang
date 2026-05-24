@@ -154,6 +154,7 @@ where
             }],
             // token_groups: Vec::new(),
             tokens_start:0,
+            fail_len:0,
         }];
 
         //
@@ -740,6 +741,8 @@ where
                     self.groups_stk.push(self.groups_stk.last().unwrap().clone());
                     let last_groups=self.groups_stk.last_mut().unwrap();
 
+                    last_groups.fail_len=cur.fail_len;
+
                     //clamp dif_ancestor_groups to taken.start
                     for &g in &dif_ancestor_groups {
                         let group=&mut last_groups.groups[g];
@@ -750,12 +753,15 @@ where
                         // let n=group.tokens.len()-cur.tokens.len();
                         // let group_prims=group.tokens.get_amount(n).unwrap();
                         // group.tokens=group_prims;
+
+                        //these groups contain up to end of takeable, by popping off the end the takeable len, then it removes the takeable
                         group.tokens.pop_back_amount(take_tokens_len).unwrap();
                     }
 
-                    //
+                    //cur parent/ancestor groups, if they start after the takeable, then make them start at it
                     for &g in cur_ancestor_groups.iter() {
                         let group=&mut last_groups.groups[g];
+
                         if group.tokens.inds().start > takeable.tokens_start.inds().start {
                             group.tokens=takeable.tokens_start;
                         }
@@ -813,7 +819,7 @@ where
                     // }
 
 
-                    let group_infos=&self.groups_stk.last().unwrap().groups;
+                    // let group_infos=&self.groups_stk.last().unwrap().groups;
 
 
 
@@ -822,6 +828,11 @@ where
 
                     //
                     self.stk.truncate(cur.success_len);
+
+                    //
+                    if cur.success_len <= self.groups_stk.last().unwrap().fail_len {
+                        self.groups_stk.remove(self.groups_stk.len()-2);
+                    }
 
                     //
                     if let Some(last)=self.stk.last_mut() {
@@ -861,6 +872,11 @@ where
 
                     //
                     self.stk.truncate(cur.fail_len);
+
+                    //
+                    if self.groups_stk.len()>1 && cur.fail_len <= self.groups_stk.last().unwrap().fail_len {
+                        self.groups_stk.pop().unwrap();
+                    }
 
                     //
                     if let Some(last)=self.stk.last() {
@@ -1004,6 +1020,10 @@ where
                 self.stk.truncate(cur.success_len);
 
                 //
+                if self.groups_stk.len()>1 && cur.success_len <= self.groups_stk.last().unwrap().fail_len {
+                    self.groups_stk.remove(self.groups_stk.len()-2);
+                }
+
                 //
                 if let Some(last)=self.stk.last_mut() {
                     if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //if not parsing anything, exit the many
@@ -1209,10 +1229,16 @@ where
                     self.clear_expected();
                 }
 
+                //
                 self.stk.truncate(cur.success_len);
 
 
-                let group_infos=&mut self.groups_stk.last_mut().unwrap().groups;
+                //
+                if self.groups_stk.len()>1 && cur.success_len <= self.groups_stk.last().unwrap().fail_len {
+                    self.groups_stk.remove(self.groups_stk.len()-2);
+                }
+
+                // let group_infos=&mut self.groups_stk.last_mut().unwrap().groups;
                 // let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
 
 
@@ -1262,6 +1288,11 @@ where
 
                 //
                 self.stk.truncate(cur.fail_len);
+
+                //
+                if self.groups_stk.len()>1 && cur.fail_len <= self.groups_stk.last().unwrap().fail_len {
+                    self.groups_stk.pop().unwrap();
+                }
 
                 //
                 if let Some(last)=self.stk.last_mut() {
