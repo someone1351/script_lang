@@ -78,7 +78,7 @@ pub struct Work<'t,'g> {
 
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
     // pub output_len:usize,
-    pub groups_stk_ind:usize, //used for take
+    pub groups_stk_len:usize, //used for take
 
     // pub discard:bool,
 

@@ -107,7 +107,8 @@ where
             // grammar_debug_no_add: true,
             // expected:None,
             expected:Default::default(),
-            groups_stk_ind: 0,
+            // groups_stk_ind: 0,
+            groups_stk_len: 1,
 
         });
         {
@@ -132,7 +133,8 @@ where
                 // grammar_debug_no_add: false,
                 // expected:None,
                 expected:Default::default(),
-                groups_stk_ind: 0,
+                // groups_stk_ind: 0,
+                groups_stk_len: 1,
             });
         }
 
@@ -365,7 +367,7 @@ where
             let group_infos=&self.groups_stk.last().unwrap().groups;
 
                 let c=self.c;
-                let Work { grammar, success_len, fail_len, tokens, group_ind, group_len, takeable_starts_len, visiteds, takeables, grammar_debug_len, expected, groups_stk_ind }=&cur;
+                let Work { grammar, success_len, fail_len, tokens, group_ind, group_len, takeable_starts_len, visiteds, takeables, grammar_debug_len, expected, groups_stk_len }=&cur;
                 // println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
                 // println!("         -takeable_starts={:?}",self.takeable_starts);
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
@@ -374,7 +376,7 @@ where
                 //  println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, expected={expected},  ",);
                 println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, ",);
                 println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
-                println!("        groups_stk_ind={groups_stk_ind}, group_ind={group_ind}, group_len={group_len}, temp_groups3={:?}",group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
+                println!("        groups_stk_len={groups_stk_len}, group_ind={group_ind}, group_len={group_len}, temp_groups3={:?}",group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
 
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
@@ -425,12 +427,12 @@ where
 
             //
             if false {
-                for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len,  takeable_starts_len, visiteds, takeables, grammar_debug_len, expected, groups_stk_ind  }) in self.stk.iter()
+                for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len,  takeable_starts_len, visiteds, takeables, grammar_debug_len, expected, groups_stk_len  }) in self.stk.iter()
                     // .rev()
                     .enumerate() {
                     // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
                     // println!("\t{i:3}: {g:?}, ps={primitives:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
-                    println!("    {i:3}: ps={:?}, success={s}, fail={f}, groups_stk_ind={groups_stk_ind}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds()); //
+                    println!("    {i:3}: ps={:?}, success={s}, fail={f}, groups_stk_len={groups_stk_len}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds()); //
 
                 }
             }
@@ -468,7 +470,7 @@ where
                     // expected:Some(name),
                     // expected:(self.expected_count,name),
                     expected,
-                    groups_stk_ind: cur.groups_stk_ind,
+                    groups_stk_len: cur.groups_stk_len,
                 });
             }
             GrammarNode::Group(name, g) => {
@@ -498,7 +500,7 @@ where
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
-                    groups_stk_ind: cur.groups_stk_ind,
+                    groups_stk_len: cur.groups_stk_len,
                 });
             }
             // GrammarNode::Discard(g) => {
@@ -556,7 +558,7 @@ where
                         grammar_debug_len: cur.grammar_debug_len,
                         // grammar_debug_no_add: true,
                         expected:cur.expected,
-                        groups_stk_ind: cur.groups_stk_ind,
+                        groups_stk_len: cur.groups_stk_len,
 
                     });
                 }
@@ -585,7 +587,7 @@ where
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
-                    groups_stk_ind: cur.groups_stk_ind,
+                    groups_stk_len: cur.groups_stk_len,
                 });
             }
             GrammarNode::Or(gs) => {
@@ -613,7 +615,7 @@ where
                         grammar_debug_len: cur.grammar_debug_len,
                         // grammar_debug_no_add: true,
                         expected:cur.expected,
-                        groups_stk_ind: cur.groups_stk_ind,
+                        groups_stk_len: cur.groups_stk_len,
                     });
                 }
 
@@ -641,7 +643,7 @@ where
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
-                    groups_stk_ind: cur.groups_stk_ind,
+                    groups_stk_len: cur.groups_stk_len,
                 });
             }
 
@@ -663,7 +665,7 @@ where
                     grammar_debug_len: cur.grammar_debug_len,
                     // grammar_debug_no_add: true,
                     expected:cur.expected,
-                    groups_stk_ind: cur.groups_stk_ind,
+                    groups_stk_len: cur.groups_stk_len,
                 });
 
                 let fail_len=self.stk.len();
@@ -689,7 +691,7 @@ where
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
-                    groups_stk_ind: cur.groups_stk_ind,
+                    groups_stk_len: cur.groups_stk_len,
                 });
             }
             GrammarNode::Cede(g) => {
@@ -717,7 +719,7 @@ where
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
-                    groups_stk_ind: cur.groups_stk_ind,
+                    groups_stk_len: cur.groups_stk_len,
                 });
             }
             GrammarNode::Take(g) => {
@@ -740,6 +742,7 @@ where
                     //
                     self.groups_stk.push(self.groups_stk.last().unwrap().clone());
                     let last_groups=self.groups_stk.last_mut().unwrap();
+
 
                     last_groups.fail_len=cur.fail_len;
 
@@ -830,9 +833,12 @@ where
                     self.stk.truncate(cur.success_len);
 
                     //
-                    if cur.success_len <= self.groups_stk.last().unwrap().fail_len {
+                    if cur.success_len <= self.groups_stk.last().unwrap().fail_len { //cur.fail_len
                         self.groups_stk.remove(self.groups_stk.len()-2);
+                    } else if let Some(last)=self.stk.last_mut() {
+                        last.groups_stk_len=self.groups_stk.len(); //cur.groups_stk_len+1
                     }
+
 
                     //
                     if let Some(last)=self.stk.last_mut() {
@@ -854,6 +860,7 @@ where
                         if self.debug {
                             self.grammar_debug_stk.truncate(last.grammar_debug_len);
                         }
+;
                     }
 
 
@@ -912,7 +919,7 @@ where
                     grammar_debug_len: cur.grammar_debug_len,
                     // grammar_debug_no_add: true,
                     expected:cur.expected,
-                    groups_stk_ind: cur.groups_stk_ind,
+                    groups_stk_len: cur.groups_stk_len,
                 });
 
                 let success_len2=self.stk.len();
@@ -934,7 +941,7 @@ where
                     grammar_debug_len: cur.grammar_debug_len,
                     // grammar_debug_no_add: true,
                     expected:cur.expected,
-                    groups_stk_ind: cur.groups_stk_ind,
+                    groups_stk_len: cur.groups_stk_len,
                 });
 
                 let fail_len=self.stk.len();
@@ -961,7 +968,7 @@ where
                     grammar_debug_len: cur.grammar_debug_len+1,
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
-                    groups_stk_ind: cur.groups_stk_ind,
+                    groups_stk_len: cur.groups_stk_len,
                 });
             }
 
@@ -1013,7 +1020,7 @@ where
                     // expected_non_term:cur.expected_non_term,
                     // expected:cur.expected.or(Some(t)),
                     expected:cur.expected,
-                    groups_stk_ind: cur.groups_stk_ind,
+                    groups_stk_len: cur.groups_stk_len,
                 });
             }
             GrammarNode::Always => {
