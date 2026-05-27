@@ -33,7 +33,6 @@ pub struct TempGroupsElement<'t,'g> {
     pub groups:Vec<TempGroupInfo<'t,'g>>,
     // pub token_groups:Vec<usize>,
     pub tokens_start:usize, //not used?
-    pub success_len:usize,
     pub fail_len:usize, //used to determine if to discard or keep this version of the groups
 }
 
@@ -70,8 +69,6 @@ pub struct WorkExpected<'g> {
     pub priority:u32,
     pub name:&'g str,
 }
-
-#[derive(Clone)]
 pub struct Work<'t,'g> {
     pub grammar:GrammarNode<'g>,
     pub success_len:usize,
@@ -80,7 +77,7 @@ pub struct Work<'t,'g> {
     pub group_ind:usize,
 
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
-    // // pub output_len:usize,
+    // pub output_len:usize,
     pub groups_stk_len:usize, //used for take
 
     // pub discard:bool,

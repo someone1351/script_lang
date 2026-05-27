@@ -1,5 +1,5 @@
 
-use std::{collections::{HashMap, HashSet}, fmt::Debug, ops::Range};
+use std::{cell::RefCell, collections::{HashMap, HashSet}, fmt::Debug, ops::Range, rc::Rc};
 
 use crate::clike::tokenizer::ValueContainer;
 
@@ -28,14 +28,13 @@ pub struct WorkTakeable<'t> {
 }
 
 
-#[derive(Clone, Default, Debug)]
-pub struct TempGroupsElement<'t,'g> {
-    pub groups:Vec<TempGroupInfo<'t,'g>>,
-    // pub token_groups:Vec<usize>,
-    pub tokens_start:usize, //not used?
-    pub success_len:usize,
-    pub fail_len:usize, //used to determine if to discard or keep this version of the groups
-}
+// #[derive(Clone, Default, Debug)]
+// pub struct TempGroupsElement<'t,'g> {
+//     pub groups:Vec<TempGroupInfo<'t,'g>>,
+//     // pub token_groups:Vec<usize>,
+//     pub tokens_start:usize, //not used?
+//     pub fail_len:usize, //used to determine if to discard or keep this version of the groups
+// }
 
 // #[derive(Clone, Copy, Default, Debug)]
 // pub struct TempPrimitiveInfo {
@@ -70,8 +69,6 @@ pub struct WorkExpected<'g> {
     pub priority:u32,
     pub name:&'g str,
 }
-
-#[derive(Clone)]
 pub struct Work<'t,'g> {
     pub grammar:GrammarNode<'g>,
     pub success_len:usize,
@@ -81,7 +78,8 @@ pub struct Work<'t,'g> {
 
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
     // // pub output_len:usize,
-    pub groups_stk_len:usize, //used for take
+    // pub groups_stk_len:usize, //used for take
+    pub groups : Rc<RefCell<Vec<TempGroupInfo<'t,'g>>>>,
 
     // pub discard:bool,
 
@@ -92,7 +90,7 @@ pub struct Work<'t,'g> {
     pub visiteds:HashSet<(&'g str,usize)>, //used for checking recursive nonterms
 
     // pub takeables:HashMap<GrammarNode<'g>,TokenIterContainer<'t>>, //[non_term]
-    pub takeables:HashMap<GrammarNode<'g>,WorkTakeable<'t>>,
+    pub takeables:HashMap<GrammarNode<'g>,WorkTakeable<'t>>, //add Rc<>
 
     pub grammar_debug_len:usize,
     // pub grammar_debug_no_add:bool,
