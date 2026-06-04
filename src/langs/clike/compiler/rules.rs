@@ -47,26 +47,26 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "ending" => [NonTerm("semicolon"),Eol].or().many1(),
         "stmts" => [
             NonTerm("stmt"),
-            [NonTerm("ending"), NonTerm("stmt"),].and().many0(),
+            // [NonTerm("ending"), NonTerm("stmt"),].and().many0(),
             NonTerm("ending").many0(),
         ].and().opt(),
 
         "stmt" => [
-            NonTerm("var"),
-            NonTerm("set"),
-            NonTerm("func"),
-            NonTerm("while"),
-            NonTerm("for"),
-            NonTerm("break"),
-            NonTerm("continue"),
-            NonTerm("return"),
-            NonTerm("include"),
-            NonTerm("format"),
-            NonTerm("print"),
-            NonTerm("println"),
+            // NonTerm("var"),
+            // NonTerm("set"),
+            // NonTerm("func"),
+            // NonTerm("while"),
+            // NonTerm("for"),
+            // NonTerm("break"),
+            // NonTerm("continue"),
+            // NonTerm("return"),
+            // NonTerm("include"),
+            // NonTerm("format"),
+            // NonTerm("print"),
+            // NonTerm("println"),
             NonTerm("expr"),
-            // NonTerm("block"), //after expr, so dict can use the empty {} //put as expr or stmt?
-            // NonTerm("if"),
+            // // NonTerm("block"), //after expr, so dict can use the empty {} //put as expr or stmt?
+            // // NonTerm("if"),
         ].or(),
 
         "continue" => Keyword("continue"),
@@ -182,10 +182,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
 
         "expr" => [
             NonTerm("val"),
-            [
-                NonTerm("infix"),
-                NonTerm("val"),
-            ].and().many0(),
+            // [
+            //     NonTerm("infix"),
+            //     NonTerm("val"),
+            // ].and().many0(),
         ].and().group("expr").expected0("expr"),
 
         "prefixes" => [
@@ -215,8 +215,14 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("rparen"),
         ].and().group("call"),
 
-        "val_field_index" => [ NonTerm("val_index"), NonTerm("val_field"), ].or(),
-        "val_field_index_call" => [ NonTerm("val_field_index").cede(), NonTerm("call"), ].or(),
+        "val_field_index" => [
+            // NonTerm("val_index"),
+            NonTerm("val_field"),
+        ].or(),
+        "val_field_index_call" => [
+            NonTerm("val_field_index").cede(),
+            NonTerm("call"),
+        ].or(),
 
         "field" => Identifier,
         "val_field" => [
@@ -245,32 +251,32 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "idn" => Identifier,
 
         "val" => [
-            NonTerm("prefixes").opt(),
+            // NonTerm("prefixes").opt(),
             [
 
                 // [Identifier.group("name"),NonTerm("call_params")].and().group("mcall"),
                 [
                     Int,
-                    Float,
-                    String,
-                    NonTerm("idn").cede(),
+                    // Float,
+                    // String,
+                    // NonTerm("idn").cede(),
                 ].or().group("primitive"),
-                NonTerm("bool"),
-                NonTerm("nil"),
-                NonTerm("void"),
+                // NonTerm("bool"),
+                // NonTerm("nil"),
+                // NonTerm("void"),
 
-                NonTerm("array"),
-                NonTerm("dict"), //empty dict supercedes empty block
+                // NonTerm("array"),
+                // NonTerm("dict"), //empty dict supercedes empty block
 
-                NonTerm("if"),
-                NonTerm("lambda"),
-                NonTerm("block"), //allow code blocks for  exprs?
+                // NonTerm("if"),
+                // NonTerm("lambda"),
+                // NonTerm("block"), //allow code blocks for  exprs?
 
-                [
-                    NonTerm("lparen"),
-                    NonTerm("expr"),
-                    NonTerm("rparen"),
-                ].and(),
+                // [
+                //     NonTerm("lparen"),
+                //     NonTerm("expr"),
+                //     NonTerm("rparen"),
+                // ].and(),
             ].or().expected0("val"),
             NonTerm("val_field_index_call").many0(),
         ].and().group("val").expected0("val"),
