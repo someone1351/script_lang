@@ -33,8 +33,8 @@ pub struct TempGroupsElement<'t,'g> {
     pub groups:Vec<TempGroupInfo<'t,'g>>,
     // pub token_groups:Vec<usize>,
     pub tokens_start:usize, //not used?
-    pub success_len:usize,
-    pub fail_len:usize, //used to determine if to discard or keep this version of the groups
+    // pub success_len:usize,
+    // pub fail_len:usize, //used to determine if to discard or keep this version of the groups
 }
 
 // #[derive(Clone, Copy, Default, Debug)]
@@ -98,6 +98,7 @@ pub struct Work<'t,'g> {
     // pub grammar_debug_no_add:bool,
     // pub expected:Option<&'g str>,
     pub expected:WorkExpected<'g>, //(u64,u32,&'g str), //id,priority,expected
+    pub and_id:usize, //for take, to know when continuing on an And, or leaving
 }
 
 

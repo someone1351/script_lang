@@ -2,6 +2,7 @@
 
 use super::error::*;
 use super::temp_data::*;
+use core::panic;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -109,6 +110,7 @@ where
             expected:Default::default(),
             // // groups_stk_ind: 0,
             groups_stk_len: 1,
+            and_id: 0,
 
         });
         {
@@ -135,6 +137,7 @@ where
                 expected:Default::default(),
                 // // groups_stk_ind: 0,
                 groups_stk_len: 1,
+                and_id: 0,
             });
         }
 
@@ -156,8 +159,8 @@ where
             }],
             // token_groups: Vec::new(),
             tokens_start:0,
-            success_len:0,
-            fail_len:0,
+            // success_len:0,
+            // fail_len:0,
         }];
 
         //
@@ -319,6 +322,10 @@ where
 
             let group_infos=&mut self.groups_stk.last_mut().unwrap().groups;
             group_infos.truncate(cur.group_len);
+
+            if cur.group_ind>=group_infos.len() {
+                panic!("invalid group ind {}",cur.group_ind);
+            }
         }
         //
 
@@ -368,7 +375,7 @@ where
                 let group_infos=&self.groups_stk.last().unwrap().groups;
 
                 let c=self.c;
-                let Work { grammar, success_len, fail_len, tokens, group_ind, group_len, takeable_starts_len, visiteds, takeables, grammar_debug_len, expected, groups_stk_len  }=&cur;
+                let Work { grammar, success_len, fail_len, tokens, group_ind, group_len, takeable_starts_len, visiteds, takeables, grammar_debug_len, expected, groups_stk_len, and_id  }=&cur;
                 // println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
                 // println!("         -takeable_starts={:?}",self.takeable_starts);
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
@@ -376,10 +383,12 @@ where
                 let expected=if expected.id==0 {"None".to_string()}else{format!("{}:{}",expected.id,expected.name)};
                 //  println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, expected={expected},  ",);
                 // let groups_stk_len=self.groups_stk.len();
-
+                let temp_groups=group_infos.iter().enumerate().map(|(i,x)|format!("g{i}:p{}:{}",x.parent,x.name)).collect::<Vec<_>>();
                 println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, ",);
                 println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
-                println!("        groups_stk_len={groups_stk_len}, group_ind={group_ind}, group_len={group_len}, temp_groups3={:?}",group_infos.iter().map(|x|x.name).collect::<Vec<_>>());
+                println!("        and_id={and_id}, groups_stk_len={groups_stk_len}, group_ind={group_ind}, group_len={group_len}, temp_groups3={temp_groups:?}",
+                    // group_infos.iter().map(|x|x.name).collect::<Vec<_>>(),
+                );
 
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
@@ -430,12 +439,12 @@ where
 
             //
             if false {
-                for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len,  takeable_starts_len, visiteds, takeables, grammar_debug_len, expected, groups_stk_len   }) in self.stk.iter()
+                for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len,  takeable_starts_len, visiteds, takeables, grammar_debug_len, expected, groups_stk_len, and_id   }) in self.stk.iter()
                     // .rev()
                     .enumerate() {
                     // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
                     // println!("\t{i:3}: {g:?}, ps={primitives:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
-                    println!("    {i:3}: ps={:?}, success={s}, fail={f}, groups_stk_len={groups_stk_len}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds()); //
+                    println!("    {i:3}: ps={:?}, success={s}, fail={f}, and_id={and_id}, groups_stk_len={groups_stk_len}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds()); //
 
                 }
             }
@@ -474,6 +483,7 @@ where
                     // expected:(self.expected_count,name),
                     expected,
                     groups_stk_len: cur.groups_stk_len,
+                    and_id:cur.and_id,
                 });
             }
             GrammarNode::Group(name, g) => {
@@ -504,6 +514,7 @@ where
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
                     groups_stk_len: cur.groups_stk_len,
+                    and_id:cur.and_id,
                 });
             }
             // GrammarNode::Discard(g) => {
@@ -562,7 +573,7 @@ where
                         // grammar_debug_no_add: true,
                         expected:cur.expected,
                         groups_stk_len: cur.groups_stk_len,
-
+                        and_id:cur.and_id+1,
                     });
                 }
 
@@ -591,6 +602,7 @@ where
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
                     groups_stk_len: cur.groups_stk_len,
+                    and_id:cur.and_id+1,
                 });
             }
             GrammarNode::Or(gs) => {
@@ -619,6 +631,7 @@ where
                         // grammar_debug_no_add: true,
                         expected:cur.expected,
                         groups_stk_len: cur.groups_stk_len,
+                        and_id:cur.and_id,
                     });
                 }
 
@@ -647,6 +660,7 @@ where
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
                     groups_stk_len: cur.groups_stk_len,
+                    and_id:cur.and_id,
                 });
             }
 
@@ -669,6 +683,7 @@ where
                     // grammar_debug_no_add: true,
                     expected:cur.expected,
                     groups_stk_len: cur.groups_stk_len,
+                    and_id:cur.and_id,
                 });
 
                 let fail_len=self.stk.len();
@@ -695,6 +710,7 @@ where
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
                     groups_stk_len: cur.groups_stk_len,
+                    and_id:cur.and_id,
                 });
             }
             GrammarNode::Cede(g) => {
@@ -723,6 +739,7 @@ where
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
                     groups_stk_len: cur.groups_stk_len,
+                    and_id:cur.and_id,
                 });
             }
             GrammarNode::Take(g) => {
@@ -747,54 +764,57 @@ where
                     let last_groups=self.groups_stk.last_mut().unwrap();
 
 
-                    last_groups.success_len=cur.success_len;
-                    last_groups.fail_len=cur.fail_len;
+                    // last_groups.success_len=cur.success_len;
+                    // last_groups.fail_len=cur.fail_len;
 
-                    //clamp dif_ancestor_groups to taken.start
-                    for &g in &dif_ancestor_groups {
-                        let group=&mut last_groups.groups[g];
-                        println!("g={g}, \ngroup.tokens.len={:?} \ncur.tokens.len={:?} \ntaken_ps_start={:?}",
-                            group.tokens,cur.tokens,
-                            takeable.tokens,
-                        );
-                        // let n=group.tokens.len()-cur.tokens.len();
-                        // let group_prims=group.tokens.get_amount(n).unwrap();
-                        // group.tokens=group_prims;
+                    // //clamp dif_ancestor_groups to taken.start
+                    // for &g in &dif_ancestor_groups {
+                    //     let group=&mut last_groups.groups[g];
+                    //     println!("g={g}, \ngroup.tokens.len={:?} \ncur.tokens.len={:?} \ntaken_ps_start={:?}",
+                    //         group.tokens,cur.tokens,
+                    //         takeable.tokens,
+                    //     );
+                    //     // let n=group.tokens.len()-cur.tokens.len();
+                    //     // let group_prims=group.tokens.get_amount(n).unwrap();
+                    //     // group.tokens=group_prims;
 
-                        //these groups contain up to end of takeable, by popping off the end the takeable len, then it removes the takeable
-                        group.tokens.pop_back_amount(take_tokens_len).unwrap();
-                    }
+                    //     //these groups contain up to end of takeable, by popping off the end the takeable len, then it removes the takeable
+                    //     group.tokens.pop_back_amount(take_tokens_len).unwrap();
+                    // }
 
-                    //cur parent/ancestor groups, if they start after the takeable, then make them start at it
-                    for &g in cur_ancestor_groups.iter() {
-                        let group=&mut last_groups.groups[g];
+                    // //cur parent/ancestor groups, if they start after the takeable, then make them start at it
+                    // for &g in cur_ancestor_groups.iter() {
+                    //     let group=&mut last_groups.groups[g];
 
-                        if group.tokens.inds().start > takeable.tokens_start.inds().start {
-                            group.tokens=takeable.tokens_start;
-                        }
+                    //     if group.tokens.inds().start > takeable.tokens_start.inds().start {
+                    //         group.tokens=takeable.tokens_start;
+                    //     }
 
-                    }
+                    // }
 
-                    //change parent of taken children groups to cur_group_ind
-                    for g in takeable.inner_groups {
-                        let group=&mut last_groups.groups[g];
+                    // //change parent of taken children groups to cur_group_ind
+                    // println!("==takeable group_ind={}",takeable.group_ind);
 
-                        if group.parent == takeable.group_ind {
-                            group.parent=cur.group_ind;
-                        }
-                    }
+                    // for g in takeable.inner_groups {
+                    //     let group=&mut last_groups.groups[g];
 
-                    //change parent of output tokens who's parent in dif_ancestor_groups
-                    // for x in takeable.tokens.inds() {
-                    //     let g=&mut last_groups.token_groups[x];
-
-                    //     println!("=== x={x}, g={g}, cur.group_ind={}, contians={}",cur.group_ind,dif_ancestor_groups.contains(g));
-
-                    //     if dif_ancestor_groups.contains(g)
-                    //     {
-                    //         *g=cur.group_ind;
+                    //     if group.parent == takeable.group_ind {
+                    //         group.parent=cur.group_ind;
+                    //         println!("\t group.parent={}, cur.group_ind={}",group.parent,cur.group_ind,);
                     //     }
                     // }
+
+                    // //change parent of output tokens who's parent in dif_ancestor_groups
+                    // // for x in takeable.tokens.inds() {
+                    // //     let g=&mut last_groups.token_groups[x];
+
+                    // //     println!("=== x={x}, g={g}, cur.group_ind={}, contians={}",cur.group_ind,dif_ancestor_groups.contains(g));
+
+                    // //     if dif_ancestor_groups.contains(g)
+                    // //     {
+                    // //         *g=cur.group_ind;
+                    // //     }
+                    // // }
 
 
 
@@ -914,6 +934,7 @@ where
                     // grammar_debug_no_add: true,
                     expected:cur.expected,
                     groups_stk_len: cur.groups_stk_len,
+                    and_id:cur.and_id,
                 });
 
                 let success_len2=self.stk.len();
@@ -936,6 +957,7 @@ where
                     // grammar_debug_no_add: true,
                     expected:cur.expected,
                     groups_stk_len: cur.groups_stk_len,
+                    and_id:cur.and_id,
                 });
 
                 let fail_len=self.stk.len();
@@ -963,6 +985,7 @@ where
                     // grammar_debug_no_add: false,
                     expected:cur.expected,
                     groups_stk_len: cur.groups_stk_len,
+                    and_id:cur.and_id,
                 });
             }
 
@@ -1015,6 +1038,7 @@ where
                     // expected:cur.expected.or(Some(t)),
                     expected:cur.expected,
                     groups_stk_len: cur.groups_stk_len,
+                    and_id:cur.and_id,
                 });
             }
             GrammarNode::Always => {
@@ -1025,6 +1049,11 @@ where
 
                 //
                 if let Some(last)=self.stk.last_mut() {
+                    println!("---- last.group_len={}, cur.group_len={}, last.group_ind={}, cur.group_ind={}",
+                        last.group_len,cur.group_len,
+                        last.group_ind, cur.group_ind,
+                    );
+
                     if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //if not parsing anything, exit the many
                         last.grammar=GrammarNode::Always;
                     }
@@ -1035,6 +1064,7 @@ where
 
                     // // last.group_ind=cur.group_ind;
                     // let last_group_len= last.group_len;
+
                     last.group_len=cur.group_len; //done below //not anymore
                     // last.output_len=cur.output_len;
                     // last.takeable_starts=cur.takeable_starts;
@@ -1347,24 +1377,37 @@ where
         // let cur_stk_len=self.stk.len();
         // let cur_stk_len=cur.success_len;
 
-        if cur.success_len > self.groups_stk.last().unwrap().success_len {
-            return;
+        if let Some(last)=self.stk.last_mut() {
+            println!("----====== do_groups_stk_success, groups_stk.len={}, cur.success_len={}, keep={}",
+                self.groups_stk.len(),
+                cur.success_len,
+                // self.groups_stk.last().unwrap().success_len,
+                // self.groups_stk.last().unwrap().fail_len,
+                last.and_id==cur.and_id,
+            );
+            if last.and_id==cur.and_id {
+                last.groups_stk_len=cur.groups_stk_len;
+                // last.group_ind
+            } else {
+                let last_groups= self.groups_stk.last().cloned().unwrap();
+                self.groups_stk.truncate(last.groups_stk_len-1);
+                self.groups_stk.push(last_groups);
+            }
         }
 
-        println!("----====== do_groups_stk_success, groups_stk.len={}, cur.success_len={}, groups_stk_last.success_len={}, groups_stk_last.fail_len={}",
-            self.groups_stk.len(),
-            cur.success_len,
-            self.groups_stk.last().unwrap().success_len,
-            self.groups_stk.last().unwrap().fail_len,
-        );
+        // if cur.success_len > self.groups_stk.last().unwrap().success_len {
+        //     return;
+        // }
 
-        let last=self.groups_stk.last().unwrap().clone();
 
-        if let Some((i,_))=self.groups_stk[1..].iter().enumerate().find(|(i,x)|cur.success_len<=x.success_len) {
-             println!("----========= i={i}");
-            self.groups_stk.truncate(i+1);
-            self.groups_stk.push(last);
-        }
+
+        // let last=self.groups_stk.last().unwrap().clone();
+
+        // if let Some((i,_))=self.groups_stk[1..].iter().enumerate().find(|(i,x)|cur.success_len<=x.success_len) {
+        //      println!("----========= i={i}");
+        //     self.groups_stk.truncate(i+1);
+        //     self.groups_stk.push(last);
+        // }
 
     }
     fn do_groups_stk_fail(&mut self,cur:Work<'t,'g>) {
@@ -1373,40 +1416,49 @@ where
             return;
         }
 
-        // let cur_stk_len=cur.fail_len;
-        if cur.fail_len > self.groups_stk.last().unwrap().fail_len {
-            return;
-        }
-
-        //
-        // println!("")
-        println!("----====== do_groups_stk_fail, groups_stk.len={}, cur.fail_len={}, groups_stk_last.fail_len={}, groups_stk_last.success_len={}",
+        if let Some(last)=self.stk.last_mut() {
+        println!("----====== do_groups_stk_fail, groups_stk.len={}, cur.fail_len={}, keep={}",
             self.groups_stk.len(),
             cur.fail_len,
-            self.groups_stk.last().unwrap().fail_len,
-            self.groups_stk.last().unwrap().success_len,
+            // self.groups_stk.last().unwrap().fail_len,
+            // self.groups_stk.last().unwrap().success_len,
+            last.and_id==cur.and_id,
         );
-
-        let cur_stk_len=self.stk.len();
-
-        let mut i=self.groups_stk.len();
-
-            for (j,gs) in self.groups_stk.iter().enumerate() {
-                let gs=gs.groups.iter().map(|z|z.name).collect::<Vec<_>>();
-                println!("-=-=-={j} {gs:?}",);
-
+            if last.and_id!=cur.and_id {
+                self.groups_stk.truncate(last.groups_stk_len);
             }
-        while self.groups_stk.len()>1 {
-            i-=1;
-            let last_fail_len=self.groups_stk.last().unwrap().fail_len;
-
-            if cur_stk_len>last_fail_len {
-                break;
-            }
-
-            println!("-=-= i={i}");
-            self.groups_stk.pop().unwrap();
         }
+
+        // //
+        // // let cur_stk_len=cur.fail_len;
+        // if cur.fail_len > self.groups_stk.last().unwrap().fail_len {
+        //     return;
+        // }
+
+        // //
+        // // println!("")
+
+
+        // let cur_stk_len=self.stk.len();
+
+        // let mut i=self.groups_stk.len();
+
+        //     for (j,gs) in self.groups_stk.iter().enumerate() {
+        //         let gs=gs.groups.iter().map(|z|z.name).collect::<Vec<_>>();
+        //         println!("-=-=-={j} {gs:?}",);
+
+        //     }
+        // while self.groups_stk.len()>1 {
+        //     i-=1;
+        //     let last_fail_len=self.groups_stk.last().unwrap().fail_len;
+
+        //     if cur_stk_len>last_fail_len {
+        //         break;
+        //     }
+
+        //     println!("-=-= i={i}");
+        //     self.groups_stk.pop().unwrap();
+        // }
     }
     fn consolidate_grammar_debug_stk(&mut self, ) { //cur_grammar_debug_len:usize
 
@@ -1450,8 +1502,9 @@ where
         cur_primitives:TokenIterContainer<'t>,
     ) {
         if let Some(last)=self.stk.last_mut() {
+            // println!("==gggr {:?}",last.grammar);
 
-
+            println!("==do_groups_primitives_clamp: cur_group_ind={cur_group_ind}, last.group_ind={}",last.group_ind);
             let group_infos=&mut self.groups_stk.last_mut().unwrap().groups;
 
             // let last_group_prim_len=last.primitives.len();
@@ -1462,6 +1515,8 @@ where
             // println!("---g={g} to lg={}",last.group_ind);
             while g>last.group_ind {
                 let group=&mut group_infos[g];
+
+                println!("\tg={g} parent={}",group.parent);
                 // let mut last_primitives=group.primitives;
 
                 // println!("\tg={g} lg={} : {} {}",last.group_ind,group.primitives.len(),cur_primitives.len(),);
