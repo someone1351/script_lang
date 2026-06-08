@@ -1759,7 +1759,7 @@ where
         println!("groups2 {:?}",group_infos2.iter().enumerate().collect::<Vec<_>>());
         for (i,&(g,p,)) in group_infos2.iter().enumerate() {
             let group_infos=&self.groups_stk.last().unwrap().groups;
-            println!("\t{i}: {g}, {p}, {:?}",group_infos[g].name);
+            println!("\t{i}: g{g}, p{p}, {:?}, {:?}, {:?}",group_infos[g].name,group_infos[g].tokens.inds(),group_infos[g].tokens);
         }
         //
         // let mut csum=1;
