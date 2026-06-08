@@ -39,10 +39,35 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             String,
         ].and(),
 
+        // "start" => [
+        //     NonTerm("stmts"),
+        //     NonTerm("ending").many0(),
+        // ].and(),
+
+        // "start" => NonTerm("val"),
+        // "start" => [
+        //     Int.cede().group("a"),
+        //     Int.take().group("b"),
+        //     ].and(),
+
         "start" => [
-            NonTerm("stmts"),
-            NonTerm("ending").many0(),
-        ].and(),
+            Int,
+            [
+                [
+                    NonTerm("dot"),
+                    NonTerm("field").cede().group("field"), //.expected0("field")
+                ].and(),
+                NonTerm("call2"),
+            ].or().many0(),
+        ].and().group("val"), //.expected0("val")
+
+        "call2" => [
+            NonTerm("field").take().group("field2").opt(),
+            NonTerm("lparen"),
+			NonTerm("start").opt().group("params"),
+            NonTerm("rparen"),
+        ].and().group("call"),
+
 
         "ending" => [NonTerm("semicolon"),Eol].or().many1(),
         "stmts" => [
@@ -204,14 +229,16 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             // Always,
             // NonTerm("field").take(),
             NonTerm("lparen"),
-            [
-                NonTerm("expr"),
-                [
-                    NonTerm("comma"),
-                    NonTerm("expr"),
-                ].and().many0(),
-                NonTerm("comma").opt(),
-            ].and().opt().group("params"),
+                NonTerm("val").opt().group("params"),
+            // [
+            //     NonTerm("val"),
+            //     // NonTerm("expr"),
+            //     // [
+            //     //     NonTerm("comma"),
+            //     //     NonTerm("expr"),
+            //     // ].and().many0(),
+            //     // NonTerm("comma").opt(),
+            // ].and().opt().group("params"),
             NonTerm("rparen"),
         ].and().group("call"),
 
