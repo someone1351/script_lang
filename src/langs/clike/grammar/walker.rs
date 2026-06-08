@@ -322,8 +322,11 @@ where
 
             let groups=&mut self.groups_stk.last_mut().unwrap().groups;
 
-            if groups.len() != cur.group_len {
-                println!("--- groups dif len, groups.len={}, cur.group_len={}",groups.len(),cur.group_len);
+
+            if self.debug {
+                if groups.len() != cur.group_len {
+                    println!("--- groups dif len, groups.len={}, cur.group_len={}",groups.len(),cur.group_len);
+                }
             }
 
             groups.truncate(cur.group_len);
@@ -457,10 +460,9 @@ where
         }
 
         //
-
+        // if self.debug
         {
-
-            let groups=&mut self.groups_stk.last_mut().unwrap().groups;
+            let groups=&self.groups_stk.last().unwrap().groups;
 
             if cur.group_ind>=groups.len() {
                 panic!("invalid group_ind={}, groups_len={}",cur.group_ind,groups.len());
@@ -782,45 +784,45 @@ where
                     let last_groups=self.groups_stk.last_mut().unwrap();
 
 
-                    // last_groups.success_len=cur.success_len;
-                    // last_groups.fail_len=cur.fail_len;
+                    // // last_groups.success_len=cur.success_len;
+                    // // last_groups.fail_len=cur.fail_len;
 
-                    // //clamp dif_ancestor_groups to taken.start
-                    // for &g in &dif_ancestor_groups {
-                    //     let group=&mut last_groups.groups[g];
-                    //     println!("g={g}, \ngroup.tokens.len={:?} \ncur.tokens.len={:?} \ntaken_ps_start={:?}",
-                    //         group.tokens,cur.tokens,
-                    //         takeable.tokens,
-                    //     );
-                    //     // let n=group.tokens.len()-cur.tokens.len();
-                    //     // let group_prims=group.tokens.get_amount(n).unwrap();
-                    //     // group.tokens=group_prims;
+                    //clamp dif_ancestor_groups to taken.start
+                    for &g in &dif_ancestor_groups {
+                        let group=&mut last_groups.groups[g];
+                        println!("g={g}, \ngroup.tokens.len={:?} \ncur.tokens.len={:?} \ntaken_ps_start={:?}",
+                            group.tokens,cur.tokens,
+                            takeable.tokens,
+                        );
+                        // let n=group.tokens.len()-cur.tokens.len();
+                        // let group_prims=group.tokens.get_amount(n).unwrap();
+                        // group.tokens=group_prims;
 
-                    //     //these groups contain up to end of takeable, by popping off the end the takeable len, then it removes the takeable
-                    //     group.tokens.pop_back_amount(take_tokens_len).unwrap();
-                    // }
+                        //these groups contain up to end of takeable, by popping off the end the takeable len, then it removes the takeable
+                        group.tokens.pop_back_amount(take_tokens_len).unwrap();
+                    }
 
-                    // //cur parent/ancestor groups, if they start after the takeable, then make them start at it
-                    // for &g in cur_ancestor_groups.iter() {
-                    //     let group=&mut last_groups.groups[g];
+                    //cur parent/ancestor groups, if they start after the takeable, then make them start at it
+                    for &g in cur_ancestor_groups.iter() {
+                        let group=&mut last_groups.groups[g];
 
-                    //     if group.tokens.inds().start > takeable.tokens_start.inds().start {
-                    //         group.tokens=takeable.tokens_start;
-                    //     }
+                        if group.tokens.inds().start > takeable.tokens_start.inds().start {
+                            group.tokens=takeable.tokens_start;
+                        }
 
-                    // }
+                    }
 
-                    // //change parent of taken children groups to cur_group_ind
-                    // println!("==takeable group_ind={}",takeable.group_ind);
+                    //change parent of taken children groups to cur_group_ind
+                    println!("==takeable group_ind={}",takeable.group_ind);
 
-                    // for g in takeable.inner_groups {
-                    //     let group=&mut last_groups.groups[g];
+                    for g in takeable.inner_groups {
+                        let group=&mut last_groups.groups[g];
 
-                    //     if group.parent == takeable.group_ind {
-                    //         group.parent=cur.group_ind;
-                    //         println!("\t group.parent={}, cur.group_ind={}",group.parent,cur.group_ind,);
-                    //     }
-                    // }
+                        if group.parent == takeable.group_ind {
+                            group.parent=cur.group_ind;
+                            println!("\t group.parent={}, cur.group_ind={}",group.parent,cur.group_ind,);
+                        }
+                    }
 
                     // //change parent of output tokens who's parent in dif_ancestor_groups
                     // // for x in takeable.tokens.inds() {
@@ -844,7 +846,7 @@ where
                     //how to remove no longer used groups, and fix inds of the used group that ccomes after the removed one?
 
                     // let cur_group_ind=self.remove_groups_at_except(taken_ps_start,cur.group_ind,);
-                    let cur_group_ind=cur.group_ind;
+                    // let cur_group_ind=cur.group_ind;
 
 
                     // //clear outputs to start of taken
@@ -873,7 +875,7 @@ where
 
                     //
                     self.stk.truncate(cur.success_len);
-                    self.do_groups_stk_success(cur.clone());
+                    self.do_groups_stk_success(cur.clone(),cur.and_id);
 
                     //
                     if let Some(last)=self.stk.last_mut() {
@@ -915,7 +917,7 @@ where
                     //
                     self.stk.truncate(cur.fail_len);
 
-                    self.do_groups_stk_fail(cur.clone());
+                    self.do_groups_stk_fail(cur.clone(),cur.and_id);
 
                     //
                     if let Some(last)=self.stk.last() {
@@ -1063,7 +1065,7 @@ where
                 self.stk.truncate(cur.success_len);
 
                 //
-                self.do_groups_stk_success(cur.clone());
+                self.do_groups_stk_success(cur.clone(),cur.and_id);
 
                 //
                 if let Some(last)=self.stk.last_mut() {
@@ -1281,7 +1283,7 @@ where
 
 
                 //
-                self.do_groups_stk_success(cur.clone());
+                self.do_groups_stk_success(cur.clone(),cur.and_id);
 
                 // let group_infos=&mut self.groups_stk.last_mut().unwrap().groups;
                 // let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
@@ -1335,7 +1337,7 @@ where
                 self.stk.truncate(cur.fail_len);
 
                 //
-                self.do_groups_stk_fail(cur.clone());
+                self.do_groups_stk_fail(cur.clone(),cur.and_id);
 
                 //
                 if let Some(last)=self.stk.last_mut() {
@@ -1386,7 +1388,7 @@ where
 
     }
 
-    fn do_groups_stk_success(&mut self,cur:Work<'t,'g>,) {
+    fn do_groups_stk_success(&mut self,cur:Work<'t,'g>,cur_and_id:usize) {
         // return;
         if self.groups_stk.len()==1 {
             return;
@@ -1396,23 +1398,29 @@ where
         // let cur_stk_len=cur.success_len;
 
         if let Some(last)=self.stk.last_mut() {
-            println!("----====== do_groups_stk_success, groups_stk.len={}, groups.len={}, cur.success_len={}, keep={}",
-                self.groups_stk.len(),
-                self.groups_stk.last().unwrap().groups.len(),
-                cur.success_len,
-                // self.groups_stk.last().unwrap().success_len,
-                // self.groups_stk.last().unwrap().fail_len,
-                last.and_id==cur.and_id,
-            );
+            if self.debug {
+                println!("----====== do_groups_stk_success, groups_stk.len={}, groups.len={}, cur.success_len={}, keep={}",
+                    self.groups_stk.len(),
+                    self.groups_stk.last().unwrap().groups.len(),
+                    cur.success_len,
+                    // self.groups_stk.last().unwrap().success_len,
+                    // self.groups_stk.last().unwrap().fail_len,
+                    last.and_id==cur_and_id,
+                );
 
-            if last.and_id==cur.and_id {
+            }
+
+            if last.and_id==cur_and_id {
                 last.groups_stk_len=self.groups_stk.len(); //cur.groups_stk_len;
                 // last.group_ind
             } else {
                 let last_groups= self.groups_stk.last().cloned().unwrap();
                 self.groups_stk.truncate(last.groups_stk_len-1);
                 self.groups_stk.push(last_groups);
-                println!("----====== \tgroups.len={}, ",self.groups_stk.last().unwrap().groups.len(),);
+
+                if self.debug {
+                    println!("----====== \tgroups.len={}, ",self.groups_stk.last().unwrap().groups.len(),);
+                }
             }
         }
 
@@ -1431,25 +1439,31 @@ where
         // }
 
     }
-    fn do_groups_stk_fail(&mut self,cur:Work<'t,'g>) {
+    fn do_groups_stk_fail(&mut self,cur:Work<'t,'g>,cur_and_id:usize) {
         // return;
         if self.groups_stk.len()==1 {
             return;
         }
 
         if let Some(last)=self.stk.last_mut() {
-            println!("----====== do_groups_stk_fail, groups_stk.len={}, groups.len={}, cur.fail_len={}, keep={}",
-                self.groups_stk.len(),
-                self.groups_stk.last().unwrap().groups.len(),
-                cur.fail_len,
-                // self.groups_stk.last().unwrap().fail_len,
-                // self.groups_stk.last().unwrap().success_len,
-                last.and_id==cur.and_id,
-            );
 
-            if last.and_id!=cur.and_id {
+            if self.debug {
+                println!("----====== do_groups_stk_fail, groups_stk.len={}, groups.len={}, cur.fail_len={}, keep={}",
+                    self.groups_stk.len(),
+                    self.groups_stk.last().unwrap().groups.len(),
+                    cur.fail_len,
+                    // self.groups_stk.last().unwrap().fail_len,
+                    // self.groups_stk.last().unwrap().success_len,
+                    last.and_id==cur_and_id,
+                );
+            }
+
+            if last.and_id!=cur_and_id {
                 self.groups_stk.truncate(last.groups_stk_len);
-                println!("----====== \tgroups.len={}, ",self.groups_stk.last().unwrap().groups.len(),);
+
+                if self.debug {
+                    println!("----====== \tgroups.len={}, ",self.groups_stk.last().unwrap().groups.len(),);
+                }
             }
         }
 

@@ -39,10 +39,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             String,
         ].and(),
 
-        // "start" => [
-        //     NonTerm("stmts"),
-        //     NonTerm("ending").many0(),
-        // ].and(),
+        "start" => [
+            NonTerm("stmts"),
+            NonTerm("ending").many0(),
+        ].and(),
 
         // "start" => NonTerm("val"),
         // "start" => [
@@ -50,23 +50,23 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         //     Int.take().group("b"),
         //     ].and(),
 
-        "start" => [
-            Int,
-            [
-                [
-                    NonTerm("dot"),
-                    NonTerm("field").cede().group("field"), //.expected0("field")
-                ].and(),
-                NonTerm("call2"),
-            ].or().many0(),
-        ].and().group("val"), //.expected0("val")
+        // "start" => [
+        //     Int,
+        //     [
+        //         [
+        //             NonTerm("dot"),
+        //             NonTerm("field").cede().group("field"), //.expected0("field")
+        //         ].and(),
+        //         NonTerm("call2"),
+        //     ].or().many0(),
+        // ].and().group("val"), //.expected0("val")
 
-        "call2" => [
-            NonTerm("field").take().group("field2").opt(),
-            NonTerm("lparen"),
-			NonTerm("start").opt().group("params"),
-            NonTerm("rparen"),
-        ].and().group("call"),
+        // "call2" => [
+        //     NonTerm("field").take().group("field2").opt(),
+        //     NonTerm("lparen"),
+		// 	NonTerm("start").opt().group("params"),
+        //     NonTerm("rparen"),
+        // ].and().group("call"),
 
 
         "ending" => [NonTerm("semicolon"),Eol].or().many1(),
