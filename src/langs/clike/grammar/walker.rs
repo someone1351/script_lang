@@ -774,73 +774,120 @@ where
                     //
                     let taken_ancestor_groups=self.get_cur_groups(takeable.group_ind);
                     let cur_ancestor_groups=self.get_cur_groups(cur.group_ind);
-                    let dif_ancestor_groups=taken_ancestor_groups.difference(&cur_ancestor_groups).cloned().collect::<Vec<_>>();
 
-                    //
-                    let take_tokens_len=takeable.tokens.len();
+                    let old_groups=taken_ancestor_groups.difference(&cur_ancestor_groups).cloned().collect::<Vec<_>>();
+                    let new_groups=cur_ancestor_groups.difference(&taken_ancestor_groups).cloned().collect::<Vec<_>>();
 
-                    //
-                    self.groups_stk.push(self.groups_stk.last().unwrap().clone());
-                    let last_groups=self.groups_stk.last_mut().unwrap();
+                    let groups=&mut self.groups_stk.last_mut().unwrap().groups;
+                    //clamp old_groups.tokens.end to takeable.start
+                    println!("--- do take {g:?}");
 
-
-                    // // last_groups.success_len=cur.success_len;
-                    // // last_groups.fail_len=cur.fail_len;
-
-                    //clamp dif_ancestor_groups to taken.start
-                    for &g in &dif_ancestor_groups {
-                        let group=&mut last_groups.groups[g];
-                        println!("g={g}, \ngroup.tokens.len={:?} \ncur.tokens.len={:?} \ntaken_ps_start={:?}",
-                            group.tokens,cur.tokens,
-                            takeable.tokens,
-                        );
-                        // let n=group.tokens.len()-cur.tokens.len();
-                        // let group_prims=group.tokens.get_amount(n).unwrap();
-                        // group.tokens=group_prims;
-
-                        //these groups contain up to end of takeable, by popping off the end the takeable len, then it removes the takeable
-                        group.tokens.pop_back_amount(take_tokens_len).unwrap();
+                    for g in old_groups {
+                        let group=&mut groups[g];
+                        group.tokens.pop_back_amount(takeable.tokens.len()).unwrap();
+                        println!("-----\told_groups.clamp g={g}, group.tokens={:?}",group.tokens,);
                     }
 
-                    //cur parent/ancestor groups, if they start after the takeable, then make them start at it
-                    for &g in cur_ancestor_groups.iter() {
-                        let group=&mut last_groups.groups[g];
+                    //set new_groups.tokens.start to takeable.start
+                    for g in new_groups {
+                        let group=&mut groups[g];
 
-                        if group.tokens.inds().start > takeable.tokens_start.inds().start {
-                            group.tokens=takeable.tokens_start;
-                        }
-
+                        println!("-----\tnew_groups.set_start g={g}, group.tokens={:?}",group.tokens,);
+                        group.tokens=takeable.tokens_start;
                     }
 
-                    //change parent of taken children groups to cur_group_ind
-                    println!("==takeable group_ind={}",takeable.group_ind);
-
+                    //change parent group of takeable.inner_groups (child groups, and descendents), whose parent group is eq to takeable.parent_group
                     for g in takeable.inner_groups {
-                        let group=&mut last_groups.groups[g];
+                        let group=&mut groups[g];
 
-                        if group.parent == takeable.group_ind {
+                        if group.parent == takeable.group_ind
+                            && group.tokens.inds().end >= takeable.tokens.inds().start
+                        {
+                            println!("-----\tinner.groups.change_parent g={g}, group.parent={}=>{}",group.parent,cur.group_ind,);
+                            println!("--------- group.name={:?}, group.tokens.inds={:?} takeable.tokens.inds={:?}",group.name,group.tokens.inds(), takeable.tokens.inds());
+                            println!("--------- group.name={:?}, group.tokens={:?} takeable.tokens={:?} takeable.tokens_start={:?}",group.name,group.tokens, takeable.tokens,takeable.tokens_start);
+
+                            println!("--------- {} >= {}",group.tokens.inds().end, takeable.tokens.inds().start);
                             group.parent=cur.group_ind;
-                            println!("\t group.parent={}, cur.group_ind={}",group.parent,cur.group_ind,);
                         }
                     }
 
-                    // //change parent of output tokens who's parent in dif_ancestor_groups
-                    // // for x in takeable.tokens.inds() {
-                    // //     let g=&mut last_groups.token_groups[x];
 
-                    // //     println!("=== x={x}, g={g}, cur.group_ind={}, contians={}",cur.group_ind,dif_ancestor_groups.contains(g));
+                    // //
+                    // //
+                    // let dif_ancestor_groups=taken_ancestor_groups.difference(&cur_ancestor_groups).cloned().collect::<Vec<_>>();
 
-                    // //     if dif_ancestor_groups.contains(g)
-                    // //     {
-                    // //         *g=cur.group_ind;
-                    // //     }
-                    // // }
+                    // //
+                    // let take_tokens_len=takeable.tokens.len();
+
+                    // //
+                    // self.groups_stk.push(self.groups_stk.last().unwrap().clone());
+                    // let last_groups=self.groups_stk.last_mut().unwrap();
+
+
+                    // // // last_groups.success_len=cur.success_len;
+                    // // // last_groups.fail_len=cur.fail_len;
+
+                    // //
+                    // {
+                    //     //clamp dif_ancestor_groups to taken.start
+                    //     for &g in &dif_ancestor_groups {
+                    //         let group=&mut last_groups.groups[g];
+                    //         println!("----- clamp: g={g}, \ngroup.tokens.len={:?} \ncur.tokens.len={:?} \ntaken_ps_start={:?}",
+                    //             group.tokens,cur.tokens,
+                    //             takeable.tokens,
+                    //         );
+                    //         // // let n=group.tokens.len()-cur.tokens.len();
+                    //         // // let group_prims=group.tokens.get_amount(n).unwrap();
+                    //         // // group.tokens=group_prims;
+
+                    //         // //these groups contain up to end of takeable, by popping off the end the takeable len, then it removes the takeable
+                    //         // group.tokens.pop_back_amount(take_tokens_len).unwrap();
+                    //     }
+
+                    //     //cur parent/ancestor groups, if they start after the takeable, then make them start at it
+                    //     for &g in cur_ancestor_groups.iter() {
+                    //         let group=&mut last_groups.groups[g];
+
+                    //         if group.tokens.inds().start > takeable.tokens_start.inds().start {
+                    //             println!("----- takeable start after, g={g} ");
+                    //             // group.tokens=takeable.tokens_start;
+                    //         }
+
+                    //     }
+
+                    //     //change parent of taken children groups to cur_group_ind
+                    //     println!("-----takeable group_ind={}, takeable.inner_groups={:?}",takeable.group_ind,takeable.inner_groups);
+
+                    //     for g in takeable.inner_groups {
+                    //         let group=&mut last_groups.groups[g];
+
+                    //         if group.parent == takeable.group_ind {
+                    //             // group.parent=cur.group_ind;
+                    //             // println!("-----\t group.parent={}, cur.group_ind={}",group.parent,cur.group_ind,);
+                    //             println!("-----\t g={g}, group.parent= {}=>{}",takeable.group_ind,cur.group_ind,);
+                    //         }
+                    //     }
+
+                    // }
+
+                    // // //change parent of output tokens who's parent in dif_ancestor_groups
+                    // // // for x in takeable.tokens.inds() {
+                    // // //     let g=&mut last_groups.token_groups[x];
+
+                    // // //     println!("=== x={x}, g={g}, cur.group_ind={}, contians={}",cur.group_ind,dif_ancestor_groups.contains(g));
+
+                    // // //     if dif_ancestor_groups.contains(g)
+                    // // //     {
+                    // // //         *g=cur.group_ind;
+                    // // //     }
+                    // // // }
 
 
 
-                    //
-                    // last_groups.tokens_start=taken_ps_start.inds().start;
-                    last_groups.tokens_start=takeable.tokens.inds().start;
+                    // //
+                    // // last_groups.tokens_start=taken_ps_start.inds().start;
+                    // last_groups.tokens_start=takeable.tokens.inds().start;
 
 
                     //how to remove no longer used groups, and fix inds of the used group that ccomes after the removed one?

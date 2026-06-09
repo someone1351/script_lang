@@ -24,7 +24,7 @@ pub struct WorkTakeable<'t> {
     pub tokens:TokenIterContainer<'t>,
     pub tokens_start:TokenIterContainer<'t>,
     pub group_ind:usize,
-    pub inner_groups:Range<usize>,
+    pub inner_groups:Range<usize>, //groups inside the takeable?
 }
 
 

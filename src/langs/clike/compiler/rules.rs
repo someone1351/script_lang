@@ -221,7 +221,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
 
         "call" => [
             [
-                NonTerm("field").group("field2").take().group("field"),
+                NonTerm("field").group("field").take(), //.group("field"),
                 NonTerm("idn").group("idn").take(),
                 // // Always.group("other")
             ].or().opt(),
@@ -255,7 +255,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "val_field" => [
             NonTerm("dot"),
             [
-                NonTerm("field").group("field2").cede().group("field"),
+                NonTerm("field").group("field").cede(), //.group("field"),
                 Int,
             ].or().expected0("field"),
 
