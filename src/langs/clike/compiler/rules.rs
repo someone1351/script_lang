@@ -219,19 +219,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("not").group("not"),
         ].or().many1().group("prefixes"),
 
-        "call" => [
-            [
-                Identifier.group("field_name").take(),
-                Identifier.group("idn").take(),
-                // // Always.group("other")
-            ].or().opt(),
-            // NonTerm("field").take().group("field2").opt(),
-            // Always,
-            // NonTerm("field").take(),
+        "call_params" => [
             NonTerm("lparen"),
-                // //NonTerm("val").opt().group("params"),
             [
-                // //NonTerm("val"),
                 NonTerm("expr"),
                 [
                     NonTerm("comma"),
@@ -240,7 +230,20 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 NonTerm("comma").opt(),
             ].and().opt().group("params"),
             NonTerm("rparen"),
-        ].and().group("call"),
+        ].and(),
+
+        "call_idn" => [
+            Identifier.group("idn").take(),
+            NonTerm("call_params"),
+        ].and().group("call_idn"),
+
+        "call_field" => [
+            NonTerm("field").take(),
+            NonTerm("call_params"),
+        ].and().group("call_field"),
+        "call_val" => NonTerm("call_params").group("call_val"),
+        "call" => [NonTerm("call_idn"),NonTerm("call_field"),NonTerm("call_val")].or(),
+
 
         "val_field_index" => [
             NonTerm("val_index"),
@@ -251,11 +254,11 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("call"),
         ].or(),
 
-        // "field" => Identifier,
+        "field" => Identifier.group("field_name"),
         "val_field" => [
             NonTerm("dot"),
             [
-                Identifier.group("field_name").cede(),
+                NonTerm("field").cede(),
                 Int.group("field_ind"),
             ].or().expected0("field"),
 

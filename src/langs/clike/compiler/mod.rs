@@ -176,23 +176,25 @@ impl Compiler {
 
         match top_group.name() {
             "primitive" => {
-                let p=top_group.tokens().first().unwrap();
-                builder.loc(p.start_loc());
-                println!("\t{:?}",p.token_type());
-                match p.token_type() {
-                    super::tokenizer::TokenTypeContainer::Float(x) => {
-                        builder.result_float(x);
-                    },
-                    super::tokenizer::TokenTypeContainer::Int(x) => {
-                        builder.result_int(x);
-                    },
-                    super::tokenizer::TokenTypeContainer::String(x) => {
-                        builder.result_string(x);
-                    },
-                    super::tokenizer::TokenTypeContainer::Identifier(x) => {
-                        builder.get_var(x);
-                    },
-                    _ => {panic!("");}
+                if let Some(p)=top_group.tokens().first() {
+                    builder.loc(p.start_loc());
+                    println!("\t{:?}",p.token_type());
+
+                    match p.token_type() {
+                        TokenTypeContainer::Float(x) => {
+                            builder.result_float(x);
+                        },
+                        TokenTypeContainer::Int(x) => {
+                            builder.result_int(x);
+                        },
+                        TokenTypeContainer::String(x) => {
+                            builder.result_string(x);
+                        },
+                        TokenTypeContainer::Identifier(x) => {
+                            builder.get_var(x);
+                        },
+                        _ => {panic!("");}
+                    }
                 }
             }
             "nil" => {
@@ -237,30 +239,31 @@ impl Compiler {
                     .get_field(false)
                     ;
             }
-            "field" => {
-                let field=top_group.tokens().first().unwrap();
+            "field_index" => {
+                let field=top_group.tokens().first().unwrap().get_int().unwrap();
                 builder
-                    .loc(field.start_loc())
+                    .loc(field.token.start_loc())
                     .param_push()
-                    ;
+                    .result_int(field.value)
 
-                match field.token_type() {
-                    TokenTypeContainer::Int(x) => {
-                        builder.result_int(x);
-                    }
-                    TokenTypeContainer::Identifier(x) => {
-                        builder.result_string(x);
-                    }
-                    _=> {panic!("");}
-                }
-
-                //
-                builder
                     .param_push()
                     .swap()
                     .get_field(false)
                     ;
             }
+            "field_name" => {
+                let field=top_group.tokens().first().unwrap().get_identifier().unwrap();
+                builder
+                    .loc(field.token.start_loc())
+                    .param_push()
+                    .result_string(field.value)
+
+                    .param_push()
+                    .swap()
+                    .get_field(false)
+                    ;
+            }
+
             "field_call" => {
                 let field=top_group.tokens().first().unwrap();
                 let call=top_group.child(0).unwrap();
