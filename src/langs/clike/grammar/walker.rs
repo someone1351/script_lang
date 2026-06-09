@@ -780,19 +780,26 @@ where
 
                     let groups=&mut self.groups_stk.last_mut().unwrap().groups;
                     //clamp old_groups.tokens.end to takeable.start
-                    println!("--- do take {g:?}");
+
+                    if self.debug {
+                        println!("--- do take {g:?}");
+                    }
 
                     for g in old_groups {
                         let group=&mut groups[g];
                         group.tokens.pop_back_amount(takeable.tokens.len()).unwrap();
-                        println!("-----\told_groups.clamp g={g}, group.tokens={:?}",group.tokens,);
+
+                        if self.debug {
+                            println!("-----\told_groups.clamp g={g}, group.tokens={:?}",group.tokens,);
+                        }
                     }
 
                     //set new_groups.tokens.start to takeable.start
                     for g in new_groups {
                         let group=&mut groups[g];
-
-                        println!("-----\tnew_groups.set_start g={g}, group.tokens={:?}",group.tokens,);
+                        if self.debug {
+                            println!("-----\tnew_groups.set_start g={g}, group.tokens={:?}",group.tokens,);
+                        }
                         group.tokens=takeable.tokens_start;
                     }
 
@@ -803,11 +810,14 @@ where
                         if group.parent == takeable.group_ind
                             && group.tokens.inds().end >= takeable.tokens.inds().start
                         {
-                            println!("-----\tinner.groups.change_parent g={g}, group.parent={}=>{}",group.parent,cur.group_ind,);
-                            println!("--------- group.name={:?}, group.tokens.inds={:?} takeable.tokens.inds={:?}",group.name,group.tokens.inds(), takeable.tokens.inds());
-                            println!("--------- group.name={:?}, group.tokens={:?} takeable.tokens={:?} takeable.tokens_start={:?}",group.name,group.tokens, takeable.tokens,takeable.tokens_start);
+                            if self.debug {
+                                println!("-----\tinner.groups.change_parent g={g}, group.parent={}=>{}",group.parent,cur.group_ind,);
+                                println!("--------- group.name={:?}, group.tokens.inds={:?} takeable.tokens.inds={:?}",group.name,group.tokens.inds(), takeable.tokens.inds());
+                                println!("--------- group.name={:?}, group.tokens={:?} takeable.tokens={:?} takeable.tokens_start={:?}",group.name,group.tokens, takeable.tokens,takeable.tokens_start);
 
-                            println!("--------- {} >= {}",group.tokens.inds().end, takeable.tokens.inds().start);
+                                println!("--------- {} >= {}",group.tokens.inds().end, takeable.tokens.inds().start);
+                            }
+
                             group.parent=cur.group_ind;
                         }
                     }

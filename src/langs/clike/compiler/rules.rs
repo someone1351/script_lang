@@ -72,8 +72,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "ending" => [NonTerm("semicolon"),Eol].or().many1(),
         "stmts" => [
             NonTerm("stmt"),
-            // [NonTerm("ending"), NonTerm("stmt"),].and().many0(),
-            NonTerm("ending").many0(),
+            [NonTerm("ending"), NonTerm("stmt"),].and().many0(),
+            // NonTerm("ending").many0(),
         ].and().opt(),
 
         "stmt" => [
@@ -207,10 +207,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
 
         "expr" => [
             NonTerm("val"),
-            [
-                NonTerm("infix"),
-                NonTerm("val"),
-            ].and().many0(),
+            // [
+            //     NonTerm("infix"),
+            //     NonTerm("val"),
+            // ].and().many0(),
         ].and().group("expr").expected0("expr"),
 
         "prefixes" => [
@@ -221,8 +221,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
 
         "call" => [
             [
-                NonTerm("field").group("field").take(), //.group("field"),
-                NonTerm("idn").group("idn").take(),
+                NonTerm("field").group("field_name").take(),
+                Identifier.group("idn").take(),
                 // // Always.group("other")
             ].or().opt(),
             // NonTerm("field").take().group("field2").opt(),
@@ -255,8 +255,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "val_field" => [
             NonTerm("dot"),
             [
-                NonTerm("field").group("field").cede(), //.group("field"),
-                Int,
+                NonTerm("field").group("field_name").cede(),
+                Int.group("field_ind"),
             ].or().expected0("field"),
 
         ].and(),
@@ -275,7 +275,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "nil" => Keyword("nil").group("nil"),
         "void" => Keyword("void").group("void"),
 
-        "idn" => Identifier,
+
 
         "val" => [
             NonTerm("prefixes").opt(),
@@ -286,7 +286,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                     Int,
                     Float,
                     String,
-                    NonTerm("idn").cede(),
+                    Identifier.group("idn").cede(),
                 ].or().group("primitive"),
                 NonTerm("bool"),
                 NonTerm("nil"),
