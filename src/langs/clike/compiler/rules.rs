@@ -207,10 +207,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
 
         "expr" => [
             NonTerm("val"),
-            // [
-            //     NonTerm("infix"),
-            //     NonTerm("val"),
-            // ].and().many0(),
+            [
+                NonTerm("infix"),
+                NonTerm("val"),
+            ].and().many0(),
         ].and().group("expr").expected0("expr"),
 
         "prefixes" => [

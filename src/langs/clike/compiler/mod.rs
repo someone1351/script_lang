@@ -330,7 +330,6 @@ impl Compiler {
                     ;
             }
 
-
             "val" => {
                 let mut groups=top_group.children();
 
