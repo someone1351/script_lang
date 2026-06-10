@@ -619,12 +619,12 @@ impl Debugger {
 
         match cur_instr {
             Instruction::CallGlobalOrMethod(symbol_ind,params_num)=>{
-                format!("CallGlobal({:?},{params_num})",symbol_ind.as_str())
+                format!("CallGlobalOrMethod({:?},{params_num})",symbol_ind.as_str())
             }
             Instruction::CallMethod(symbol_ind,params_num)=>{
                 format!("CallMethod({:?},{params_num})",symbol_ind.as_str())
             }
-            Instruction::TryCallMethod(symbol_ind,params_num)=>{
+            Instruction::CallMethodOrResult(symbol_ind,params_num)=>{
                 format!("TryCallMethod({:?},{params_num})",symbol_ind.as_str())
             }
             Instruction::DeclGlobalVar(symbol_ind)=>{

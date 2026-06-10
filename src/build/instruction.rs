@@ -124,7 +124,7 @@ pub enum Instruction {
     CallGlobalOrMethod(StringVal,usize), //symbol_ind, params_num
 
     CallMethod(StringVal,usize), //symbol_ind, params_num
-    TryCallMethod(StringVal,usize), //symbol_ind, params_num
+    CallMethodOrResult(StringVal,usize), //symbol_ind, params_num
     // HasMethod(usize), //symbol_ind,
     CallResult(usize), //params_num
 

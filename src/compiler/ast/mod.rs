@@ -703,14 +703,14 @@ impl<'a> Ast<'a> {
         Ok(())
     }
 
-    pub fn try_call_method(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> {
+    pub fn call_method_or_result(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> {
         //uses and pops off params_num amount off stack
 
         if self.last_node().stack_pushed_num < params_num {
             return Err(AstError::CallNotEnoughParamsPushedOnStack);
         }
 
-        self.add_next(AstNodeType::TryCallMethod{name,params_num});
+        self.add_next(AstNodeType::CallMethodOrResult{name,params_num});
 
         self.last_node_mut().stack_pushed_num-=params_num;
 
@@ -1318,7 +1318,7 @@ impl<'a> Ast<'a> {
                         self.get_node_mut(cur_node_ind).stack_size-=amount;
                     }
                     AstNodeType::CallMethod { params_num, .. }
-                    | AstNodeType::TryCallMethod { params_num, .. }
+                    | AstNodeType::CallMethodOrResult { params_num, .. }
                     | AstNodeType::CallResult { params_num }
                     | AstNodeType::CallVarOrMethod { params_num, .. } =>
                     {
@@ -1736,8 +1736,8 @@ impl<'a> Ast<'a> {
                 AstNodeType::CallMethod{name,params_num} => {
                     instructions.push(Instruction::CallMethod(symbol_inds.get(name),params_num));
                 }
-                AstNodeType::TryCallMethod{name,params_num} => {
-                    instructions.push(Instruction::TryCallMethod(symbol_inds.get(name),params_num));
+                AstNodeType::CallMethodOrResult{name,params_num} => {
+                    instructions.push(Instruction::CallMethodOrResult(symbol_inds.get(name),params_num));
                 }
                 AstNodeType::CallResult{params_num} => {
                     instructions.push(Instruction::CallResult(params_num));

@@ -97,7 +97,7 @@ impl Compiler {
 
         //
         let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
-        walker.set_debug(true);
+        // walker.set_debug(true);
 
         //
         if let Err(e)=walker.run("start") {
@@ -122,7 +122,7 @@ impl Compiler {
         println!("{}",walk.root());
 
 
-        return Ok(BuildT::new(Build::default()));
+        // return Ok(BuildT::new(Build::default()));
 
         //
         let mut builder = builder::Builder::new();
@@ -218,7 +218,7 @@ impl Compiler {
                 builder.result_bool(false);
             }
             "expr" => {
-                builder.eval(top_group.children().first().unwrap());
+                builder.eval(top_group.children().first().unwrap()); //todo
             }
             "pos" => {}
             "neg" => {
@@ -264,90 +264,73 @@ impl Compiler {
                     ;
             }
 
-            "call_field" => {
+            "params" => {
+                let params_group=top_group.child(1).unwrap();
 
+                for param in params_group.children().rev() {
+                    builder
+                        .eval(param)
+                        .param_push();
+                }
+            }
+            "call_field_index" => {
+                let field_group=top_group.child(0).unwrap();
+                let params_group=top_group.child(1).unwrap();
+                let field_val=field_group.tokens().first().unwrap().get_int().unwrap();
+                let params_num=params_group.children().len();
+
+                //self.ind(..) => self[ind](self, ..)
+
+                builder
+                    .decl_anon_var("self", false)
+                    .set_anon_var("self")
+                    .eval(params_group)
+                    .get_anon_var("self")
+                    .param_push()
+                    .eval(field_group)
+                    .loc(field_val.token.start_loc())
+                    .call_result(params_num)
+                    ;
+            }
+            "call_field_name" => {
+                let field_group=top_group.child(0).unwrap();
+                let params_group=top_group.child(1).unwrap();
+                let field_val=field_group.tokens().first().unwrap().get_identifier().unwrap();
+                let params_num=params_group.children().len();
+
+                //self.field(..) => self.field(self, ..)
+
+                builder
+                    .decl_anon_var("self", false)
+                    .set_anon_var("self")
+                    .eval(params_group)
+                    .get_anon_var("self")
+                    .param_push()
+                    .eval(field_group)
+                    .loc(field_val.token.start_loc())
+                    .call_method_or_result(field_val.value, params_num)
+                    ;
             }
             "call_idn" => {
+                let idn_group=top_group.child(0).unwrap();
+                let params_group=top_group.child(1).unwrap();
+                let name=idn_group.tokens().first().unwrap().get_identifier().unwrap();
 
+                builder
+                    .eval(params_group)
+                    .loc(name.token.start_loc())
+                    .call(name.value, params_group.children().len());
             }
             "call_val" => {
-
-            }
-            "field_call" => {
-                let field=top_group.tokens().first().unwrap();
-                let call=top_group.child(0).unwrap();
+                let params_group=top_group.child(0).unwrap();
 
                 builder
-                    .loc(field.start_loc())
-                    .param_push() //var
-                    ;
-
-                match field.token_type() {
-                    TokenTypeContainer::Identifier(x) => {
-                        builder.result_string(x);
-                    }
-                    _=> {panic!("");}
-                }
-
-                //
-                builder
-                    .param_push() //field
-                    .swap()
-                    .get_field(false)
-                    .block_start(None)
-                        .block_start(None)
-                            .to_block_end(JmpCond::Nil, 0)
-                            .call_result(0)
-                            .to_block_end(JmpCond::None, 1)
-                        .block_end()
-                        .call_method("name", 0)
-                    .block_end()
-
+                    .eval(params_group)
+                    .call_result(params_group.children().len())
                     ;
             }
-            "call" => {
-                let params=top_group.child(0).unwrap().children();
-                let last_loc=builder.get_loc();
 
 
-                builder.set_anon_scope(*next_anon_id); *next_anon_id+=1;
-
-                builder
-                    .decl_anon_var("f", false)
-                    .set_anon_var("f")
-                    ;
-
-                for param in params.rev() {
-                    builder
-                        .eval(param)
-                        .param_push()
-                        ;
-                }
-
-                builder
-                    .loc(last_loc)
-                    .get_anon_var("f")
-                    .call_result(params.len())
-                    ;
-            }
-            "mcall" => {
-
-                let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
-                let params=top_group.child(1).unwrap().children();
-
-                for param in params.rev() {
-                    // println!("param {:?}",param.name());
-                    builder
-                        .eval(param)
-                        .param_push()
-                        ;
-                }
-
-                builder
-                    .loc(name.token.start_loc())
-                    .call(name.value, params.len())
-                    ;
-            }
             "val" => {
                 let mut groups=top_group.children();
 
@@ -370,8 +353,8 @@ impl Compiler {
 
                 //
                 if let Some(prefixes)=prefixes {
-                    for c in prefixes.children().rev() {
-                        builder.eval(c);
+                    for prefix in prefixes.children().rev() {
+                        builder.eval(prefix);
                     }
                 }
             }

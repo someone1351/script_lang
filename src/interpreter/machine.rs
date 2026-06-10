@@ -945,15 +945,23 @@ impl<'a,X> Machine<'a,X> {
                 }
             }
 
-            Instruction::TryCallMethod(symbol, params_num) => {
+            Instruction::CallMethodOrResult(symbol, params_num) => {
                 let params_num =*params_num;
 
                 if let Some(x)=self.get_method(symbol.as_str(), params_num) {
                     self.debugger.add_func_name(symbol.as_str());
                     self.inner_call_bound_func(params_num, x)?;
                 } else {
-                    self.stack_pop_amount(params_num)?;
+                    // self.stack_pop_amount(params_num)?;
+
+                    //
+                    let v = self.result_val();
+
+                    if self.inner_call_value(params_num,v,false)? {
+                        return Ok(()); //continue;
+                    }
                 }
+
             }
 
             Instruction::CallGlobalOrMethod(symbol, params_num)  => {
