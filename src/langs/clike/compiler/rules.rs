@@ -197,12 +197,12 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         ].and().group("lambda"),
 
         "infix" => [
-            NonTerm("add"),NonTerm("sub"),
-            NonTerm("mul"),NonTerm("div"),
-            NonTerm("lt"),NonTerm("gt"),
-            NonTerm("le"),NonTerm("ge"),
-            NonTerm("eq"),NonTerm("ne"),
-            NonTerm("and"),NonTerm("or"),
+            NonTerm("add").group("add"),NonTerm("sub").group("sub"),
+            NonTerm("mul").group("mul"),NonTerm("div").group("div"),
+            NonTerm("lt").group("lt"),NonTerm("gt").group("gt"),
+            NonTerm("le").group("le"),NonTerm("ge").group("ge"),
+            NonTerm("eq").group("eq"),NonTerm("ne").group("ne"),
+            NonTerm("and").group("and"),NonTerm("or").group("or"),
         ].or(),
 
         "expr" => [

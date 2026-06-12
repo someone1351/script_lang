@@ -444,6 +444,11 @@ impl<'a> Ast<'a> {
     }
 
     pub fn to_label_block_end(&mut self, cond:JmpCond, block_label:&'a str, skip:usize) -> Result<bool,AstError> {
+        //skip was to solve a problem, eg
+        // while true { while {break} {body ...} }
+        //without skip, it would break out of the inner while, instead of the outer
+        //
+
         let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
 
         if stack_pushed_num!=0 {

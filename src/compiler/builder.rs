@@ -79,6 +79,10 @@ pub enum BuilderNodeType<'a,T:Clone+'a,E:Clone> {
         primitive:T, // PrimitiveContainer<'a>
         data:HashMap<&'a str,usize>,
     },
+    EvalFunc{
+        func:Box<dyn Fn(&mut Builder<'a,T,E>)->Result<(),BuilderError<E>>+'a>,
+        data:HashMap<&'a str,usize>,
+    },
 
     Ast(Box<dyn Fn(&mut Ast<'a>)->Result<(),BuilderError<E>>+'a>),
 
@@ -686,14 +690,28 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
             Ok(())
         })
     }
-
+    pub fn eval_func<F>(&mut self, func : F,) -> &mut Self
+    where
+        F:Fn(&mut Builder<'a,T,E>)->Result<(),BuilderError<E>>+'a,
+    {
+        self.eval_func_with_flags(func, [])
+    }
+    pub fn eval_func_with_flags<F,D>(&mut self, func : F,flags:D) -> &mut Self
+    where
+        F:Fn(&mut Builder<'a,T,E>)->Result<(),BuilderError<E>>+'a,
+        D: IntoIterator<Item=(&'a str,usize)>,
+    {
+        let flags= flags.into_iter().collect();
+        self.temp_stk.push(BuilderNode{node_type:BuilderNodeType::EvalFunc{func:Box::new(func),data: flags},loc:self.cur_loc});
+        self
+    }
 
     pub fn eval(&mut self, primitive : T) -> &mut Self {
         self.eval_with_flags(primitive, [])
     }
-    pub fn eval_with_flags<F>(&mut self, primitive : T,flags:F) -> &mut Self
+    pub fn eval_with_flags<D>(&mut self, primitive : T,flags:D) -> &mut Self
     where
-        F: IntoIterator<Item=(&'a str,usize)>,
+        D: IntoIterator<Item=(&'a str,usize)>,
     {
         let flags= flags.into_iter().collect();
         self.temp_stk.push(BuilderNode{node_type:BuilderNodeType::EvalPrimitive{primitive,data: flags},loc:self.cur_loc});
@@ -900,6 +918,9 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
 
         while let Some(node)=working_stk.pop() {
             match node.node_type {
+				BuilderNodeType::Ast(x)=>{
+                    self.nodes.push((x,node.loc));
+                }
                 BuilderNodeType::EvalPrimitive{ primitive, data }=> {
                     let mut last_flags=data;
                     // self.cur_flags=data;
@@ -909,8 +930,15 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
                     // self.cur_flags.clear();
                     self.cur_flags=last_flags;
                 }
-				BuilderNodeType::Ast(x)=>{
-                    self.nodes.push((x,node.loc));
+                BuilderNodeType::EvalFunc{ func, data }=> {
+                    let mut last_flags=data;
+                    std::mem::swap(&mut self.cur_flags, &mut last_flags);
+
+                    //
+                    func(self)?;
+
+                    //
+                    self.cur_flags=last_flags;
                 }
             }
 

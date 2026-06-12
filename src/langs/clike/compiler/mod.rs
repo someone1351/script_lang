@@ -218,6 +218,36 @@ impl Compiler {
                 builder.result_bool(false);
             }
             "expr" => {
+                let ops=vec!["div", "mul", "sub", "add", "ge", "le", "gt", "lt", "ne", "eq", "and", "or"];
+
+                // let mut ops=["or","and","eq","ne","lt","gt","le","ge","add","sub","mul","div"];
+
+                // ops.reverse();
+                // println!("{ops:?}");
+
+                let add_func=|x: &WalkGroupContainer<'_, '_>|x.tokens().first().unwrap().has_symbol("+").is_ok();
+                let sub_func=|x: &WalkGroupContainer<'_, '_>|x.tokens().first().unwrap().has_symbol("-").is_ok();
+                let mul_func=|x: &WalkGroupContainer<'_, '_>|x.tokens().first().unwrap().has_symbol("*").is_ok();
+                let div_func=|x: &WalkGroupContainer<'_, '_>|x.tokens().first().unwrap().has_symbol("/").is_ok();
+
+                let xs=top_group.children().collect::<Vec<_>>();
+                let ys=xs
+                    .split(|x|x.tokens().first().unwrap().has_symbol("+").is_ok())
+                    .map(|y|y.split(|x|x.tokens().first().unwrap().has_symbol("-").is_ok())
+                        .map(|y|y.split(|x|x.tokens().first().unwrap().has_symbol("-").is_ok()))
+                        )
+                    .collect::<Vec<_>>();
+                // let zs=ys.split(pred)
+
+
+                let pluses=xs.split(|x|x.tokens().first().unwrap().has_symbol("+").is_ok()).collect::<Vec<_>>();
+
+                for a in pluses {
+                    let minuses=a.split(|x|x.tokens().first().unwrap().has_symbol("+").is_ok()).collect::<Vec<_>>();
+
+                }
+
+
                 builder.eval(top_group.children().first().unwrap()); //todo
             }
             "pos" => {}

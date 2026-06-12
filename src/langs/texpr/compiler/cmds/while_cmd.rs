@@ -25,7 +25,7 @@ pub fn while_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Prim
     builder
         // .loop_instr()
         .block_start(Some("loop"))
-            .eval_with_flags(cond_expr,[("in_loop_cond",1)])
+            .eval_with_flags(cond_expr,[("in_loop_cond",1)]) //so breaks/continues in cond, don't break out of this loop, instead break out of an outer loop
             .param_push()
             .call_method("not", 1)
             .to_block_end(JmpCond::True //False
