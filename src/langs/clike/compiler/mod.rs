@@ -127,6 +127,7 @@ pub fn op_add<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,
             .loc(loc)
             .call_method("add",2); //,loc
     }
+
     Ok(())
 }
 pub fn op_sub<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
@@ -151,12 +152,42 @@ pub fn op_sub<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,
 }
 pub fn op_mul<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
     println!("=mul, op_ind={op_ind}, splits={splits:?}");
+
     builder.eval_func(op_run(op_ind+1, splits[0]));
+
+    //
+    for i in (0 .. (splits.len()-1)/2).rev() {
+        let loc=splits[i*2+1].first().unwrap().tokens().first().unwrap().start_loc();
+
+        builder
+            .param_push() //push last result
+            .eval_func(op_run(op_ind+1, splits[(i+1)*2]))
+            .param_push()
+            .swap()
+            .loc(loc)
+            .call_method("mul",2); //,loc
+    }
+
     Ok(())
 }
 pub fn op_div<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
     println!("=div, op_ind={op_ind}, splits={splits:?}");
+
     builder.eval_func(op_run(op_ind+1, splits[0]));
+
+    //
+    for i in (0 .. (splits.len()-1)/2).rev() {
+        let loc=splits[i*2+1].first().unwrap().tokens().first().unwrap().start_loc();
+
+        builder
+            .param_push() //push last result
+            .eval_func(op_run(op_ind+1, splits[(i+1)*2]))
+            .param_push()
+            .swap()
+            .loc(loc)
+            .call_method("div",2); //,loc
+    }
+
     Ok(())
 }
 
@@ -187,7 +218,8 @@ impl Fn(&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult
         // ("le",op_le),("ge",op_ge),
         ("add",op_add),
         ("sub",op_sub),
-        // ("mul",op_mul),("div",op_div),
+        ("mul",op_mul),
+        ("div",op_div),
         // ("mod",op_mod),("pow",op_pow),
     ];
 
