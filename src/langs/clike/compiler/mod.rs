@@ -87,19 +87,24 @@ pub fn op_add<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,
 
     builder.eval_func(op_run(op_ind+1, splits[0]));
 
-    // let loc = sexpr.get(0).unwrap().start_loc();
+    // let infix_num=splits.len()/2;
+    // let val_num=splits.len()-infix_num;
 
-    // for i in 2 .. sexpr.len() {
 
-    //     builder.loc(loc);
+    //
+    for i in 0 .. (splits.len()-1)/2 {
+        let loc=splits[i*2].first().unwrap().tokens().first().unwrap().start_loc();
 
-    //     builder
-    //         .param_push() //push last result
-    //         .eval(sexpr.get(i).unwrap())
-    //         .param_push()
-    //         .swap()
-    //         .call_method("add",2); //,loc
-    // }
+        builder
+            .param_push() //push last result
+            // .eval(sexpr.get(i).unwrap())
+            .eval_func(op_run(op_ind+1, splits[i*2+1]))
+
+            .param_push()
+            .swap()
+            .loc(loc)
+            .call_method("add",2); //,loc
+    }
     Ok(())
 }
 pub fn op_sub<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
@@ -376,47 +381,8 @@ impl Compiler {
                 builder.result_bool(false);
             }
             "expr" => {
-                // static  OPS: &[&str]=&["div", "mul", "sub", "add", "ge", "le", "gt", "lt", "ne", "eq", "and", "or"];
-                // static OPS: &[&str]=&["or","and","eq","ne","lt","gt","le","ge","add","sub","mul","div"];
-                // static OP_FUNCS:&[Box<dyn Fn(&mut Builder<'a,WalkGroupContainer<'t,'g>,BuilderErrorType>)->Result<(),E>>]=&[Box::new(|builder|{
-                //     // builder.
-                //     Ok(())
-                // })];
+                builder.eval_func(op_run(0, top_group.children()));
 
-                // let i=0;
-
-                // builder.eval_func(|builder|{
-                //     ops_funcs[0](builder)?;
-                //     Ok(())
-                // });
-
-                // ops.reverse();
-                // println!("{ops:?}");
-
-                let add_func=|x: &WalkGroupContainer<'_, '_>|x.tokens().first().unwrap().has_symbol("+").is_ok();
-                let sub_func=|x: &WalkGroupContainer<'_, '_>|x.tokens().first().unwrap().has_symbol("-").is_ok();
-                let mul_func=|x: &WalkGroupContainer<'_, '_>|x.tokens().first().unwrap().has_symbol("*").is_ok();
-                let div_func=|x: &WalkGroupContainer<'_, '_>|x.tokens().first().unwrap().has_symbol("/").is_ok();
-
-                let xs=top_group.children().collect::<Vec<_>>();
-                let ys=xs
-                    .split(|x|x.tokens().first().unwrap().has_symbol("+").is_ok())
-                    .map(|y|y.split(|x|x.tokens().first().unwrap().has_symbol("-").is_ok())
-                        .map(|y|y.split(|x|x.tokens().first().unwrap().has_symbol("-").is_ok()))
-                        )
-                    .collect::<Vec<_>>();
-                // let zs=ys.split(pred)
-
-
-                let pluses=xs.split(|x|x.tokens().first().unwrap().has_symbol("+").is_ok()).collect::<Vec<_>>();
-
-                for a in pluses {
-                    let minuses=a.split(|x|x.tokens().first().unwrap().has_symbol("+").is_ok()).collect::<Vec<_>>();
-
-                }
-
-
-                builder.eval(top_group.children().first().unwrap()); //todo
             }
             "pos" => {}
             "neg" => {

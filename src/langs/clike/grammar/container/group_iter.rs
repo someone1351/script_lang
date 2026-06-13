@@ -83,6 +83,8 @@ impl<'t,'g> WalkGroupIterContainer<'t,'g> {
         let mut v=Vec::new();
         let mut x=self.start;
 
+        print!("!!!!");
+        print!("gs is {self:?}");
         for i in self.start ..self.end {
             let g=self.get(i).unwrap();
 
