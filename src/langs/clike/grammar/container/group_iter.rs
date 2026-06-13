@@ -83,10 +83,10 @@ impl<'t,'g> WalkGroupIterContainer<'t,'g> {
         let mut v=Vec::new();
         let mut x=self.start;
 
-        print!("!!!!");
-        print!("gs is {self:?}");
+        // print!("!!!!");
+        // print!("gs is {self:?}");
         for i in self.start ..self.end {
-            let g=self.get(i).unwrap();
+            let g=self.get(i-self.start).unwrap();
 
             if f(g) {
                 if x!=i {
@@ -123,9 +123,11 @@ impl<'t,'g> WalkGroupIterContainer<'t,'g> {
         let mut x=self.start;
 
         for i in self.start ..self.end {
-            let g=self.get(i).unwrap();
+            let g=self.get(i-self.start).unwrap();
 
-            if f(g) {
+            let fg=f(g);
+            // println!("f(g)={fg}",);
+            if fg {
                 if x!=i {
                     v.push(WalkGroupIterContainer{ walk: self.walk, start: x, end: i });
                 }

@@ -309,7 +309,7 @@ pub fn register_int<X>(lib_scope : &mut LibScope<X>) {
     lib_scope.method("sub",|context|{
         let a=context.param(0).as_int();
         let b=context.param(1).as_int();
-        Ok(a.checked_add(b)?.into())
+        Ok(a.checked_sub(b)?.into())
     }).int().int().end();
 
     //mul(int,int)

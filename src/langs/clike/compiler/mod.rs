@@ -50,55 +50,77 @@ type ClikeBuilder<'a,'t,'g> = Builder<'a,WalkGroupContainer<'t,'g>,BuilderErrorT
 type ClikeBuilderResult=Result<(), BuilderError<BuilderErrorType>>;
 
 pub fn op_and<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=and, op_ind={op_ind}, splits={splits:?}");
+
+    builder.eval_func(op_run(op_ind+1, splits[0]));
     Ok(())
 }
 pub fn op_or<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=or, op_ind={op_ind}, splits={splits:?}");
+    builder.eval_func(op_run(op_ind+1, splits[0]));
     Ok(())
 }
 
 
 pub fn op_eq<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=eq, op_ind={op_ind}, splits={splits:?}");
+
+    builder.eval_func(op_run(op_ind+1, splits[0]));
     Ok(())
 }
 pub fn op_ne<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=ne, op_ind={op_ind}, splits={splits:?}");
+
+    builder.eval_func(op_run(op_ind+1, splits[0]));
     Ok(())
 }
 
 
 pub fn op_lt<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=lt, op_ind={op_ind}, splits={splits:?}");
+    builder.eval_func(op_run(op_ind+1, splits[0]));
     Ok(())
 }
 pub fn op_gt<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=gt, op_ind={op_ind}, splits={splits:?}");
+    builder.eval_func(op_run(op_ind+1, splits[0]));
     Ok(())
 }
 
 pub fn op_le<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=le, op_ind={op_ind}, splits={splits:?}");
+    builder.eval_func(op_run(op_ind+1, splits[0]));
     Ok(())
 }
 pub fn op_ge<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=ge, op_ind={op_ind}, splits={splits:?}");
+    builder.eval_func(op_run(op_ind+1, splits[0]));
     Ok(())
 }
 
 pub fn op_add<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=add, op_ind={op_ind}, splits={splits:?}");
 
     // let splits: Vec<WalkGroupIterContainer<'t,'g>>=groups.split(|x|x.name()==OPS[i].0);
 
     //a+b+c+d = ((a+b)+c)+d
 
     builder.eval_func(op_run(op_ind+1, splits[0]));
-
+    // println!("hmma splits[i*2+1]={:?}",splits[0]);
     // let infix_num=splits.len()/2;
     // let val_num=splits.len()-infix_num;
 
 
     //
     for i in 0 .. (splits.len()-1)/2 {
-        let loc=splits[i*2].first().unwrap().tokens().first().unwrap().start_loc();
+        let loc=splits[i*2+1].first().unwrap().tokens().first().unwrap().start_loc();
+
+        // println!("hmmb{i} splits[{}]={:?}",(i+1)*2,splits[(i+1)*2]);
 
         builder
             .param_push() //push last result
             // .eval(sexpr.get(i).unwrap())
-            .eval_func(op_run(op_ind+1, splits[i*2+1]))
+            .eval_func(op_run(op_ind+1, splits[(i+1)*2]))
 
             .param_push()
             .swap()
@@ -108,20 +130,45 @@ pub fn op_add<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,
     Ok(())
 }
 pub fn op_sub<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=sub, op_ind={op_ind}, splits={splits:?}");
+
+    builder.eval_func(op_run(op_ind+1, splits[0]));
+
+    //
+    for i in 0 .. (splits.len()-1)/2 {
+        let loc=splits[i*2+1].first().unwrap().tokens().first().unwrap().start_loc();
+
+        builder
+            .param_push() //push last result
+            .eval_func(op_run(op_ind+1, splits[(i+1)*2]))
+            .param_push()
+            .swap()
+            .loc(loc)
+            .call_method("sub",2); //,loc
+    }
+
     Ok(())
 }
 pub fn op_mul<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=mul, op_ind={op_ind}, splits={splits:?}");
+    builder.eval_func(op_run(op_ind+1, splits[0]));
     Ok(())
 }
 pub fn op_div<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=div, op_ind={op_ind}, splits={splits:?}");
+    builder.eval_func(op_run(op_ind+1, splits[0]));
     Ok(())
 }
 
 
 pub fn op_pow<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=pow, op_ind={op_ind}, splits={splits:?}");
+    builder.eval_func(op_run(op_ind+1, splits[0]));
     Ok(())
 }
 pub fn op_mod<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    println!("=mod, op_ind={op_ind}, splits={splits:?}");
+    builder.eval_func(op_run(op_ind+1, splits[0]));
     Ok(())
 }
 
@@ -134,49 +181,48 @@ impl Fn(&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult
     // static  OPS: &[&str]=&["div", "mul", "sub", "add", "ge", "le", "gt", "lt", "ne", "eq", "and", "or"];
     static OPS: &[(&'static str, for<'a,'t,'g,> fn(usize,Vec<WalkGroupIterContainer<'t,'g>>, &mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult)]
     =&[
-        ("or",op_or),("and",op_and),
-        ("eq",op_eq),("ne",op_ne),
-        ("lt",op_lt),("gt",op_gt),
-        ("le",op_le),("ge",op_ge),
-        ("add",op_add),("sub",op_sub),
-        ("mul",op_mul),("div",op_div),
-        ("mod",op_mod),("pow",op_pow),
+        // ("or",op_or),("and",op_and),
+        // ("eq",op_eq),("ne",op_ne),
+        // ("lt",op_lt),("gt",op_gt),
+        // ("le",op_le),("ge",op_ge),
+        ("add",op_add),
+        ("sub",op_sub),
+        // ("mul",op_mul),("div",op_div),
+        // ("mod",op_mod),("pow",op_pow),
     ];
 
-    // let splits: Vec<WalkGroupIterContainer<'t,'g>>=groups.split(|x|x.name()==OPS[i].0);
+    println!("=run, op_ind={op_ind}, groups={groups:?}");
 
-    // match splits.len() {
-    //     0 => {panic!("");}
-    //     1 => {}
-    //     _ => {
-    //         OPS[i].1(splits,builder)?;
-    //     }
-    // }
-
-    // if i+1<OPS.len() {
-    //     builder.eval_func(move|builder|run_ops(i+1,builder));
-    // }
-
-    // Ok(())
 
 
     move|builder|{
-        if op_ind>=OPS.len() {
+        // println!("groups are {groups:?}");
+
+
+        if groups.len()==1 {
+            println!("groups ==1, {groups:?}");
+            builder.eval(groups.first().unwrap());
             return Ok(());
+        } else if op_ind>=OPS.len() {
+            panic!("");
+        } else if groups.len()%2 ==0 {
+            panic!("");
         }
 
         let op_name=OPS[op_ind].0;
-        let op_func=OPS[op_ind].1;
-        let splits: Vec<WalkGroupIterContainer<'t,'g>>=groups.split(|x|x.name()==op_name);
 
-        if splits.len()==1 {
-            builder.eval(splits[0].first().unwrap());
-            Ok(())
-        } else if splits.len()%2 ==0 {
-            panic!("");
-        } else {
-            op_func(op_ind,splits,builder)
-        }
+
+        let op_func=OPS[op_ind].1;
+        // println!("-gooo {groups:?}");
+        let splits: Vec<WalkGroupIterContainer<'t,'g>>=groups.split_between(|x|{
+            // println!("\t\tx.name()={:?}, op_name={op_name:?}",x.name());
+            x.name()==op_name
+        });
+        println!("\tsplits={splits:?}");
+
+
+        op_func(op_ind,splits,builder)
+
     }
 
 }
