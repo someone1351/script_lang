@@ -203,6 +203,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("le").group("le"),NonTerm("ge").group("ge"),
             NonTerm("eq").group("eq"),NonTerm("ne").group("ne"),
             NonTerm("and").group("and"),NonTerm("or").group("or"),
+
+
+            NonTerm("percent").group("mod"),NonTerm("hat").group("pow"),
         ].or(),
 
         "expr" => [
@@ -392,6 +395,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "sub" => Symbol("-"),
         "mul" => Symbol("*"),
         "div" => Symbol("/"),
+
+
+        "hat" => Symbol("^"),
+        "percent" => Symbol("%"),
 
         "and" => [Symbol("&"),Symbol("&"),].and(),
         "or" => [Symbol("|"),Symbol("|"),].and(),

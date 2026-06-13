@@ -36,6 +36,164 @@ pub use compiler_error::*;
 
 // pub type Cmd = for<'a> fn(&mut PrimitiveIterContainer<'a>, &mut CExprBuilder<'a>) -> Result<(),BuilderError<BuilderErrorType>>;
 
+
+
+
+    // pub fn run<'a,'t,'g>(&self,
+    //     // builder:&mut CExprBuilder<'a>,
+    //     builder:&mut Builder<'a,WalkGroupContainer<'t,'g>,BuilderErrorType>,
+    //     top_group:WalkGroupContainer<'t,'g>,
+    //     next_anon_id:&mut usize,
+    // ) -> Result<(),BuilderError<BuilderErrorType>> {
+
+type ClikeBuilder<'a,'t,'g> = Builder<'a,WalkGroupContainer<'t,'g>,BuilderErrorType>;
+type ClikeBuilderResult=Result<(), BuilderError<BuilderErrorType>>;
+
+pub fn op_and<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+pub fn op_or<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+
+
+pub fn op_eq<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+pub fn op_ne<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+
+
+pub fn op_lt<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+pub fn op_gt<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+
+pub fn op_le<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+pub fn op_ge<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+
+pub fn op_add<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+
+    // let splits: Vec<WalkGroupIterContainer<'t,'g>>=groups.split(|x|x.name()==OPS[i].0);
+
+    //a+b+c+d = ((a+b)+c)+d
+
+    builder.eval_func(op_run(op_ind+1, splits[0]));
+
+    // let loc = sexpr.get(0).unwrap().start_loc();
+
+    // for i in 2 .. sexpr.len() {
+
+    //     builder.loc(loc);
+
+    //     builder
+    //         .param_push() //push last result
+    //         .eval(sexpr.get(i).unwrap())
+    //         .param_push()
+    //         .swap()
+    //         .call_method("add",2); //,loc
+    // }
+    Ok(())
+}
+pub fn op_sub<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+pub fn op_mul<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+pub fn op_div<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+
+
+pub fn op_pow<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+pub fn op_mod<'a,'t,'g>(op_ind:usize, splits:Vec<WalkGroupIterContainer<'t,'g>>,builder:&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult{
+    Ok(())
+}
+
+//type OpsFunc<'a,'t,'g>= fn(usize,Vec<WalkGroupIterContainer<'t,'g>>, &mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult;
+
+pub fn op_run<'a,'t:'a,'g:'a>(op_ind:usize, groups:WalkGroupIterContainer<'t,'g>) ->
+// ClikeBuilderResult
+impl Fn(&mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult
+{
+    // static  OPS: &[&str]=&["div", "mul", "sub", "add", "ge", "le", "gt", "lt", "ne", "eq", "and", "or"];
+    static OPS: &[(&'static str, for<'a,'t,'g,> fn(usize,Vec<WalkGroupIterContainer<'t,'g>>, &mut ClikeBuilder<'a,'t,'g>) -> ClikeBuilderResult)]
+    =&[
+        ("or",op_or),("and",op_and),
+        ("eq",op_eq),("ne",op_ne),
+        ("lt",op_lt),("gt",op_gt),
+        ("le",op_le),("ge",op_ge),
+        ("add",op_add),("sub",op_sub),
+        ("mul",op_mul),("div",op_div),
+        ("mod",op_mod),("pow",op_pow),
+    ];
+
+    // let splits: Vec<WalkGroupIterContainer<'t,'g>>=groups.split(|x|x.name()==OPS[i].0);
+
+    // match splits.len() {
+    //     0 => {panic!("");}
+    //     1 => {}
+    //     _ => {
+    //         OPS[i].1(splits,builder)?;
+    //     }
+    // }
+
+    // if i+1<OPS.len() {
+    //     builder.eval_func(move|builder|run_ops(i+1,builder));
+    // }
+
+    // Ok(())
+
+
+    move|builder|{
+        if op_ind>=OPS.len() {
+            return Ok(());
+        }
+
+        let op_name=OPS[op_ind].0;
+        let op_func=OPS[op_ind].1;
+        let splits: Vec<WalkGroupIterContainer<'t,'g>>=groups.split(|x|x.name()==op_name);
+
+        if splits.len()==1 {
+            builder.eval(splits[0].first().unwrap());
+            Ok(())
+        } else if splits.len()%2 ==0 {
+            panic!("");
+        } else {
+            op_func(op_ind,splits,builder)
+        }
+    }
+
+}
+// pub struct Ops<'a,'t,'g> {
+
+// }
+
+// impl<'a,'t,'g> Ops<'a,'t,'g> {
+//     pub fn run(i:usize,builder:&mut Builder<'a,WalkGroupContainer<'t,'g>,BuilderErrorType>,) -> Result<(),BuilderError<BuilderErrorType>>{
+//                         // static  OPS: &[&str]=&["div", "mul", "sub", "add", "ge", "le", "gt", "lt", "ne", "eq", "and", "or"];
+//                 // static OPS: &[&str]=&["or","and","eq","ne","lt","gt","le","ge","add","sub","mul","div"];
+//                 // static OP_FUNCS:&[Box<dyn Fn(&mut Builder<'a,WalkGroupContainer<'t,'g>,BuilderErrorType>)->Result<(),E>>]=&[Box::new(|builder|{
+//                 //     // builder.
+//                 //     Ok(())
+//                 // })];
+
+//         Ok(())
+//     }
+//     fn run_and(builder:&mut Builder<'a,WalkGroupContainer<'t,'g>,BuilderErrorType>,) {
+
+//     }
+// }
 pub struct Compiler {
     // cmds : HashMap<&'static str,Vec<Cmd>>,
 
@@ -218,9 +376,19 @@ impl Compiler {
                 builder.result_bool(false);
             }
             "expr" => {
-                let ops=vec!["div", "mul", "sub", "add", "ge", "le", "gt", "lt", "ne", "eq", "and", "or"];
+                // static  OPS: &[&str]=&["div", "mul", "sub", "add", "ge", "le", "gt", "lt", "ne", "eq", "and", "or"];
+                // static OPS: &[&str]=&["or","and","eq","ne","lt","gt","le","ge","add","sub","mul","div"];
+                // static OP_FUNCS:&[Box<dyn Fn(&mut Builder<'a,WalkGroupContainer<'t,'g>,BuilderErrorType>)->Result<(),E>>]=&[Box::new(|builder|{
+                //     // builder.
+                //     Ok(())
+                // })];
 
-                // let mut ops=["or","and","eq","ne","lt","gt","le","ge","add","sub","mul","div"];
+                // let i=0;
+
+                // builder.eval_func(|builder|{
+                //     ops_funcs[0](builder)?;
+                //     Ok(())
+                // });
 
                 // ops.reverse();
                 // println!("{ops:?}");

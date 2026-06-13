@@ -71,6 +71,79 @@ impl<'t,'g> WalkGroupIterContainer<'t,'g> {
     pub fn first(&self) -> Option<WalkGroupContainer<'t,'g>,> {
         self.get(0)
     }
+    pub fn split<F>(&self,f:F) -> Vec<WalkGroupIterContainer<'t,'g>>
+    where
+        F:Fn(WalkGroupContainer<'t,'g>) -> bool,
+    {
+        if self.len()==0 {
+            return Vec::new();
+        }
+
+        //
+        let mut v=Vec::new();
+        let mut x=self.start;
+
+        for i in self.start ..self.end {
+            let g=self.get(i).unwrap();
+
+            if f(g) {
+                if x!=i {
+                    v.push(WalkGroupIterContainer{ walk: self.walk, start: x, end: i });
+                }
+
+                x=i+1;
+            }
+        }
+
+        // if x==self.start {
+        //     return vec![self.clone()];
+        // }
+
+        if x!=self.end {
+            v.push(WalkGroupIterContainer{ walk: self.walk, start: x, end: self.end });
+        }
+
+        v
+    }
+
+
+
+    pub fn split_between<F>(&self,f:F) -> Vec<WalkGroupIterContainer<'t,'g>>
+    where
+        F:Fn(WalkGroupContainer<'t,'g>) -> bool,
+    {
+        if self.len()==0 {
+            return Vec::new();
+        }
+
+        //
+        let mut v=Vec::new();
+        let mut x=self.start;
+
+        for i in self.start ..self.end {
+            let g=self.get(i).unwrap();
+
+            if f(g) {
+                if x!=i {
+                    v.push(WalkGroupIterContainer{ walk: self.walk, start: x, end: i });
+                }
+
+                v.push(WalkGroupIterContainer{ walk: self.walk, start: i, end: i+1 });
+
+                x=i+1;
+            }
+        }
+
+        // if x==self.start {
+        //     return vec![self.clone()];
+        // }
+
+        if x!=self.end {
+            v.push(WalkGroupIterContainer{ walk: self.walk, start: x, end: self.end });
+        }
+
+        v
+    }
 }
 
 
