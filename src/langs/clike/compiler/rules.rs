@@ -196,27 +196,86 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             // NonTerm("rcurly"),
         ].and().group("lambda"),
 
-        "infix" => [
-            NonTerm("add").group("add"),NonTerm("sub").group("sub"),
-            NonTerm("mul").group("mul"),NonTerm("div").group("div"),
-            NonTerm("percent").group("mod"),NonTerm("hat").group("pow"),
+        // "compare_op" => [
 
-            NonTerm("lt").group("lt"),NonTerm("gt").group("gt"),
-            NonTerm("le").group("le"),NonTerm("ge").group("ge"),
-            NonTerm("eq").group("eq"),NonTerm("ne").group("ne"),
+        // ].or(),
+        // "infix" => [
+        //     NonTerm("add").group("add"),NonTerm("sub").group("sub"),
+        //     NonTerm("mul").group("mul"),NonTerm("div").group("div"),
+        //     NonTerm("percent").group("mod"),NonTerm("hat").group("pow"),
 
-            NonTerm("and").group("and"),NonTerm("or").group("or"),
+        //     NonTerm("and").group("and"),NonTerm("or").group("or"),
+        // ].or(),
 
+        "expr_or" => [
+            NonTerm("expr_xor"),
+            [
+                NonTerm("or"),
+                NonTerm("expr_xor"),
+            ].and().many0(),
+        ].and(),
 
-        ].or(),
+        "expr_xor" => [
+            NonTerm("expr_and"),
+            [
+                NonTerm("xor"),
+                NonTerm("expr_and"),
+            ].and().many0(),
+        ].and(),
 
-        "expr" => [
+        "expr_and" => [
+            NonTerm("expr_compare"),
+            [
+                NonTerm("and"),
+                NonTerm("expr_compare"),
+            ].and().many0(),
+        ].and(),
+
+        "expr_compare" => [
+            NonTerm("expr_factor"),
+            [
+                [
+                    NonTerm("lt").group("lt"),
+                    NonTerm("gt").group("gt"),
+                    NonTerm("le").group("le"),
+                    NonTerm("ge").group("ge"),
+                    NonTerm("eq").group("eq"),
+                    NonTerm("ne").group("ne"),
+                ].or(),
+                NonTerm("expr_factor"),
+            ].and().opt(),
+        ].and(),
+
+        "expr_factor" => [
+            NonTerm("expr_term"),
+            [
+                [NonTerm("add").group("add"),NonTerm("sub").group("sub"),].or(),
+                NonTerm("expr_term"),
+            ].and().many0(),
+        ].and(),
+
+        "expr_term" => [
             NonTerm("val"),
             [
-                NonTerm("infix"),
+                [
+                    NonTerm("mul").group("mul"),
+                    NonTerm("div").group("div"),
+                    NonTerm("mod").group("mod"),
+                ].or(),
                 NonTerm("val"),
             ].and().many0(),
-        ].and().group("expr").expected0("expr"),
+        ].and(),
+
+
+        // "expr" => [
+        //     NonTerm("val"),
+        //     [
+        //         NonTerm("infix"),
+        //         NonTerm("val"),
+        //     ].and().many0(),
+        // ].and().group("expr").expected0("expr"),
+
+        "expr" => NonTerm("expr_or").group("expr").expected0("expr"),
 
         "prefixes" => [
             NonTerm("add").group("pos"),
@@ -399,8 +458,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "div" => Symbol("/"),
 
 
-        "hat" => Symbol("^"),
-        "percent" => Symbol("%"),
+        "xor" => Symbol("^"),
+        "mod" => Symbol("%"),
 
         "and" => [Symbol("&"),Symbol("&"),].and(),
         "or" => [Symbol("|"),Symbol("|"),].and(),
