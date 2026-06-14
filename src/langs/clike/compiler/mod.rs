@@ -10,6 +10,7 @@ todo:
 ****** can't be taken from, so doesn't matter
 ***** what if X.opt().group()
 *** has to do with Or?
+**** only grammars in Or are saved eg Or(And(X,Y),X) ? No want the X from the And
 ** still need take, might aswell keep cede for it to be used in certain circumstances
 
 
