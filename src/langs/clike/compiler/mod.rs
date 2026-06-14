@@ -2,7 +2,16 @@
 
 todo:
 * remove cede/take,
-* replace takeables with prev parsed
+** replace takeables with prev parsed
+** when taking prev, need to check if the group it is in needs to be removed or not if it is empty after having prev removed
+*** how to tell if group needs to be removed?
+**** it's tokens start/end are the same?
+***** what if [Always, X.opt()].and()
+****** can't be taken from, so doesn't matter
+***** what if X.opt().group()
+*** has to do with Or?
+** still need take, might aswell keep cede for it to be used in certain circumstances
+
 
 */
 // // #![allow(unused_variables)]
