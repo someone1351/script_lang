@@ -304,10 +304,12 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "val_field_index_call" => [
             [
                 [
+                    NonTerm("dot"),
                     NonTerm("field_index"),
                     NonTerm("call_params"),
                 ].and().group("call_field_index"),
                 [
+                    NonTerm("dot"),
                     NonTerm("field_name"),
                     NonTerm("call_params"),
                 ].and().group("call_field_name"),

@@ -12,7 +12,7 @@ todo:
 *** has to do with Or?
 **** only grammars in Or are saved eg Or(And(X,Y),X) ? No want the X from the And
 ** still need take, might aswell keep cede for it to be used in certain circumstances
-
+** when doing prev, what if or(and(X,Y,Z),and(X,Y)), should X,Y from the first be stored?
 
 */
 // // #![allow(unused_variables)]
