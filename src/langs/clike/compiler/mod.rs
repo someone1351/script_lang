@@ -1,4 +1,10 @@
+/*
 
+todo:
+* remove cede/take,
+* replace takeables with prev parsed
+
+*/
 // // #![allow(unused_variables)]
 // #![allow(unused)]
 mod compiler_error;
@@ -363,7 +369,7 @@ impl Compiler {
         println!("{}",walk.root());
 
 
-        // return Ok(BuildT::new(Build::default()));
+        return Ok(BuildT::new(Build::default()));
 
         //
         let mut builder = builder::Builder::new();

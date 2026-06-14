@@ -208,32 +208,41 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         // ].or(),
 
         "expr_or" => [
-            NonTerm("expr_xor"),
             [
-                NonTerm("or"),
                 NonTerm("expr_xor"),
-            ].and().many0(),
-        ].and(),
+                [
+                    NonTerm("or"),
+                    NonTerm("expr_xor"),
+                ].and().many1(),
+            ].and().group("expr_or"),
+            NonTerm("expr_xor"),
+        ].or(),
 
         "expr_xor" => [
-            NonTerm("expr_and"),
             [
-                NonTerm("xor"),
                 NonTerm("expr_and"),
-            ].and().many0(),
-        ].and(),
+                [
+                    NonTerm("xor"),
+                    NonTerm("expr_and"),
+                ].and().many1(),
+            ].and().group("expr_xor"),
+            NonTerm("expr_and"),
+        ].or(),
 
         "expr_and" => [
-            NonTerm("expr_compare"),
             [
-                NonTerm("and"),
                 NonTerm("expr_compare"),
-            ].and().many0(),
-        ].and(),
+                [
+                    NonTerm("and"),
+                    NonTerm("expr_compare"),
+                ].and().many1(),
+            ].and().group("expr_and"),
+            NonTerm("expr_compare"),
+        ].or(),
 
         "expr_compare" => [
-            NonTerm("expr_factor"),
             [
+                NonTerm("expr_factor"),
                 [
                     NonTerm("lt").group("lt"),
                     NonTerm("gt").group("gt"),
@@ -243,29 +252,42 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                     NonTerm("ne").group("ne"),
                 ].or(),
                 NonTerm("expr_factor"),
-            ].and().opt(),
-        ].and(),
+            ].and().group("expr_compare"),
+            NonTerm("expr_factor"),
+        ].or(),
 
         "expr_factor" => [
-            NonTerm("expr_term"),
             [
-                [NonTerm("add").group("add"),NonTerm("sub").group("sub"),].or(),
                 NonTerm("expr_term"),
-            ].and().many0(),
-        ].and(),
+                [
+                    [NonTerm("add").group("add"),NonTerm("sub").group("sub"),].or(),
+                    NonTerm("expr_term"),
+                ].and().many1(),
+            ].and().group("expr_factor"),
+            NonTerm("expr_term"),
+        ].or(),
 
         "expr_term" => [
-            NonTerm("val"),
             [
-                [
-                    NonTerm("mul").group("mul"),
-                    NonTerm("div").group("div"),
-                    NonTerm("mod").group("mod"),
-                ].or(),
                 NonTerm("val"),
-            ].and().many0(),
-        ].and(),
+                [
+                    [
+                        NonTerm("mul").group("mul"),
+                        NonTerm("div").group("div"),
+                        NonTerm("mod").group("mod"),
+                    ].or(),
+                    NonTerm("val"),
+                ].and().many1(),
+            ].and().group("expr_term"),
+            NonTerm("val"),
+        ].or(),
 
+        // "expr_term" => [
+        //     [NonTerm("val"),NonTerm("mul"),NonTerm("expr_term"),].and().group("mul"),
+        //     [NonTerm("val"),NonTerm("div"),NonTerm("expr_term"),].and().group("div"),
+        //     [NonTerm("val"),NonTerm("mod"),NonTerm("expr_term"),].and().group("mod"),
+        //     NonTerm("val"),
+        // ].or(),
 
         // "expr" => [
         //     NonTerm("val"),
