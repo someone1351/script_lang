@@ -324,6 +324,7 @@ where
                         |TempGrammarNodeDebug::Group(_, g)
                         |TempGrammarNodeDebug::NonTerm(_, g)
                         |TempGrammarNodeDebug::Expected(_,_, g)
+                        |TempGrammarNodeDebug::EndsIn(g,)
                         // |TempGrammarNodeDebug::Discard(g)
                         => {*g=Some(x.into())}
 
