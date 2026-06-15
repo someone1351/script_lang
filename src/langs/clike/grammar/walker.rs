@@ -126,7 +126,7 @@ where
                 parent: 0,
                 tokens:self.top_primitives,
             }],
-            tokens_start:0,
+            // tokens_start:0,
         }];
 
         //
@@ -1059,7 +1059,7 @@ where
             }
 
             GrammarNode::Eol => {
-                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_eol(),|v,self2|{
+                if let Some(_)=self.do_primtive(cur,|ps|ps.pop_eol(),|v,self2|{
                     if self2.debug {
                         let Some(TempGrammarNodeDebug::Eol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
                         *x=Some(v);
