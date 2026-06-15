@@ -9,8 +9,8 @@ pub enum GrammarNode<'g> {
     And(Vec<GrammarNode<'g>>), //should store reversed?
     Or(Vec<GrammarNode<'g>>), //should store reversed?
     Opt(Box<GrammarNode<'g>>),
-    Cede(Box<GrammarNode<'g>>),
-    Take(Box<GrammarNode<'g>>),
+    // Cede(Box<GrammarNode<'g>>),
+    // Take(Box<GrammarNode<'g>>),
     Group(&'g str,Box<GrammarNode<'g>>),
     Expected(u32,&'g str,Box<GrammarNode<'g>>), //priority, expected,
     EndsIn(Box<GrammarNode<'g>>,Box<GrammarNode<'g>>), //grammar, ends_in_grammar
@@ -70,12 +70,12 @@ impl<'g> GrammarNode<'g> {
     //     Self::Discard(self.into())
     // }
 
-    pub fn cede(self,) -> GrammarNode<'g> {
-        Self::Cede(self.into())
-    }
-    pub fn take(self,) -> GrammarNode<'g> {
-        Self::Take(self.into())
-    }
+    // pub fn cede(self,) -> GrammarNode<'g> {
+    //     Self::Cede(self.into())
+    // }
+    // pub fn take(self,) -> GrammarNode<'g> {
+    //     Self::Take(self.into())
+    // }
 
     pub fn ends_in(self,ends_in_grammar:GrammarNode<'g>) -> GrammarNode<'g> {
         Self::EndsIn(self.into(),ends_in_grammar.into()) //grammar, ends_in_grammar

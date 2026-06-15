@@ -91,8 +91,8 @@ pub enum TempGrammarNodeDebug<'t,'g> {
 
     EndsIn(Option<Box<Self>>, ), //Box<GrammarNode<'g>>
 
-    Cede(Option<Box<Self>>),
-    Take(Option<Box<Self>>),
+    // Cede(Option<Box<Self>>),
+    // Take(Option<Box<Self>>),
 
     // Discard(Option<Box<Self>>),
 
@@ -155,16 +155,16 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                             stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
                             write!(f,"Opt(")?;
                         }
-                        Self::Cede(arg0) => {
-                            stk.push(Work::Write(")"));
-                            stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
-                            write!(f,"Cede(")?;
-                        }
-                        Self::Take(arg0) => {
-                            stk.push(Work::Write(")"));
-                            stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
-                            write!(f,"Take(")?;
-                        }
+                        // Self::Cede(arg0) => {
+                        //     stk.push(Work::Write(")"));
+                        //     stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
+                        //     write!(f,"Cede(")?;
+                        // }
+                        // Self::Take(arg0) => {
+                        //     stk.push(Work::Write(")"));
+                        //     stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
+                        //     write!(f,"Take(")?;
+                        // }
                         Self::EndsIn(arg0, ) => {
                             stk.push(Work::Write(")"));
                             stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});

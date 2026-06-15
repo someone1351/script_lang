@@ -84,8 +84,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
 
         "set" => [
             [
-                [Identifier,NonTerm("val_field_index").cede().many0(), NonTerm("val_field_index").take(),].and(),
-                // [NonTerm("val").ends_in(NonTerm("val_field_index"))].and(),
+                // [Identifier,NonTerm("val_field_index").cede().many0(), NonTerm("val_field_index").take(),].and(),
+                [NonTerm("val").ends_in(NonTerm("val_field_index"))].and(),
                 Identifier,
             ].or(),
             [NonTerm("add"),NonTerm("sub"),NonTerm("mul"),NonTerm("div"),NonTerm("not")].or().opt(),
