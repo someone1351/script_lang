@@ -81,9 +81,14 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             [NonTerm("comma"),NonTerm("var_set"),].and().many0(),
         ].and(),
 
+        //a.x().y=5
+        //  val.set_field_or_ind
+        //could have a list of things that can be taken
+        //  and contains the new groups etc to be set? no, waste to do such calcs before being used
         "set" => [
             [
                 [Identifier,NonTerm("val_field_index").cede().many0(), NonTerm("val_field_index").take(),].and(),
+                //[Identifier,NonTerm("val_field_index").many0(), NonTerm("val_field_index").take(),].and(),
                 Identifier,
             ].or(),
             [NonTerm("add"),NonTerm("sub"),NonTerm("mul"),NonTerm("div"),NonTerm("not")].or().opt(),
@@ -303,32 +308,20 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
 
         "val_field_index_call" => [
             [
-                [
-                    NonTerm("dot"),
-                    NonTerm("field_index"),
-                    NonTerm("call_params"),
-                ].and().group("call_field_index"),
-                [
-                    NonTerm("dot"),
-                    NonTerm("field_name"),
-                    NonTerm("call_params"),
-                ].and().group("call_field_name"),
+                [NonTerm("field_index"),NonTerm("call_params"),].and().group("call_field_index"),
+                [NonTerm("field_name"),NonTerm("call_params"),].and().group("call_field_name"),
                 NonTerm("call_params").group("call_val"),
                 NonTerm("val_field_index"),
             ].or()
         ].or(),
 
-        "field_name" => Identifier.group("field_name"),
-        "field_index" => Int.group("field_index"),
+        "field_name" => [NonTerm("dot"),Identifier.group("field_name")].and(),
+        "field_index" => [NonTerm("dot"),Int.group("field_index")].and(),
 
         "val_field" => [
-            NonTerm("dot"),
-            [
-                NonTerm("field_name"),
-                NonTerm("field_index"),
-            ].or().expected0("field"),
-
-        ].and(),
+            NonTerm("field_name"),
+            NonTerm("field_index"),
+        ].or().expected0("field"),
 
         "val_index" => [
             NonTerm("lsquare"),
