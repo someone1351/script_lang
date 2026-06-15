@@ -81,14 +81,11 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             [NonTerm("comma"),NonTerm("var_set"),].and().many0(),
         ].and(),
 
-        //a.x().y=5
-        //  val.set_field_or_ind
-        //could have a list of things that can be taken
-        //  and contains the new groups etc to be set? no, waste to do such calcs before being used
+
         "set" => [
             [
                 [Identifier,NonTerm("val_field_index").cede().many0(), NonTerm("val_field_index").take(),].and(),
-                //[Identifier,NonTerm("val_field_index").many0(), NonTerm("val_field_index").take(),].and(),
+                // [NonTerm("val").ends_in(NonTerm("val_field_index"))].and(),
                 Identifier,
             ].or(),
             [NonTerm("add"),NonTerm("sub"),NonTerm("mul"),NonTerm("div"),NonTerm("not")].or().opt(),
