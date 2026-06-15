@@ -31,25 +31,14 @@ pub struct WorkTakeable<'t> {
 #[derive(Clone, Default, Debug)]
 pub struct TempGroupsElement<'t,'g> {
     pub groups:Vec<TempGroupInfo<'t,'g>>,
-    // pub token_groups:Vec<usize>,
     pub tokens_start:usize, //not used?
-    // pub success_len:usize,
-    // pub fail_len:usize, //used to determine if to discard or keep this version of the groups
 }
 
-// #[derive(Clone, Copy, Default, Debug)]
-// pub struct TempPrimitiveInfo {
-//     // name:&'a str,
-//     // depth:usize,
-//     pub group:usize,
-//     pub discard:bool,
-// }
 
 #[derive(Clone)]
 pub struct TempGroupInfo<'t,'g> {
     pub name:&'g str,
     pub parent:usize, //group
-    // pub primitive_ind_start:usize,
     pub tokens:TokenIterContainer<'t>,
 }
 
@@ -80,27 +69,19 @@ pub struct Work<'t,'g> {
     pub group_ind:usize,
 
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
-    // // pub output_len:usize,
     pub groups_stk_len:usize, //used for take
 
-    // pub discard:bool,
-
-    // takeable_starts:HashSet<(GrammarItem<'a>,usize)>, //[(g,output_ind_start)]
     pub takeable_starts_len:usize,
-    // pub opt:bool,
+    pub takeables:HashMap<GrammarNode<'g>,WorkTakeable<'t>>,
 
     pub visiteds:HashSet<(&'g str,usize)>, //used for checking recursive nonterms
 
-    // pub takeables:HashMap<GrammarNode<'g>,TokenIterContainer<'t>>, //[non_term]
-    pub takeables:HashMap<GrammarNode<'g>,WorkTakeable<'t>>,
 
     pub grammar_debug_len:usize,
-    // pub grammar_debug_no_add:bool,
-    // pub expected:Option<&'g str>,
+
     pub expected:WorkExpected<'g>, //(u64,u32,&'g str), //id,priority,expected
     pub and_id:usize, //for take, to know when continuing on an And, or leaving
 }
-
 
 
 #[derive(Clone,Debug)]
@@ -110,8 +91,13 @@ pub enum TempGrammarNodeDebug<'t,'g> {
     Or(Vec<Self>),
 
     Opt(Option<Box<Self>>),
+
     Cede(Option<Box<Self>>),
     Take(Option<Box<Self>>),
+
+    EndsIn(Option<Box<Self>>, ), //Box<GrammarNode<'g>>
+
+
     Group(&'g str,Option<Box<Self>>),
     Expected(u32,&'g str,Option<Box<Self>>),
     // Discard(Option<Box<Self>>),
@@ -129,19 +115,6 @@ pub enum TempGrammarNodeDebug<'t,'g> {
     Error,
 }
 
-// impl<'t,'g> TempGrammarNodeDebug<'t,'g> {
-//     pub fn token_val_mut(&mut self)
-// }
-
-
-// impl<'t,'g> Into for Option<TempGrammarNodeDebug<'t,'g>> {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         match self {
-//             Some(x) => write!(f,"{x}"),
-//             None => write!(f,"_"),
-//         }
-//     }
-// }
 
 impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -198,6 +171,11 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                             stk.push(Work::Write(")"));
                             stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
                             write!(f,"Take(")?;
+                        }
+                        Self::EndsIn(arg0, ) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"EndsIn(")?;
                         }
                         Self::Group(arg0, arg1) => {
                             stk.push(Work::Write(")"));
