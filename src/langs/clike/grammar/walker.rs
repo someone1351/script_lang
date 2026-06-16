@@ -24,7 +24,6 @@ where
     top_primitives:TokenIterContainer<'t>,
     primitives_remaining: TokenIterContainer<'t>,
     groups_stk:Vec<TempGroupsElement<'t,'g>>,
-    takeable_starts:Vec<TempTakeableStart<'t,'g>>,
     grammar_func:G,
     stk: Vec<Work<'t,'g>>,
     c:usize,
@@ -35,14 +34,8 @@ where
     grammar_debug_stk:Vec<TempGrammarNodeDebug<'t,'g>>,
     non_term_recursive_check:bool,
 
-    // primitive_infos : Vec<TempPrimitiveInfo>,
-    // group_infos : Vec<TempGroupInfo<'t,'g>>,
-    // takeable_starts:Vec<(GrammarNode<'g>,TokenIterContainer<'t>)>, //[(g,output_ind_start)]
-    // expected_in_non_term:bool,
-    // expected: (Loc,Vec<GrammarNode<'g>>,),
-    // keywords : HashSet<&'a str>,
-    // keywords : &'a HashSet<&'a str>,
-    // tokenized:Tokenized<'a>,
+    // takeable_starts:Vec<TempTakeableStart<'t,'g>>,
+
 }
 
 impl<'t,'g,G> GrammarWalker<'t,'g,G>
@@ -65,7 +58,7 @@ where
             non_term_recursive_check:true,
             expected_count: 0,
 
-            takeable_starts: Default::default(),
+            // takeable_starts: Default::default(),
         }
     }
 
@@ -87,8 +80,8 @@ where
             groups_stk_len: 1,
             and_id: 0,
 
-            takeable_starts_len:0,
-            takeables:Default::default(),
+            // takeable_starts_len:0,
+            // takeables:Default::default(),
 
             // discard:false,
             // opt:false,
@@ -111,8 +104,8 @@ where
                 groups_stk_len: 1,
                 and_id: 0,
 
-                takeable_starts_len:0,
-                takeables:Default::default(),
+                // takeable_starts_len:0,
+                // takeables:Default::default(),
 
                 // discard:false,
                 // opt:false,
@@ -129,8 +122,10 @@ where
             // tokens_start:0,
         }];
 
+        // //takeables
+        // self.takeable_starts.clear();
+
         //
-        self.takeable_starts.clear();
         self.c=0;
         self.expected_loc=Loc::zero();
         self.expecteds.clear();
@@ -279,10 +274,19 @@ where
                 let group_infos=&self.groups_stk.last().unwrap().groups;
 
                 let c=self.c;
-                let Work { grammar, success_len, fail_len, tokens, group_ind, group_len, takeable_starts_len, visiteds, takeables, grammar_debug_len, expected, groups_stk_len, and_id  }=&cur;
+
+                let Work {
+                    grammar, success_len, fail_len, tokens,
+                    group_ind, group_len,visiteds,
+                    grammar_debug_len, expected, and_id,
+                    groups_stk_len,
+                    // takeables, takeable_starts_len,
+                }=&cur;
+
                 // println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
                 // println!("         -takeable_starts={:?}",self.takeable_starts);
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
+
                 let ps=tokens.inds();
                 let expected=if expected.id==0 {"None".to_string()}else{format!("{}:{}",expected.id,expected.name)};
                 //  println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, expected={expected},  ",);
@@ -293,10 +297,8 @@ where
                 let groups_stk_len2=self.groups_stk.len();
 
                 println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, ",);
-                println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
-                println!("        and_id={and_id}, groups.len={groups_len2}, groups_stk.len={groups_stk_len2}, groups_stk_len={groups_stk_len}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",
-                    // group_infos.iter().map(|x|x.name).collect::<Vec<_>>(),
-                );
+                // println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
+                println!("        and_id={and_id}, groups.len={groups_len2}, groups_stk.len={groups_stk_len2}, groups_stk_len={groups_stk_len}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
 
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
@@ -347,9 +349,14 @@ where
 
             //
             if false {
-                for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len,  takeable_starts_len, visiteds, takeables, grammar_debug_len, expected, groups_stk_len, and_id   }) in self.stk.iter()
+                for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len,
+                    visiteds, grammar_debug_len, expected, and_id,
+                    groups_stk_len,
+                    // takeable_starts_len, takeables,
+                }) in self.stk.iter()
                     // .rev()
-                    .enumerate() {
+                    .enumerate()
+                {
                     // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
                     // println!("\t{i:3}: {g:?}, ps={primitives:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
                     println!("    {i:3}: ps={:?}, success={s}, fail={f}, and_id={and_id}, groups_stk_len={groups_stk_len}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds()); //
@@ -393,8 +400,8 @@ where
                     groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
 
-                    takeable_starts_len:cur.takeable_starts_len,
-                    takeables:cur.takeables,
+                    // takeable_starts_len:cur.takeable_starts_len,
+                    // takeables:cur.takeables,
 
                     // discard:cur.discard,
                     // opt:cur.opt,
@@ -430,8 +437,8 @@ where
                     groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
 
-                    takeable_starts_len:cur.takeable_starts_len,
-                    takeables:cur.takeables,
+                    // takeable_starts_len:cur.takeable_starts_len,
+                    // takeables:cur.takeables,
 
                     // discard:cur.discard,
                     // opt:cur.opt,
@@ -484,8 +491,8 @@ where
                         groups_stk_len: cur.groups_stk_len,
                         and_id:cur.and_id+1,
 
-                        takeable_starts_len:cur.takeable_starts_len,
-                        takeables:cur.takeables.clone(),
+                        // takeable_starts_len:cur.takeable_starts_len,
+                        // takeables:cur.takeables.clone(),
 
                         // discard:cur.discard,
                         // opt:false, //opt isnt passed to individual items in And
@@ -514,8 +521,8 @@ where
                     groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id+1,
 
-                    takeable_starts_len:cur.takeable_starts_len,
-                    takeables:cur.takeables,
+                    // takeable_starts_len:cur.takeable_starts_len,
+                    // takeables:cur.takeables,
 
                     // discard:cur.discard,
                     // opt:false, //opt isnt passed to individual items in And
@@ -542,8 +549,8 @@ where
                         groups_stk_len: cur.groups_stk_len,
                         and_id:cur.and_id,
 
-                        takeable_starts_len:cur.takeable_starts_len,
-                        takeables:cur.takeables.clone(),
+                        // takeable_starts_len:cur.takeable_starts_len,
+                        // takeables:cur.takeables.clone(),
 
                         // opt:cur.opt,
                         // discard:cur.discard,
@@ -572,8 +579,8 @@ where
                     groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
 
-                    takeable_starts_len:cur.takeable_starts_len,
-                    takeables:cur.takeables,
+                    // takeable_starts_len:cur.takeable_starts_len,
+                    // takeables:cur.takeables,
 
                     // discard:cur.discard,
                     // opt:cur.opt,
@@ -595,8 +602,8 @@ where
                     groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
 
-                    takeable_starts_len:cur.takeable_starts_len,
-                    takeables:cur.takeables.clone(),
+                    // takeable_starts_len:cur.takeable_starts_len,
+                    // takeables:cur.takeables.clone(),
 
                     // discard:cur.discard,
                     // opt:false, //not used on always
@@ -624,8 +631,8 @@ where
                     groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
 
-                    takeable_starts_len:cur.takeable_starts_len,
-                    takeables:cur.takeables,
+                    // takeable_starts_len:cur.takeable_starts_len,
+                    // takeables:cur.takeables,
 
                     // discard:cur.discard,
                     // opt:true,
@@ -805,8 +812,8 @@ where
                     groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
 
-                    takeable_starts_len:cur.takeable_starts_len,
-                    takeables:cur.takeables.clone(),
+                    // takeable_starts_len:cur.takeable_starts_len,
+                    // takeables:cur.takeables.clone(),
 
                     // discard:cur.discard,
                     // opt:true,
@@ -829,8 +836,8 @@ where
                     groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
 
-                    takeable_starts_len:cur.takeable_starts_len,
-                    takeables:cur.takeables.clone(),
+                    // takeable_starts_len:cur.takeable_starts_len,
+                    // takeables:cur.takeables.clone(),
 
                     // discard:cur.discard,
                     // opt:false, //not used
@@ -858,8 +865,8 @@ where
                     groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
 
-                    takeable_starts_len:cur.takeable_starts_len,
-                    takeables:cur.takeables,
+                    // takeable_starts_len:cur.takeable_starts_len,
+                    // takeables:cur.takeables,
 
                     // discard:cur.discard,
                     // opt:true,
@@ -891,8 +898,8 @@ where
                     groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
 
-                    takeables:cur.takeables,
-                    takeable_starts_len:cur.takeable_starts_len,
+                    // takeables:cur.takeables,
+                    // takeable_starts_len:cur.takeable_starts_len,
 
                     // discard:cur.discard,
                     // opt:cur.opt,
@@ -926,8 +933,8 @@ where
                     // last.takeable_starts=cur.takeable_starts;
                     // last.takeables.retain(|_k,v|{ v.inds().start >= last.primitives.inds().start });
 
-                    //
-                    last.takeables=cur.takeables;
+                    // //takeables
+                    // last.takeables=cur.takeables;
 
                     //
                     if cur.expected.id!=last.expected.id {
@@ -949,8 +956,10 @@ where
                 //
                 // self.last_remove_groups_at(cur.group_len,cur.primitives);
 
+                // //takeables
+                // self.last_insert_start_takeables(cur.tokens);
+
                 //
-                self.last_insert_start_takeables(cur.tokens);
                 self.set_remaining_prims(cur.tokens);
 
                 //
@@ -1132,9 +1141,9 @@ where
                 //
                 self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
 
-                //
-                self.last_remove_old_takeables();
-                self.last_insert_start_takeables(cur.tokens);
+                // //takeables
+                // self.last_remove_old_takeables();
+                // self.last_insert_start_takeables(cur.tokens);
 
                 //
                 // if self.stk.is_empty() {
@@ -1167,12 +1176,8 @@ where
 
                 //
                 if let Some(last)=self.stk.last_mut() {
-                    //
-                    // let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
-                    // primitive_infos.truncate(last.output_len);
-
-                    //
-                    self.takeable_starts.truncate(last.takeable_starts_len);
+                    // //takeables
+                    // self.takeable_starts.truncate(last.takeable_starts_len);
 
                     //
                     if self.debug {
@@ -1458,49 +1463,49 @@ where
         Ok(visiteds)
     }
 
-    fn last_insert_start_takeables(&mut self,
-        cur_tokens:TokenIterContainer<'t>,
-    ) {
-        //
-        let group_infos=&self.groups_stk.last().unwrap().groups;
-        let groups_len=group_infos.len();
+    // fn last_insert_start_takeables(&mut self,
+    //     cur_tokens:TokenIterContainer<'t>,
+    // ) {
+    //     //
+    //     let group_infos=&self.groups_stk.last().unwrap().groups;
+    //     let groups_len=group_infos.len();
 
-        //
-        if let Some(last)=self.stk.last_mut() {
-            //
-            for TempTakeableStart { grammar:tg, tokens_start, group_ind }// (tg,tp_ind)
-                in self.takeable_starts.drain(last.takeable_starts_len ..)
-            {
-                //
-                let tokens_len=tokens_start.len()-cur_tokens.len();
-                let tokens=tokens_start.get_amount(tokens_len).unwrap();
+    //     //
+    //     if let Some(last)=self.stk.last_mut() {
+    //         //
+    //         for TempTakeableStart { grammar:tg, tokens_start, group_ind }// (tg,tp_ind)
+    //             in self.takeable_starts.drain(last.takeable_starts_len ..)
+    //         {
+    //             //
+    //             let tokens_len=tokens_start.len()-cur_tokens.len();
+    //             let tokens=tokens_start.get_amount(tokens_len).unwrap();
 
-                //
-                if self.debug {
-                    println!("--- inserting takeable {tg:?} {tokens:?}",);
-                }
+    //             //
+    //             if self.debug {
+    //                 println!("--- inserting takeable {tg:?} {tokens:?}",);
+    //             }
 
-                //
-                // last.takeables.insert(tg, tp_ind);
+    //             //
+    //             // last.takeables.insert(tg, tp_ind);
 
-                //
-                last.takeables.insert(tg, WorkTakeable {
-                    tokens_start, tokens, group_ind,
-                    inner_groups:group_ind+1 .. groups_len,
-                });
-            }
-        }
-        // last_takeables
-    }
+    //             //
+    //             last.takeables.insert(tg, WorkTakeable {
+    //                 tokens_start, tokens, group_ind,
+    //                 inner_groups:group_ind+1 .. groups_len,
+    //             });
+    //         }
+    //     }
+    //     // last_takeables
+    // }
 
-    fn last_remove_old_takeables(&mut self) {
-        if let Some(last)=self.stk.last_mut() {
-            last.takeables.retain(|_k,v|{
-                // v.inds().start
-                v.tokens.inds().start >= last.tokens.inds().start
-            });
-        }
-    }
+    // fn last_remove_old_takeables(&mut self) {
+    //     if let Some(last)=self.stk.last_mut() {
+    //         last.takeables.retain(|_k,v|{
+    //             // v.inds().start
+    //             v.tokens.inds().start >= last.tokens.inds().start
+    //         });
+    //     }
+    // }
 
     fn clear_expected(&mut self) {
         // println!("-------==== expected cleared, {}",self.expected_loc);

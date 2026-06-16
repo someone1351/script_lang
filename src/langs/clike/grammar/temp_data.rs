@@ -11,20 +11,20 @@ use super::node::*;
 
 
 
-#[derive(Clone, Debug)]
-pub struct TempTakeableStart<'t,'g> {
-    pub grammar:GrammarNode<'g>,
-    pub tokens_start:TokenIterContainer<'t>,
-    pub group_ind:usize,
-}
+// #[derive(Clone, Debug)]
+// pub struct TempTakeableStart<'t,'g> {
+//     pub grammar:GrammarNode<'g>,
+//     pub tokens_start:TokenIterContainer<'t>,
+//     pub group_ind:usize,
+// }
 
-#[derive(Clone, Debug)]
-pub struct WorkTakeable<'t> {
-    pub tokens:TokenIterContainer<'t>,
-    pub tokens_start:TokenIterContainer<'t>,
-    pub group_ind:usize,
-    pub inner_groups:Range<usize>, //groups inside the takeable?
-}
+// #[derive(Clone, Debug)]
+// pub struct WorkTakeable<'t> {
+//     pub tokens:TokenIterContainer<'t>,
+//     pub tokens_start:TokenIterContainer<'t>,
+//     pub group_ind:usize,
+//     pub inner_groups:Range<usize>, //groups inside the takeable?
+// }
 
 #[derive(Clone, Default, Debug)]
 pub struct TempGroupsElement<'t,'g> {
@@ -71,8 +71,8 @@ pub struct Work<'t,'g> {
     pub expected:WorkExpected<'g>, //(u64,u32,&'g str), //id,priority,expected
     pub and_id:usize, //for take, to know when continuing on an And, or leaving
 
-    pub takeable_starts_len:usize,
-    pub takeables:HashMap<GrammarNode<'g>,WorkTakeable<'t>>,
+    // pub takeable_starts_len:usize,
+    // pub takeables:HashMap<GrammarNode<'g>,WorkTakeable<'t>>,
 
     // pub discard:bool,
     // pub opt:bool,
