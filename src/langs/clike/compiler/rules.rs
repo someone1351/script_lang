@@ -88,8 +88,22 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 [NonTerm("val").ends_in(NonTerm("val_field_index"))].and(),
                 Identifier,
             ].or(),
-            [NonTerm("add"),NonTerm("sub"),NonTerm("mul"),NonTerm("div"),NonTerm("not")].or().opt(),
-            NonTerm("equals"),
+            [
+                [
+                    [
+                        NonTerm("add").group("add_eq"),
+                        NonTerm("sub").group("sub_eq"),
+                        NonTerm("mul").group("mul_eq"),
+                        NonTerm("div").group("div_eq"),
+                        NonTerm("not").group("not_eq"),
+                        NonTerm("and").group("and_eq"),
+                        NonTerm("or").group("or_eq"),
+                        NonTerm("xor").group("xor_eq"),
+                    ].or(),
+                    NonTerm("equals"),
+                ].and(),
+                NonTerm("equals").group("eq"),
+            ].or(),
             NonTerm("expr"),
         ].and(),
 
@@ -195,7 +209,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 ].and().many1(),
             ].and().group("expr_or"),
             NonTerm("expr_xor"),
-        ].or(),
+        ].or().expected0("or"),
 
         "expr_xor" => [
             [
@@ -206,7 +220,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 ].and().many1(),
             ].and().group("expr_xor"),
             NonTerm("expr_and"),
-        ].or(),
+        ].or().expected0("xor"),
 
         "expr_and" => [
             [
@@ -217,7 +231,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 ].and().many1(),
             ].and().group("expr_and"),
             NonTerm("expr_compare"),
-        ].or(),
+        ].or().expected0("and"),
 
         "expr_compare" => [
             [
@@ -233,7 +247,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 NonTerm("expr_factor"),
             ].and().group("expr_compare"),
             NonTerm("expr_factor"),
-        ].or(),
+        ].or().expected0("compare"),
 
         "expr_factor" => [
             [
@@ -244,7 +258,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 ].and().many1(),
             ].and().group("expr_factor"),
             NonTerm("expr_term"),
-        ].or(),
+        ].or().expected0("factor"),
 
         "expr_term" => [
             [
@@ -259,7 +273,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 ].and().many1(),
             ].and().group("expr_term"),
             NonTerm("val"),
-        ].or(),
+        ].or().expected0("term"),
 
         // "expr_term" => [
         //     [NonTerm("val"),NonTerm("mul"),NonTerm("expr_term"),].and().group("mul"),

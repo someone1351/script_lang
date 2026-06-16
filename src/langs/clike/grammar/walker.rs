@@ -460,7 +460,28 @@ where
             }
 
             GrammarNode::EndsIn(g, ends_in_g ) => {
-                //todo
+
+                //
+                self.stk.push(Work {
+                    grammar: *g,
+                    success_len: cur.success_len,
+                    fail_len: cur.fail_len,
+                    tokens: cur.tokens,
+                    group_ind: cur.group_ind,
+                    group_len: cur.group_len,
+                    visiteds:cur.visiteds,
+                    grammar_debug_len: cur.grammar_debug_len+1,
+                    expected:cur.expected,
+                    and_id:cur.and_id,
+
+                    // groups_stk_len: cur.groups_stk_len,
+
+                    // takeable_starts_len:cur.takeable_starts_len,
+                    // takeables:cur.takeables,
+
+                    // discard:cur.discard,
+                    // opt:cur.opt,
+                });
             }
 
             GrammarNode::Group(name, g) => {
