@@ -65,11 +65,12 @@ pub struct Work<'t,'g> {
     pub tokens:TokenIterContainer<'t>,
     pub group_ind:usize,
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
-    pub groups_stk_len:usize, //used for take
     pub visiteds:HashSet<(&'g str,usize)>, //used for checking recursive nonterms
     pub grammar_debug_len:usize,
     pub expected:WorkExpected<'g>, //(u64,u32,&'g str), //id,priority,expected
     pub and_id:usize, //for take, to know when continuing on an And, or leaving
+
+    // pub groups_stk_len:usize, //used for take
 
     // pub takeable_starts_len:usize,
     // pub takeables:HashMap<GrammarNode<'g>,WorkTakeable<'t>>,

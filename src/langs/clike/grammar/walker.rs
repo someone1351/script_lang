@@ -23,7 +23,6 @@ where
 {
     top_primitives:TokenIterContainer<'t>,
     primitives_remaining: TokenIterContainer<'t>,
-    groups_stk:Vec<TempGroupsElement<'t,'g>>,
     grammar_func:G,
     stk: Vec<Work<'t,'g>>,
     c:usize,
@@ -34,6 +33,10 @@ where
     grammar_debug_stk:Vec<TempGrammarNodeDebug<'t,'g>>,
     non_term_recursive_check:bool,
 
+
+    groups:Vec<TempGroupInfo<'t,'g>>,
+
+    // groups_stk:Vec<TempGroupsElement<'t,'g>>,
     // takeable_starts:Vec<TempTakeableStart<'t,'g>>,
 
 }
@@ -45,7 +48,6 @@ where
 
     pub fn new(top_primitives:TokenIterContainer<'t>, grammar_func:G,) -> Self {
         Self {
-            groups_stk:Default::default(),
             stk:Default::default(),
             c:Default::default(),
             expected_loc:Loc::zero(),
@@ -58,6 +60,9 @@ where
             non_term_recursive_check:true,
             expected_count: 0,
 
+            groups:Default::default(),
+
+            // groups_stk:Default::default(),
             // takeable_starts: Default::default(),
         }
     }
@@ -77,9 +82,9 @@ where
             visiteds:Default::default(),
             grammar_debug_len: 0,
             expected:Default::default(),
-            groups_stk_len: 1,
             and_id: 0,
 
+            // groups_stk_len: 1,
             // takeable_starts_len:0,
             // takeables:Default::default(),
 
@@ -101,9 +106,9 @@ where
                 visiteds:Default::default(),
                 grammar_debug_len: 1,
                 expected:Default::default(),
-                groups_stk_len: 1,
                 and_id: 0,
 
+                // groups_stk_len: 1,
                 // takeable_starts_len:0,
                 // takeables:Default::default(),
 
@@ -113,14 +118,21 @@ where
         }
 
         //
-        self.groups_stk=vec![TempGroupsElement{
-            groups: vec![TempGroupInfo{
-                name: "",
-                parent: 0,
-                tokens:self.top_primitives,
-            }],
-            // tokens_start:0,
+        self.groups=vec![TempGroupInfo{
+            name: "",
+            parent: 0,
+            tokens:self.top_primitives,
         }];
+
+        // //takeables
+        // self.groups_stk=vec![TempGroupsElement{
+        //     groups: vec![TempGroupInfo{
+        //         name: "",
+        //         parent: 0,
+        //         tokens:self.top_primitives,
+        //     }],
+        //     // tokens_start:0,
+        // }];
 
         // //takeables
         // self.takeable_starts.clear();
@@ -165,8 +177,12 @@ where
 
         //
         if self.debug {
-            let group_infos=&self.groups_stk.last().unwrap().groups;
-            println!("groups={:?}",group_infos);
+            // //takeables
+            // let group_infos=&self.groups_stk.last().unwrap().groups;
+            // println!("groups={:?}",group_infos);
+
+            //
+            println!("groups={:?}",self.groups);
         }
 
         //
@@ -198,9 +214,15 @@ where
 
         //
         if self.debug {
-            let group_infos=&self.groups_stk.last().unwrap().groups;
+            // //takeables
+            // let group_infos=&self.groups_stk.last().unwrap().groups;
 
-            for (i,g) in group_infos.iter().enumerate() {
+            // for (i,g) in group_infos.iter().enumerate() {
+            //     println!("g{i}: {:?} {:?}",g.name,g.tokens);
+            // }
+
+            //
+            for (i,g) in self.groups.iter().enumerate() {
                 println!("g{i}: {:?} {:?}",g.name,g.tokens);
             }
         }
@@ -217,7 +239,11 @@ where
     fn step(&mut self,cur:Work<'t,'g>) -> Result<(),GrammarWalkError<'g>> {
         //
         {
-            let groups=&mut self.groups_stk.last_mut().unwrap().groups;
+            // //takeables
+            // let groups=&mut self.groups_stk.last_mut().unwrap().groups;
+
+            //
+            let groups=&mut self.groups;
 
             //
             if self.debug {
@@ -271,34 +297,48 @@ where
             // // println!(": {cur:?} || {} && {primitives:?}", self.stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
 
             {
-                let group_infos=&self.groups_stk.last().unwrap().groups;
+                // //takeables
+                // let groups=&self.groups_stk.last().unwrap().groups;
 
+                //
+                let groups=&self.groups;
+
+                //
                 let c=self.c;
 
+                //
                 let Work {
                     grammar, success_len, fail_len, tokens,
                     group_ind, group_len,visiteds,
                     grammar_debug_len, expected, and_id,
-                    groups_stk_len,
+                    // groups_stk_len,
                     // takeables, takeable_starts_len,
                 }=&cur;
 
+                //
                 // println!("=>{c:4}: {grammar:?}, ps={primitives:?}, success={success_len}, fail={fail_len}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}, ");
                 // println!("         -takeable_starts={:?}",self.takeable_starts);
                 // println!("         -temp_primtives={:?}",self.primitive_infos);
 
+                //
                 let ps=tokens.inds();
                 let expected=if expected.id==0 {"None".to_string()}else{format!("{}:{}",expected.id,expected.name)};
                 //  println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, expected={expected},  ",);
                 // let groups_stk_len=self.groups_stk.len();
-                let temp_groups=group_infos.iter().enumerate().map(|(i,x)|format!("g{i}:p{}:{}",x.parent,x.name)).collect::<Vec<_>>();
+                let temp_groups=groups.iter().enumerate().map(|(i,x)|format!("g{i}:p{}:{}",x.parent,x.name)).collect::<Vec<_>>();
 
-                let groups_len2=group_infos.len();
-                let groups_stk_len2=self.groups_stk.len();
+                let groups_len2=groups.len();
 
+                // //takeables
+                // let groups_stk_len2=self.groups_stk.len();
+
+                //
                 println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, ",);
                 // println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
-                println!("        and_id={and_id}, groups.len={groups_len2}, groups_stk.len={groups_stk_len2}, groups_stk_len={groups_stk_len}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
+                println!("        and_id={and_id}, groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
+
+                // //takeables
+                // println!("        groups_stk.len={groups_stk_len2}, groups_stk_len={groups_stk_len}, ");
 
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
@@ -351,7 +391,7 @@ where
             if false {
                 for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len,
                     visiteds, grammar_debug_len, expected, and_id,
-                    groups_stk_len,
+                    // groups_stk_len,
                     // takeable_starts_len, takeables,
                 }) in self.stk.iter()
                     // .rev()
@@ -359,7 +399,12 @@ where
                 {
                     // println!("\t{i:3}: {g:?}\n\t   : {ps:?}\n\t   : success={s}, fail={f}",);
                     // println!("\t{i:3}: {g:?}, ps={primitives:?},success={s}, fail={f}, group_ind={group_ind}, group_len={group_len}, output_len={output_len}, discard={discard}, takeable_starts_len={takeable_starts_len:?}, visiteds={visiteds:?}, opt={opt:?}, takeables={takeables:?}",);
-                    println!("    {i:3}: ps={:?}, success={s}, fail={f}, and_id={and_id}, groups_stk_len={groups_stk_len}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds()); //
+
+                    // //takeables
+                    // println!("    {i:3}: ps={:?}, success={s}, fail={f}, and_id={and_id}, groups_stk_len={groups_stk_len}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds()); //
+
+                    //
+                    println!("    {i:3}: ps={:?}, success={s}, fail={f}, and_id={and_id}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds());
                 }
             }
         }
@@ -367,8 +412,13 @@ where
         //
         // if self.debug
         {
-            let groups=&self.groups_stk.last().unwrap().groups;
+            // //takeables
+            // let groups=&self.groups_stk.last().unwrap().groups;
 
+            //
+            let groups=&self.groups;
+
+            //
             if cur.group_ind>=groups.len() {
                 panic!("invalid group_ind={}, groups_len={}",cur.group_ind,groups.len());
             }
@@ -397,8 +447,9 @@ where
                     visiteds:cur.visiteds,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     expected,
-                    groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
+
+                    // groups_stk_len: cur.groups_stk_len,
 
                     // takeable_starts_len:cur.takeable_starts_len,
                     // takeables:cur.takeables,
@@ -415,8 +466,13 @@ where
             GrammarNode::Group(name, g) => {
                 //
                 let new_group_ind=self.new_group(name, cur.group_ind, cur.tokens);
-                let group_infos=&self.groups_stk.last().unwrap().groups;
-                let new_group_len=group_infos.len();
+
+                // //takeables
+                // let groups=&self.groups_stk.last().unwrap().groups;
+
+                //
+                let groups=&self.groups;
+                let new_group_len=groups.len();
 
                 //
                 // if cur.opt {
@@ -434,8 +490,9 @@ where
                     visiteds:cur.visiteds,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     expected:cur.expected,
-                    groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
+
+                    // groups_stk_len: cur.groups_stk_len,
 
                     // takeable_starts_len:cur.takeable_starts_len,
                     // takeables:cur.takeables,
@@ -488,8 +545,9 @@ where
                         visiteds:cur.visiteds.clone(),
                         grammar_debug_len: cur.grammar_debug_len,
                         expected:cur.expected,
-                        groups_stk_len: cur.groups_stk_len,
                         and_id:cur.and_id+1,
+
+                        // groups_stk_len: cur.groups_stk_len,
 
                         // takeable_starts_len:cur.takeable_starts_len,
                         // takeables:cur.takeables.clone(),
@@ -518,8 +576,9 @@ where
                     visiteds:cur.visiteds,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     expected:cur.expected,
-                    groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id+1,
+
+                    // groups_stk_len: cur.groups_stk_len,
 
                     // takeable_starts_len:cur.takeable_starts_len,
                     // takeables:cur.takeables,
@@ -546,8 +605,9 @@ where
                         visiteds:cur.visiteds.clone(),
                         grammar_debug_len: cur.grammar_debug_len,
                         expected:cur.expected,
-                        groups_stk_len: cur.groups_stk_len,
                         and_id:cur.and_id,
+
+                        // groups_stk_len: cur.groups_stk_len,
 
                         // takeable_starts_len:cur.takeable_starts_len,
                         // takeables:cur.takeables.clone(),
@@ -576,8 +636,9 @@ where
                     visiteds:cur.visiteds,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     expected:cur.expected,
-                    groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
+
+                    // groups_stk_len: cur.groups_stk_len,
 
                     // takeable_starts_len:cur.takeable_starts_len,
                     // takeables:cur.takeables,
@@ -599,8 +660,9 @@ where
                     visiteds:cur.visiteds.clone(),
                     grammar_debug_len: cur.grammar_debug_len,
                     expected:cur.expected,
-                    groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
+
+                    // groups_stk_len: cur.groups_stk_len,
 
                     // takeable_starts_len:cur.takeable_starts_len,
                     // takeables:cur.takeables.clone(),
@@ -628,8 +690,9 @@ where
                     visiteds:cur.visiteds,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     expected:cur.expected,
-                    groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
+
+                    // groups_stk_len: cur.groups_stk_len,
 
                     // takeable_starts_len:cur.takeable_starts_len,
                     // takeables:cur.takeables,
@@ -809,8 +872,9 @@ where
                     visiteds:cur.visiteds.clone(),
                     grammar_debug_len: cur.grammar_debug_len,
                     expected:cur.expected,
-                    groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
+
+                    // groups_stk_len: cur.groups_stk_len,
 
                     // takeable_starts_len:cur.takeable_starts_len,
                     // takeables:cur.takeables.clone(),
@@ -833,8 +897,9 @@ where
                     visiteds:cur.visiteds.clone(),
                     grammar_debug_len: cur.grammar_debug_len,
                     expected:cur.expected,
-                    groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
+
+                    // groups_stk_len: cur.groups_stk_len,
 
                     // takeable_starts_len:cur.takeable_starts_len,
                     // takeables:cur.takeables.clone(),
@@ -862,8 +927,9 @@ where
                     visiteds:cur.visiteds,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     expected:cur.expected,
-                    groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
+
+                    // groups_stk_len: cur.groups_stk_len,
 
                     // takeable_starts_len:cur.takeable_starts_len,
                     // takeables:cur.takeables,
@@ -895,8 +961,9 @@ where
                     visiteds,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     expected:cur.expected,
-                    groups_stk_len: cur.groups_stk_len,
                     and_id:cur.and_id,
+
+                    // groups_stk_len: cur.groups_stk_len,
 
                     // takeables:cur.takeables,
                     // takeable_starts_len:cur.takeable_starts_len,
@@ -909,8 +976,8 @@ where
             GrammarNode::Always => {
                 self.stk.truncate(cur.success_len);
 
-                //
-                self.do_groups_stk_success(cur.clone(),cur.and_id);
+                // //takeables
+                // self.do_groups_stk_success(cur.clone(),cur.and_id);
 
                 //
                 if let Some(last)=self.stk.last_mut() {
@@ -1108,19 +1175,8 @@ where
                 //
                 self.stk.truncate(cur.success_len);
 
-                //
-                self.do_groups_stk_success(cur.clone(),cur.and_id);
-
-                //
-                // let group_infos=&mut self.groups_stk.last_mut().unwrap().groups;
-                // let primitive_infos=&mut self.groups_stk.last_mut().unwrap().token_groups;
-
-
-                // // primitive_infos.resize(vprim.ind(), TempPrimitiveInfo{ group: cur.group_ind,discard:true, }); //discard:true,
-                // // primitive_infos.push(TempPrimitiveInfo{ group: cur.group_ind,discard:cur.discard,});
-
-                // primitive_infos.resize(vprim.ind(), cur.group_ind);
-                // primitive_infos.push(cur.group_ind);
+                // //takeables
+                // self.do_groups_stk_success(cur.clone(),cur.and_id);
 
                 //
                 if let Some(last)=self.stk.last_mut() {
@@ -1171,8 +1227,8 @@ where
                 //
                 self.stk.truncate(cur.fail_len);
 
-                //
-                self.do_groups_stk_fail(cur.clone(),cur.and_id);
+                // //takeables
+                // self.do_groups_stk_fail(cur.clone(),cur.and_id);
 
                 //
                 if let Some(last)=self.stk.last_mut() {
@@ -1219,126 +1275,73 @@ where
         }
     }
 
-    fn do_groups_stk_success(&mut self,cur:Work<'t,'g>,cur_and_id:usize) {
-        // return;
+    // fn do_groups_stk_success(&mut self,cur:Work<'t,'g>,cur_and_id:usize) {
 
-        //
-        if self.groups_stk.len()==1 {
-            return;
-        }
+    //     //
+    //     if self.groups_stk.len()==1 {
+    //         return;
+    //     }
 
-        //
-        // let cur_stk_len=self.stk.len();
-        // let cur_stk_len=cur.success_len;
+    //     //
+    //     if let Some(last)=self.stk.last_mut() {
+    //         //
+    //         if self.debug {
+    //             println!("----====== do_groups_stk_success, groups_stk.len={}, groups.len={}, cur.success_len={}, keep={}",
+    //                 self.groups_stk.len(),
+    //                 self.groups_stk.last().unwrap().groups.len(),
+    //                 cur.success_len,
 
-        //
-        if let Some(last)=self.stk.last_mut() {
-            //
-            if self.debug {
-                println!("----====== do_groups_stk_success, groups_stk.len={}, groups.len={}, cur.success_len={}, keep={}",
-                    self.groups_stk.len(),
-                    self.groups_stk.last().unwrap().groups.len(),
-                    cur.success_len,
+    //                 last.and_id==cur_and_id,
+    //             );
+    //         }
 
-                    // self.groups_stk.last().unwrap().success_len,
-                    // self.groups_stk.last().unwrap().fail_len,
+    //         //
+    //         if last.and_id==cur_and_id {
+    //             last.groups_stk_len=self.groups_stk.len(); //cur.groups_stk_len;
+    //             // last.group_ind
+    //         } else {
+    //             let last_groups= self.groups_stk.last().cloned().unwrap();
 
-                    last.and_id==cur_and_id,
-                );
-            }
+    //             self.groups_stk.truncate(last.groups_stk_len-1);
+    //             self.groups_stk.push(last_groups);
 
-            //
-            if last.and_id==cur_and_id {
-                last.groups_stk_len=self.groups_stk.len(); //cur.groups_stk_len;
-                // last.group_ind
-            } else {
-                let last_groups= self.groups_stk.last().cloned().unwrap();
+    //             if self.debug {
+    //                 println!("----====== \tgroups.len={}, ",self.groups_stk.last().unwrap().groups.len(),);
+    //             }
+    //         }
+    //     }
+    // }
 
-                self.groups_stk.truncate(last.groups_stk_len-1);
-                self.groups_stk.push(last_groups);
+    // fn do_groups_stk_fail(&mut self,cur:Work<'t,'g>,cur_and_id:usize) {
+    //     //
+    //     if self.groups_stk.len()==1 {
+    //         return;
+    //     }
 
-                if self.debug {
-                    println!("----====== \tgroups.len={}, ",self.groups_stk.last().unwrap().groups.len(),);
-                }
-            }
-        }
+    //     //
+    //     if let Some(last)=self.stk.last_mut() {
+    //         //
+    //         if self.debug {
+    //             println!("----====== do_groups_stk_fail, groups_stk.len={}, groups.len={}, cur.fail_len={}, keep={}",
+    //                 self.groups_stk.len(),
+    //                 self.groups_stk.last().unwrap().groups.len(),
+    //                 cur.fail_len,
 
-        //
-        // if cur.success_len > self.groups_stk.last().unwrap().success_len {
-        //     return;
-        // }
+    //                 last.and_id==cur_and_id,
+    //             );
+    //         }
 
-        //
-        // let last=self.groups_stk.last().unwrap().clone();
+    //         //
+    //         if last.and_id!=cur_and_id {
+    //             self.groups_stk.truncate(last.groups_stk_len);
 
-        //
-        // if let Some((i,_))=self.groups_stk[1..].iter().enumerate().find(|(i,x)|cur.success_len<=x.success_len) {
-        //     println!("----========= i={i}");
-        //     self.groups_stk.truncate(i+1);
-        //     self.groups_stk.push(last);
-        // }
-    }
-
-    fn do_groups_stk_fail(&mut self,cur:Work<'t,'g>,cur_and_id:usize) {
-        // return;
-
-        //
-        if self.groups_stk.len()==1 {
-            return;
-        }
-
-        //
-        if let Some(last)=self.stk.last_mut() {
-            //
-            if self.debug {
-                println!("----====== do_groups_stk_fail, groups_stk.len={}, groups.len={}, cur.fail_len={}, keep={}",
-                    self.groups_stk.len(),
-                    self.groups_stk.last().unwrap().groups.len(),
-                    cur.fail_len,
-                    // self.groups_stk.last().unwrap().fail_len,
-                    // self.groups_stk.last().unwrap().success_len,
-                    last.and_id==cur_and_id,
-                );
-            }
-
-            //
-            if last.and_id!=cur_and_id {
-                self.groups_stk.truncate(last.groups_stk_len);
-
-                //
-                if self.debug {
-                    println!("----====== \tgroups.len={}, ",self.groups_stk.last().unwrap().groups.len(),);
-                }
-            }
-        }
-
-        // //
-        // // let cur_stk_len=cur.fail_len;
-        // if cur.fail_len > self.groups_stk.last().unwrap().fail_len {
-        //     return;
-        // }
-
-        // let cur_stk_len=self.stk.len();
-
-        // let mut i=self.groups_stk.len();
-
-        //     for (j,gs) in self.groups_stk.iter().enumerate() {
-        //         let gs=gs.groups.iter().map(|z|z.name).collect::<Vec<_>>();
-        //         println!("-=-=-={j} {gs:?}",);
-
-        //     }
-        // while self.groups_stk.len()>1 {
-        //     i-=1;
-        //     let last_fail_len=self.groups_stk.last().unwrap().fail_len;
-
-        //     if cur_stk_len>last_fail_len {
-        //         break;
-        //     }
-
-        //     println!("-=-= i={i}");
-        //     self.groups_stk.pop().unwrap();
-        // }
-    }
+    //             //
+    //             if self.debug {
+    //                 println!("----====== \tgroups.len={}, ",self.groups_stk.last().unwrap().groups.len(),);
+    //             }
+    //         }
+    //     }
+    // }
 
     fn consolidate_grammar_debug_stk(&mut self, ) { //cur_grammar_debug_len:usize
         //
@@ -1393,8 +1396,11 @@ where
             //
             println!("==do_groups_primitives_clamp: cur_group_ind={cur_group_ind}, last.group_ind={}",last.group_ind);
 
+            // //takeables
+            // let groups=&mut self.groups_stk.last_mut().unwrap().groups;
+
             //
-            let group_infos=&mut self.groups_stk.last_mut().unwrap().groups;
+            let groups=&mut self.groups;
 
             //
             // let last_group_prim_len=last.primitives.len();
@@ -1408,7 +1414,7 @@ where
 
             //
             while g>last.group_ind {
-                let group=&mut group_infos[g];
+                let group=&mut groups[g];
 
                 //
                 println!("\tg={g} parent={}",group.parent);
@@ -1536,12 +1542,17 @@ where
     }
 
     fn new_group(&mut self,name : &'g str, parent:usize, ps:TokenIterContainer<'t>) -> usize {
-        //
-        let group_infos=&mut self.groups_stk.last_mut().unwrap().groups;
-        let new_group_ind=group_infos.len();
+        // //takeables
+        // let groups=&mut self.groups_stk.last_mut().unwrap().groups;
 
         //
-        group_infos.push(TempGroupInfo {
+        let groups=&mut self.groups;
+
+        //
+        let new_group_ind=groups.len();
+
+        //
+        groups.push(TempGroupInfo {
             name,
             parent,
             // primitive_ind_start: ps.inds().start,
@@ -1559,8 +1570,11 @@ where
     }
 
     fn get_cur_groups(&self,cur_group_ind:usize,) -> HashSet<usize> {
+        // //takeables
+        // let groups=&self.groups_stk.last().unwrap().groups;
+
         //
-        let group_infos=&self.groups_stk.last().unwrap().groups;
+        let groups=&self.groups;
 
         //collect cur groups
         let mut cur_used_group_inds: HashSet<usize>=HashSet::new();
@@ -1576,7 +1590,7 @@ where
                     break;
                 }
 
-                let group=&group_infos[group_ind];
+                let group=&groups[group_ind];
                 group_ind=group.parent;
             }
         }
@@ -1614,11 +1628,14 @@ where
 
     pub fn get_walk(&self) -> Walk<'t,'g> {
         //
-        let mut groups: Vec<WalkGroup<'t,'g>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
-        // groups.resize_with(new_len, f);
+        let mut groups_out: Vec<WalkGroup<'t,'g>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
+        // groups_out.resize_with(new_len, f);
+
+        // //takeables
+        // let group_infos=&self.groups_stk.last().unwrap().groups;
 
         //
-        let group_infos=&self.groups_stk.last().unwrap().groups;
+        let group_infos=&self.groups;
 
         //
         // let primitive_infos=&self.groups_stk.last().unwrap().token_groups;
@@ -1641,7 +1658,13 @@ where
 
         //
         for (i,&(g,p,)) in group_infos2.iter().enumerate() {
-            let group_infos=&self.groups_stk.last().unwrap().groups;
+            // //takeables
+            // let group_infos=&self.groups_stk.last().unwrap().groups;
+
+            //
+            let group_infos=&self.groups;
+
+            //
             println!("\t{i}: g{g}, p{p}, {:?}, {:?}, {:?}",group_infos[g].name,group_infos[g].tokens.inds(),group_infos[g].tokens);
         }
 
@@ -1651,14 +1674,20 @@ where
 
         //
         for (i,&(gind,p,)) in group_infos2.iter().enumerate() {
-            let group_infos=&self.groups_stk.last().unwrap().groups;
+            // //takeables
+            // let group_infos=&self.groups_stk.last().unwrap().groups;
+
+            //
+            let group_infos=&self.groups;
+
+            //
             let g=&group_infos[gind];
 
             //
-            // groups.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives.inds() });
+            // groups_out.push(WalkGroup { name: gg.name, children: csum..csum+c, tokens: gg.primitives.inds() });
 
             //
-            groups.push(WalkGroup { name: g.name,
+            groups_out.push(WalkGroup { name: g.name,
                 children: 0..0, // csum..csum+c
                 tokens: g.tokens,
             });
@@ -1671,7 +1700,7 @@ where
             //
             if i!=0 { //as root's parent is 0, ie itself, which is incorrect
                 let ind=ind_map.get(&p).cloned().unwrap();
-                let c= &mut groups[ind].children;
+                let c= &mut groups_out[ind].children;
                 if c.start==0 {c.start=i;}
                 c.start=c.start.min(i);
                 c.end=c.end.max(i+1);
@@ -1679,7 +1708,7 @@ where
         }
 
         //
-        let walk=Walk{ groups };
+        let walk=Walk{ groups: groups_out };
         walk
     }
 }
