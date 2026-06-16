@@ -81,29 +81,29 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             [NonTerm("comma"),NonTerm("var_set"),].and().many0(),
         ].and(),
 
-
+        "set_eq" => [
+            [
+                [
+                    NonTerm("add").group("add_eq"),
+                    NonTerm("sub").group("sub_eq"),
+                    NonTerm("mul").group("mul_eq"),
+                    NonTerm("div").group("div_eq"),
+                    NonTerm("not").group("not_eq"),
+                    NonTerm("and").group("and_eq"),
+                    NonTerm("or").group("or_eq"),
+                    NonTerm("xor").group("xor_eq"),
+                ].or(),
+                NonTerm("equals"),
+            ].and(),
+            NonTerm("equals").group("eq"),
+        ].or(),
         "set" => [
             [
                 // [Identifier,NonTerm("val_field_index").cede().many0(), NonTerm("val_field_index").take(),].and(),
                 [NonTerm("val").ends_in(NonTerm("val_field_index"))].and(),
                 Identifier,
             ].or(),
-            [
-                [
-                    [
-                        NonTerm("add").group("add_eq"),
-                        NonTerm("sub").group("sub_eq"),
-                        NonTerm("mul").group("mul_eq"),
-                        NonTerm("div").group("div_eq"),
-                        NonTerm("not").group("not_eq"),
-                        NonTerm("and").group("and_eq"),
-                        NonTerm("or").group("or_eq"),
-                        NonTerm("xor").group("xor_eq"),
-                    ].or(),
-                    NonTerm("equals"),
-                ].and(),
-                NonTerm("equals").group("eq"),
-            ].or(),
+            NonTerm("set_eq"),
             NonTerm("expr"),
         ].and(),
 
