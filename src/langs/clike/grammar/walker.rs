@@ -39,6 +39,9 @@ where
     // groups_stk:Vec<TempGroupsElement<'t,'g>>,
     // takeable_starts:Vec<TempTakeableStart<'t,'g>>,
 
+
+    takeable_starts2:Vec<TempTakeableStart2<'t,'g>>,
+
 }
 
 impl<'t,'g,G> GrammarWalker<'t,'g,G>
@@ -64,6 +67,8 @@ where
 
             // groups_stk:Default::default(),
             // takeable_starts: Default::default(),
+
+            takeable_starts2: Default::default(),
         }
     }
 
@@ -90,6 +95,8 @@ where
 
             // discard:false,
             // opt:false,
+
+            from_user:false,
         });
 
         {
@@ -114,6 +121,8 @@ where
 
                 // discard:false,
                 // opt:false,
+
+                from_user:true,
             });
         }
 
@@ -136,6 +145,9 @@ where
 
         // //takeables
         // self.takeable_starts.clear();
+
+        //
+        self.takeable_starts2.clear();
 
         //
         self.c=0;
@@ -256,6 +268,9 @@ where
         }
 
         //
+        self.takeable_starts2.push(TempTakeableStart2 { grammar: cur.grammar.clone(), tokens_start: cur.tokens.clone(), group_ind: cur.group_ind });
+
+        //
         if self.debug {
             if cur.grammar_debug_len> self.grammar_debug_stk.len() {
                 let x=match cur.grammar {
@@ -313,6 +328,7 @@ where
                     grammar_debug_len, expected, and_id,
                     // groups_stk_len,
                     // takeables, takeable_starts_len,
+                    from_user,
                 }=&cur;
 
                 //
@@ -389,10 +405,12 @@ where
 
             //
             if false {
-                for (i,Work { grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len,
+                for (i,Work {
+                    grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len,
                     visiteds, grammar_debug_len, expected, and_id,
                     // groups_stk_len,
                     // takeable_starts_len, takeables,
+                    from_user,
                 }) in self.stk.iter()
                     // .rev()
                     .enumerate()
@@ -456,6 +474,7 @@ where
 
                     // discard:cur.discard,
                     // opt:cur.opt,
+                    from_user:true,
                 });
             }
 
@@ -481,6 +500,8 @@ where
 
                     // discard:cur.discard,
                     // opt:cur.opt,
+
+                    from_user:true,
                 });
             }
 
@@ -520,33 +541,10 @@ where
 
                     // discard:cur.discard,
                     // opt:cur.opt,
+
+                    from_user:true,
                 });
             }
-
-            // GrammarNode::Discard(g) => {
-            //     // if cur.opt {
-            //     //     self.takeable_starts.push((*g.clone(),cur.primitives.clone()));
-            //     // }
-
-            //     self.stk.push(Work {
-            //         grammar: *g,
-            //         success_len: cur.success_len,
-            //         fail_len: cur.fail_len,
-            //         tokens: cur.tokens,
-
-            //         group_ind: cur.group_ind,
-            //         group_len: cur.group_len,
-            //         output_len: cur.output_len,
-            //         discard:true,
-            //         takeable_starts_len:cur.takeable_starts_len,
-            //         visiteds:cur.visiteds,
-            //         takeables:cur.takeables,
-            //         opt:cur.opt,
-            //         grammar_debug_len: cur.grammar_debug_len+1,
-            //         // grammar_debug_no_add: false,
-            //         expected:cur.expected,
-            //     });
-            // }
 
             GrammarNode::And(gs) => {
                 let Some(first)=gs.first().cloned() else {
@@ -575,6 +573,8 @@ where
 
                         // discard:cur.discard,
                         // opt:false, //opt isnt passed to individual items in And
+
+                        from_user:false,
                     });
                 }
 
@@ -606,6 +606,8 @@ where
 
                     // discard:cur.discard,
                     // opt:false, //opt isnt passed to individual items in And
+
+                    from_user:true,
                 });
             }
 
@@ -635,6 +637,8 @@ where
 
                         // opt:cur.opt,
                         // discard:cur.discard,
+
+                        from_user:false,
                     });
                 }
 
@@ -666,6 +670,8 @@ where
 
                     // discard:cur.discard,
                     // opt:cur.opt,
+
+                    from_user:true,
                 });
             }
 
@@ -690,6 +696,8 @@ where
 
                     // discard:cur.discard,
                     // opt:false, //not used on always
+
+                    from_user:false,
                 });
 
                 //
@@ -720,18 +728,13 @@ where
 
                     // discard:cur.discard,
                     // opt:true,
+
+                    from_user:true,
                 });
             }
 
             // GrammarNode::Cede(g) => {
-            //     //should return err if not giveable? ie not opt? or just ignore?
-            //     //  or just don't rquire at all
-
-            //     //
-            //     // if cur.opt {
-            //     // self.takeable_starts.push((*g.clone(),cur.tokens.clone()));
             //     self.takeable_starts.push(TempTakeableStart { grammar: *g.clone(), tokens_start: cur.tokens.clone(), group_ind: cur.group_ind });
-            //     // }
 
             //     //
             //     self.stk.push(Work {
@@ -902,6 +905,8 @@ where
 
                     // discard:cur.discard,
                     // opt:true,
+
+                    from_user:false,
                 });
 
                 //
@@ -927,6 +932,8 @@ where
 
                     // discard:cur.discard,
                     // opt:false, //not used
+
+                    from_user:false,
                 });
 
                 //
@@ -957,6 +964,8 @@ where
 
                     // discard:cur.discard,
                     // opt:true,
+
+                    from_user:true,
                 });
             }
 
@@ -991,6 +1000,8 @@ where
 
                     // discard:cur.discard,
                     // opt:cur.opt,
+
+                    from_user:true,
                 });
             }
 
