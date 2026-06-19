@@ -369,9 +369,12 @@ where
                 // println!("        groups_stk.len={groups_stk_len2}, groups_stk_len={groups_stk_len}, ");
                 // println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
 
-                //
-                println!("        takeable_starts_len={takeable_starts_len2:?}, takeables={:?}, ",
-                    takeables2.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>(),
+                println!("        takeable_starts_len={takeable_starts_len2:?}, takeable_starts={},",
+                    self.takeable_starts2.iter().map(|t|format!("{:?}:{}",t.grammar,t.tokens_start.inds().start)).collect::<Vec<_>>().join(","),
+                );
+                println!("        takeables=[{}], ",
+                    takeables2.iter().map(|(k,t)|format!("{k:?}:{:?}",t.tokens)).collect::<Vec<_>>().join(","),
+                    // takeables2.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>(),
                 );
 
                 //

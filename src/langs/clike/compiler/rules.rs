@@ -10,6 +10,7 @@ pub fn is_keyword(n:& str) -> bool {
         "print"|"println"|"format"|
         "var"|"fn"|"return"|
         "if"|"elif"|"else"
+        |"a"|"b"|"c"
         => true,
         _=>false,
     }
@@ -40,9 +41,13 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         ].and(),
 
         "start" => [
-            NonTerm("stmts"),
-            NonTerm("ending").many0(),
+            Keyword("a"),
+            Keyword("b"),
         ].and(),
+        // "start" => [
+        //     NonTerm("stmts"),
+        //     NonTerm("ending").many0(),
+        // ].and(),
 
 
 
