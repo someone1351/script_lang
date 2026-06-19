@@ -506,6 +506,27 @@ where
 
             GrammarNode::EndsIn(g, ends_in_g ) => {
 
+                //check ends in here
+                self.stk.push(Work {
+                    grammar: GrammarNode::Always,
+                    success_len: cur.success_len,
+                    fail_len: 0, //not used
+                    tokens: cur.tokens,
+                    group_ind: cur.group_ind,
+                    group_len: cur.group_len,
+                    visiteds:cur.visiteds,
+                    grammar_debug_len: cur.grammar_debug_len+1,
+                    expected:cur.expected,
+                    and_id:cur.and_id,
+
+                    from_user:false,
+
+                    takeable_starts_len2:cur.takeable_starts_len2,
+                    takeables2:cur.takeables2,
+                });
+
+                let success_len=self.stk.len();
+
                 //
                 self.stk.push(Work {
                     grammar: *g,
@@ -1304,6 +1325,12 @@ where
                 //
                 self.last_remove_old_takeables2();
                 self.last_insert_start_takeables2(cur.tokens);
+
+                //
+                println!("--- hmm stk={:?}",self.stk.iter().map(|x|x.grammar.clone()).collect::<Vec<_>>());
+                if let Some(last)=self.stk.last_mut() {
+                    println!("---takeables3={:?}",last.takeables2);
+                }
 
                 //
                 // if self.stk.is_empty() {
