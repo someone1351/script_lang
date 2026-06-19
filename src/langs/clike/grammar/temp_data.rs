@@ -16,6 +16,14 @@ pub struct TempTakeableStart2<'t,'g> {
     pub group_ind:usize,
 }
 
+#[derive(Clone, Debug)]
+pub struct WorkTakeable2<'t> {
+    pub tokens:TokenIterContainer<'t>,
+    pub tokens_start:TokenIterContainer<'t>,
+    pub group_ind:usize,
+    pub inner_groups:Range<usize>, //groups inside the takeable?
+}
+
 
 // #[derive(Clone, Debug)]
 // pub struct TempTakeableStart<'t,'g> {
@@ -86,8 +94,8 @@ pub struct Work<'t,'g> {
 
 
     pub from_user:bool, //gramamr added by input grammar, not walker
-    // pub takeable_starts_len2:usize,
-    // pub takeables2:HashMap<GrammarNode<'g>,WorkTakeable2<'t>>,
+    pub takeable_starts_len2:usize,
+    pub takeables2:HashMap<GrammarNode<'g>,WorkTakeable2<'t>>,
 }
 
 

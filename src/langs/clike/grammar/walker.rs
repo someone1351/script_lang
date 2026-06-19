@@ -97,6 +97,9 @@ where
             // opt:false,
 
             from_user:false,
+
+            takeable_starts_len2:0,
+            takeables2:Default::default(),
         });
 
         {
@@ -123,6 +126,9 @@ where
                 // opt:false,
 
                 from_user:true,
+
+                takeable_starts_len2:0,
+                takeables2:Default::default(),
             });
         }
 
@@ -268,7 +274,13 @@ where
         }
 
         //
-        self.takeable_starts2.push(TempTakeableStart2 { grammar: cur.grammar.clone(), tokens_start: cur.tokens.clone(), group_ind: cur.group_ind });
+        if cur.from_user { //ignore grammars added by walker
+            self.takeable_starts2.push(TempTakeableStart2 {
+                grammar: cur.grammar.clone(),
+                tokens_start: cur.tokens.clone(),
+                group_ind: cur.group_ind,
+            });
+        }
 
         //
         if self.debug {
@@ -329,6 +341,7 @@ where
                     // groups_stk_len,
                     // takeables, takeable_starts_len,
                     from_user,
+                    takeable_starts_len2,takeables2,
                 }=&cur;
 
                 //
@@ -350,11 +363,16 @@ where
 
                 //
                 println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, ",);
-                // println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
                 println!("        and_id={and_id}, groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
 
                 // //takeables
                 // println!("        groups_stk.len={groups_stk_len2}, groups_stk_len={groups_stk_len}, ");
+                // println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
+
+                //
+                println!("        takeable_starts_len={takeable_starts_len2:?}, takeables={:?}, ",
+                    takeables2.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>(),
+                );
 
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
@@ -411,6 +429,7 @@ where
                     // groups_stk_len,
                     // takeable_starts_len, takeables,
                     from_user,
+                    takeable_starts_len2,takeables2,
                 }) in self.stk.iter()
                     // .rev()
                     .enumerate()
@@ -474,7 +493,11 @@ where
 
                     // discard:cur.discard,
                     // opt:cur.opt,
+
                     from_user:true,
+
+                    takeable_starts_len2:cur.takeable_starts_len2,
+                    takeables2:cur.takeables2,
                 });
             }
 
@@ -502,6 +525,9 @@ where
                     // opt:cur.opt,
 
                     from_user:true,
+
+                    takeable_starts_len2:cur.takeable_starts_len2,
+                    takeables2:cur.takeables2,
                 });
             }
 
@@ -543,6 +569,9 @@ where
                     // opt:cur.opt,
 
                     from_user:true,
+
+                    takeable_starts_len2:cur.takeable_starts_len2,
+                    takeables2:cur.takeables2,
                 });
             }
 
@@ -575,6 +604,9 @@ where
                         // opt:false, //opt isnt passed to individual items in And
 
                         from_user:false,
+
+                        takeable_starts_len2:cur.takeable_starts_len2,
+                        takeables2:cur.takeables2.clone(),
                     });
                 }
 
@@ -608,6 +640,9 @@ where
                     // opt:false, //opt isnt passed to individual items in And
 
                     from_user:true,
+
+                    takeable_starts_len2:cur.takeable_starts_len2,
+                    takeables2:cur.takeables2,
                 });
             }
 
@@ -639,6 +674,9 @@ where
                         // discard:cur.discard,
 
                         from_user:false,
+
+                        takeable_starts_len2:cur.takeable_starts_len2,
+                        takeables2:cur.takeables2.clone(),
                     });
                 }
 
@@ -672,6 +710,9 @@ where
                     // opt:cur.opt,
 
                     from_user:true,
+
+                    takeable_starts_len2:cur.takeable_starts_len2,
+                    takeables2:cur.takeables2,
                 });
             }
 
@@ -698,6 +739,9 @@ where
                     // opt:false, //not used on always
 
                     from_user:false,
+
+                    takeable_starts_len2:cur.takeable_starts_len2,
+                    takeables2:cur.takeables2.clone(),
                 });
 
                 //
@@ -730,6 +774,9 @@ where
                     // opt:true,
 
                     from_user:true,
+
+                    takeable_starts_len2:cur.takeable_starts_len2,
+                    takeables2:cur.takeables2,
                 });
             }
 
@@ -907,6 +954,9 @@ where
                     // opt:true,
 
                     from_user:false,
+
+                    takeable_starts_len2:cur.takeable_starts_len2,
+                    takeables2:cur.takeables2.clone(),
                 });
 
                 //
@@ -934,6 +984,9 @@ where
                     // opt:false, //not used
 
                     from_user:false,
+
+                    takeable_starts_len2:cur.takeable_starts_len2,
+                    takeables2:cur.takeables2.clone(),
                 });
 
                 //
@@ -966,6 +1019,9 @@ where
                     // opt:true,
 
                     from_user:true,
+
+                    takeable_starts_len2:cur.takeable_starts_len2,
+                    takeables2:cur.takeables2,
                 });
             }
 
@@ -1002,6 +1058,9 @@ where
                     // opt:cur.opt,
 
                     from_user:true,
+
+                    takeables2:cur.takeables2,
+                    takeable_starts_len2:cur.takeable_starts_len2,
                 });
             }
 
@@ -1036,6 +1095,9 @@ where
                     // last.takeables=cur.takeables;
 
                     //
+                    last.takeables2=cur.takeables2;
+
+                    //
                     if cur.expected.id!=last.expected.id {
                         last.expected=Default::default();
                     }
@@ -1057,6 +1119,9 @@ where
 
                 // //takeables
                 // self.last_insert_start_takeables(cur.tokens);
+
+                //
+                self.last_insert_start_takeables2(cur.tokens);
 
                 //
                 self.set_remaining_prims(cur.tokens);
@@ -1234,6 +1299,10 @@ where
                 // self.last_insert_start_takeables(cur.tokens);
 
                 //
+                self.last_remove_old_takeables2();
+                self.last_insert_start_takeables2(cur.tokens);
+
+                //
                 // if self.stk.is_empty() {
                 //     self.primitives_remaining=cur.primitives;
                 // }
@@ -1266,6 +1335,9 @@ where
                 if let Some(last)=self.stk.last_mut() {
                     // //takeables
                     // self.takeable_starts.truncate(last.takeable_starts_len);
+
+                    //
+                    self.takeable_starts2.truncate(last.takeable_starts_len2);
 
                     //
                     if self.debug {
@@ -1345,6 +1417,68 @@ where
     // }
 
     // fn do_groups_stk_fail(&mut self,cur:Work<'t,'g>,cur_and_id:usize) {
+    //     //
+    //     if self.groups_stk.len()==1 {
+    //         return;
+    //     }
+
+    //     //
+    //     if let Some(last)=self.stk.last_mut() {
+    //         //
+    //         if self.debug {
+    //             println!("----====== do_groups_stk_fail, groups_stk.len={}, groups.len={}, cur.fail_len={}, keep={}",
+    //                 self.groups_stk.len(),
+    //                 self.groups_stk.last().unwrap().groups.len(),
+    //                 cur.fail_len,
+
+    //                 last.and_id==cur_and_id,
+    //             );
+    //         }
+
+    //         //
+    //         if last.and_id!=cur_and_id {
+    //             self.groups_stk.truncate(last.groups_stk_len);
+
+    //             //
+    //             if self.debug {
+    //                 println!("----====== \tgroups.len={}, ",self.groups_stk.last().unwrap().groups.len(),);
+    //             }
+    //         }
+    //     }
+    // }
+
+
+    // fn do_groups_stk_success2(&mut self,cur:Work<'t,'g>,cur_and_id:usize) {
+
+    //     //
+    //     if let Some(last)=self.stk.last_mut() {
+    //         //
+    //         if self.debug {
+    //             println!("----====== do_groups_stk_success, groups.len={}, cur.success_len={}, keep={}",
+    //                 // self.groups_stk.len(),
+    //                 self.groups.len(),
+    //                 cur.success_len,
+    //                 last.and_id==cur_and_id,
+    //             );
+    //         }
+
+    //         //
+    //         if last.and_id==cur_and_id {
+    //             last.groups_stk_len=self.groups_stk.len(); //cur.groups_stk_len;
+    //         } else {
+    //             let last_groups= self.groups_stk.last().cloned().unwrap();
+
+    //             self.groups_stk.truncate(last.groups_stk_len-1);
+    //             self.groups_stk.push(last_groups);
+
+    //             if self.debug {
+    //                 println!("----====== \tgroups.len={}, ",self.groups_stk.last().unwrap().groups.len(),);
+    //             }
+    //         }
+    //     }
+    // }
+
+    // fn do_groups_stk_fail2(&mut self,cur:Work<'t,'g>,cur_and_id:usize) {
     //     //
     //     if self.groups_stk.len()==1 {
     //         return;
@@ -1544,6 +1678,41 @@ where
     //         });
     //     }
     // }
+
+    fn last_insert_start_takeables2(&mut self,
+        cur_tokens:TokenIterContainer<'t>,
+    ) {
+        //
+        if let Some(last)=self.stk.last_mut() {
+            //
+            for TempTakeableStart2 {
+                grammar:tg, tokens_start, group_ind ,
+            } in self.takeable_starts2.drain(last.takeable_starts_len2 ..)
+            {
+                //
+                let tokens_len=tokens_start.len()-cur_tokens.len();
+                let tokens=tokens_start.get_amount(tokens_len).unwrap();
+
+                //
+                if self.debug {
+                    println!("--- inserting takeable {tg:?} {tokens:?}",);
+                }
+
+                //
+                last.takeables2.insert(tg, WorkTakeable2 {
+                    tokens_start, tokens, group_ind,
+                    inner_groups:group_ind+1 .. self.groups.len(),
+                });
+            }
+        }
+        // last_takeables
+    }
+
+    fn last_remove_old_takeables2(&mut self) {
+        if let Some(last)=self.stk.last_mut() {
+            last.takeables2.retain(|_k,v|v.tokens.inds().start>=last.tokens.inds().start);
+        }
+    }
 
     fn clear_expected(&mut self) {
         // println!("-------==== expected cleared, {}",self.expected_loc);
