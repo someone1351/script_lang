@@ -79,6 +79,7 @@ where
     fn init(&mut self,start_non_term:&'g str,) {
         self.stk.clear();
 
+        //
         self.stk.push(Work{
             grammar:GrammarNode::Error(GrammarWalkError::FailedParse),
             success_len:0,fail_len:0,
@@ -102,6 +103,31 @@ where
             takeables2:Default::default(),
         });
 
+        //
+        let fail_len=self.stk.len();
+
+        //no needed, but allows takeables2 to finish, for debugging purposes
+        self.stk.push(Work{
+            grammar : GrammarNode::Always,
+            success_len:0,
+            fail_len:0, //not used
+            tokens:self.top_primitives,
+            group_ind: 0, group_len: 1,
+            visiteds:Default::default(),
+            grammar_debug_len: 1,
+            expected:Default::default(),
+            and_id: 0,
+
+            from_user:true,
+
+            takeable_starts_len2:0,
+            takeables2:Default::default(),
+        });
+
+        //
+        let success_len=self.stk.len();
+
+        //start
         {
             let grammar=if let Some(g)=(self.grammar_func)(start_non_term) {
                 g
@@ -111,7 +137,10 @@ where
 
             self.stk.push(Work{
                 grammar, //:(self.grammar_func)(start_non_term),
-                success_len:0,fail_len:1,tokens:self.top_primitives,
+                // success_len:0,
+                success_len,
+                fail_len, //1
+                tokens:self.top_primitives,
                 group_ind: 0, group_len: 1,
                 visiteds:Default::default(),
                 grammar_debug_len: 1,
@@ -506,7 +535,7 @@ where
 
             GrammarNode::EndsIn(g, ends_in_g ) => {
 
-                //check ends in here
+                //todo check ends_in here
                 self.stk.push(Work {
                     grammar: GrammarNode::Always,
                     success_len: cur.success_len,
@@ -514,7 +543,7 @@ where
                     tokens: cur.tokens,
                     group_ind: cur.group_ind,
                     group_len: cur.group_len,
-                    visiteds:cur.visiteds,
+                    visiteds:cur.visiteds.clone(),
                     grammar_debug_len: cur.grammar_debug_len+1,
                     expected:cur.expected,
                     and_id:cur.and_id,
@@ -522,7 +551,7 @@ where
                     from_user:false,
 
                     takeable_starts_len2:cur.takeable_starts_len2,
-                    takeables2:cur.takeables2,
+                    takeables2:cur.takeables2.clone(), //not necessary? since the work below, should pass its takeables2 to here after it succeeeds
                 });
 
                 let success_len=self.stk.len();
@@ -530,7 +559,8 @@ where
                 //
                 self.stk.push(Work {
                     grammar: *g,
-                    success_len: cur.success_len,
+                    // success_len: cur.success_len,
+                    success_len,
                     fail_len: cur.fail_len,
                     tokens: cur.tokens,
                     group_ind: cur.group_ind,
@@ -1329,7 +1359,7 @@ where
                 //
                 println!("--- hmm stk={:?}",self.stk.iter().map(|x|x.grammar.clone()).collect::<Vec<_>>());
                 if let Some(last)=self.stk.last_mut() {
-                    println!("---takeables3={:?}",last.takeables2);
+                    println!("---takeables3={:?}, len={}",last.takeables2,last.takeables2.len());
                 }
 
                 //
