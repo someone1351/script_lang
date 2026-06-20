@@ -94,6 +94,7 @@ pub struct Work<'t,'g> {
 
 
     pub from_user:bool, //gramamr added by input grammar, not walker
+    pub takeable_starts_ind2:usize,
     pub takeable_starts_len2:usize,
     pub takeables2:HashMap<GrammarNode<'g>,WorkTakeable2<'t>>,
 }

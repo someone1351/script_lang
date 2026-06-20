@@ -99,6 +99,7 @@ where
 
             from_user:false,
 
+            takeable_starts_ind2:0,
             takeable_starts_len2:0,
             takeables2:Default::default(),
         });
@@ -120,6 +121,7 @@ where
 
             from_user:true,
 
+            takeable_starts_ind2:0,
             takeable_starts_len2:0,
             takeables2:Default::default(),
         });
@@ -156,6 +158,7 @@ where
 
                 from_user:true,
 
+                takeable_starts_ind2:0,
                 takeable_starts_len2:0,
                 takeables2:Default::default(),
             });
@@ -370,7 +373,7 @@ where
                     // groups_stk_len,
                     // takeables, takeable_starts_len,
                     from_user,
-                    takeable_starts_len2,takeables2,
+                    takeable_starts_ind2,takeable_starts_len2,takeables2,
                 }=&cur;
 
                 //
@@ -398,7 +401,7 @@ where
                 // println!("        groups_stk.len={groups_stk_len2}, groups_stk_len={groups_stk_len}, ");
                 // println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
 
-                println!("        takeable_starts_len={takeable_starts_len2:?}, takeable_starts={},",
+                println!("        takeable_starts: ind={takeable_starts_ind2} len={takeable_starts_len2:?} :: {},",
                     self.takeable_starts2.iter().map(|t|format!("{:?}:{}",t.grammar,t.tokens_start.inds().start)).collect::<Vec<_>>().join(","),
                 );
                 println!("        takeables=[{}], ",
@@ -461,7 +464,7 @@ where
                     // groups_stk_len,
                     // takeable_starts_len, takeables,
                     from_user,
-                    takeable_starts_len2,takeables2,
+                    takeable_starts_ind2,takeable_starts_len2,takeables2,
                 }) in self.stk.iter()
                     // .rev()
                     .enumerate()
@@ -528,6 +531,7 @@ where
 
                     from_user:true,
 
+                    takeable_starts_ind2:cur.takeable_starts_ind2,
                     takeable_starts_len2:cur.takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
@@ -550,6 +554,7 @@ where
 
                     from_user:false,
 
+                    takeable_starts_ind2:cur.takeable_starts_ind2,
                     takeable_starts_len2:cur.takeable_starts_len2,
                     takeables2:cur.takeables2.clone(), //not necessary? since the work below, should pass its takeables2 to here after it succeeeds
                 });
@@ -580,6 +585,7 @@ where
 
                     from_user:true,
 
+                    takeable_starts_ind2:cur.takeable_starts_ind2,
                     takeable_starts_len2:cur.takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
@@ -624,6 +630,7 @@ where
 
                     from_user:true,
 
+                    takeable_starts_ind2:cur.takeable_starts_ind2,
                     takeable_starts_len2:cur.takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
@@ -659,6 +666,7 @@ where
 
                         from_user:false,
 
+                        takeable_starts_ind2:cur.takeable_starts_ind2,
                         takeable_starts_len2:cur.takeable_starts_len2,
                         takeables2:cur.takeables2.clone(),
                     });
@@ -695,6 +703,7 @@ where
 
                     from_user:true,
 
+                    takeable_starts_ind2:cur.takeable_starts_ind2,
                     takeable_starts_len2:cur.takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
@@ -729,6 +738,7 @@ where
 
                         from_user:false,
 
+                        takeable_starts_ind2:cur.takeable_starts_ind2,
                         takeable_starts_len2:cur.takeable_starts_len2,
                         takeables2:cur.takeables2.clone(),
                     });
@@ -765,6 +775,7 @@ where
 
                     from_user:true,
 
+                    takeable_starts_ind2:cur.takeable_starts_ind2,
                     takeable_starts_len2:cur.takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
@@ -794,6 +805,7 @@ where
 
                     from_user:false,
 
+                    takeable_starts_ind2:cur.takeable_starts_ind2,
                     takeable_starts_len2:cur.takeable_starts_len2,
                     takeables2:cur.takeables2.clone(),
                 });
@@ -829,6 +841,7 @@ where
 
                     from_user:true,
 
+                    takeable_starts_ind2:cur.takeable_starts_ind2,
                     takeable_starts_len2:cur.takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
@@ -1009,6 +1022,7 @@ where
 
                     from_user:false,
 
+                    takeable_starts_ind2:cur.takeable_starts_ind2,
                     takeable_starts_len2:cur.takeable_starts_len2,
                     takeables2:cur.takeables2.clone(),
                 });
@@ -1039,6 +1053,7 @@ where
 
                     from_user:false,
 
+                    takeable_starts_ind2:cur.takeable_starts_ind2,
                     takeable_starts_len2:cur.takeable_starts_len2,
                     takeables2:cur.takeables2.clone(),
                 });
@@ -1074,6 +1089,7 @@ where
 
                     from_user:true,
 
+                    takeable_starts_ind2:cur.takeable_starts_ind2,
                     takeable_starts_len2:cur.takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
@@ -1113,8 +1129,9 @@ where
 
                     from_user:true,
 
-                    takeables2:cur.takeables2,
+                    takeable_starts_ind2:cur.takeable_starts_ind2,
                     takeable_starts_len2:cur.takeable_starts_len2,
+                    takeables2:cur.takeables2,
                 });
             }
 
