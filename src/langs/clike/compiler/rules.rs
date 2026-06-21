@@ -40,15 +40,20 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             String,
         ].and(),
 
+        // "start" => [
+        //     [Keyword("a"),Keyword("b"),].and(),
+        //     [Keyword("a"),Keyword("b"),].and().prev(),
+        // ].and(),
+
         "start" => [
             [Keyword("a"),Keyword("b"),].and(),
-            [Keyword("a"),Keyword("b"),].and().prev(),
-        ].and(),
+            Keyword("a"),
+        ].or(),
+
         // "start" => [
         //     NonTerm("stmts"),
         //     NonTerm("ending").many0(),
         // ].and(),
-
 
 
         "ending" => [NonTerm("semicolon"),Eol].or().many1(),
