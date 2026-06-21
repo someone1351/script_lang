@@ -97,6 +97,7 @@ pub struct Work<'t,'g> {
     pub takeable_starts_ind2:usize,
     pub takeable_starts_len2:usize,
     pub takeables2:HashMap<GrammarNode<'g>,WorkTakeable2<'t>>,
+    pub ends_in : Option<GrammarNode<'g>>
 }
 
 
@@ -110,7 +111,8 @@ pub enum TempGrammarNodeDebug<'t,'g> {
     Expected(u32,&'g str,Option<Box<Self>>),
     NonTerm(&'g str,Option<Box<Self>>),
 
-    EndsIn(Option<Box<Self>>, ), //Box<GrammarNode<'g>>
+    // EndsIn(Option<Box<Self>>, ), //Box<GrammarNode<'g>>
+    Prev(Option<Box<Self>>),
 
     // Cede(Option<Box<Self>>),
     // Take(Option<Box<Self>>),
@@ -186,10 +188,15 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                         //     stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
                         //     write!(f,"Take(")?;
                         // }
-                        Self::EndsIn(arg0, ) => {
+                        // Self::EndsIn(arg0, ) => {
+                        //     stk.push(Work::Write(")"));
+                        //     stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
+                        //     write!(f,"EndsIn(")?;
+                        // }
+                        Self::Prev(arg0, ) => {
                             stk.push(Work::Write(")"));
                             stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
-                            write!(f,"EndsIn(")?;
+                            write!(f,"Prev(")?;
                         }
                         Self::Group(arg0, arg1) => {
                             stk.push(Work::Write(")"));

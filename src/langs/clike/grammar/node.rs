@@ -13,7 +13,8 @@ pub enum GrammarNode<'g> {
     // Take(Box<GrammarNode<'g>>),
     Group(&'g str,Box<GrammarNode<'g>>),
     Expected(u32,&'g str,Box<GrammarNode<'g>>), //priority, expected,
-    EndsIn(Box<GrammarNode<'g>>,Box<GrammarNode<'g>>), //grammar, ends_in_grammar
+    // EndsIn(Box<GrammarNode<'g>>,Box<GrammarNode<'g>>), //grammar, ends_in_grammar
+    Prev(Box<GrammarNode<'g>>),
 
     // List(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
     // ListNoTrail(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
@@ -77,10 +78,13 @@ impl<'g> GrammarNode<'g> {
     //     Self::Take(self.into())
     // }
 
-    pub fn ends_in(self,ends_in_grammar:GrammarNode<'g>) -> GrammarNode<'g> {
-        Self::EndsIn(self.into(),ends_in_grammar.into()) //grammar, ends_in_grammar
-    }
+    // pub fn ends_in(self,ends_in_grammar:GrammarNode<'g>) -> GrammarNode<'g> {
+    //     Self::EndsIn(self.into(),ends_in_grammar.into()) //grammar, ends_in_grammar
+    // }
 
+    pub fn prev(self) -> GrammarNode<'g> {
+        Self::Prev(self.into())
+    }
     // pub fn d(self,) -> GrammarNode<'g> {
     //     self.discard()
     // }

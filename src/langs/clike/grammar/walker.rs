@@ -102,6 +102,7 @@ where
             takeable_starts_ind2:0,
             takeable_starts_len2:0,
             takeables2:Default::default(),
+            ends_in:None,
         });
 
         //
@@ -124,6 +125,7 @@ where
             takeable_starts_ind2:0,
             takeable_starts_len2:0,
             takeables2:Default::default(),
+            ends_in:None,
         });
 
         //
@@ -161,6 +163,7 @@ where
                 takeable_starts_ind2:0,
                 takeable_starts_len2:0,
                 takeables2:Default::default(),
+                ends_in:None,
             });
         }
 
@@ -337,7 +340,8 @@ where
                     GrammarNode::Always => TempGrammarNodeDebug::Always,
                     GrammarNode::Error(_) => TempGrammarNodeDebug::Error,
                     // GrammarNode::Discard(_) => TempGrammarNodeDebug::Discard(None),
-                    GrammarNode::EndsIn(_,_) => TempGrammarNodeDebug::EndsIn(None, ), //ends_in_g.clone()
+                    // GrammarNode::EndsIn(_,_) => TempGrammarNodeDebug::EndsIn(None, ), //ends_in_g.clone()
+                    GrammarNode::Prev(_) => TempGrammarNodeDebug::Prev(None),
                 };
 
                 // println!("===x={x}");
@@ -373,7 +377,7 @@ where
                     // groups_stk_len,
                     // takeables, takeable_starts_len,
                     from_user,
-                    takeable_starts_ind2,takeable_starts_len2,takeables2,
+                    takeable_starts_ind2,takeable_starts_len2,takeables2,ends_in,
                 }=&cur;
 
                 //
@@ -435,7 +439,8 @@ where
                         |TempGrammarNodeDebug::Group(_, g)
                         |TempGrammarNodeDebug::NonTerm(_, g)
                         |TempGrammarNodeDebug::Expected(_,_, g)
-                        |TempGrammarNodeDebug::EndsIn(g,)
+                        // |TempGrammarNodeDebug::EndsIn(g,)
+                        |TempGrammarNodeDebug::Prev(g,)
                         // |TempGrammarNodeDebug::Discard(g)
                         => {*g=Some(x.into())}
 
@@ -464,7 +469,7 @@ where
                     // groups_stk_len,
                     // takeable_starts_len, takeables,
                     from_user,
-                    takeable_starts_ind2,takeable_starts_len2,takeables2,
+                    takeable_starts_ind2,takeable_starts_len2,takeables2,ends_in,
                 }) in self.stk.iter()
                     // .rev()
                     .enumerate()
@@ -538,66 +543,140 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
+                    ends_in:None,
                 });
             }
 
-            GrammarNode::EndsIn(g, ends_in_g ) => {
+            // GrammarNode::EndsIn(g, ends_in_g ) => {
+
+            //     //
+            //     let takeable_starts_len2=self.add_takeable_start2(&cur);
+
+            //     //todo check ends_in here
+            //     self.stk.push(Work {
+            //         grammar: GrammarNode::Always,
+            //         success_len: cur.success_len,
+            //         fail_len: 0, //not used
+            //         tokens: cur.tokens,
+            //         group_ind: cur.group_ind,
+            //         group_len: cur.group_len,
+            //         visiteds:cur.visiteds.clone(),
+            //         grammar_debug_len: cur.grammar_debug_len+1,
+            //         expected:cur.expected,
+            //         and_id:cur.and_id,
+
+            //         from_user:false,
+
+            //         takeable_starts_ind2:cur.takeable_starts_ind2,
+            //         // takeable_starts_len2:cur.takeable_starts_len2,
+            //         takeable_starts_len2,
+            //         takeables2:cur.takeables2.clone(), //not necessary? since the work below, should pass its takeables2 to here after it succeeeds
+            //         ends_in:Some(*ends_in_g)
+            //     });
+
+            //     let success_len=self.stk.len();
+
+            //     //
+            //     self.stk.push(Work {
+            //         grammar: *g,
+            //         // success_len: cur.success_len,
+            //         success_len,
+            //         fail_len: cur.fail_len,
+            //         tokens: cur.tokens,
+            //         group_ind: cur.group_ind,
+            //         group_len: cur.group_len,
+            //         visiteds:cur.visiteds,
+            //         grammar_debug_len: cur.grammar_debug_len+1,
+            //         expected:cur.expected,
+            //         and_id:cur.and_id,
+
+            //         // groups_stk_len: cur.groups_stk_len,
+
+            //         // takeable_starts_len:cur.takeable_starts_len,
+            //         // takeables:cur.takeables,
+
+            //         // discard:cur.discard,
+            //         // opt:cur.opt,
+
+            //         from_user:true,
+
+            //         takeable_starts_ind2:cur.takeable_starts_ind2,
+            //         // takeable_starts_len2:cur.takeable_starts_len2,
+            //         takeable_starts_len2,
+            //         takeables2:cur.takeables2,
+            //         ends_in:None,
+            //     });
+            // }
+            GrammarNode::Prev(g) => {
 
                 //
                 let takeable_starts_len2=self.add_takeable_start2(&cur);
 
-                //todo check ends_in here
-                self.stk.push(Work {
-                    grammar: GrammarNode::Always,
-                    success_len: cur.success_len,
-                    fail_len: 0, //not used
-                    tokens: cur.tokens,
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    visiteds:cur.visiteds.clone(),
-                    grammar_debug_len: cur.grammar_debug_len+1,
-                    expected:cur.expected,
-                    and_id:cur.and_id,
-
-                    from_user:false,
-
-                    takeable_starts_ind2:cur.takeable_starts_ind2,
-                    // takeable_starts_len2:cur.takeable_starts_len2,
-                    takeable_starts_len2,
-                    takeables2:cur.takeables2.clone(), //not necessary? since the work below, should pass its takeables2 to here after it succeeeds
-                });
-
-                let success_len=self.stk.len();
 
                 //
-                self.stk.push(Work {
-                    grammar: *g,
-                    // success_len: cur.success_len,
-                    success_len,
-                    fail_len: cur.fail_len,
-                    tokens: cur.tokens,
-                    group_ind: cur.group_ind,
-                    group_len: cur.group_len,
-                    visiteds:cur.visiteds,
-                    grammar_debug_len: cur.grammar_debug_len+1,
-                    expected:cur.expected,
-                    and_id:cur.and_id,
+                if cur.takeables2.contains_key(&g) {
 
-                    // groups_stk_len: cur.groups_stk_len,
+                    //
+                    self.stk.truncate(cur.success_len);
+                    // self.do_groups_stk_success(cur.clone(),cur.and_id);
 
-                    // takeable_starts_len:cur.takeable_starts_len,
-                    // takeables:cur.takeables,
+                    //
+                    if let Some(last)=self.stk.last_mut() {
+                        if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //if not parsing anything, exit the many
+                            last.grammar=GrammarNode::Always;
+                        }
 
-                    // discard:cur.discard,
-                    // opt:cur.opt,
+                        //
+                        last.tokens=cur.tokens;
+                        last.group_len=cur.group_len;
+                        last.takeables2=cur.takeables2;
 
-                    from_user:true,
+                        //
+                        if cur.expected.id!=last.expected.id {
+                            last.expected=Default::default();
+                        }
 
-                    takeable_starts_ind2:cur.takeable_starts_ind2,
-                    // takeable_starts_len2:cur.takeable_starts_len2,
-                    takeable_starts_len2,
-                    takeables2:cur.takeables2,
-                });
+                        //
+                        self.takeable_starts2.truncate(last.takeable_starts_len2);
+
+                        //
+                        if self.debug {
+                            self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                        };
+                    }
+
+                    //
+                    if self.debug {
+                        self.consolidate_grammar_debug_stk();
+                    }
+
+                    //
+                    self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
+                    self.last_insert_start_takeables2(cur.tokens);
+                    self.set_remaining_prims(cur.tokens);
+                } else {
+                    //
+                    if cur.expected.id==0{
+                        self.add_expected(
+                            cur.tokens.first().map(|t|t.start_loc()).unwrap_or_default(),
+                            0,cur.grammar.clone(),
+                        );
+                    }
+
+                    //
+                    self.stk.truncate(cur.fail_len);
+
+                    //
+                    if let Some(last)=self.stk.last() {
+                        //
+                        self.takeable_starts2.truncate(last.takeable_starts_len2);
+
+                        //
+                        if self.debug {
+                            self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                        }
+                    }
+                }
             }
 
             GrammarNode::Group(name, g) => {
@@ -646,6 +725,7 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
+                    ends_in:None,
                 });
             }
 
@@ -684,6 +764,7 @@ where
                         // takeable_starts_len2:cur.takeable_starts_len2,
                         takeable_starts_len2,
                         takeables2:cur.takeables2.clone(),
+                        ends_in:None,
                     });
                 }
 
@@ -722,6 +803,7 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
+                    ends_in:None,
                 });
             }
 
@@ -760,6 +842,7 @@ where
                         // takeable_starts_len2:cur.takeable_starts_len2,
                         takeable_starts_len2,
                         takeables2:cur.takeables2.clone(),
+                        ends_in:None,
                     });
                 }
 
@@ -798,6 +881,7 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
+                    ends_in:None,
                 });
             }
 
@@ -832,6 +916,7 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2.clone(),
+                    ends_in:None,
                 });
 
                 //
@@ -869,6 +954,7 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
+                    ends_in:None,
                 });
             }
 
@@ -1055,6 +1141,7 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2.clone(),
+                    ends_in:None,
                 });
 
                 //
@@ -1087,6 +1174,7 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2.clone(),
+                    ends_in:None,
                 });
 
                 //
@@ -1124,6 +1212,7 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
+                    ends_in:None,
                 });
             }
 
@@ -1168,6 +1257,7 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
+                    ends_in:None,
                 });
             }
 
@@ -1408,6 +1498,9 @@ where
                     // last.expected=None;
 
                     last.expected=Default::default();
+
+                    //
+                    // last.takeables2=cur.takeables2; //needed? no, self.last_remove_old_takeables2() handles it
                 }
 
                 //
@@ -1662,7 +1755,8 @@ where
                     |TempGrammarNodeDebug::Group(_, g)
                     |TempGrammarNodeDebug::Expected(_,_, g)
                     |TempGrammarNodeDebug::NonTerm(_, g)
-                    |TempGrammarNodeDebug::EndsIn(g,)
+                    // |TempGrammarNodeDebug::EndsIn(g,)
+                    |TempGrammarNodeDebug::Prev(g)
                     // |TempGrammarNodeDebug::Discard(g)
                     => {*g=Some(last_gd.into())}
 
