@@ -305,14 +305,14 @@ where
             groups.truncate(cur.group_len);
         }
 
-        //
-        if cur.from_user { //ignore grammars added by walker
-            self.takeable_starts2.push(TempTakeableStart2 {
-                grammar: cur.grammar.clone(),
-                tokens_start: cur.tokens.clone(),
-                group_ind: cur.group_ind,
-            });
-        }
+        // //
+        // if cur.from_user { //ignore grammars added by walker
+        //     self.takeable_starts2.push(TempTakeableStart2 {
+        //         grammar: cur.grammar.clone(),
+        //         tokens_start: cur.tokens.clone(),
+        //         group_ind: cur.group_ind,
+        //     });
+        // }
 
         //
         if self.debug {
@@ -508,6 +508,9 @@ where
                     cur.expected
                 };
 
+                //
+                let takeable_starts_len2=self.add_takeable_start2(&cur);
+
                 //TODO
                 self.stk.push(Work {
                     grammar: *g,
@@ -532,12 +535,16 @@ where
                     from_user:true,
 
                     takeable_starts_ind2:cur.takeable_starts_ind2,
-                    takeable_starts_len2:cur.takeable_starts_len2,
+                    // takeable_starts_len2:cur.takeable_starts_len2,
+                    takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
             }
 
             GrammarNode::EndsIn(g, ends_in_g ) => {
+
+                //
+                let takeable_starts_len2=self.add_takeable_start2(&cur);
 
                 //todo check ends_in here
                 self.stk.push(Work {
@@ -555,7 +562,8 @@ where
                     from_user:false,
 
                     takeable_starts_ind2:cur.takeable_starts_ind2,
-                    takeable_starts_len2:cur.takeable_starts_len2,
+                    // takeable_starts_len2:cur.takeable_starts_len2,
+                    takeable_starts_len2,
                     takeables2:cur.takeables2.clone(), //not necessary? since the work below, should pass its takeables2 to here after it succeeeds
                 });
 
@@ -586,7 +594,8 @@ where
                     from_user:true,
 
                     takeable_starts_ind2:cur.takeable_starts_ind2,
-                    takeable_starts_len2:cur.takeable_starts_len2,
+                    // takeable_starts_len2:cur.takeable_starts_len2,
+                    takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
             }
@@ -606,6 +615,9 @@ where
                 // if cur.opt {
                 //     self.takeable_starts.push((*g.clone(),cur.primitives.clone()));
                 // }
+
+                //
+                let takeable_starts_len2=self.add_takeable_start2(&cur);
 
                 //
                 self.stk.push(Work {
@@ -631,16 +643,18 @@ where
                     from_user:true,
 
                     takeable_starts_ind2:cur.takeable_starts_ind2,
-                    takeable_starts_len2:cur.takeable_starts_len2,
+                    // takeable_starts_len2:cur.takeable_starts_len2,
+                    takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
             }
 
             GrammarNode::And(gs) => {
-                let Some(first)=gs.first().cloned() else {
-                    // continue;
-                    return Ok(());
-                };
+                //
+                let Some(first)=gs.first().cloned() else { return Ok(()); };
+
+                //
+                let takeable_starts_len2=self.add_takeable_start2(&cur);
 
                 //
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
@@ -667,7 +681,8 @@ where
                         from_user:false,
 
                         takeable_starts_ind2:cur.takeable_starts_ind2,
-                        takeable_starts_len2:cur.takeable_starts_len2,
+                        // takeable_starts_len2:cur.takeable_starts_len2,
+                        takeable_starts_len2,
                         takeables2:cur.takeables2.clone(),
                     });
                 }
@@ -704,17 +719,20 @@ where
                     from_user:true,
 
                     takeable_starts_ind2:cur.takeable_starts_ind2,
-                    takeable_starts_len2:cur.takeable_starts_len2,
+                    // takeable_starts_len2:cur.takeable_starts_len2,
+                    takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
             }
 
             GrammarNode::Or(gs) => {
-                let Some(first)=gs.first().cloned() else {
-                    // continue;
-                    return Ok(())
-                };
+                //
+                let Some(first)=gs.first().cloned() else { return Ok(()); };
 
+                //
+                let takeable_starts_len2=self.add_takeable_start2(&cur);
+
+                //
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
                     self.stk.push(Work {
                         grammar: GrammarNode::Or(rest.into()),
@@ -739,7 +757,8 @@ where
                         from_user:false,
 
                         takeable_starts_ind2:cur.takeable_starts_ind2,
-                        takeable_starts_len2:cur.takeable_starts_len2,
+                        // takeable_starts_len2:cur.takeable_starts_len2,
+                        takeable_starts_len2,
                         takeables2:cur.takeables2.clone(),
                     });
                 }
@@ -776,12 +795,16 @@ where
                     from_user:true,
 
                     takeable_starts_ind2:cur.takeable_starts_ind2,
-                    takeable_starts_len2:cur.takeable_starts_len2,
+                    // takeable_starts_len2:cur.takeable_starts_len2,
+                    takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
             }
 
             GrammarNode::Opt(g) => {
+                //
+                let takeable_starts_len2=self.add_takeable_start2(&cur);
+
                 //
                 self.stk.push(Work {
                     grammar: GrammarNode::Always,
@@ -806,7 +829,8 @@ where
                     from_user:false,
 
                     takeable_starts_ind2:cur.takeable_starts_ind2,
-                    takeable_starts_len2:cur.takeable_starts_len2,
+                    // takeable_starts_len2:cur.takeable_starts_len2,
+                    takeable_starts_len2,
                     takeables2:cur.takeables2.clone(),
                 });
 
@@ -842,7 +866,8 @@ where
                     from_user:true,
 
                     takeable_starts_ind2:cur.takeable_starts_ind2,
-                    takeable_starts_len2:cur.takeable_starts_len2,
+                    // takeable_starts_len2:cur.takeable_starts_len2,
+                    takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
             }
@@ -997,6 +1022,10 @@ where
             // }
 
             GrammarNode::Many(g) => {
+                //
+                let takeable_starts_len2=self.add_takeable_start2(&cur);
+
+                //
                 // let fail_len2=self.stk.len(); //only remove everything past here on fail
 
                 //
@@ -1023,7 +1052,8 @@ where
                     from_user:false,
 
                     takeable_starts_ind2:cur.takeable_starts_ind2,
-                    takeable_starts_len2:cur.takeable_starts_len2,
+                    // takeable_starts_len2:cur.takeable_starts_len2,
+                    takeable_starts_len2,
                     takeables2:cur.takeables2.clone(),
                 });
 
@@ -1054,7 +1084,8 @@ where
                     from_user:false,
 
                     takeable_starts_ind2:cur.takeable_starts_ind2,
-                    takeable_starts_len2:cur.takeable_starts_len2,
+                    // takeable_starts_len2:cur.takeable_starts_len2,
+                    takeable_starts_len2,
                     takeables2:cur.takeables2.clone(),
                 });
 
@@ -1090,12 +1121,16 @@ where
                     from_user:true,
 
                     takeable_starts_ind2:cur.takeable_starts_ind2,
-                    takeable_starts_len2:cur.takeable_starts_len2,
+                    // takeable_starts_len2:cur.takeable_starts_len2,
+                    takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
             }
 
             GrammarNode::NonTerm(t) => {
+                //
+                let takeable_starts_len2=self.add_takeable_start2(&cur);
+
                 //
                 let visiteds=self.do_non_term_visiteds(t,cur.tokens,cur.visiteds)?;
 
@@ -1130,13 +1165,19 @@ where
                     from_user:true,
 
                     takeable_starts_ind2:cur.takeable_starts_ind2,
-                    takeable_starts_len2:cur.takeable_starts_len2,
+                    // takeable_starts_len2:cur.takeable_starts_len2,
+                    takeable_starts_len2,
                     takeables2:cur.takeables2,
                 });
             }
 
             GrammarNode::Always => {
+
+                //
                 self.stk.truncate(cur.success_len);
+
+                //
+                let takeable_starts_len2=self.add_takeable_start2(&cur);
 
                 // //takeables
                 // self.do_groups_stk_success(cur.clone(),cur.and_id);
@@ -1207,6 +1248,10 @@ where
                     println!("====error {:?} {:?}",self.expected_loc,self.expecteds,);
                 }
 
+
+                //
+                // let takeable_starts_len2=self.add_takeable_start2(&cur);
+
                 //necesaary? any point to it?
                 // if self.expecteds.is_empty() { // self.expected.0.is_zero()
                 //     self.expected_loc=cur.primitives.loc();
@@ -1224,12 +1269,16 @@ where
             }
 
             GrammarNode::String => {
-                if let Some(v)=self.do_primtive(cur,|ps|ps.pop_string(),|v,self2|{
-                    if self2.debug {
-                        let Some(TempGrammarNodeDebug::String(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                        *x=Some(v);
+                if let Some(v)=self.do_primtive(
+                    cur,
+                    |ps|ps.pop_string(),
+                    |v,self2|{
+                        if self2.debug {
+                            let Some(TempGrammarNodeDebug::String(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                            *x=Some(v);
+                        }
                     }
-                }) {
+                ) {
                     if self.debug {
                         println!("--- string {v:?}");
                     }
@@ -1327,8 +1376,12 @@ where
         Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
         K: Fn(ValueContainer<'t,P>,&mut Self),
     {
+        //
+        let takeable_starts_len2=self.add_takeable_start2(&cur);
+
         match prim_func(&mut cur.tokens) {
             Ok(v) => {
+
                 //
                 let vprim=v.token;
 
@@ -1789,6 +1842,18 @@ where
         if let Some(last)=self.stk.last_mut() {
             last.takeables2.retain(|_k,v|v.tokens.inds().start>=last.tokens.inds().start);
         }
+    }
+
+    fn add_takeable_start2(&mut self,cur:&Work<'t,'g>) -> usize {
+        if cur.from_user { //ignore grammars added by walker
+            self.takeable_starts2.push(TempTakeableStart2 {
+                grammar: cur.grammar.clone(),
+                tokens_start: cur.tokens.clone(),
+                group_ind: cur.group_ind,
+            });
+        }
+
+        self.takeable_starts2.len()
     }
 
     fn clear_expected(&mut self) {
