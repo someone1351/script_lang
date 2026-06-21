@@ -409,7 +409,8 @@ where
                     self.takeable_starts2.iter().map(|t|format!("{:?}:{}",t.grammar,t.tokens_start.inds().start)).collect::<Vec<_>>().join(","),
                 );
                 println!("        takeables=[{}], ",
-                    takeables2.iter().map(|(k,t)|format!("{k:?}:{:?}",t.tokens)).collect::<Vec<_>>().join(","),
+                    // takeables2.iter().map(|(k,t)|format!("{k:?}:{:?}",t.tokens)).collect::<Vec<_>>().join(","),
+                    takeables2.iter().map(|(k,t)|format!("{{{k:?} : {:?}}}",t.tokens.inds())).collect::<Vec<_>>().join(", "),
                     // takeables2.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>(),
                 );
 
@@ -636,14 +637,17 @@ where
                             last.expected=Default::default();
                         }
 
-                        //
-                        self.takeable_starts2.truncate(last.takeable_starts_len2);
+                        // //
+                        // self.takeable_starts2.truncate(last.takeable_starts_len2); //what is it for?
 
                         //
                         if self.debug {
                             self.grammar_debug_stk.truncate(last.grammar_debug_len);
                         };
                     }
+
+                    //
+                    self.last_takeables_starts2_truncate();
 
                     //
                     if self.debug {
@@ -668,14 +672,17 @@ where
 
                     //
                     if let Some(last)=self.stk.last() {
-                        //
-                        self.takeable_starts2.truncate(last.takeable_starts_len2);
+                        // //
+                        // self.takeable_starts2.truncate(last.takeable_starts_len2); //what is it for?
 
                         //
                         if self.debug {
                             self.grammar_debug_stk.truncate(last.grammar_debug_len);
                         }
                     }
+
+                    //
+                    self.last_takeables_starts2_truncate();
                 }
             }
 
@@ -1560,7 +1567,7 @@ where
                     // self.takeable_starts.truncate(last.takeable_starts_len);
 
                     //
-                    self.takeable_starts2.truncate(last.takeable_starts_len2);
+                    // self.takeable_starts2.truncate(last.takeable_starts_len2); //what is it for?
 
                     //
                     if self.debug {
@@ -1584,6 +1591,9 @@ where
                         self.add_expected(loc, cur.expected.priority,GrammarNode::NonTerm(cur.expected.name));
                     }
                 }
+
+                //
+                self.last_takeables_starts2_truncate();
 
                 //
                 // if self.stk.is_empty() {
@@ -1935,6 +1945,12 @@ where
     fn last_remove_old_takeables2(&mut self) {
         if let Some(last)=self.stk.last_mut() {
             last.takeables2.retain(|_k,v|v.tokens.inds().start>=last.tokens.inds().start);
+        }
+    }
+
+    fn last_takeables_starts2_truncate(&mut self) {
+        if let Some(last)=self.stk.last() {
+            self.takeable_starts2.truncate(last.takeable_starts_len2); //what is it for? clears failed takeable_starts?
         }
     }
 
