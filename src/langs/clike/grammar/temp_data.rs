@@ -47,6 +47,11 @@ pub struct TempGroupsElement<'t,'g> {
 }
 
 #[derive(Clone)]
+pub struct TempOrElement<'t,'g> {
+    pub groups:Vec<TempGroupInfo<'t,'g>>,
+    pub tokens_after:TokenIterContainer<'t>,
+}
+#[derive(Clone)]
 pub struct TempGroupInfo<'t,'g> {
     pub name:&'g str,
     pub parent:usize, //group
@@ -97,7 +102,9 @@ pub struct Work<'t,'g> {
     pub takeable_starts_ind2:usize,
     pub takeable_starts_len2:usize,
     pub takeables2:HashMap<GrammarNode<'g>,WorkTakeable2<'t>>,
-    pub ends_in : Option<GrammarNode<'g>>
+    // pub ends_in : Option<GrammarNode<'g>>,
+    pub or_stk_len:usize,
+    pub is_first:bool,
 }
 
 

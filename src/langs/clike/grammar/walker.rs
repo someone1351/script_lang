@@ -41,6 +41,7 @@ where
 
 
     takeable_starts2:Vec<TempTakeableStart2<'t,'g>>,
+    or_stk:Vec<HashMap<GrammarNode<'g>,TempOrElement<'t,'g>>>,
 
 }
 
@@ -69,6 +70,7 @@ where
             // takeable_starts: Default::default(),
 
             takeable_starts2: Default::default(),
+            or_stk: Default::default(),
         }
     }
 
@@ -102,7 +104,9 @@ where
             takeable_starts_ind2:0,
             takeable_starts_len2:0,
             takeables2:Default::default(),
-            ends_in:None,
+
+            or_stk_len:0,
+            is_first:true,
         });
 
         //
@@ -125,7 +129,9 @@ where
             takeable_starts_ind2:0,
             takeable_starts_len2:0,
             takeables2:Default::default(),
-            ends_in:None,
+
+            or_stk_len:0,
+            is_first:true,
         });
 
         //
@@ -163,7 +169,9 @@ where
                 takeable_starts_ind2:0,
                 takeable_starts_len2:0,
                 takeables2:Default::default(),
-                ends_in:None,
+
+                or_stk_len:0,
+                is_first:true,
             });
         }
 
@@ -189,6 +197,7 @@ where
 
         //
         self.takeable_starts2.clear();
+        self.or_stk.clear();
 
         //
         self.c=0;
@@ -377,7 +386,9 @@ where
                     // groups_stk_len,
                     // takeables, takeable_starts_len,
                     from_user,
-                    takeable_starts_ind2,takeable_starts_len2,takeables2,ends_in,
+                    takeable_starts_ind2,takeable_starts_len2,takeables2,
+                    // ends_in,
+                    is_first,or_stk_len,
                 }=&cur;
 
                 //
@@ -470,7 +481,9 @@ where
                     // groups_stk_len,
                     // takeable_starts_len, takeables,
                     from_user,
-                    takeable_starts_ind2,takeable_starts_len2,takeables2,ends_in,
+                    takeable_starts_ind2,takeable_starts_len2,takeables2,
+                    // ends_in,
+                    is_first,or_stk_len,
                 }) in self.stk.iter()
                     // .rev()
                     .enumerate()
@@ -544,7 +557,9 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
-                    ends_in:None,
+
+                    or_stk_len:cur.or_stk_len,
+                    is_first:cur.is_first,
                 });
             }
 
@@ -605,7 +620,7 @@ where
             //         // takeable_starts_len2:cur.takeable_starts_len2,
             //         takeable_starts_len2,
             //         takeables2:cur.takeables2,
-            //         ends_in:None,
+            //
             //     });
             // }
             GrammarNode::Prev(g) => {
@@ -732,7 +747,9 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
-                    ends_in:None,
+
+                    or_stk_len:cur.or_stk_len,
+                    is_first:cur.is_first,
                 });
             }
 
@@ -771,7 +788,9 @@ where
                         // takeable_starts_len2:cur.takeable_starts_len2,
                         takeable_starts_len2,
                         takeables2:cur.takeables2.clone(),
-                        ends_in:None,
+
+                        or_stk_len:cur.or_stk_len,
+                        is_first:false,
                     });
                 }
 
@@ -810,7 +829,9 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
-                    ends_in:None,
+
+                    or_stk_len:cur.or_stk_len,
+                    is_first:cur.from_user,
                 });
             }
 
@@ -820,6 +841,9 @@ where
 
                 //
                 let takeable_starts_len2=self.add_takeable_start2(&cur);
+
+                //
+                self.or_stk.push(Default::default());
 
                 //
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
@@ -849,7 +873,9 @@ where
                         // takeable_starts_len2:cur.takeable_starts_len2,
                         takeable_starts_len2,
                         takeables2:cur.takeables2.clone(),
-                        ends_in:None,
+
+                        or_stk_len:cur.or_stk_len+1, //aka self.or_stk.len()
+                        is_first:cur.is_first,
                     });
                 }
 
@@ -888,7 +914,10 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
-                    ends_in:None,
+
+
+                    or_stk_len:cur.or_stk_len+1, //aka self.or_stk.len()
+                    is_first:cur.is_first,
                 });
             }
 
@@ -923,7 +952,10 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2.clone(),
-                    ends_in:None,
+
+
+                    or_stk_len:cur.or_stk_len,
+                    is_first:cur.is_first,
                 });
 
                 //
@@ -961,7 +993,9 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
-                    ends_in:None,
+
+                    or_stk_len:cur.or_stk_len,
+                    is_first:cur.is_first,
                 });
             }
 
@@ -1148,7 +1182,9 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2.clone(),
-                    ends_in:None,
+
+                    or_stk_len:cur.or_stk_len,
+                    is_first:cur.is_first,
                 });
 
                 //
@@ -1181,7 +1217,9 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2.clone(),
-                    ends_in:None,
+
+                    or_stk_len:cur.or_stk_len,
+                    is_first:cur.is_first,
                 });
 
                 //
@@ -1219,7 +1257,9 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
-                    ends_in:None,
+
+                    or_stk_len:cur.or_stk_len,
+                    is_first:cur.is_first,
                 });
             }
 
@@ -1264,7 +1304,9 @@ where
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     takeable_starts_len2,
                     takeables2:cur.takeables2,
-                    ends_in:None,
+
+                    or_stk_len:cur.or_stk_len,
+                    is_first:cur.is_first,
                 });
             }
 
