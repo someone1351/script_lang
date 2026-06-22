@@ -424,6 +424,7 @@ where
                     takeables2.iter().map(|(k,t)|format!("{{{k:?} : {:?}}}",t.tokens.inds())).collect::<Vec<_>>().join(", "),
                     // takeables2.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>(),
                 );
+                println!("        first={is_first}, or_stk_len={or_stk_len}",);
 
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
