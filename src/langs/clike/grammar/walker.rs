@@ -532,17 +532,29 @@ where
                     self.stk.truncate(cur.success_len);
 
                     //
-                    let takeable_starts_len2=self.add_takeable_start2(&cur);
+                    // let takeable_starts_len2=self.add_takeable_start2(&cur); //not needed
 
 
                     if let Some(last)=self.stk.last_mut() {
 
                         //
-                        last.tokens=cur.tokens;
+                        // last.tokens=cur.tokens;
+                        last.tokens=or_element.tokens_after;
+
+                        //todo groups
+                        {
+                            for (i,g) in or_element.groups.iter().enumerate() {
+
+                            }
+
+                        }
+
+                        //todo
                         last.group_len=cur.group_len;
 
                         //
-                        last.takeables2=cur.takeables2;
+                        // last.takeables2=cur.takeables2;
+                        last.takeables2=or_element.takeables2.clone();
 
                         //
                         if cur.expected.id!=last.expected.id {
@@ -559,7 +571,7 @@ where
                     self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
 
                     //
-                    self.last_insert_start_takeables2(cur.tokens);
+                    self.last_insert_start_takeables2(cur.tokens); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
 
                     //
                     self.set_remaining_prims(cur.tokens);
@@ -2022,7 +2034,8 @@ where
         if let Some(last)=self.stk.last_mut() {
             //
             for TempTakeableStart2 {
-                grammar:tg, tokens_start, group_ind ,
+                grammar:tg, tokens_start,
+                // group_ind ,
             } in self.takeable_starts2.drain(last.takeable_starts_len2 ..)
             {
                 //
@@ -2036,7 +2049,8 @@ where
 
                 //
                 last.takeables2.insert(tg, WorkTakeable2 {
-                    tokens_start, tokens,
+                    // tokens_start,
+                    tokens,
                     // group_ind,
                     // inner_groups:group_ind+1 .. self.groups.len(),
                 });
@@ -2062,7 +2076,7 @@ where
             self.takeable_starts2.push(TempTakeableStart2 {
                 grammar: cur.grammar.clone(),
                 tokens_start: cur.tokens.clone(),
-                group_ind: cur.group_ind,
+                // group_ind: cur.group_ind,
             });
         }
 
