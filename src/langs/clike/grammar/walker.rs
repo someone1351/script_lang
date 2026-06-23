@@ -844,7 +844,12 @@ where
                 let takeable_starts_len2=self.add_takeable_start2(&cur);
 
                 //
-                self.or_stk.push(Default::default());
+                if cur.is_first {
+                    let last_or_stk=self.or_stk.last().cloned().unwrap_or_default();
+                    self.or_stk.push(last_or_stk);
+                } else {
+                    self.or_stk.push(Default::default());
+                }
 
                 //
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
