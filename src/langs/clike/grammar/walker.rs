@@ -541,16 +541,13 @@ where
                         // last.tokens=cur.tokens;
                         last.tokens=or_element.tokens_after;
 
-                        //todo groups
-                        {
-                            for (i,g) in or_element.groups.iter().enumerate() {
-
-                            }
-
+                        //add groups
+                        for g in or_element.groups.iter() {
+                            self.groups.push(TempGroupInfo { parent: cur.group_ind+g.parent, ..g.clone()});
                         }
 
-                        //todo
-                        last.group_len=cur.group_len;
+                        //
+                        last.group_len=self.groups.len(); //cur.group_len+or_element.groups;
 
                         //
                         // last.takeables2=cur.takeables2;
