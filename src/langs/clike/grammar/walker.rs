@@ -305,16 +305,23 @@ where
             // let groups=&mut self.groups_stk.last_mut().unwrap().groups;
 
             //
-            let groups=&mut self.groups;
+            // let groups=&mut self.groups;
 
             //
             if self.debug {
-                if groups.len() != cur.group_len {
-                    println!("--- groups dif len, groups.len={}, cur.group_len={}",groups.len(),cur.group_len);
+                if self.groups.len() != cur.group_len {
+                    println!("--- groups dif len, groups.len={}, cur.group_len={}",self.groups.len(),cur.group_len);
+                }
+                if self.or_stk.len() != cur.or_stk_len {
+                    println!("--- or_stk dif len, or_stk.len={}, cur.or_stk_len={}",self.or_stk.len(),cur.or_stk_len);
                 }
             }
 
-            groups.truncate(cur.group_len);
+            //
+            self.groups.truncate(cur.group_len);
+
+            //
+            self.or_stk.truncate(cur.or_stk_len);
         }
 
         // //
@@ -513,6 +520,53 @@ where
             //
             if cur.group_ind>=groups.len() {
                 panic!("invalid group_ind={}, groups_len={}",cur.group_ind,groups.len());
+            }
+        }
+
+        //
+        if cur.is_first {
+            if let Some(or_map)=self.or_stk.last() {
+                if let Some(or_element)=or_map.get(&cur.grammar) {
+
+                    //
+                    self.stk.truncate(cur.success_len);
+
+                    //
+                    let takeable_starts_len2=self.add_takeable_start2(&cur);
+
+
+                    if let Some(last)=self.stk.last_mut() {
+
+                        //
+                        last.tokens=cur.tokens;
+                        last.group_len=cur.group_len;
+
+                        //
+                        last.takeables2=cur.takeables2;
+
+                        //
+                        if cur.expected.id!=last.expected.id {
+                            last.expected=Default::default();
+                        }
+                    }
+
+                    //
+                    if self.debug {
+                        self.consolidate_grammar_debug_stk();
+                    }
+
+                    //
+                    self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
+
+                    //
+                    self.last_insert_start_takeables2(cur.tokens);
+
+                    //
+                    self.set_remaining_prims(cur.tokens);
+
+                    //
+                    return Ok(());
+                }
             }
         }
 
@@ -1982,8 +2036,9 @@ where
 
                 //
                 last.takeables2.insert(tg, WorkTakeable2 {
-                    tokens_start, tokens, group_ind,
-                    inner_groups:group_ind+1 .. self.groups.len(),
+                    tokens_start, tokens,
+                    // group_ind,
+                    // inner_groups:group_ind+1 .. self.groups.len(),
                 });
             }
         }

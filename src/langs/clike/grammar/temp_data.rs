@@ -20,8 +20,8 @@ pub struct TempTakeableStart2<'t,'g> {
 pub struct WorkTakeable2<'t> {
     pub tokens:TokenIterContainer<'t>,
     pub tokens_start:TokenIterContainer<'t>,
-    pub group_ind:usize,
-    pub inner_groups:Range<usize>, //groups inside the takeable?
+    // pub group_ind:usize,
+    // pub inner_groups:Range<usize>, //groups inside the takeable?
 }
 
 
@@ -40,16 +40,17 @@ pub struct WorkTakeable2<'t> {
 //     pub inner_groups:Range<usize>, //groups inside the takeable?
 // }
 
-#[derive(Clone, Default, Debug)]
-pub struct TempGroupsElement<'t,'g> {
-    pub groups:Vec<TempGroupInfo<'t,'g>>,
-    // pub tokens_start:usize, //not used?
-}
+// #[derive(Clone, Default, Debug)]
+// pub struct TempGroupsElement<'t,'g> {
+//     pub groups:Vec<TempGroupInfo<'t,'g>>,
+//     // pub tokens_start:usize, //not used?
+// }
 
 #[derive(Clone)]
 pub struct TempOrElement<'t,'g> {
     pub groups:Vec<TempGroupInfo<'t,'g>>,
     pub tokens_after:TokenIterContainer<'t>,
+    pub takeables2:HashMap<GrammarNode<'g>,WorkTakeable2<'t>>,
 }
 #[derive(Clone)]
 pub struct TempGroupInfo<'t,'g> {
