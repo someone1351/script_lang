@@ -41,7 +41,7 @@ where
 
 
     takeable_starts2:Vec<TempTakeableStart2<'t,'g>>,
-    or_stk:Vec<HashMap<GrammarNode<'g>,TempOrElement<'t,'g>>>,
+    or_stk:Vec<TempOrInfo<'t,'g>>,
 
 }
 
@@ -436,6 +436,7 @@ where
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
                 println!("        tokens {tokens:?}");
+                println!("        or_stk_len={or_stk_len}, or_elements {:?}",self.or_stk);
             }
 
             //
@@ -524,9 +525,9 @@ where
         }
 
         //
-        if cur.is_first {
+        if cur.from_user && cur.is_first {
             if let Some(or_map)=self.or_stk.last() {
-                if let Some(or_element)=or_map.get(&cur.grammar) {
+                if let Some(or_element)=or_map.elements.get(&cur.grammar) {
 
                     //
                     self.stk.truncate(cur.success_len);
@@ -568,11 +569,13 @@ where
                     self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
 
                     //
-                    self.last_insert_start_takeables2(cur.tokens); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+                    self.last_insert_start_takeables2(&cur,false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
 
                     //
                     self.set_remaining_prims(cur.tokens);
 
+                    //
+                    println!("---- grabbed from or");
                     //
                     return Ok(());
                 }
@@ -709,7 +712,7 @@ where
                         //
                         last.tokens=cur.tokens;
                         last.group_len=cur.group_len;
-                        last.takeables2=cur.takeables2;
+                        last.takeables2=cur.takeables2.clone(); //should use move
 
                         //
                         if cur.expected.id!=last.expected.id {
@@ -735,7 +738,7 @@ where
 
                     //
                     self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
-                    self.last_insert_start_takeables2(cur.tokens);
+                    self.last_insert_start_takeables2(&cur,true);
                     self.set_remaining_prims(cur.tokens);
                 } else {
                     //
@@ -895,7 +898,7 @@ where
                     takeables2:cur.takeables2,
 
                     or_stk_len:cur.or_stk_len,
-                    is_first:cur.from_user,
+                    is_first:cur.is_first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
                 });
             }
 
@@ -906,12 +909,12 @@ where
                 //
                 let takeable_starts_len2=self.add_takeable_start2(&cur);
 
+
                 //
-                if cur.is_first {
-                    let last_or_stk=self.or_stk.last().cloned().unwrap_or_default();
-                    self.or_stk.push(last_or_stk);
-                } else {
-                    self.or_stk.push(Default::default());
+
+                if self.or_stk.is_empty() || !cur.is_first {
+                    let last_or_stk_len=self.or_stk.last().map(|x|x.last_or_stk_len).unwrap_or(0)+1;
+                    self.or_stk.push(TempOrInfo{last_or_stk_len,..Default::default()});
                 }
 
                 //
@@ -943,7 +946,7 @@ where
                         takeable_starts_len2,
                         takeables2:cur.takeables2.clone(),
 
-                        or_stk_len:cur.or_stk_len+1, //aka self.or_stk.len()
+                        or_stk_len:self.or_stk.len(),
                         is_first:cur.is_first,
                     });
                 }
@@ -985,7 +988,7 @@ where
                     takeables2:cur.takeables2,
 
 
-                    or_stk_len:cur.or_stk_len+1, //aka self.or_stk.len()
+                    or_stk_len:self.or_stk.len(),
                     is_first:cur.is_first,
                 });
             }
@@ -1415,7 +1418,7 @@ where
                     // last.takeables=cur.takeables;
 
                     //
-                    last.takeables2=cur.takeables2;
+                    last.takeables2=cur.takeables2.clone(); //should use move
 
                     //
                     if cur.expected.id!=last.expected.id {
@@ -1441,7 +1444,7 @@ where
                 // self.last_insert_start_takeables(cur.tokens);
 
                 //
-                self.last_insert_start_takeables2(cur.tokens);
+                self.last_insert_start_takeables2(&cur,true);
 
                 //
                 self.set_remaining_prims(cur.tokens);
@@ -1635,7 +1638,7 @@ where
 
                 //
                 self.last_remove_old_takeables2();
-                self.last_insert_start_takeables2(cur.tokens);
+                self.last_insert_start_takeables2(&cur,true);
 
                 //
                 println!("--- hmm stk={:?}",self.stk.iter().map(|x|x.grammar.clone()).collect::<Vec<_>>());
@@ -2025,33 +2028,78 @@ where
     // }
 
     fn last_insert_start_takeables2(&mut self,
-        cur_tokens:TokenIterContainer<'t>,
+        // cur_tokens:TokenIterContainer<'t>,
+        cur:&Work<'t,'g>,
+        do_or_stk:bool,
     ) {
+        let cur_tokens=cur.tokens;
         //
         if let Some(last)=self.stk.last_mut() {
-            //
-            for TempTakeableStart2 {
-                grammar:tg, tokens_start,
-                // group_ind ,
-            } in self.takeable_starts2.drain(last.takeable_starts_len2 ..)
-            {
+            let drained_starts=self.takeable_starts2.drain(last.takeable_starts_len2 ..).collect::<Vec<_>>();
+            let new_takeables=drained_starts.iter().map(|takeable_start2|{
                 //
-                let tokens_len=tokens_start.len()-cur_tokens.len();
-                let tokens=tokens_start.get_amount(tokens_len).unwrap();
+                let tokens_len=takeable_start2.tokens_start.len()-cur_tokens.len();
+                let tokens=takeable_start2.tokens_start.get_amount(tokens_len).unwrap();
 
                 //
                 if self.debug {
-                    println!("--- inserting takeable {tg:?} {tokens:?}",);
+                    println!("--- inserting takeable {:?} {tokens:?}",takeable_start2.grammar);
                 }
 
                 //
-                last.takeables2.insert(tg, WorkTakeable2 {
-                    // tokens_start,
-                    tokens,
-                    // group_ind,
-                    // inner_groups:group_ind+1 .. self.groups.len(),
-                });
+                (
+                    takeable_start2.grammar.clone(),
+                    WorkTakeable2 {
+                        // tokens_start,
+                        tokens,
+                        // group_ind,
+                        // inner_groups:group_ind+1 .. self.groups.len(),
+                    }
+                )
+
+            }).collect::<Vec<_>>();
+
+            //
+
+            //
+            for i in 0..drained_starts.len()
+            {
+                let takeable_start2=&drained_starts[i];
+
+                //
+                println!("---going i={i}, is_first={}, g={:?} self.or_stk.len={}",
+                    takeable_start2.is_first,takeable_start2.grammar,
+                    self.or_stk.len(),
+                );
+                //
+                if takeable_start2.is_first {
+                    if let Some(or_info)=self.or_stk.last_mut() {
+                        let mut groups=self.groups[cur.group_ind..cur.group_len].to_vec();
+
+                        //offset parents in group
+                        if !groups.is_empty() {
+                            let first_parent=groups[0].parent;
+
+                            for group in groups.iter_mut() {
+                                group.parent-=first_parent;
+                            }
+                        }
+
+                        //
+                        or_info.elements.entry(takeable_start2.grammar.clone()).or_insert_with(||TempOrInfoElement {
+                            groups,
+                            takeables2: HashMap::from_iter(new_takeables[i+1..].into_iter().cloned()),
+                            tokens_after: cur_tokens,
+                        });
+                    }
+                }
+
             }
+
+            //
+
+            last.takeables2.extend(new_takeables.into_iter());
+
         }
         // last_takeables
     }
@@ -2074,6 +2122,7 @@ where
                 grammar: cur.grammar.clone(),
                 tokens_start: cur.tokens.clone(),
                 // group_ind: cur.group_ind,
+                is_first:cur.is_first,
             });
         }
 

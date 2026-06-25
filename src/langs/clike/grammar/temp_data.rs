@@ -14,6 +14,7 @@ pub struct TempTakeableStart2<'t,'g> {
     pub grammar:GrammarNode<'g>,
     pub tokens_start:TokenIterContainer<'t>,
     // pub group_ind:usize,
+    pub is_first:bool,
 }
 
 #[derive(Clone, Debug)]
@@ -46,10 +47,16 @@ pub struct WorkTakeable2<'t> {
 //     // pub tokens_start:usize, //not used?
 // }
 
-#[derive(Clone)]
-pub struct TempOrElement<'t,'g> {
-    pub groups:Vec<TempGroupInfo<'t,'g>>,
-    pub takeables2:HashMap<GrammarNode<'g>,WorkTakeable2<'t>>,
+#[derive(Clone,Default,Debug)]
+pub struct TempOrInfo<'t,'g> {
+    pub elements:HashMap<GrammarNode<'g>,TempOrInfoElement<'t,'g>>,
+    pub last_or_stk_len:usize, //used for
+}
+
+#[derive(Clone,Debug)]
+pub struct TempOrInfoElement<'t,'g> {
+    pub groups:Vec<TempGroupInfo<'t,'g>>, //inside the grammar this represents
+    pub takeables2:HashMap<GrammarNode<'g>,WorkTakeable2<'t>>, //inside the grammar this represents
     pub tokens_after:TokenIterContainer<'t>,
 }
 #[derive(Clone)]
