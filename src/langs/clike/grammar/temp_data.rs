@@ -50,7 +50,7 @@ pub struct WorkTakeable2<'t> {
 #[derive(Clone,Default,Debug)]
 pub struct TempOrInfo<'t,'g> {
     pub elements:HashMap<GrammarNode<'g>,TempOrInfoElement<'t,'g>>,
-    pub last_or_stk_len:usize, //used for
+    // pub last_or_stk_len:usize, //used for
 }
 
 #[derive(Clone,Debug)]

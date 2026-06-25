@@ -10,7 +10,7 @@ pub fn is_keyword(n:& str) -> bool {
         "print"|"println"|"format"|
         "var"|"fn"|"return"|
         "if"|"elif"|"else"
-        |"a"|"b"|"c"
+        |"a"|"b"|"c"|"d"
         => true,
         _=>false,
     }
@@ -46,9 +46,12 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         // ].and(),
 
         "start" => [
-            [[Keyword("a"),Keyword("c")].and(),Keyword("b"),].and(),
-            [Keyword("a"),Keyword("c")].and(),
-        ].or(),
+            [
+                [[Keyword("a"),Keyword("c").group("c")].and(),Keyword("b"),].and(),
+                [Keyword("a"),Keyword("c").group("c")].and(),
+            ].or(),
+            Keyword("d"),
+        ].and(),
 
         // "start" => [
         //     NonTerm("stmts"),

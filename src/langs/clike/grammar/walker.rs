@@ -913,8 +913,7 @@ where
                 //
 
                 if self.or_stk.is_empty() || !cur.is_first {
-                    let last_or_stk_len=self.or_stk.last().map(|x|x.last_or_stk_len).unwrap_or(0)+1;
-                    self.or_stk.push(TempOrInfo{last_or_stk_len,..Default::default()});
+                    self.or_stk.push(Default::default());
                 }
 
                 //
