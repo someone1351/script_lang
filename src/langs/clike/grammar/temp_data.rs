@@ -10,7 +10,7 @@ use super::node::*;
 
 
 #[derive(Clone, Debug)]
-pub struct TempTakeableStart2<'t,'g> {
+pub struct TempHistNew<'t,'g> {
     pub grammar:GrammarNode<'g>,
     pub tokens_start:TokenIterContainer<'t>,
     // pub group_ind:usize,
@@ -18,7 +18,7 @@ pub struct TempTakeableStart2<'t,'g> {
 }
 
 #[derive(Clone, Debug)]
-pub struct WorkTakeable2<'t> {
+pub struct TempHistEnd<'t> {
     pub tokens:TokenIterContainer<'t>,
     // pub tokens_start:TokenIterContainer<'t>,
     // pub group_ind:usize,
@@ -48,15 +48,16 @@ pub struct WorkTakeable2<'t> {
 // }
 
 #[derive(Clone,Default,Debug)]
-pub struct TempOrInfo<'t,'g> {
-    pub elements:HashMap<GrammarNode<'g>,TempOrInfoElement<'t,'g>>,
+pub struct TempHistBegins<'t,'g> {
+    pub elements:HashMap<GrammarNode<'g>,TempHistBegin<'t,'g>>,
     // pub last_or_stk_len:usize, //used for
+    //todo: store groups, hist_ends here, and in TempHistBegin store inds into them
 }
 
 #[derive(Clone,Debug)]
-pub struct TempOrInfoElement<'t,'g> {
+pub struct TempHistBegin<'t,'g> {
     pub groups:Vec<TempGroupInfo<'t,'g>>, //inside the grammar this represents
-    pub takeables2:HashMap<GrammarNode<'g>,WorkTakeable2<'t>>, //inside the grammar this represents
+    pub hist_ends:HashMap<GrammarNode<'g>,TempHistEnd<'t>>, //inside the grammar this represents
     pub tokens_after:TokenIterContainer<'t>,
 }
 #[derive(Clone)]
@@ -107,12 +108,11 @@ pub struct Work<'t,'g> {
 
 
     pub from_user:bool, //gramamr added by input grammar, not walker
-    pub takeable_starts_ind2:usize,
-    pub takeable_starts_len2:usize,
-    pub takeables2:HashMap<GrammarNode<'g>,WorkTakeable2<'t>>,
-    // pub ends_in : Option<GrammarNode<'g>>,
-    pub or_stk_len:usize,
     pub is_first:bool,
+
+    pub hist_news_len:usize,
+    pub hist_begins_stk_len:usize,
+    pub hist_ends:HashMap<GrammarNode<'g>,TempHistEnd<'t>>, //could store as a stk in Walker,
 }
 
 
