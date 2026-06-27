@@ -1445,10 +1445,12 @@ where
                 //
                 if let Some(last)=self.stk.last_mut() {
                     //
-                    println!("---- last.group_len={}, cur.group_len={}, last.group_ind={}, cur.group_ind={}",
-                        last.group_len,cur.group_len,
-                        last.group_ind, cur.group_ind,
-                    );
+                    if self.debug {
+                        println!("---- last.group_len={}, cur.group_len={}, last.group_ind={}, cur.group_ind={}",
+                            last.group_len,cur.group_len,
+                            last.group_ind, cur.group_ind,
+                        );
+                    }
 
                     //
                     if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //if not parsing anything, exit the many
@@ -1691,11 +1693,13 @@ where
                 self.hist_news_add_to_last(&cur,true);
 
                 //
-                println!("--- hmm stk={:?}",self.stk.iter().map(|x|x.grammar.clone()).collect::<Vec<_>>());
-                if let Some(last)=self.stk.last_mut() {
-                    let last_hist_ends=&self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
+                if self.debug {
+                    println!("--- hmm stk={:?}",self.stk.iter().map(|x|x.grammar.clone()).collect::<Vec<_>>());
 
-                    println!("---takeables3={:?}, len={}",last_hist_ends,last_hist_ends.len());
+                    if let Some(last)=self.stk.last() {
+                        let last_hist_ends=&self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
+                        println!("---takeables3={:?}, len={}",last_hist_ends,last_hist_ends.len());
+                    }
                 }
 
                 //
@@ -1960,8 +1964,9 @@ where
             // println!("==gggr {:?}",last.grammar);
 
             //
-            println!("==do_groups_primitives_clamp: cur_group_ind={cur_group_ind}, last.group_ind={}",last.group_ind);
-
+            if self.debug {
+                println!("==do_groups_primitives_clamp: cur_group_ind={cur_group_ind}, last.group_ind={}",last.group_ind);
+            }
             // //takeables
             // let groups=&mut self.groups_stk.last_mut().unwrap().groups;
 
@@ -1983,7 +1988,9 @@ where
                 let group=&mut groups[g];
 
                 //
-                println!("\tg={g} parent={}",group.parent);
+                // if self.debug {
+                //     println!("\tg={g} parent={}",group.parent);
+                // }
 
                 //
                 // let mut last_primitives=group.primitives;
@@ -2120,10 +2127,13 @@ where
                 let hist_new=&drained_hist_news[i];
 
                 //
-                println!("---going i={i}, is_first={}, g={:?} self.or_stk.len={}",
-                    hist_new.is_first,hist_new.grammar,
-                    self.hist_begins_stk.len(),
-                );
+                if self.debug {
+                    println!("---going i={i}, is_first={}, g={:?} self.or_stk.len={}",
+                        hist_new.is_first,hist_new.grammar,
+                        self.hist_begins_stk.len(),
+                    );
+                }
+
                 //
                 if hist_new.is_first {
                     if let Some(or_info)=self.hist_begins_stk.last_mut() {
