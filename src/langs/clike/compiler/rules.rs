@@ -45,14 +45,15 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         //     [Keyword("a"),Keyword("b"),].and().prev(),
         // ].and(),
 
-        "start" => [
-            [
-                [[Keyword("a"),Keyword("c").group("c")].and(),Keyword("b"),].and(),
-                [Keyword("a"),Keyword("c").group("c")].and(),
-            ].or(),
-            Keyword("d"),
-        ].and(),
+        // "start" => [
+        //     [
+        //         [[Keyword("a"),Keyword("c").group("c")].and(),Keyword("b"),].and(),
+        //         [Keyword("a"),Keyword("c").group("c")].and(),
+        //     ].or(),
+        //     Keyword("d"),
+        // ].and(),
 
+        "start" => [[Keyword("a"),Keyword("b")].or().many0(), Keyword("b").prev()].and(),
         // "start" => [
         //     NonTerm("stmts"),
         //     NonTerm("ending").many0(),

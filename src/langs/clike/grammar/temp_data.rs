@@ -54,6 +54,11 @@ pub struct TempHistBegins<'t,'g> {
     //todo: store groups, hist_ends here, and in TempHistBegin store inds into them
 }
 
+#[derive(Clone,Default,Debug)]
+pub struct TempHistEnds<'t,'g> {
+    pub elements:HashMap<GrammarNode<'g>,TempHistEnd<'t>>,
+}
+
 #[derive(Clone,Debug)]
 pub struct TempHistBegin<'t,'g> {
     pub groups:Vec<TempGroupInfo<'t,'g>>, //inside the grammar this represents
@@ -112,7 +117,8 @@ pub struct Work<'t,'g> {
 
     pub hist_news_len:usize,
     pub hist_begins_stk_len:usize,
-    pub hist_ends:HashMap<GrammarNode<'g>,TempHistEnd<'t>>, //could store as a stk in Walker,
+    // pub hist_ends:HashMap<GrammarNode<'g>,TempHistEnd<'t>>, //could store as a stk in Walker,
+    pub hist_ends_stk_len:usize,
 }
 
 

@@ -42,7 +42,7 @@ where
 
     hist_news:Vec<TempHistNew<'t,'g>>,
     hist_begins_stk:Vec<TempHistBegins<'t,'g>>,
-
+    hist_ends_stk:Vec<TempHistEnds<'t,'g>>,
 }
 
 impl<'t,'g,G> GrammarWalker<'t,'g,G>
@@ -71,6 +71,7 @@ where
 
             hist_news: Default::default(),
             hist_begins_stk: Default::default(),
+            hist_ends_stk: Default::default(),
         }
     }
 
@@ -100,13 +101,14 @@ where
             // opt:false,
 
             from_user:false,
+            is_first:true,
 
             // takeable_starts_ind2:0,
             hist_news_len:0,
-            hist_ends:Default::default(),
+            // hist_ends:Default::default(),
 
             hist_begins_stk_len:0,
-            is_first:true,
+            hist_ends_stk_len:1,
         });
 
         //
@@ -125,13 +127,14 @@ where
             and_id: 0,
 
             from_user:true,
+            is_first:true,
 
             // takeable_starts_ind2:0,
             hist_news_len:0,
-            hist_ends:Default::default(),
+            // hist_ends:Default::default(),
 
             hist_begins_stk_len:0,
-            is_first:true,
+            hist_ends_stk_len:1,
         });
 
         //
@@ -165,13 +168,14 @@ where
                 // opt:false,
 
                 from_user:true,
+                is_first:true,
 
                 // takeable_starts_ind2:0,
                 hist_news_len:0,
-                hist_ends:Default::default(),
+                // hist_ends:Default::default(),
 
                 hist_begins_stk_len:0,
-                is_first:true,
+                hist_ends_stk_len:1,
             });
         }
 
@@ -197,7 +201,9 @@ where
 
         //
         self.hist_news.clear();
-        self.hist_begins_stk.clear();
+        self.hist_begins_stk.clear(); //don't need initial one because don't need to store begins before an Or exists
+        // self.hist_ends_stk.clear();
+        self.hist_ends_stk=vec![Default::default()]; //need an initial one because require ends regardless of an Or existing
 
         //
         self.c=0;
@@ -319,9 +325,8 @@ where
 
             //
             self.groups.truncate(cur.group_len);
-
-            //
             self.hist_begins_stk.truncate(cur.hist_begins_stk_len);
+            self.hist_ends_stk.truncate(cur.hist_ends_stk_len);
         }
 
         // //
@@ -394,9 +399,12 @@ where
                     // takeables, takeable_starts_len,
                     from_user,
                     // takeable_starts_ind2,
-                    hist_news_len: takeable_starts_len2,hist_ends: takeables2,
+                    hist_news_len,
+                    // hist_ends,
                     // ends_in,
-                    is_first,hist_begins_stk_len: or_stk_len,
+                    is_first,
+                    hist_begins_stk_len,
+                    hist_ends_stk_len,
                 }=&cur;
 
                 //
@@ -424,20 +432,22 @@ where
                 // println!("        groups_stk.len={groups_stk_len2}, groups_stk_len={groups_stk_len}, ");
                 // println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
 
-                println!("        takeable_starts: len={takeable_starts_len2:?} :: {},",
+                println!("        takeable_starts: len={hist_news_len:?} :: {},",
                     self.hist_news.iter().map(|t|format!("{:?}:{}",t.grammar,t.tokens_start.inds().start)).collect::<Vec<_>>().join(","),
                 );
-                println!("        takeables=[{}], ",
-                    // takeables2.iter().map(|(k,t)|format!("{k:?}:{:?}",t.tokens)).collect::<Vec<_>>().join(","),
-                    takeables2.iter().map(|(k,t)|format!("{{{k:?} : {:?}}}",t.tokens.inds())).collect::<Vec<_>>().join(", "),
-                    // takeables2.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>(),
-                );
-                println!("        first={is_first}, or_stk_len={or_stk_len}",);
+
+                // println!("        takeables=[{}], ",
+                //     // takeables2.iter().map(|(k,t)|format!("{k:?}:{:?}",t.tokens)).collect::<Vec<_>>().join(","),
+                //     hist_ends.iter().map(|(k,t)|format!("{{{k:?} : {:?}}}",t.tokens.inds())).collect::<Vec<_>>().join(", "),
+                //     // takeables2.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>(),
+                // );
+
+                println!("        first={is_first}, or_stk_len={hist_begins_stk_len}",);
 
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
                 println!("        tokens {tokens:?}");
-                println!("        or_stk_len={or_stk_len}, or_elements {:?}",self.hist_begins_stk);
+                println!("        or_stk_len={hist_begins_stk_len}, or_elements {:?}",self.hist_begins_stk);
             }
 
             //
@@ -492,9 +502,12 @@ where
                     // takeable_starts_len, takeables,
                     from_user,
                     // takeable_starts_ind2,
-                    hist_news_len: takeable_starts_len2,hist_ends: takeables2,
+                    hist_news_len,
+                    // hist_ends,
                     // ends_in,
-                    is_first,hist_begins_stk_len: or_stk_len,
+                    is_first,
+                    hist_begins_stk_len,
+                    hist_ends_stk_len,
                 }) in self.stk.iter()
                     // .rev()
                     .enumerate()
@@ -553,8 +566,9 @@ where
                         last.group_len=self.groups.len(); //cur.group_len+or_element.groups;
 
                         //
-                        // last.takeables2=cur.takeables2;
-                        last.hist_ends=or_element.hist_ends.clone();
+                        // // last.takeables2=cur.takeables2;
+                        // last.hist_ends=or_element.hist_ends.clone();
+                        last.hist_ends_stk_len=cur.hist_ends_stk_len;
 
                         //
                         if cur.expected.id!=last.expected.id {
@@ -571,7 +585,7 @@ where
                     self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
 
                     //
-                    self.last_insert_start_takeables2(&cur,false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+                    self.hist_news_add_to_last(&cur,false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
 
                     //
                     self.set_remaining_prims(cur.tokens);
@@ -597,7 +611,7 @@ where
                 };
 
                 //
-                let takeable_starts_len2=self.add_takeable_start2(&cur);
+                let hist_news_len=self.hist_news_add(&cur);
 
                 //TODO
                 self.stk.push(Work {
@@ -621,14 +635,15 @@ where
                     // opt:cur.opt,
 
                     from_user:true,
+                    is_first:cur.is_first,
 
                     // takeable_starts_ind2:cur.takeable_starts_ind2,
                     // takeable_starts_len2:cur.takeable_starts_len2,
-                    hist_news_len: takeable_starts_len2,
-                    hist_ends:cur.hist_ends,
+                    hist_news_len,
+                    // hist_ends:cur.hist_ends,
 
                     hist_begins_stk_len:cur.hist_begins_stk_len,
-                    is_first:cur.is_first,
+                    hist_ends_stk_len:cur.hist_ends_stk_len,
                 });
             }
 
@@ -695,11 +710,12 @@ where
             GrammarNode::Prev(g) => {
 
                 //
-                let takeable_starts_len2=self.add_takeable_start2(&cur);
+                let takeable_starts_len2=self.hist_news_add(&cur);
 
+                let cur_hist_ends=&self.hist_ends_stk.last().unwrap().elements;
 
                 //
-                if cur.hist_ends.contains_key(&g) {
+                if cur_hist_ends.contains_key(&g) {
 
                     //
                     self.stk.truncate(cur.success_len);
@@ -714,7 +730,9 @@ where
                         //
                         last.tokens=cur.tokens;
                         last.group_len=cur.group_len;
-                        last.hist_ends=cur.hist_ends.clone(); //should use move
+
+                        // last.hist_ends=cur.hist_ends.clone(); //should use move
+                        last.hist_ends_stk_len=cur.hist_ends_stk_len;
 
                         //
                         if cur.expected.id!=last.expected.id {
@@ -731,7 +749,7 @@ where
                     }
 
                     //
-                    self.last_takeables_starts2_truncate();
+                    self.hist_news_truncate_to_last();
 
                     //
                     if self.debug {
@@ -740,7 +758,7 @@ where
 
                     //
                     self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
-                    self.last_insert_start_takeables2(&cur,true);
+                    self.hist_news_add_to_last(&cur,true);
                     self.set_remaining_prims(cur.tokens);
                 } else {
                     //
@@ -766,7 +784,7 @@ where
                     }
 
                     //
-                    self.last_takeables_starts2_truncate();
+                    self.hist_news_truncate_to_last();
                 }
             }
 
@@ -787,7 +805,7 @@ where
                 // }
 
                 //
-                let takeable_starts_len2=self.add_takeable_start2(&cur);
+                let takeable_starts_len2=self.hist_news_add(&cur);
 
                 //
                 self.stk.push(Work {
@@ -811,14 +829,15 @@ where
                     // opt:cur.opt,
 
                     from_user:true,
+                    is_first:cur.is_first,
 
                     // takeable_starts_ind2:cur.takeable_starts_ind2,
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     hist_news_len: takeable_starts_len2,
-                    hist_ends:cur.hist_ends,
+                    // hist_ends:cur.hist_ends,
 
                     hist_begins_stk_len:cur.hist_begins_stk_len,
-                    is_first:cur.is_first,
+                    hist_ends_stk_len:cur.hist_ends_stk_len,
                 });
             }
 
@@ -827,7 +846,7 @@ where
                 let Some(first)=gs.first().cloned() else { return Ok(()); };
 
                 //
-                let takeable_starts_len2=self.add_takeable_start2(&cur);
+                let takeable_starts_len2=self.hist_news_add(&cur);
 
                 //
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
@@ -852,14 +871,15 @@ where
                         // opt:false, //opt isnt passed to individual items in And
 
                         from_user:false,
+                        is_first:false,
 
                         // takeable_starts_ind2:cur.takeable_starts_ind2,
                         // takeable_starts_len2:cur.takeable_starts_len2,
                         hist_news_len: takeable_starts_len2,
-                        hist_ends:cur.hist_ends.clone(),
+                        // hist_ends:cur.hist_ends.clone(),
 
                         hist_begins_stk_len:cur.hist_begins_stk_len,
-                        is_first:false,
+                        hist_ends_stk_len:cur.hist_ends_stk_len,
                     });
                 }
 
@@ -893,14 +913,15 @@ where
                     // opt:false, //opt isnt passed to individual items in And
 
                     from_user:true,
+                    is_first:cur.is_first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
 
                     // takeable_starts_ind2:cur.takeable_starts_ind2,
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     hist_news_len: takeable_starts_len2,
-                    hist_ends:cur.hist_ends,
+                    // hist_ends:cur.hist_ends,
 
                     hist_begins_stk_len:cur.hist_begins_stk_len,
-                    is_first:cur.is_first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
+                    hist_ends_stk_len:cur.hist_ends_stk_len,
                 });
             }
 
@@ -909,14 +930,16 @@ where
                 let Some(first)=gs.first().cloned() else { return Ok(()); };
 
                 //
-                let takeable_starts_len2=self.add_takeable_start2(&cur);
+                let takeable_starts_len2=self.hist_news_add(&cur);
 
 
                 //
-
                 if self.hist_begins_stk.is_empty() || !cur.is_first {
                     self.hist_begins_stk.push(Default::default());
                 }
+
+                //
+                self.hist_ends_stk.push(self.hist_ends_stk.last().cloned().unwrap());
 
                 //
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
@@ -941,14 +964,15 @@ where
                         // discard:cur.discard,
 
                         from_user:false,
+                        is_first:cur.is_first,
 
                         // takeable_starts_ind2:cur.takeable_starts_ind2,
                         // takeable_starts_len2:cur.takeable_starts_len2,
                         hist_news_len: takeable_starts_len2,
-                        hist_ends:cur.hist_ends.clone(),
+                        // hist_ends:cur.hist_ends.clone(),
 
                         hist_begins_stk_len:self.hist_begins_stk.len(),
-                        is_first:cur.is_first,
+                        hist_ends_stk_len:cur.hist_ends_stk_len,
                     });
                 }
 
@@ -982,21 +1006,22 @@ where
                     // opt:cur.opt,
 
                     from_user:true,
+                    is_first:cur.is_first,
 
                     // takeable_starts_ind2:cur.takeable_starts_ind2,
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     hist_news_len: takeable_starts_len2,
-                    hist_ends:cur.hist_ends,
+                    // hist_ends:cur.hist_ends,
 
 
                     hist_begins_stk_len:self.hist_begins_stk.len(),
-                    is_first:cur.is_first,
+                    hist_ends_stk_len:cur.hist_ends_stk_len,
                 });
             }
 
             GrammarNode::Opt(g) => {
                 //
-                let takeable_starts_len2=self.add_takeable_start2(&cur);
+                let takeable_starts_len2=self.hist_news_add(&cur);
 
                 //
                 self.stk.push(Work {
@@ -1020,15 +1045,16 @@ where
                     // opt:false, //not used on always
 
                     from_user:false,
+                    is_first:cur.is_first,
 
                     // takeable_starts_ind2:cur.takeable_starts_ind2,
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     hist_news_len: takeable_starts_len2,
-                    hist_ends:cur.hist_ends.clone(),
+                    // hist_ends:cur.hist_ends.clone(),
 
 
                     hist_begins_stk_len:cur.hist_begins_stk_len,
-                    is_first:cur.is_first,
+                    hist_ends_stk_len:cur.hist_ends_stk_len,
                 });
 
                 //
@@ -1061,14 +1087,15 @@ where
                     // opt:true,
 
                     from_user:true,
+                    is_first:cur.is_first,
 
                     // takeable_starts_ind2:cur.takeable_starts_ind2,
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     hist_news_len: takeable_starts_len2,
-                    hist_ends:cur.hist_ends,
+                    // hist_ends:cur.hist_ends,
 
                     hist_begins_stk_len:cur.hist_begins_stk_len,
-                    is_first:cur.is_first,
+                    hist_ends_stk_len:cur.hist_ends_stk_len,
                 });
             }
 
@@ -1223,7 +1250,7 @@ where
 
             GrammarNode::Many(g) => {
                 //
-                let takeable_starts_len2=self.add_takeable_start2(&cur);
+                let takeable_starts_len2=self.hist_news_add(&cur);
 
                 //
                 // let fail_len2=self.stk.len(); //only remove everything past here on fail
@@ -1250,14 +1277,15 @@ where
                     // opt:true,
 
                     from_user:false,
+                    is_first:cur.is_first,
 
                     // takeable_starts_ind2:cur.takeable_starts_ind2,
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     hist_news_len: takeable_starts_len2,
-                    hist_ends:cur.hist_ends.clone(),
+                    // hist_ends:cur.hist_ends.clone(),
 
                     hist_begins_stk_len:cur.hist_begins_stk_len,
-                    is_first:cur.is_first,
+                    hist_ends_stk_len:cur.hist_ends_stk_len,
                 });
 
                 //
@@ -1285,14 +1313,15 @@ where
                     // opt:false, //not used
 
                     from_user:false,
+                    is_first:cur.is_first,
 
                     // takeable_starts_ind2:cur.takeable_starts_ind2,
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     hist_news_len: takeable_starts_len2,
-                    hist_ends:cur.hist_ends.clone(),
+                    // hist_ends:cur.hist_ends.clone(),
 
                     hist_begins_stk_len:cur.hist_begins_stk_len,
-                    is_first:cur.is_first,
+                    hist_ends_stk_len:cur.hist_ends_stk_len,
                 });
 
                 //
@@ -1325,20 +1354,21 @@ where
                     // opt:true,
 
                     from_user:true,
+                    is_first:cur.is_first,
 
                     // takeable_starts_ind2:cur.takeable_starts_ind2,
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     hist_news_len: takeable_starts_len2,
-                    hist_ends:cur.hist_ends,
+                    // hist_ends:cur.hist_ends,
 
                     hist_begins_stk_len:cur.hist_begins_stk_len,
-                    is_first:cur.is_first,
+                    hist_ends_stk_len:cur.hist_ends_stk_len,
                 });
             }
 
             GrammarNode::NonTerm(t) => {
                 //
-                let takeable_starts_len2=self.add_takeable_start2(&cur);
+                let takeable_starts_len2=self.hist_news_add(&cur);
 
                 //
                 let visiteds=self.do_non_term_visiteds(t,cur.tokens,cur.visiteds)?;
@@ -1372,14 +1402,15 @@ where
                     // opt:cur.opt,
 
                     from_user:true,
+                    is_first:cur.is_first,
 
                     // takeable_starts_ind2:cur.takeable_starts_ind2,
                     // takeable_starts_len2:cur.takeable_starts_len2,
                     hist_news_len: takeable_starts_len2,
-                    hist_ends:cur.hist_ends,
+                    // hist_ends:cur.hist_ends,
 
                     hist_begins_stk_len:cur.hist_begins_stk_len,
-                    is_first:cur.is_first,
+                    hist_ends_stk_len:cur.hist_ends_stk_len,
                 });
             }
 
@@ -1389,7 +1420,7 @@ where
                 self.stk.truncate(cur.success_len);
 
                 //
-                let takeable_starts_len2=self.add_takeable_start2(&cur);
+                let takeable_starts_len2=self.hist_news_add(&cur);
 
                 // //takeables
                 // self.do_groups_stk_success(cur.clone(),cur.and_id);
@@ -1419,7 +1450,8 @@ where
                     // last.takeables=cur.takeables;
 
                     //
-                    last.hist_ends=cur.hist_ends.clone(); //should use move
+                    // last.hist_ends=cur.hist_ends.clone(); //should use move
+                    last.hist_ends_stk_len=cur.hist_ends_stk_len;
 
                     //
                     if cur.expected.id!=last.expected.id {
@@ -1445,7 +1477,7 @@ where
                 // self.last_insert_start_takeables(cur.tokens);
 
                 //
-                self.last_insert_start_takeables2(&cur,true);
+                self.hist_news_add_to_last(&cur,true);
 
                 //
                 self.set_remaining_prims(cur.tokens);
@@ -1589,7 +1621,7 @@ where
         K: Fn(ValueContainer<'t,P>,&mut Self),
     {
         //
-        let takeable_starts_len2=self.add_takeable_start2(&cur);
+        let takeable_starts_len2=self.hist_news_add(&cur);
 
         match prim_func(&mut cur.tokens) {
             Ok(v) => {
@@ -1638,13 +1670,15 @@ where
                 // self.last_insert_start_takeables(cur.tokens);
 
                 //
-                self.last_remove_old_takeables2();
-                self.last_insert_start_takeables2(&cur,true);
+                self.last_hist_ends_remove_old();
+                self.hist_news_add_to_last(&cur,true);
 
                 //
                 println!("--- hmm stk={:?}",self.stk.iter().map(|x|x.grammar.clone()).collect::<Vec<_>>());
                 if let Some(last)=self.stk.last_mut() {
-                    println!("---takeables3={:?}, len={}",last.hist_ends,last.hist_ends.len());
+                    let last_hist_ends=&self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
+
+                    println!("---takeables3={:?}, len={}",last_hist_ends,last_hist_ends.len());
                 }
 
                 //
@@ -1708,7 +1742,7 @@ where
                 }
 
                 //
-                self.last_takeables_starts2_truncate();
+                self.hist_news_truncate_to_last();
 
                 //
                 // if self.stk.is_empty() {
@@ -2028,28 +2062,29 @@ where
     //     }
     // }
 
-    fn last_insert_start_takeables2(&mut self,
+    fn hist_news_add_to_last(&mut self,
         // cur_tokens:TokenIterContainer<'t>,
         cur:&Work<'t,'g>,
-        do_or_stk:bool,
+        do_or_stk:bool, //what was this for again? something to do with not adding cur grammar to hist_begins?
     ) {
         let cur_tokens=cur.tokens;
+
         //
         if let Some(last)=self.stk.last_mut() {
-            let drained_starts=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
-            let new_takeables=drained_starts.iter().map(|takeable_start2|{
+            let drained_hist_news=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
+            let hist_news=drained_hist_news.iter().map(|hist_new|{
                 //
-                let tokens_len=takeable_start2.tokens_start.len()-cur_tokens.len();
-                let tokens=takeable_start2.tokens_start.get_amount(tokens_len).unwrap();
+                let tokens_len=hist_new.tokens_start.len()-cur_tokens.len();
+                let tokens=hist_new.tokens_start.get_amount(tokens_len).unwrap();
 
                 //
                 if self.debug {
-                    println!("--- inserting takeable {:?} {tokens:?}",takeable_start2.grammar);
+                    println!("--- inserting hist_new {:?} {tokens:?}",hist_new.grammar);
                 }
 
                 //
                 (
-                    takeable_start2.grammar.clone(),
+                    hist_new.grammar.clone(),
                     TempHistEnd {
                         // tokens_start,
                         tokens,
@@ -2063,17 +2098,17 @@ where
             //
 
             //
-            for i in 0..drained_starts.len()
+            for i in 0..drained_hist_news.len()
             {
-                let takeable_start2=&drained_starts[i];
+                let hist_new=&drained_hist_news[i];
 
                 //
                 println!("---going i={i}, is_first={}, g={:?} self.or_stk.len={}",
-                    takeable_start2.is_first,takeable_start2.grammar,
+                    hist_new.is_first,hist_new.grammar,
                     self.hist_begins_stk.len(),
                 );
                 //
-                if takeable_start2.is_first {
+                if hist_new.is_first {
                     if let Some(or_info)=self.hist_begins_stk.last_mut() {
                         let mut groups=self.groups[cur.group_ind..cur.group_len].to_vec();
 
@@ -2087,9 +2122,9 @@ where
                         }
 
                         //
-                        or_info.elements.entry(takeable_start2.grammar.clone()).or_insert_with(||TempHistBegin {
+                        or_info.elements.entry(hist_new.grammar.clone()).or_insert_with(||TempHistBegin {
                             groups,
-                            hist_ends: HashMap::from_iter(new_takeables[i+1..].into_iter().cloned()),
+                            hist_ends: HashMap::from_iter(hist_news[i+1..].into_iter().cloned()),
                             tokens_after: cur_tokens,
                         });
                     }
@@ -2099,25 +2134,27 @@ where
 
             //
 
-            last.hist_ends.extend(new_takeables.into_iter());
+            let last_hist_ends=&mut self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
+            last_hist_ends.extend(hist_news.into_iter());
 
         }
         // last_takeables
     }
 
-    fn last_remove_old_takeables2(&mut self) {
+    fn last_hist_ends_remove_old(&mut self) {
         if let Some(last)=self.stk.last_mut() {
-            last.hist_ends.retain(|_k,v|v.tokens.inds().start>=last.tokens.inds().start);
+            let last_hist_ends=&mut self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
+            last_hist_ends.retain(|_k,v|v.tokens.inds().start>=last.tokens.inds().start);
         }
     }
 
-    fn last_takeables_starts2_truncate(&mut self) {
+    fn hist_news_truncate_to_last(&mut self) {
         if let Some(last)=self.stk.last() {
             self.hist_news.truncate(last.hist_news_len); //what is it for? clears failed takeable_starts?
         }
     }
 
-    fn add_takeable_start2(&mut self,cur:&Work<'t,'g>) -> usize {
+    fn hist_news_add(&mut self,cur:&Work<'t,'g>) -> usize {
         if cur.from_user { //ignore grammars added by walker
             self.hist_news.push(TempHistNew {
                 grammar: cur.grammar.clone(),
