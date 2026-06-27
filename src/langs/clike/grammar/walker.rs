@@ -432,22 +432,22 @@ where
                 // println!("        groups_stk.len={groups_stk_len2}, groups_stk_len={groups_stk_len}, ");
                 // println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
 
-                println!("        takeable_starts: len={hist_news_len:?} :: {},",
+                println!("        hist_news: len={hist_news_len:?} :: {},",
                     self.hist_news.iter().map(|t|format!("{:?}:{}",t.grammar,t.tokens_start.inds().start)).collect::<Vec<_>>().join(","),
                 );
 
-                // println!("        takeables=[{}], ",
-                //     // takeables2.iter().map(|(k,t)|format!("{k:?}:{:?}",t.tokens)).collect::<Vec<_>>().join(","),
-                //     hist_ends.iter().map(|(k,t)|format!("{{{k:?} : {:?}}}",t.tokens.inds())).collect::<Vec<_>>().join(", "),
-                //     // takeables2.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>(),
-                // );
+                println!("        hist_ends=[{}], ",
+                    // takeables2.iter().map(|(k,t)|format!("{k:?}:{:?}",t.tokens)).collect::<Vec<_>>().join(","),
+                    self.hist_ends_stk.last().unwrap().elements.iter().map(|(k,t)|format!("{{{k:?} : {:?}}}",t.tokens.inds())).collect::<Vec<_>>().join(", "),
+                    // takeables2.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>(),
+                );
 
-                println!("        first={is_first}, or_stk_len={hist_begins_stk_len}",);
+                println!("        first={is_first}, hist_begins_stk_len={hist_begins_stk_len}",);
 
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
                 println!("        tokens {tokens:?}");
-                println!("        or_stk_len={hist_begins_stk_len}, or_elements {:?}",self.hist_begins_stk);
+                println!("        hist_begins_stk: len={hist_begins_stk_len}, {:?}",self.hist_begins_stk);
             }
 
             //
@@ -930,7 +930,7 @@ where
                 let Some(first)=gs.first().cloned() else { return Ok(()); };
 
                 //
-                let takeable_starts_len2=self.hist_news_add(&cur);
+                let hist_news_len=self.hist_news_add(&cur);
 
 
                 //
@@ -968,11 +968,11 @@ where
 
                         // takeable_starts_ind2:cur.takeable_starts_ind2,
                         // takeable_starts_len2:cur.takeable_starts_len2,
-                        hist_news_len: takeable_starts_len2,
+                        hist_news_len,
                         // hist_ends:cur.hist_ends.clone(),
 
                         hist_begins_stk_len:self.hist_begins_stk.len(),
-                        hist_ends_stk_len:cur.hist_ends_stk_len,
+                        hist_ends_stk_len:self.hist_ends_stk.len(),
                     });
                 }
 
@@ -1010,12 +1010,12 @@ where
 
                     // takeable_starts_ind2:cur.takeable_starts_ind2,
                     // takeable_starts_len2:cur.takeable_starts_len2,
-                    hist_news_len: takeable_starts_len2,
+                    hist_news_len,
                     // hist_ends:cur.hist_ends,
 
 
                     hist_begins_stk_len:self.hist_begins_stk.len(),
-                    hist_ends_stk_len:cur.hist_ends_stk_len,
+                    hist_ends_stk_len:self.hist_ends_stk.len(),
                 });
             }
 
