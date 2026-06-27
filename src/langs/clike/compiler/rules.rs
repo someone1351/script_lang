@@ -10,7 +10,7 @@ pub fn is_keyword(n:& str) -> bool {
         "print"|"println"|"format"|
         "var"|"fn"|"return"|
         "if"|"elif"|"else"
-        |"a"|"b"|"c"|"d"
+        // |"a"|"b"|"c"|"d"
         => true,
         _=>false,
     }
@@ -53,11 +53,11 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         //     Keyword("d"),
         // ].and(),
 
-        "start" => [[Keyword("a"),Keyword("b")].or().many0(), Keyword("b").prev()].and(),
-        // "start" => [
-        //     NonTerm("stmts"),
-        //     NonTerm("ending").many0(),
-        // ].and(),
+        // "start" => [[Keyword("a"),Keyword("b")].or().many0(), Keyword("b").prev()].and(),
+        "start" => [
+            NonTerm("stmts"),
+            NonTerm("ending").many0(),
+        ].and(),
 
 
         "ending" => [NonTerm("semicolon"),Eol].or().many1(),
@@ -121,7 +121,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             ].or(),
             NonTerm("set_eq"),
             NonTerm("expr"),
-        ].and(),
+        ].and().group("set"),
 
         "cond" => [
             // NonTerm("lparen"),
@@ -291,22 +291,23 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("val"),
         ].or().expected0("term"),
 
-        // "expr_term" => [
-        //     [NonTerm("val"),NonTerm("mul"),NonTerm("expr_term"),].and().group("mul"),
-        //     [NonTerm("val"),NonTerm("div"),NonTerm("expr_term"),].and().group("div"),
-        //     [NonTerm("val"),NonTerm("mod"),NonTerm("expr_term"),].and().group("mod"),
-        //     NonTerm("val"),
-        // ].or(),
+        // // "expr_term" => [
+        // //     [NonTerm("val"),NonTerm("mul"),NonTerm("expr_term"),].and().group("mul"),
+        // //     [NonTerm("val"),NonTerm("div"),NonTerm("expr_term"),].and().group("div"),
+        // //     [NonTerm("val"),NonTerm("mod"),NonTerm("expr_term"),].and().group("mod"),
+        // //     NonTerm("val"),
+        // // ].or(),
 
-        // "expr" => [
-        //     NonTerm("val"),
-        //     [
-        //         NonTerm("infix"),
-        //         NonTerm("val"),
-        //     ].and().many0(),
-        // ].and().group("expr").expected0("expr"),
+        // // "expr" => [
+        // //     NonTerm("val"),
+        // //     [
+        // //         NonTerm("infix"),
+        // //         NonTerm("val"),
+        // //     ].and().many0(),
+        // // ].and().group("expr").expected0("expr"),
 
         "expr" => NonTerm("expr_or").group("expr").expected0("expr"),
+        // "expr" => NonTerm("val").group("expr").expected0("expr"),
 
         "prefixes" => [
             NonTerm("add").group("pos"),

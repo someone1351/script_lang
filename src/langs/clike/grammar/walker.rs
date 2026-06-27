@@ -432,22 +432,31 @@ where
                 // println!("        groups_stk.len={groups_stk_len2}, groups_stk_len={groups_stk_len}, ");
                 // println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
 
-                println!("        hist_news: len={hist_news_len:?} :: {},",
-                    self.hist_news.iter().map(|t|format!("{:?}:{}",t.grammar,t.tokens_start.inds().start)).collect::<Vec<_>>().join(","),
-                );
 
-                println!("        hist_ends=[{}], ",
-                    // takeables2.iter().map(|(k,t)|format!("{k:?}:{:?}",t.tokens)).collect::<Vec<_>>().join(","),
-                    self.hist_ends_stk.last().unwrap().elements.iter().map(|(k,t)|format!("{{{k:?} : {:?}}}",t.tokens.inds())).collect::<Vec<_>>().join(", "),
-                    // takeables2.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>(),
+                println!("        first={is_first}, hist_news_len={hist_news_len}, hist_begins_stk_len={hist_begins_stk_len}, hist_ends_stk_len={hist_ends_stk_len}",);
+                println!("        hist_begins_stk_last_len={}, hist_ends_stk_last_len={}",
+                    self.hist_begins_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
+                    self.hist_ends_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
                 );
-
-                println!("        first={is_first}, hist_begins_stk_len={hist_begins_stk_len}",);
 
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
                 println!("        tokens {tokens:?}");
-                println!("        hist_begins_stk: len={hist_begins_stk_len}, {:?}",self.hist_begins_stk);
+
+                // println!("        hist_news: len={hist_news_len:?} :: {},",
+                //     self.hist_news.iter().map(|t|format!("{:?}:{}",t.grammar,t.tokens_start.inds().start)).collect::<Vec<_>>().join(","),
+                // );
+
+                // println!("        hist_ends=[{}], ",
+                //     // takeables2.iter().map(|(k,t)|format!("{k:?}:{:?}",t.tokens)).collect::<Vec<_>>().join(","),
+                //     self.hist_ends_stk.last().unwrap().elements.iter().map(|(k,t)|format!("{{{k:?} : {:?}}}",t.tokens.inds())).collect::<Vec<_>>().join(", "),
+                //     // takeables2.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>(),
+                // );
+
+                // println!("        hist_begins_stk: len={hist_begins_stk_len}, {:?}",
+                //     // self.hist_begins_stk.iter().map(|x|x.elements.iter().map(|y|(y.0,y.1)).collect::<Vec<_>>()).collect::<Vec<_>>(),
+                //     self.hist_begins_stk.last().map(|x|x.elements.iter().map(|y|(y.0,y.1)).collect::<Vec<_>>()),
+                // );
             }
 
             //
@@ -902,7 +911,8 @@ where
                     visiteds:cur.visiteds,
                     grammar_debug_len: cur.grammar_debug_len+1,
                     expected:cur.expected,
-                    and_id:cur.and_id+1,
+                    // and_id:cur.and_id+1,
+                    and_id:if gs.len()==1{cur.and_id}else{cur.and_id+1}, //don't need if single element in And?
 
                     // groups_stk_len: cur.groups_stk_len,
 
@@ -932,14 +942,21 @@ where
                 //
                 let hist_news_len=self.hist_news_add(&cur);
 
-
                 //
-                if self.hist_begins_stk.is_empty() || !cur.is_first {
+                if cur.from_user {
+
+                }
+                //
+                if  self.hist_begins_stk.is_empty() //reason? shouldn't it not be empty, as would be created by first? there was a reason ...
+                    || !cur.is_first //don't need to use cur.from_user, first is better, as could handle potential Or not added by user
+                {
                     self.hist_begins_stk.push(Default::default());
                 }
 
                 //
-                self.hist_ends_stk.push(self.hist_ends_stk.last().cloned().unwrap());
+                if cur.is_first {
+                    self.hist_ends_stk.push(self.hist_ends_stk.last().cloned().unwrap());
+                }
 
                 //
                 if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
