@@ -10,7 +10,7 @@ pub fn is_keyword(n:& str) -> bool {
         "print"|"println"|"format"|
         "var"|"fn"|"return"|
         "if"|"elif"|"else"
-        // |"a"|"b"|"c"|"d"
+        |"a"|"b"|"c"|"d"
         => true,
         _=>false,
     }
@@ -54,11 +54,35 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         // ].and(),
 
         // "start" => [[Keyword("a"),Keyword("b")].or().many0(), Keyword("b").prev()].and(),
-        "start" => [
-            NonTerm("stmts"),
-            NonTerm("ending").many0(),
-        ].and(),
+        // "start" => [
+        //     NonTerm("stmts"),
+        //     NonTerm("ending").many0(),
+        // ].and(),
+        // "start" => NonTerm("expr"),
+        "start" => NonTerm("factor"),
+        "factor" => [
+            [
+                NonTerm("term"),
+                [Symbol("+"),NonTerm("term")].and().many1(),
+            ].and().group("factor"),
+            NonTerm("term"),
+        ].or(),
+        "term" => [
+            [
+                NonTerm("num"),
+                [Symbol("*"),NonTerm("num"),].and().many1(),
+            ].and().group("term"),
+            NonTerm("num"),
+        ].or(),
+        "num" => Int.group("num"),
 
+        // "start" => [
+        //     [NonTerm("a"),NonTerm("b"),NonTerm("c"),].and(),
+        //     [NonTerm("a"),NonTerm("b"),].and(),
+        // ].or(),
+        // "a" => Keyword("a"),
+        // "b" => Keyword("b"),
+        // "c" => Keyword("c"),
 
         "ending" => [NonTerm("semicolon"),Eol].or().many1(),
         "stmts" => [

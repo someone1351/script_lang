@@ -433,11 +433,37 @@ where
                 // println!("        takeable_starts_len={takeable_starts_len:?}, takeables={:?}, ", takeables.iter().map(|t|(t.0,t.1.tokens)).collect::<Vec<_>>());
 
 
-                println!("        first={is_first}, hist_news_len={hist_news_len}, hist_begins_stk_len={hist_begins_stk_len}, hist_ends_stk_len={hist_ends_stk_len}",);
-                println!("        hist_begins_stk_last_len={}, hist_ends_stk_last_len={}",
+                println!("        first={is_first}, hist_news_len={hist_news_len}, hist_begins_stk_len={hist_begins_stk_len}:{}, hist_ends_stk_len={hist_ends_stk_len}:{}, ",
                     self.hist_begins_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
                     self.hist_ends_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
-                );
+                ); //hist_begins_stk_last_len={}, hist_ends_stk_last_len={}
+
+                if true {
+                    println!("        hist_news={}",
+                        self.hist_news.iter().map(|x|x.grammar.clone())
+                            .map(|x|format!("{x:?}"))
+                            .map(|x|{let mut s=x; s.retain(|y|!['"',' '].contains(&y));s})
+                            .collect::<Vec<_>>().join(", ")
+                    );
+                    println!("        hist_begins_last={}",
+                        self.hist_begins_stk.last().map(|q|format!("{}",q.elements.iter()
+                            .map(|x|format!("{:?}",x.0.clone()))
+                            .map(|x|{let mut s=x; s.retain(|y|!['"',' '].contains(&y));s})
+                            .collect::<Vec<_>>().join(", ")
+                        )).unwrap_or_default(),
+                    );
+                    println!("        hist_ends_last={}",
+                        self.hist_ends_stk.last().map(|q|format!("{}",q.elements.iter()
+                            .map(|x|format!("{:?}",x.0.clone()))
+                            .map(|x|{let mut s=x; s.retain(|y|!['"',' '].contains(&y));s})
+                            .collect::<Vec<_>>().join(", ")
+                        )).unwrap_or_default(),
+                    );
+                    // println!("        hist_ends_last={}",
+                    //     self.hist_ends_stk.last().map(|q|format!("{:?}",q.elements.iter().map(|x|x.0.clone()).collect::<Vec<_>>())
+                    //     ).unwrap_or_default(),
+                    // );
+                }
 
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
@@ -600,7 +626,7 @@ where
                     self.set_remaining_prims(cur.tokens);
 
                     //
-                    println!("---- grabbed from or");
+                    println!("---- grabbed from or {:?}",cur.grammar);
                     //
                     return Ok(());
                 }
