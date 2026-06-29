@@ -447,22 +447,24 @@ where
                     );
                     println!("        hist_begins_last={}",
                         self.hist_begins_stk.last().map(|q|format!("{}",q.elements.iter()
-                            .map(|x|format!("{:?}",x.0.clone()))
-                            .map(|x|{let mut s=x; s.retain(|y|!['"',' '].contains(&y));s})
-                            .collect::<Vec<_>>().join(", ")
+                            .map(|x|{
+                                format!("{}:{:?}",
+                                    {let mut s=format!("{:?}",x.0.clone()); s.retain(|y|!['"',' '].contains(&y));s},
+                                    x.1.tokens_after.inds(),
+                                )
+                            }).collect::<Vec<_>>().join(", ")
                         )).unwrap_or_default(),
                     );
                     println!("        hist_ends_last={}",
                         self.hist_ends_stk.last().map(|q|format!("{}",q.elements.iter()
-                            .map(|x|format!("{:?}",x.0.clone()))
-                            .map(|x|{let mut s=x; s.retain(|y|!['"',' '].contains(&y));s})
-                            .collect::<Vec<_>>().join(", ")
+                            .map(|x|{
+                                format!("{}:{:?}",
+                                    {let mut s=format!("{:?}",x.0.clone()); s.retain(|y|!['"',' '].contains(&y));s},
+                                    x.1.tokens.inds(),
+                                )
+                            }).collect::<Vec<_>>().join(", ")
                         )).unwrap_or_default(),
                     );
-                    // println!("        hist_ends_last={}",
-                    //     self.hist_ends_stk.last().map(|q|format!("{:?}",q.elements.iter().map(|x|x.0.clone()).collect::<Vec<_>>())
-                    //     ).unwrap_or_default(),
-                    // );
                 }
 
                 //
@@ -576,8 +578,8 @@ where
 
         //
         if cur.from_user && cur.is_first {
-            if let Some(or_map)=self.hist_begins_stk.last() {
-                if let Some(or_element)=or_map.elements.get(&cur.grammar) {
+            if let Some(hist_begins)=self.hist_begins_stk.last() {
+                if let Some(hist_begin)=hist_begins.elements.get(&cur.grammar) {
 
                     //
                     self.stk.truncate(cur.success_len);
@@ -590,10 +592,10 @@ where
 
                         //
                         // last.tokens=cur.tokens;
-                        last.tokens=or_element.tokens_after;
+                        last.tokens=hist_begin.tokens_after;
 
                         //add groups
-                        for g in or_element.groups.iter() {
+                        for g in hist_begin.groups.iter() {
                             self.groups.push(TempGroupInfo { parent: cur.group_ind+g.parent, ..g.clone()});
                         }
 
@@ -611,6 +613,8 @@ where
                         }
                     }
 
+                    let hist_begin=hist_begin.clone();
+
                     //
                     if self.debug {
                         self.consolidate_grammar_debug_stk();
@@ -626,7 +630,7 @@ where
                     self.set_remaining_prims(cur.tokens);
 
                     //
-                    println!("---- grabbed from or {:?}",cur.grammar);
+                    println!("---- grabbed from or {:?}, {hist_begin:?}",cur.grammar);
                     //
                     return Ok(());
                 }
