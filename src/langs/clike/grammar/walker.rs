@@ -850,75 +850,6 @@ where
         Ok(())
     }
 
-    fn step_truncates(&mut self,cur :&Work<'t,'g>) {
-        self.groups.truncate(cur.group_len);
-        self.hist_begins_stk.truncate(cur.hist_begins_stk_len);
-        self.hist_ends_stk.truncate(cur.hist_ends_stk_len);
-    }
-
-    fn grammar_try_from_hist_begins(&mut self,cur :&Work<'t,'g>) -> bool {
-        if cur.from_user && cur.is_first {
-            if let Some(hist_begins)=self.hist_begins_stk.last() {
-                if let Some(hist_begin)=hist_begins.elements.get(&cur.grammar) {
-
-                    //
-                    self.stk.truncate(cur.success_len);
-
-                    //
-                    // let takeable_starts_len2=self.add_takeable_start2(&cur); //not needed
-
-
-                    if let Some(last)=self.stk.last_mut() {
-
-                        //
-                        // last.tokens=cur.tokens;
-                        last.tokens=hist_begin.tokens_after;
-
-                        //add groups
-                        for g in hist_begin.groups.iter() {
-                            self.groups.push(TempGroupInfo { parent: cur.group_ind+g.parent, ..g.clone()});
-                        }
-
-                        //
-                        last.group_len=self.groups.len(); //cur.group_len+or_element.groups;
-
-                        //
-                        // // last.takeables2=cur.takeables2;
-                        // last.hist_ends=or_element.hist_ends.clone();
-                        last.hist_ends_stk_len=cur.hist_ends_stk_len;
-
-                        //
-                        if cur.expected.id!=last.expected.id {
-                            last.expected=Default::default();
-                        }
-                    }
-
-                    let hist_begin=hist_begin.clone();
-
-                    //
-                    if self.debug {
-                        self.consolidate_grammar_debug_stk();
-                    }
-
-                    //
-                    self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
-
-                    //a
-                    self.hist_news_add_to_last(&cur,false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
-
-                    //
-                    self.set_remaining_prims(cur.tokens);
-
-                    //
-                    println!("---- grabbed from or {:?}, {hist_begin:?}",cur.grammar);
-                    //
-                    return true;
-                }
-            }
-        }
-
-        false
-    }
     fn grammar_expect(&mut self,cur :Work<'t,'g>,priority:u32, name:&'g str,g:Box<GrammarNode<'g>>) {
         self.expected_count+=1;
         let expected=if cur.expected.id==0 {
@@ -965,86 +896,7 @@ where
             hist_ends_stk_len:cur.hist_ends_stk_len,
         });
     }
-    fn grammar_prev(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>) {
 
-        //
-        let takeable_starts_len2=self.hist_news_add(&cur);
-
-        let cur_hist_ends=&self.hist_ends_stk.last().unwrap().elements;
-
-        //
-        if cur_hist_ends.contains_key(&g) {
-
-            //
-            self.stk.truncate(cur.success_len);
-            // self.do_groups_stk_success(cur.clone(),cur.and_id);
-
-            //
-            if let Some(last)=self.stk.last_mut() {
-                if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //if not parsing anything, exit the many
-                    last.grammar=GrammarNode::Always;
-                }
-
-                //
-                last.tokens=cur.tokens;
-                last.group_len=cur.group_len;
-
-                // last.hist_ends=cur.hist_ends.clone(); //should use move
-                last.hist_ends_stk_len=cur.hist_ends_stk_len;
-
-                //
-                if cur.expected.id!=last.expected.id {
-                    last.expected=Default::default();
-                }
-
-                // //
-                // self.takeable_starts2.truncate(last.takeable_starts_len2); //what is it for?
-
-                //
-                if self.debug {
-                    self.grammar_debug_stk.truncate(last.grammar_debug_len);
-                };
-            }
-
-            //
-            self.hist_news_truncate_to_last();
-
-            //
-            if self.debug {
-                self.consolidate_grammar_debug_stk();
-            }
-
-            //
-            self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
-            self.hist_news_add_to_last(&cur,true);
-            self.set_remaining_prims(cur.tokens);
-        } else {
-            //
-            if cur.expected.id==0{
-                self.add_expected(
-                    cur.tokens.first().map(|t|t.start_loc()).unwrap_or_default(),
-                    0,cur.grammar.clone(),
-                );
-            }
-
-            //
-            self.stk.truncate(cur.fail_len);
-
-            //
-            if let Some(last)=self.stk.last() {
-                // //
-                // self.takeable_starts2.truncate(last.takeable_starts_len2); //what is it for?
-
-                //
-                if self.debug {
-                    self.grammar_debug_stk.truncate(last.grammar_debug_len);
-                }
-            }
-
-            //
-            self.hist_news_truncate_to_last();
-        }
-    }
     fn grammar_group(&mut self,cur :Work<'t,'g>,name:&'g str,g:Box<GrammarNode<'g>>) {
         //
         let new_group_ind=self.new_group(name, cur.group_ind, cur.tokens);
@@ -1097,187 +949,7 @@ where
             hist_ends_stk_len:cur.hist_ends_stk_len,
         });
     }
-    fn grammar_and(&mut self,cur :Work<'t,'g>,gs:Vec<GrammarNode<'g>>,) {
-        //
-        let Some(first)=gs.first().cloned() else { return ; };
 
-        //
-        let takeable_starts_len2=self.hist_news_add(&cur);
-
-        //
-        if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
-            self.stk.push(Work {
-                grammar: GrammarNode::And(rest.into()),
-                success_len: cur.success_len,
-                fail_len: cur.fail_len,
-                tokens: cur.tokens, //not really necessary? since gets updated by always/primtitives
-                group_ind: cur.group_ind,
-                group_len: cur.group_len,
-                visiteds:cur.visiteds.clone(),
-                grammar_debug_len: cur.grammar_debug_len,
-                expected:cur.expected,
-                and_id:cur.and_id+1,
-
-                // groups_stk_len: cur.groups_stk_len,
-
-                // takeable_starts_len:cur.takeable_starts_len,
-                // takeables:cur.takeables.clone(),
-
-                // discard:cur.discard,
-                // opt:false, //opt isnt passed to individual items in And
-
-                from_user:false,
-                is_first:false,
-
-                // takeable_starts_ind2:cur.takeable_starts_ind2,
-                // takeable_starts_len2:cur.takeable_starts_len2,
-                hist_news_len: takeable_starts_len2,
-                // hist_ends:cur.hist_ends.clone(),
-
-                hist_begins_stk_len:cur.hist_begins_stk_len,
-                hist_ends_stk_len:cur.hist_ends_stk_len,
-            });
-        }
-
-        //
-        let success_len=if gs.len()>1 {self.stk.len()}else{cur.success_len};
-
-        //
-        // if cur.opt {
-        //     self.takeable_starts.push((first.clone(),cur.primitives.clone()));
-        // }
-
-        //
-        self.stk.push(Work {
-            grammar: first,
-            success_len,
-            fail_len: cur.fail_len,
-            tokens: cur.tokens,
-            group_ind: cur.group_ind,
-            group_len: cur.group_len,
-            visiteds:cur.visiteds,
-            grammar_debug_len: cur.grammar_debug_len+1,
-            expected:cur.expected,
-            // and_id:cur.and_id+1,
-            and_id:if gs.len()==1{cur.and_id}else{cur.and_id+1}, //don't need if single element in And?
-
-            // groups_stk_len: cur.groups_stk_len,
-
-            // takeable_starts_len:cur.takeable_starts_len,
-            // takeables:cur.takeables,
-
-            // discard:cur.discard,
-            // opt:false, //opt isnt passed to individual items in And
-
-            from_user:true,
-            is_first:cur.is_first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
-
-            // takeable_starts_ind2:cur.takeable_starts_ind2,
-            // takeable_starts_len2:cur.takeable_starts_len2,
-            hist_news_len: takeable_starts_len2,
-            // hist_ends:cur.hist_ends,
-
-            hist_begins_stk_len:cur.hist_begins_stk_len,
-            hist_ends_stk_len:cur.hist_ends_stk_len,
-        });
-    }
-
-    fn grammar_or(&mut self,cur :Work<'t,'g>,gs:Vec<GrammarNode<'g>>,) {
-        //
-        let Some(first)=gs.first().cloned() else { return; };
-
-        //
-        let hist_news_len=self.hist_news_add(&cur);
-
-        //
-        if  self.hist_begins_stk.is_empty() //reason? shouldn't it not be empty, as would be created by first? there was a reason ...
-            || !cur.is_first //don't need to use cur.from_user, first is better, as could handle potential Or not added by user
-        {
-            self.hist_begins_stk.push(Default::default());
-        }
-
-        //
-        if cur.is_first {
-            self.hist_ends_stk.push(self.hist_ends_stk.last().cloned().unwrap());
-        }
-
-        //
-        if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
-            self.stk.push(Work {
-                grammar: GrammarNode::Or(rest.into()),
-                success_len: cur.success_len,
-                fail_len: cur.fail_len,
-                tokens: cur.tokens,
-                group_ind: cur.group_ind,
-                group_len: cur.group_len,
-                visiteds:cur.visiteds.clone(),
-                grammar_debug_len: cur.grammar_debug_len,
-                expected:cur.expected,
-                and_id:cur.and_id,
-
-                // groups_stk_len: cur.groups_stk_len,
-
-                // takeable_starts_len:cur.takeable_starts_len,
-                // takeables:cur.takeables.clone(),
-
-                // opt:cur.opt,
-                // discard:cur.discard,
-
-                from_user:false,
-                is_first:cur.is_first,
-
-                // takeable_starts_ind2:cur.takeable_starts_ind2,
-                // takeable_starts_len2:cur.takeable_starts_len2,
-                hist_news_len,
-                // hist_ends:cur.hist_ends.clone(),
-
-                hist_begins_stk_len:self.hist_begins_stk.len(),
-                hist_ends_stk_len:self.hist_ends_stk.len(),
-            });
-        }
-
-        //
-        let fail_len=if gs.len()>1 {self.stk.len()}else{cur.fail_len};
-
-        //
-        // if cur.opt {
-        //     self.takeable_starts.push((first.clone(),cur.primitives.clone()));
-        // }
-
-        //
-        self.stk.push(Work {
-            grammar: first,
-            success_len: cur.success_len,
-            fail_len,
-            tokens: cur.tokens,
-            group_ind: cur.group_ind,
-            group_len: cur.group_len,
-            visiteds:cur.visiteds,
-            grammar_debug_len: cur.grammar_debug_len+1,
-            expected:cur.expected,
-            and_id:cur.and_id,
-
-            // groups_stk_len: cur.groups_stk_len,
-
-            // takeable_starts_len:cur.takeable_starts_len,
-            // takeables:cur.takeables,
-
-            // discard:cur.discard,
-            // opt:cur.opt,
-
-            from_user:true,
-            is_first:cur.is_first,
-
-            // takeable_starts_ind2:cur.takeable_starts_ind2,
-            // takeable_starts_len2:cur.takeable_starts_len2,
-            hist_news_len,
-            // hist_ends:cur.hist_ends,
-
-
-            hist_begins_stk_len:self.hist_begins_stk.len(),
-            hist_ends_stk_len:self.hist_ends_stk.len(),
-        });
-    }
     fn grammar_opt(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>,) {
         //
         let takeable_starts_len2=self.hist_news_add(&cur);
@@ -1525,80 +1197,7 @@ where
 
         Ok(())
     }
-    fn grammar_always(&mut self,cur :Work<'t,'g>,) {
 
-        //
-        self.stk.truncate(cur.success_len);
-
-        //
-        let takeable_starts_len2=self.hist_news_add(&cur);
-
-        // //takeables
-        // self.do_groups_stk_success(cur.clone(),cur.and_id);
-
-        //
-        if let Some(last)=self.stk.last_mut() {
-            //
-            if self.debug {
-                println!("---- last.group_len={}, cur.group_len={}, last.group_ind={}, cur.group_ind={}",
-                    last.group_len,cur.group_len,
-                    last.group_ind, cur.group_ind,
-                );
-            }
-
-            //
-            if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //to stop the many getting stuck in a loop
-                last.grammar=GrammarNode::Always;
-            }
-
-            //
-            last.tokens=cur.tokens;
-            last.group_len=cur.group_len; //done below //not anymore
-
-            //
-            // last.takeable_starts=cur.takeable_starts;
-            // last.takeables.retain(|_k,v|{ v.inds().start >= last.primitives.inds().start });
-
-            // //takeables
-            // last.takeables=cur.takeables;
-
-            //
-            // last.hist_ends=cur.hist_ends.clone(); //should use move
-            last.hist_ends_stk_len=cur.hist_ends_stk_len;
-
-            //
-            if cur.expected.id!=last.expected.id {
-                last.expected=Default::default();
-            }
-
-            //
-            // last.expected_non_term=None;
-        }
-
-        //
-        if self.debug {
-            self.consolidate_grammar_debug_stk();
-        }
-
-        //
-        self.do_groups_primitives_clamp(cur.group_ind,cur.tokens); //here
-
-        //
-        // self.last_remove_groups_at(cur.group_len,cur.primitives);
-
-        // //takeables
-        // self.last_insert_start_takeables(cur.tokens);
-
-        //
-        self.hist_news_add_to_last(&cur,true);
-
-        //
-        self.set_remaining_prims(cur.tokens);
-
-        //
-        // self.clear_expected();
-        // self.group_infos.truncate(cur.group_len);
-    }
     fn grammar_error(&mut self,cur :Work<'t,'g>,e:GrammarWalkError<'g>) -> GrammarWalkError<'g> {
         if self.debug {
             println!("====error {:?} {:?}",self.expected_loc,self.expecteds,);
@@ -1712,6 +1311,412 @@ where
                 println!("--- eol");
             }
         }
+    }
+    fn grammar_and(&mut self,cur :Work<'t,'g>,gs:Vec<GrammarNode<'g>>,) {
+        //
+        let Some(first)=gs.first().cloned() else { return ; };
+
+        //
+        let takeable_starts_len2=self.hist_news_add(&cur);
+
+        //
+        if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
+            self.stk.push(Work {
+                grammar: GrammarNode::And(rest.into()),
+                success_len: cur.success_len,
+                fail_len: cur.fail_len,
+                tokens: cur.tokens, //not really necessary? since gets updated by always/primtitives
+                group_ind: cur.group_ind,
+                group_len: cur.group_len,
+                visiteds:cur.visiteds.clone(),
+                grammar_debug_len: cur.grammar_debug_len,
+                expected:cur.expected,
+                and_id:cur.and_id+1,
+
+                // groups_stk_len: cur.groups_stk_len,
+
+                // takeable_starts_len:cur.takeable_starts_len,
+                // takeables:cur.takeables.clone(),
+
+                // discard:cur.discard,
+                // opt:false, //opt isnt passed to individual items in And
+
+                from_user:false,
+                is_first:false,
+
+                // takeable_starts_ind2:cur.takeable_starts_ind2,
+                // takeable_starts_len2:cur.takeable_starts_len2,
+                hist_news_len: takeable_starts_len2,
+                // hist_ends:cur.hist_ends.clone(),
+
+                hist_begins_stk_len:cur.hist_begins_stk_len,
+                hist_ends_stk_len:cur.hist_ends_stk_len,
+            });
+        }
+
+        //
+        let success_len=if gs.len()>1 {self.stk.len()}else{cur.success_len};
+
+        //
+        // if cur.opt {
+        //     self.takeable_starts.push((first.clone(),cur.primitives.clone()));
+        // }
+
+        //
+        self.stk.push(Work {
+            grammar: first,
+            success_len,
+            fail_len: cur.fail_len,
+            tokens: cur.tokens,
+            group_ind: cur.group_ind,
+            group_len: cur.group_len,
+            visiteds:cur.visiteds,
+            grammar_debug_len: cur.grammar_debug_len+1,
+            expected:cur.expected,
+            // and_id:cur.and_id+1,
+            and_id:if gs.len()==1{cur.and_id}else{cur.and_id+1}, //don't need if single element in And?
+
+            // groups_stk_len: cur.groups_stk_len,
+
+            // takeable_starts_len:cur.takeable_starts_len,
+            // takeables:cur.takeables,
+
+            // discard:cur.discard,
+            // opt:false, //opt isnt passed to individual items in And
+
+            from_user:true,
+            is_first:cur.is_first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
+
+            // takeable_starts_ind2:cur.takeable_starts_ind2,
+            // takeable_starts_len2:cur.takeable_starts_len2,
+            hist_news_len: takeable_starts_len2,
+            // hist_ends:cur.hist_ends,
+
+            hist_begins_stk_len:cur.hist_begins_stk_len,
+            hist_ends_stk_len:cur.hist_ends_stk_len,
+        });
+    }
+
+    fn grammar_or(&mut self,cur :Work<'t,'g>,gs:Vec<GrammarNode<'g>>,) {
+        //
+        let Some(first)=gs.first().cloned() else { return; };
+
+        //
+        let hist_news_len=self.hist_news_add(&cur);
+
+        //
+        if  self.hist_begins_stk.is_empty() //reason? shouldn't it not be empty, as would be created by first? there was a reason ...
+            || !cur.is_first //don't need to use cur.from_user, first is better, as could handle potential Or not added by user
+        {
+            self.hist_begins_stk.push(Default::default());
+        }
+
+        //
+        if cur.is_first {
+            self.hist_ends_stk.push(self.hist_ends_stk.last().cloned().unwrap());
+        }
+
+        //
+        if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
+            self.stk.push(Work {
+                grammar: GrammarNode::Or(rest.into()),
+                success_len: cur.success_len,
+                fail_len: cur.fail_len,
+                tokens: cur.tokens,
+                group_ind: cur.group_ind,
+                group_len: cur.group_len,
+                visiteds:cur.visiteds.clone(),
+                grammar_debug_len: cur.grammar_debug_len,
+                expected:cur.expected,
+                and_id:cur.and_id,
+
+                // groups_stk_len: cur.groups_stk_len,
+
+                // takeable_starts_len:cur.takeable_starts_len,
+                // takeables:cur.takeables.clone(),
+
+                // opt:cur.opt,
+                // discard:cur.discard,
+
+                from_user:false,
+                is_first:cur.is_first,
+
+                // takeable_starts_ind2:cur.takeable_starts_ind2,
+                // takeable_starts_len2:cur.takeable_starts_len2,
+                hist_news_len,
+                // hist_ends:cur.hist_ends.clone(),
+
+                hist_begins_stk_len:self.hist_begins_stk.len(),
+                hist_ends_stk_len:self.hist_ends_stk.len(),
+            });
+        }
+
+        //
+        let fail_len=if gs.len()>1 {self.stk.len()}else{cur.fail_len};
+
+        //
+        // if cur.opt {
+        //     self.takeable_starts.push((first.clone(),cur.primitives.clone()));
+        // }
+
+        //
+        self.stk.push(Work {
+            grammar: first,
+            success_len: cur.success_len,
+            fail_len,
+            tokens: cur.tokens,
+            group_ind: cur.group_ind,
+            group_len: cur.group_len,
+            visiteds:cur.visiteds,
+            grammar_debug_len: cur.grammar_debug_len+1,
+            expected:cur.expected,
+            and_id:cur.and_id,
+
+            // groups_stk_len: cur.groups_stk_len,
+
+            // takeable_starts_len:cur.takeable_starts_len,
+            // takeables:cur.takeables,
+
+            // discard:cur.discard,
+            // opt:cur.opt,
+
+            from_user:true,
+            is_first:cur.is_first,
+
+            // takeable_starts_ind2:cur.takeable_starts_ind2,
+            // takeable_starts_len2:cur.takeable_starts_len2,
+            hist_news_len,
+            // hist_ends:cur.hist_ends,
+
+
+            hist_begins_stk_len:self.hist_begins_stk.len(),
+            hist_ends_stk_len:self.hist_ends_stk.len(),
+        });
+    }
+    fn grammar_prev(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>) {
+
+        //
+        let takeable_starts_len2=self.hist_news_add(&cur);
+
+        let cur_hist_ends=&self.hist_ends_stk.last().unwrap().elements;
+
+        //
+        if cur_hist_ends.contains_key(&g) {
+
+            //
+            self.stk.truncate(cur.success_len);
+            // self.do_groups_stk_success(cur.clone(),cur.and_id);
+
+            //
+            if let Some(last)=self.stk.last_mut() {
+                if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //if not parsing anything, exit the many
+                    last.grammar=GrammarNode::Always;
+                }
+
+                //
+                last.tokens=cur.tokens;
+                last.group_len=cur.group_len;
+
+                // last.hist_ends=cur.hist_ends.clone(); //should use move
+                last.hist_ends_stk_len=cur.hist_ends_stk_len;
+
+                //
+                if cur.expected.id!=last.expected.id {
+                    last.expected=Default::default();
+                }
+
+                // //
+                // self.takeable_starts2.truncate(last.takeable_starts_len2); //what is it for?
+
+                //
+                if self.debug {
+                    self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                };
+            }
+
+            //
+            self.hist_news_truncate_to_last();
+
+            //
+            if self.debug {
+                self.consolidate_grammar_debug_stk();
+            }
+
+            //
+            self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
+            self.hist_news_add_to_last(&cur,true);
+            self.set_remaining_prims(cur.tokens);
+        } else {
+            //
+            if cur.expected.id==0{
+                self.add_expected(
+                    cur.tokens.first().map(|t|t.start_loc()).unwrap_or_default(),
+                    0,cur.grammar.clone(),
+                );
+            }
+
+            //
+            self.stk.truncate(cur.fail_len);
+
+            //
+            if let Some(last)=self.stk.last() {
+                // //
+                // self.takeable_starts2.truncate(last.takeable_starts_len2); //what is it for?
+
+                //
+                if self.debug {
+                    self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                }
+            }
+
+            //
+            self.hist_news_truncate_to_last();
+        }
+    }
+
+    fn grammar_always(&mut self,cur :Work<'t,'g>,) {
+
+        //
+        self.stk.truncate(cur.success_len);
+
+        //
+        let takeable_starts_len2=self.hist_news_add(&cur);
+
+        // //takeables
+        // self.do_groups_stk_success(cur.clone(),cur.and_id);
+
+        //
+        if let Some(last)=self.stk.last_mut() {
+            //
+            if self.debug {
+                println!("---- last.group_len={}, cur.group_len={}, last.group_ind={}, cur.group_ind={}",
+                    last.group_len,cur.group_len,
+                    last.group_ind, cur.group_ind,
+                );
+            }
+
+            //
+            if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //to stop the many getting stuck in a loop
+                last.grammar=GrammarNode::Always;
+            }
+
+            //
+            last.tokens=cur.tokens;
+            last.group_len=cur.group_len; //done below //not anymore
+
+            //
+            // last.takeable_starts=cur.takeable_starts;
+            // last.takeables.retain(|_k,v|{ v.inds().start >= last.primitives.inds().start });
+
+            // //takeables
+            // last.takeables=cur.takeables;
+
+            //
+            // last.hist_ends=cur.hist_ends.clone(); //should use move
+            last.hist_ends_stk_len=cur.hist_ends_stk_len;
+
+            //
+            if cur.expected.id!=last.expected.id {
+                last.expected=Default::default();
+            }
+
+            //
+            // last.expected_non_term=None;
+        }
+
+        //
+        if self.debug {
+            self.consolidate_grammar_debug_stk();
+        }
+
+        //
+        self.do_groups_primitives_clamp(cur.group_ind,cur.tokens); //here
+
+        //
+        // self.last_remove_groups_at(cur.group_len,cur.primitives);
+
+        // //takeables
+        // self.last_insert_start_takeables(cur.tokens);
+
+        //
+        self.hist_news_add_to_last(&cur,true);
+
+        //
+        self.set_remaining_prims(cur.tokens);
+
+        //
+        // self.clear_expected();
+        // self.group_infos.truncate(cur.group_len);
+    }
+
+    fn grammar_try_from_hist_begins(&mut self,cur :&Work<'t,'g>) -> bool {
+        if cur.from_user && cur.is_first {
+            if let Some(hist_begins)=self.hist_begins_stk.last() {
+                if let Some(hist_begin)=hist_begins.elements.get(&cur.grammar) {
+
+                    //
+                    self.stk.truncate(cur.success_len);
+
+                    //
+                    // let takeable_starts_len2=self.add_takeable_start2(&cur); //not needed
+
+
+                    if let Some(last)=self.stk.last_mut() {
+
+                        //
+                        // last.tokens=cur.tokens;
+                        last.tokens=hist_begin.tokens_after;
+
+                        //add groups
+                        for g in hist_begin.groups.iter() {
+                            self.groups.push(TempGroupInfo { parent: cur.group_ind+g.parent, ..g.clone()});
+                        }
+
+                        //
+                        last.group_len=self.groups.len(); //cur.group_len+or_element.groups;
+
+                        //
+                        // // last.takeables2=cur.takeables2;
+                        // last.hist_ends=or_element.hist_ends.clone();
+                        last.hist_ends_stk_len=cur.hist_ends_stk_len;
+
+                        //
+                        if cur.expected.id!=last.expected.id {
+                            last.expected=Default::default();
+                        }
+                    }
+
+                    let hist_begin=hist_begin.clone();
+
+                    //
+                    if self.debug {
+                        self.consolidate_grammar_debug_stk();
+                    }
+
+                    //
+                    self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
+
+                    //a
+                    self.hist_news_add_to_last(&cur,false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+
+                    //
+                    self.set_remaining_prims(cur.tokens);
+
+                    //
+                    println!("---- grabbed from or {:?}, {hist_begin:?}",cur.grammar);
+                    //
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
+
+    fn step_truncates(&mut self,cur :&Work<'t,'g>) {
+        self.groups.truncate(cur.group_len);
+        self.hist_begins_stk.truncate(cur.hist_begins_stk_len);
+        self.hist_ends_stk.truncate(cur.hist_ends_stk_len);
     }
 
     fn do_primtive<Q,P,K>(&mut self,mut cur:Work<'t,'g>,prim_func:Q,on_ok:K) -> Option<ValueContainer<'t,P>>
