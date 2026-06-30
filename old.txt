@@ -940,8 +940,380 @@ pub struct TempGroupsElement<'t,'g> {
                         // inner_groups:group_ind+1 .. self.groups.len(),
                         // tokens_start,
         // last_takeables
-		
+
+
 //
+//Work
+    grammar_debug_stk:Vec<TempGrammarNodeDebug<'t,'g>>,
+//new
+            grammar_debug_stk:Vec::new(),
+//init
+        self.grammar_debug_stk.clear();
+		
+//grammar_string
+	|v,self2|{
+		if self2.debug {
+			let Some(TempGrammarNodeDebug::String(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+			*x=Some(v);
+		}
+	}
+//grammar_identifier
+	|v,self2|{
+		if self2.debug {
+			let Some(TempGrammarNodeDebug::Identifier(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+			*x=Some(v);
+		}
+	}
+	
+//grammar_int
+	|v,self2|{
+		if self2.debug {
+			let Some(TempGrammarNodeDebug::Int(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+			*x=Some(v);
+		}
+	}
+	
+//grammar_float
+	|v,self2|{
+		if self2.debug {
+			let Some(TempGrammarNodeDebug::Float(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+			*x=Some(v);
+		}
+	}
+	
+//grammar_symbol
+	|v,self2|{
+		if self2.debug {
+			println!("=={:?}",self2.grammar_debug_stk.last());
+			let Some(TempGrammarNodeDebug::Symbol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");}; //{s:?}
+			*x=Some(v);
+		}
+	}
+	
+//grammar_keyword
+	|v,self2|{
+		if self2.debug {
+			let Some(TempGrammarNodeDebug::Keyword(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+			*x=Some(v);
+		}
+	}
+	
+//grammar_eol
+	|v,self2|{
+		if self2.debug {
+			let Some(TempGrammarNodeDebug::Eol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+			*x=Some(v);
+		}
+	}
+	
+//do_primitive
+	,K
+	,on_ok:K
+	K: Fn(ValueContainer<'t,P>,&mut Self),
+
+                //
+                on_ok(v.clone(),self);
+				
+
+                //
+                if self.debug {
+                    self.consolidate_grammar_debug_stk();
+                }
+
+	//err
+
+                    //
+                    if self.debug {
+                        // println!("===---==--- gdb_stk_len cur={}, last={}",cur.grammar_debug_len,last.grammar_debug_len);
+                        // println!("\tcur={:?}",self.grammar_debug_stk);
+                        self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                        // println!("\tlast={:?}",self.grammar_debug_stk);
+                    }
+//grammar_prev
+
+                //
+                if self.debug {
+                    self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                };
+
+            //
+            if self.debug {
+                self.consolidate_grammar_debug_stk();
+            }
+
+	//err
+
+            //
+            if let Some(last)=self.stk.last() {
+                //
+                if self.debug {
+                    self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                }
+            }
+//grammar_always
+
+        //
+        if self.debug {
+            self.consolidate_grammar_debug_stk();
+        }
+
+//grammar_try_from_hist_begins
+
+                    //
+                    if self.debug {
+                        self.consolidate_grammar_debug_stk();
+                    }
+//step
+
+        //
+        if self.debug {
+            if cur.grammar_debug_len> self.grammar_debug_stk.len() {
+                let x=match cur.grammar {
+                    GrammarNode::Many(_) => TempGrammarNodeDebug::Many(vec![]),
+                    GrammarNode::And(_) => TempGrammarNodeDebug::And(vec![]),
+                    GrammarNode::Or(_) => TempGrammarNodeDebug::Or(vec![]),
+                    GrammarNode::Opt(_) => TempGrammarNodeDebug::Opt(None),
+                    GrammarNode::Group(g, _) => TempGrammarNodeDebug::Group(g,None),
+                    GrammarNode::Expected(p,g, _) => TempGrammarNodeDebug::Expected(p,g,None),
+                    GrammarNode::String => TempGrammarNodeDebug::String(None),
+                    GrammarNode::Identifier => TempGrammarNodeDebug::Identifier(None),
+                    GrammarNode::Int => TempGrammarNodeDebug::Int(None),
+                    GrammarNode::Float => TempGrammarNodeDebug::Float(None),
+                    GrammarNode::Symbol(_) => TempGrammarNodeDebug::Symbol(None),
+                    GrammarNode::Keyword(_) => TempGrammarNodeDebug::Keyword(None),
+                    GrammarNode::Eol => TempGrammarNodeDebug::Eol(None),
+                    GrammarNode::NonTerm(t) => TempGrammarNodeDebug::NonTerm(t,None),
+                    GrammarNode::Always => TempGrammarNodeDebug::Always,
+                    GrammarNode::Error(_) => TempGrammarNodeDebug::Error,
+                    GrammarNode::Prev(_) => TempGrammarNodeDebug::Prev(None),
+                };
+
+                // println!("===x={x}");
+
+                self.grammar_debug_stk.push(x);
+            } else {
+                // println!("===no-x");
+            }
+        }
+		
+
+            //
+            if false {
+                let mut grammar_debug_stk=self.grammar_debug_stk.clone();
+
+                for _i in (1 .. grammar_debug_stk.len()).rev() {
+                    let x=grammar_debug_stk.pop().unwrap();
+
+                    // println!("=={:?}",grammar_debug_stk.last().unwrap());
+
+                    match grammar_debug_stk.last_mut().unwrap() {
+                        TempGrammarNodeDebug::Many(gs)
+                        |TempGrammarNodeDebug::And(gs)
+                        |TempGrammarNodeDebug::Or(gs)
+                        => {gs.push(x);}
+
+                        TempGrammarNodeDebug::Opt(g)
+                        |TempGrammarNodeDebug::Group(_, g)
+                        |TempGrammarNodeDebug::NonTerm(_, g)
+                        |TempGrammarNodeDebug::Expected(_,_, g)
+                        |TempGrammarNodeDebug::Prev(g,)
+                        => {*g=Some(x.into())}
+
+                        _=>{panic!("");}
+                    }
+                }
+
+                //
+                if let Some(x)=grammar_debug_stk.first() {
+                    println!("      {x}",);
+                } else {
+                    println!("      _",);
+                }
+
+                //
+                println!("        [{}]",
+                    self.grammar_debug_stk.iter().enumerate().map(|(i,d)|format!("{i}:{d}")).collect::<Vec<_>>().join(", ")
+                );
+            }
+//
+
+#[derive(Clone,Debug)]
+pub enum TempGrammarNodeDebug<'t,'g> {
+    Many(Vec<Self>),
+    And(Vec<Self>),
+    Or(Vec<Self>),
+    Opt(Option<Box<Self>>),
+    Group(&'g str,Option<Box<Self>>),
+    Expected(u32,&'g str,Option<Box<Self>>),
+    NonTerm(&'g str,Option<Box<Self>>),
+
+    Prev(Option<Box<Self>>),
+
+    String(Option<ValueContainer<'t,&'t str>>),
+    Identifier(Option<ValueContainer<'t,&'t str>>),
+    Int(Option<ValueContainer<'t,i64>>),
+    Float(Option<ValueContainer<'t,f64>>),
+    Symbol(Option<ValueContainer<'t,&'t str>>),
+    Keyword(Option<ValueContainer<'t,&'t str>>),
+    Eol(Option<ValueContainer<'t,()>>),
+
+    Always,
+    Error,
+}
+
+
+impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        enum Work<'t, 'g, 'a> {
+            Node(&'a TempGrammarNodeDebug<'t, 'g>),
+            Write(&'a str),
+        }
+        let mut stk: Vec<Work<'t, 'g,'_>>=vec![Work::Node(self)];
+
+        while let Some(cur)=stk.pop() {
+            match cur {
+                Work::Node(n) => {
+                    match n {
+                        Self::Many(arg0) => {
+                            stk.push(Work::Write(")"));
+                            for (i,x) in arg0.into_iter().enumerate().rev() {
+                                stk.push(Work::Node(x));
+                                if i!=0 { stk.push(Work::Write(",")); }
+                            }
+                            write!(f,"Many(")?;
+                            if arg0.is_empty() {write!(f,"_")?;}
+                        }
+                        Self::And(arg0) => {
+                            stk.push(Work::Write(")"));
+                            for (i,x) in arg0.into_iter().enumerate().rev() {
+
+                                stk.push(Work::Node(x));
+                                if i!=0{ stk.push(Work::Write(",")); }
+
+                            }
+                            write!(f,"And(")?;
+                            if arg0.is_empty() {write!(f,"_")?;}
+                        }
+                        Self::Or(arg0) => {
+                            stk.push(Work::Write(")"));
+                            for (i,x) in arg0.into_iter().enumerate().rev() {
+                                stk.push(Work::Node(x));
+                                if i!=0 { stk.push(Work::Write(",")); }
+                            }
+                            write!(f,"Or(")?;
+                            if arg0.is_empty() {write!(f,"_")?;}
+                        }
+                        Self::Opt(arg0) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"Opt(")?;
+                        }
+                        Self::Prev(arg0, ) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"Prev(")?;
+                        }
+                        Self::Group(arg0, arg1) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg1 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"Group({arg0:?},")?;
+                        }
+                        Self::Expected(arg0, arg1, arg2) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg2 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"Expect({arg0}:{arg1:?},")?;
+                        }
+                        Self::NonTerm(arg0, arg1) => {
+                            stk.push(Work::Write(")"));
+                            stk.push(if let Some(x)=arg1 {Work::Node(x)} else {Work::Write("_")});
+                            write!(f,"NonTerm({arg0:?},")?;
+                        }
+                        Self::String(arg0) => {
+                            write!(f,"String({})",if let Some(x)=arg0{format!("{}:{:?}",x.token.ind(),x.value)}else{"_".into()})?;
+                        }
+                        Self::Identifier(arg0) => {
+                            write!(f,"Identifier({})",if let Some(x)=arg0{format!("{}:{:?}",x.token.ind(),x.value)}else{"_".into()})?;
+                        }
+                        Self::Int(arg0) => {
+                            write!(f,"Int({})",if let Some(x)=arg0{format!("{}:{}",x.token.ind(),x.value)}else{"_".into()})?;
+                        }
+                        Self::Float(arg0) => {
+                            write!(f,"Float({})",if let Some(x)=arg0{format!("{}:{}",x.token.ind(),x.value)}else{"_".into()})?;
+                        }
+                        Self::Symbol(arg0) => {
+                            write!(f,"Symbol({})",if let Some(x)=arg0{format!("{}:{}",x.token.ind(),x.value)}else{"_".into()})?;
+                        }
+                        Self::Keyword(arg0) => {
+                            write!(f,"Keyword({})",if let Some(x)=arg0{format!("{}:{}",x.token.ind(),x.value)}else{"_".into()})?;
+                        }
+                        Self::Eol(arg0) => {
+                            write!(f,"Eol({})",if let Some(x)=arg0{format!("{}:",x.token.ind(),)}else{"_".into()})?;
+                        }
+                        Self::Always => {
+                            write!(f, "Always")?;
+                        }
+                        Self::Error => {
+                            write!(f, "Error")?;
+                        }
+                    }
+                }
+                Work::Write(s) => {
+                    write!(f,"{s}")?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+//
+    fn consolidate_grammar_debug_stk(&mut self, ) { //cur_grammar_debug_len:usize
+        //
+        if let Some(last)=self.stk.last_mut() {
+            //
+            // let grammar_debug_len=self.grammar_debug_stk.len();
+            // if grammar_debug_len!=last.grammar_debug_len {
+
+            //
+            for _ in (last.grammar_debug_len..self.grammar_debug_stk.len()).rev() {
+                let last_gd= self.grammar_debug_stk.pop().unwrap();
+
+                match self.grammar_debug_stk.last_mut().unwrap() {
+                    TempGrammarNodeDebug::Many(gs)
+                    |TempGrammarNodeDebug::And(gs)
+                    |TempGrammarNodeDebug::Or(gs)
+                    => {gs.push(last_gd);}
+
+                    TempGrammarNodeDebug::Opt(g)
+                    // |TempGrammarNodeDebug::Cede(g)
+                    // |TempGrammarNodeDebug::Take(g)
+                    |TempGrammarNodeDebug::Group(_, g)
+                    |TempGrammarNodeDebug::Expected(_,_, g)
+                    |TempGrammarNodeDebug::NonTerm(_, g)
+                    // |TempGrammarNodeDebug::EndsIn(g,)
+                    |TempGrammarNodeDebug::Prev(g)
+                    // |TempGrammarNodeDebug::Discard(g)
+                    => {*g=Some(last_gd.into())}
+
+                    _=>{panic!("");}
+                }
+
+                //
+                // if i==last.grammar_debug_len {
+                //     break;
+                // }
+
+                //
+                // last_gd=self.grammar_debug_stk.pop().unwrap();
+            }
+            // }
+        }
+    }
+	
+	
+	
+	
+////////
 
     fn grammar_string(&mut self,cur :Work<'t,'g>,) {
         if let Some(v)=self.do_primtive(

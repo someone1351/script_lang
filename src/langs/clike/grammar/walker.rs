@@ -30,7 +30,6 @@ where
     expecteds:Vec<(u32,GrammarNode<'g>)>, //(priority,gramamr)//(u64,GrammarNode<'g>) //(id,grammar) //todo change grammar to &'g
     expected_count:u64,
     debug:bool,
-    grammar_debug_stk:Vec<TempGrammarNodeDebug<'t,'g>>,
     non_term_recursive_check:bool,
 
     groups:Vec<TempGroupInfo<'t,'g>>,
@@ -55,7 +54,6 @@ where
             primitives_remaining:top_primitives.clone(),
             top_primitives,
             debug:false,
-            grammar_debug_stk:Vec::new(),
             non_term_recursive_check:true,
             expected_count: 0,
 
@@ -166,7 +164,6 @@ where
         self.expected_loc=Loc::zero();
         self.expecteds.clear();
         self.expected_count=0;
-        self.grammar_debug_stk.clear();
     }
 
     fn grammar_expect(&mut self,cur :Work<'t,'g>,priority:u32, name:&'g str,g:Box<GrammarNode<'g>>) {
@@ -419,16 +416,7 @@ where
     }
 
     fn grammar_string(&mut self,cur :Work<'t,'g>,) {
-        if let Some(v)=self.do_primitive(
-            cur,
-            |ps|ps.pop_string(),
-            |v,self2|{
-                if self2.debug {
-                    let Some(TempGrammarNodeDebug::String(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                    *x=Some(v);
-                }
-            }
-        ) {
+        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_string(),) {
             if self.debug {
                 println!("--- string {v:?}");
             }
@@ -436,12 +424,7 @@ where
     }
 
     fn grammar_identifier(&mut self,cur :Work<'t,'g>,) {
-        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_identifier(),|v,self2|{
-            if self2.debug {
-                let Some(TempGrammarNodeDebug::Identifier(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                *x=Some(v);
-            }
-        }) {
+        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_identifier(),) {
             if self.debug {
                 println!("--- identifier {v:?}");
             }
@@ -450,12 +433,7 @@ where
     }
 
     fn grammar_int(&mut self,cur :Work<'t,'g>,) {
-        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_int(),|v,self2|{
-            if self2.debug {
-                let Some(TempGrammarNodeDebug::Int(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                *x=Some(v);
-            }
-        }) {
+        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_int(),) {
             if self.debug {
                 println!("--- int {v:?}");
             }
@@ -463,12 +441,7 @@ where
     }
 
     fn grammar_float(&mut self,cur :Work<'t,'g>,) {
-        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_float(),|v,self2|{
-            if self2.debug {
-                let Some(TempGrammarNodeDebug::Float(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                *x=Some(v);
-            }
-        }) {
+        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_float(),) {
             if self.debug {
                 println!("--- float {v:?}");
             }
@@ -476,13 +449,7 @@ where
     }
 
     fn grammar_symbol(&mut self,cur :Work<'t,'g>,s:&'g str) {
-        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_with_symbol(s),|v,self2|{
-            if self2.debug {
-                println!("=={:?}",self2.grammar_debug_stk.last());
-                let Some(TempGrammarNodeDebug::Symbol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");}; //{s:?}
-                *x=Some(v);
-            }
-        }) {
+        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_with_symbol(s),) {
             if self.debug {
                 println!("--- symbol {v:?}");
             }
@@ -490,12 +457,7 @@ where
     }
 
     fn grammar_keyword(&mut self,cur :Work<'t,'g>,s:&'g str) {
-        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_with_keyword(s),|v,self2|{
-            if self2.debug {
-                let Some(TempGrammarNodeDebug::Keyword(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                *x=Some(v);
-            }
-        }) {
+        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_with_keyword(s),) {
             if self.debug {
                 println!("--- keyword {v:?}");
             }
@@ -503,12 +465,7 @@ where
     }
 
     fn grammar_eol(&mut self,cur :Work<'t,'g>,) {
-        if let Some(_)=self.do_primitive(cur,|ps|ps.pop_eol(),|v,self2|{
-            if self2.debug {
-                let Some(TempGrammarNodeDebug::Eol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
-                *x=Some(v);
-            }
-        }) {
+        if let Some(_)=self.do_primitive(cur,|ps|ps.pop_eol(),) {
             if self.debug {
                 println!("--- eol");
             }
@@ -668,20 +625,11 @@ where
                 if cur.expected.id!=last.expected.id {
                     last.expected=Default::default();
                 }
-
-                //
-                if self.debug {
-                    self.grammar_debug_stk.truncate(last.grammar_debug_len);
-                };
             }
 
             //
             self.hist_news_truncate_to_last();
 
-            //
-            if self.debug {
-                self.consolidate_grammar_debug_stk();
-            }
 
             //
             self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
@@ -698,14 +646,6 @@ where
 
             //
             self.stk.truncate(cur.fail_len);
-
-            //
-            if let Some(last)=self.stk.last() {
-                //
-                if self.debug {
-                    self.grammar_debug_stk.truncate(last.grammar_debug_len);
-                }
-            }
 
             //
             self.hist_news_truncate_to_last();
@@ -745,11 +685,6 @@ where
             if cur.expected.id!=last.expected.id {
                 last.expected=Default::default();
             }
-        }
-
-        //
-        if self.debug {
-            self.consolidate_grammar_debug_stk();
         }
 
         //
@@ -799,11 +734,6 @@ where
                     let hist_begin=hist_begin.clone();
 
                     //
-                    if self.debug {
-                        self.consolidate_grammar_debug_stk();
-                    }
-
-                    //
                     self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
 
                     //a
@@ -824,11 +754,10 @@ where
         false
     }
 
-    fn do_primitive<Q,P,K>(&mut self,mut cur:Work<'t,'g>,prim_func:Q,on_ok:K) -> Option<ValueContainer<'t,P>>
+    fn do_primitive<Q,P>(&mut self,mut cur:Work<'t,'g>,prim_func:Q) -> Option<ValueContainer<'t,P>>
     where
         P:Clone,
         Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
-        K: Fn(ValueContainer<'t,P>,&mut Self),
     {
         //
         let _hist_news_len=self.hist_news_add(&cur);
@@ -838,8 +767,6 @@ where
                 //
                 let vprim=v.token;
 
-                //
-                on_ok(v.clone(),self);
 
                 //
                 if vprim.start_loc() >= self.expected_loc {
@@ -854,11 +781,6 @@ where
                     last.tokens=cur.tokens;
                     last.group_len=cur.group_len;
                     last.expected=Default::default();
-                }
-
-                //
-                if self.debug {
-                    self.consolidate_grammar_debug_stk();
                 }
 
                 //
@@ -899,13 +821,6 @@ where
                 //
                 if let Some(last)=self.stk.last_mut() {
 
-                    //
-                    if self.debug {
-                        // println!("===---==--- gdb_stk_len cur={}, last={}",cur.grammar_debug_len,last.grammar_debug_len);
-                        // println!("\tcur={:?}",self.grammar_debug_stk);
-                        self.grammar_debug_stk.truncate(last.grammar_debug_len);
-                        // println!("\tlast={:?}",self.grammar_debug_stk);
-                    }
 
                     //
                     // if let Some(x)=cur.expected_non_term {
@@ -1040,49 +955,6 @@ where
         self.groups.truncate(cur.group_len);
         self.hist_begins_stk.truncate(cur.hist_begins_stk_len);
         self.hist_ends_stk.truncate(cur.hist_ends_stk_len);
-    }
-
-    fn consolidate_grammar_debug_stk(&mut self, ) { //cur_grammar_debug_len:usize
-        //
-        if let Some(last)=self.stk.last_mut() {
-            //
-            // let grammar_debug_len=self.grammar_debug_stk.len();
-            // if grammar_debug_len!=last.grammar_debug_len {
-
-            //
-            for _ in (last.grammar_debug_len..self.grammar_debug_stk.len()).rev() {
-                let last_gd= self.grammar_debug_stk.pop().unwrap();
-
-                match self.grammar_debug_stk.last_mut().unwrap() {
-                    TempGrammarNodeDebug::Many(gs)
-                    |TempGrammarNodeDebug::And(gs)
-                    |TempGrammarNodeDebug::Or(gs)
-                    => {gs.push(last_gd);}
-
-                    TempGrammarNodeDebug::Opt(g)
-                    // |TempGrammarNodeDebug::Cede(g)
-                    // |TempGrammarNodeDebug::Take(g)
-                    |TempGrammarNodeDebug::Group(_, g)
-                    |TempGrammarNodeDebug::Expected(_,_, g)
-                    |TempGrammarNodeDebug::NonTerm(_, g)
-                    // |TempGrammarNodeDebug::EndsIn(g,)
-                    |TempGrammarNodeDebug::Prev(g)
-                    // |TempGrammarNodeDebug::Discard(g)
-                    => {*g=Some(last_gd.into())}
-
-                    _=>{panic!("");}
-                }
-
-                //
-                // if i==last.grammar_debug_len {
-                //     break;
-                // }
-
-                //
-                // last_gd=self.grammar_debug_stk.pop().unwrap();
-            }
-            // }
-        }
     }
 
     fn do_groups_primitives_clamp(&mut self,
@@ -1371,37 +1243,6 @@ where
 
         //
         if self.debug {
-            if cur.grammar_debug_len> self.grammar_debug_stk.len() {
-                let x=match cur.grammar {
-                    GrammarNode::Many(_) => TempGrammarNodeDebug::Many(vec![]),
-                    GrammarNode::And(_) => TempGrammarNodeDebug::And(vec![]),
-                    GrammarNode::Or(_) => TempGrammarNodeDebug::Or(vec![]),
-                    GrammarNode::Opt(_) => TempGrammarNodeDebug::Opt(None),
-                    GrammarNode::Group(g, _) => TempGrammarNodeDebug::Group(g,None),
-                    GrammarNode::Expected(p,g, _) => TempGrammarNodeDebug::Expected(p,g,None),
-                    GrammarNode::String => TempGrammarNodeDebug::String(None),
-                    GrammarNode::Identifier => TempGrammarNodeDebug::Identifier(None),
-                    GrammarNode::Int => TempGrammarNodeDebug::Int(None),
-                    GrammarNode::Float => TempGrammarNodeDebug::Float(None),
-                    GrammarNode::Symbol(_) => TempGrammarNodeDebug::Symbol(None),
-                    GrammarNode::Keyword(_) => TempGrammarNodeDebug::Keyword(None),
-                    GrammarNode::Eol => TempGrammarNodeDebug::Eol(None),
-                    GrammarNode::NonTerm(t) => TempGrammarNodeDebug::NonTerm(t,None),
-                    GrammarNode::Always => TempGrammarNodeDebug::Always,
-                    GrammarNode::Error(_) => TempGrammarNodeDebug::Error,
-                    GrammarNode::Prev(_) => TempGrammarNodeDebug::Prev(None),
-                };
-
-                // println!("===x={x}");
-
-                self.grammar_debug_stk.push(x);
-            } else {
-                // println!("===no-x");
-            }
-        }
-
-        //
-        if self.debug {
             self.c+=1;
 
             // // if c>30 {break;}
@@ -1479,45 +1320,6 @@ where
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
                 println!("        tokens {tokens:?}");
-            }
-
-            //
-            if false {
-                let mut grammar_debug_stk=self.grammar_debug_stk.clone();
-
-                for _i in (1 .. grammar_debug_stk.len()).rev() {
-                    let x=grammar_debug_stk.pop().unwrap();
-
-                    // println!("=={:?}",grammar_debug_stk.last().unwrap());
-
-                    match grammar_debug_stk.last_mut().unwrap() {
-                        TempGrammarNodeDebug::Many(gs)
-                        |TempGrammarNodeDebug::And(gs)
-                        |TempGrammarNodeDebug::Or(gs)
-                        => {gs.push(x);}
-
-                        TempGrammarNodeDebug::Opt(g)
-                        |TempGrammarNodeDebug::Group(_, g)
-                        |TempGrammarNodeDebug::NonTerm(_, g)
-                        |TempGrammarNodeDebug::Expected(_,_, g)
-                        |TempGrammarNodeDebug::Prev(g,)
-                        => {*g=Some(x.into())}
-
-                        _=>{panic!("");}
-                    }
-                }
-
-                //
-                if let Some(x)=grammar_debug_stk.first() {
-                    println!("      {x}",);
-                } else {
-                    println!("      _",);
-                }
-
-                //
-                println!("        [{}]",
-                    self.grammar_debug_stk.iter().enumerate().map(|(i,d)|format!("{i}:{d}")).collect::<Vec<_>>().join(", ")
-                );
             }
 
             //
