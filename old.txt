@@ -819,7 +819,12 @@ pub struct TempGroupsElement<'t,'g> {
                     // GrammarNode::Discard(_) => TempGrammarNodeDebug::Discard(None),
                     // GrammarNode::EndsIn(_,_) => TempGrammarNodeDebug::EndsIn(None, ), //ends_in_g.clone()
 					
-					
+
+                        |TempGrammarNodeDebug::Cede(g)
+                        |TempGrammarNodeDebug::Take(g)
+                        // |TempGrammarNodeDebug::EndsIn(g,)
+                        // |TempGrammarNodeDebug::Discard(g)
+						
                     groups_stk_len,
                     takeables, takeable_starts_len,
 					

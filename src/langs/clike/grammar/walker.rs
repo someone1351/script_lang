@@ -403,14 +403,10 @@ where
                         => {gs.push(x);}
 
                         TempGrammarNodeDebug::Opt(g)
-                        // |TempGrammarNodeDebug::Cede(g)
-                        // |TempGrammarNodeDebug::Take(g)
                         |TempGrammarNodeDebug::Group(_, g)
                         |TempGrammarNodeDebug::NonTerm(_, g)
                         |TempGrammarNodeDebug::Expected(_,_, g)
-                        // |TempGrammarNodeDebug::EndsIn(g,)
                         |TempGrammarNodeDebug::Prev(g,)
-                        // |TempGrammarNodeDebug::Discard(g)
                         => {*g=Some(x.into())}
 
                         _=>{panic!("");}
@@ -1232,7 +1228,7 @@ where
 
                     if let Some(last)=self.stk.last() {
                         let last_hist_ends=&self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
-                        println!("---takeables3={:?}, len={}",last_hist_ends,last_hist_ends.len());
+                        println!("---last_hist_ends={:?}, len={}",last_hist_ends,last_hist_ends.len());
                     }
                 }
 
