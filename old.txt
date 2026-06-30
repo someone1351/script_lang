@@ -394,6 +394,9 @@
 			
 //grammar_try_from_hist_begins
 
+                    //
+                    // let takeable_starts_len2=self.add_takeable_start2(&cur); //not needed
+
                         // // last.takeables2=cur.takeables2;
                         // last.hist_ends=or_element.hist_ends.clone();
 //do_primtive
@@ -814,6 +817,15 @@ pub struct TempGroupsElement<'t,'g> {
         //takeables
         self.takeable_starts.clear();
 
+            // takeable_starts_ind2:0,
+            // hist_ends:Default::default(),
+
+            // takeable_starts_ind2:0,
+            // hist_ends:Default::default(),
+			
+
+                // takeable_starts_ind2:0,
+                // hist_ends:Default::default(),
 //run
             //takeables
             let group_infos=&self.groups_stk.last().unwrap().groups;

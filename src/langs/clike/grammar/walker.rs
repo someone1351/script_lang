@@ -85,14 +85,10 @@ where
             expected:Default::default(),
             and_id: 0,
 
-
             from_user:false,
             is_first:true,
 
-            // takeable_starts_ind2:0,
             hist_news_len:0,
-            // hist_ends:Default::default(),
-
             hist_begins_stk_len:0,
             hist_ends_stk_len:1,
         });
@@ -115,10 +111,7 @@ where
             from_user:true,
             is_first:true,
 
-            // takeable_starts_ind2:0,
             hist_news_len:0,
-            // hist_ends:Default::default(),
-
             hist_begins_stk_len:0,
             hist_ends_stk_len:1,
         });
@@ -146,14 +139,10 @@ where
                 expected:Default::default(),
                 and_id: 0,
 
-
                 from_user:true,
                 is_first:true,
 
-                // takeable_starts_ind2:0,
                 hist_news_len:0,
-                // hist_ends:Default::default(),
-
                 hist_begins_stk_len:0,
                 hist_ends_stk_len:1,
             });
@@ -212,9 +201,6 @@ where
 
         //
         if self.debug {
-
-
-            //
             println!("groups={:?}",self.groups);
         }
 
@@ -274,7 +260,6 @@ where
 
         //
         self.step_truncates(&cur);
-
 
         //
         if self.debug {
@@ -386,7 +371,6 @@ where
                 //
                 // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
                 println!("        tokens {tokens:?}");
-
             }
 
             //
@@ -580,7 +564,6 @@ where
             grammar_debug_len: cur.grammar_debug_len+1,
             expected:cur.expected,
             and_id:cur.and_id,
-
 
             from_user:true,
             is_first:cur.is_first,
@@ -1123,16 +1106,11 @@ where
         if cur.from_user && cur.is_first {
             if let Some(hist_begins)=self.hist_begins_stk.last() {
                 if let Some(hist_begin)=hist_begins.elements.get(&cur.grammar) {
-
                     //
                     self.stk.truncate(cur.success_len);
 
                     //
-                    // let takeable_starts_len2=self.add_takeable_start2(&cur); //not needed
-
-
                     if let Some(last)=self.stk.last_mut() {
-
                         //
                         // last.tokens=cur.tokens;
                         last.tokens=hist_begin.tokens_after;
@@ -1154,6 +1132,7 @@ where
                         }
                     }
 
+                    //
                     let hist_begin=hist_begin.clone();
 
                     //
@@ -1172,6 +1151,7 @@ where
 
                     //
                     println!("---- grabbed from or {:?}, {hist_begin:?}",cur.grammar);
+
                     //
                     return true;
                 }
@@ -1192,7 +1172,6 @@ where
 
         match prim_func(&mut cur.tokens) {
             Ok(v) => {
-
                 //
                 let vprim=v.token;
 
