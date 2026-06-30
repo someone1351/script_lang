@@ -1144,6 +1144,34 @@ where
     }
 
 
+    fn new_group(&mut self,name : &'g str, parent:usize, ps:TokenIterContainer<'t>) -> usize {
+
+        //
+        let groups=&mut self.groups;
+
+        //
+        let new_group_ind=groups.len();
+
+        //
+        groups.push(TempGroupInfo {
+            name,
+            parent,
+            tokens:ps,
+        });
+
+        //
+        new_group_ind
+    }
+
+    fn set_remaining_prims(&mut self,cur_primitives:TokenIterContainer<'t>,) {
+        if self.stk.is_empty() {
+            self.primitives_remaining=cur_primitives;
+        }
+    }
+
+    //
+
+
     fn clear_expected(&mut self) {
         // println!("-------==== expected cleared, {}",self.expected_loc);
 
@@ -1172,36 +1200,7 @@ where
         }
     }
 
-    fn new_group(&mut self,name : &'g str, parent:usize, ps:TokenIterContainer<'t>) -> usize {
-
-        //
-        let groups=&mut self.groups;
-
-        //
-        let new_group_ind=groups.len();
-
-        //
-        groups.push(TempGroupInfo {
-            name,
-            parent,
-            tokens:ps,
-        });
-
-        //
-        new_group_ind
-    }
-
-    fn set_remaining_prims(&mut self,cur_primitives:TokenIterContainer<'t>,) {
-        if self.stk.is_empty() {
-            self.primitives_remaining=cur_primitives;
-        }
-    }
-
     //
-    pub fn set_debug(&mut self,debug:bool) {
-        self.debug=debug;
-    }
-
     pub fn expecteds_string(&self) -> String {
         let max_priority=self.expecteds.iter().map(|&(p,_)|p).max().unwrap_or(0);
 
@@ -1217,6 +1216,7 @@ where
             _ =>"".to_string(),
         }).collect::<Vec<_>>().join(", ")
     }
+
     pub fn last_loc(&self) -> Loc {
         if self.expected_loc.is_zero() {
             self.primitives_remaining.loc()
@@ -1225,6 +1225,7 @@ where
         }
     }
 
+    //
     pub fn get_walk(&self) -> Walk<'t,'g> {
         //
         let mut groups_out: Vec<WalkGroup<'t,'g>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
@@ -1290,10 +1291,7 @@ where
         walk
     }
 
-
-
-
-
+    //
     pub fn run(&mut self,start_non_term:&'g str,) -> Result<(),GrammarWalkError<'g>> {
         //
         self.init(start_non_term);
@@ -1591,5 +1589,10 @@ where
 
         //
         Ok(())
+    }
+
+    //
+    pub fn set_debug(&mut self,debug:bool) {
+        self.debug=debug;
     }
 }
