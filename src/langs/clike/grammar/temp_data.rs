@@ -62,7 +62,7 @@ pub struct TempHistEnds<'t,'g> {
 #[derive(Clone,Debug)]
 pub struct TempHistBegin<'t,'g> {
     pub groups:Vec<TempGroupInfo<'t,'g>>, //inside the grammar this represents
-    pub hist_ends:HashMap<GrammarNode<'g>,TempHistEnd<'t>>, //inside the grammar this represents
+    pub hist_ends:HashMap<GrammarNode<'g>,TempHistEnd<'t>>, //inside the grammar this represents //todo
     pub tokens_after:TokenIterContainer<'t>,
 }
 #[derive(Clone)]
