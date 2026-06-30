@@ -839,6 +839,15 @@ pub struct TempGroupsElement<'t,'g> {
             }
 			
 //step
+
+            // // if c>30 {break;}
+            // // println!(": {cur:?} || {} && {primitives:?}", self.stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
+
+                // let expected=if expected.id==0 {"None".to_string()}else{format!("{}:{}",expected.id,expected.name)};
+				 //hist_begins_stk_last_len={}, hist_ends_stk_last_len={}
+				 
+                // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
+				
                 //takeables
                 let groups=&self.groups_stk.last().unwrap().groups;
             //takeables

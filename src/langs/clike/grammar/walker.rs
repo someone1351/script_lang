@@ -1245,9 +1245,6 @@ where
         if self.debug {
             self.c+=1;
 
-            // // if c>30 {break;}
-            // // println!(": {cur:?} || {} && {primitives:?}", self.stk.iter().rev().map(|x|format!("{:?}",x.0)).collect::<Vec<_>>().join(" << "), );
-
             {
                 //
                 let groups=&self.groups;
@@ -1258,35 +1255,23 @@ where
                 //
                 let Work {
                     grammar, success_len, fail_len, tokens,
-                    group_ind, group_len,
-                    // expected,
-                    and_id,
-
-                    // visiteds,grammar_debug_len, from_user,
-                    hist_news_len,
-
-                    is_first,
-                    hist_begins_stk_len,
-                    hist_ends_stk_len,
+                    group_ind, group_len,and_id,is_first,
+                    hist_news_len,hist_begins_stk_len,hist_ends_stk_len,
                     ..
                 }=&cur;
 
                 //
                 let ps=tokens.inds();
-                // let expected=if expected.id==0 {"None".to_string()}else{format!("{}:{}",expected.id,expected.name)};
-
                 let temp_groups=groups.iter().enumerate().map(|(i,x)|format!("g{i}:p{}:{}",x.parent,x.name)).collect::<Vec<_>>();
-
                 let groups_len2=groups.len();
 
                 //
                 println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, ",);
                 println!("        and_id={and_id}, groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
-
                 println!("        first={is_first}, hist_news_len={hist_news_len}, hist_begins_stk_len={hist_begins_stk_len}:{}, hist_ends_stk_len={hist_ends_stk_len}:{}, ",
                     self.hist_begins_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
                     self.hist_ends_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
-                ); //hist_begins_stk_last_len={}, hist_ends_stk_last_len={}
+                );
 
                 if true {
                     println!("        hist_news={}",
@@ -1318,28 +1303,14 @@ where
                 }
 
                 //
-                // println!("        expecteds {} : = {}", self.expected_loc,self.expecteds_string());
                 println!("        tokens {tokens:?}");
             }
 
             //
             if false {
-                for (i,Work {
-                    grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len,
-                    and_id,
-
-                    // visiteds, grammar_debug_len, expected,
-                    // from_user,
-                    // hist_news_len,
-                    // is_first,
-                    // hist_begins_stk_len,
-                    // hist_ends_stk_len,
-                    ..
-                }) in self.stk.iter()
-                    // .rev()
-                    .enumerate()
+                for (i,Work {grammar:g, success_len:s, fail_len:f, tokens,
+                    group_ind, group_len,and_id,..}) in self.stk.iter().enumerate()
                 {
-                    //
                     println!("    {i:3}: ps={:?}, success={s}, fail={f}, and_id={and_id}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds());
                 }
             }
