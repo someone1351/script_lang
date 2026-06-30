@@ -324,20 +324,22 @@ where
                 //
                 let Work {
                     grammar, success_len, fail_len, tokens,
-                    group_ind, group_len,visiteds,
-                    grammar_debug_len, expected, and_id,
+                    group_ind, group_len,
+                    // expected,
+                    and_id,
 
-                    from_user,
+                    // visiteds,grammar_debug_len, from_user,
                     hist_news_len,
 
                     is_first,
                     hist_begins_stk_len,
                     hist_ends_stk_len,
+                    ..
                 }=&cur;
 
                 //
                 let ps=tokens.inds();
-                let expected=if expected.id==0 {"None".to_string()}else{format!("{}:{}",expected.id,expected.name)};
+                // let expected=if expected.id==0 {"None".to_string()}else{format!("{}:{}",expected.id,expected.name)};
 
                 let temp_groups=groups.iter().enumerate().map(|(i,x)|format!("g{i}:p{}:{}",x.parent,x.name)).collect::<Vec<_>>();
 
@@ -430,13 +432,15 @@ where
             if false {
                 for (i,Work {
                     grammar:g, success_len:s, fail_len:f, tokens, group_ind, group_len,
-                    visiteds, grammar_debug_len, expected, and_id,
+                    and_id,
 
-                    from_user,
-                    hist_news_len,
-                    is_first,
-                    hist_begins_stk_len,
-                    hist_ends_stk_len,
+                    // visiteds, grammar_debug_len, expected,
+                    // from_user,
+                    // hist_news_len,
+                    // is_first,
+                    // hist_begins_stk_len,
+                    // hist_ends_stk_len,
+                    ..
                 }) in self.stk.iter()
                     // .rev()
                     .enumerate()
