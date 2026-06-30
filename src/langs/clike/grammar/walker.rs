@@ -1293,7 +1293,6 @@ where
     }
 
     fn hist_news_add_to_last(&mut self,
-        // cur_tokens:TokenIterContainer<'t>,
         cur:&Work<'t,'g>,
         gotten:bool, //what was this for again? something to do with not adding cur grammar to hist_begins? it was for not adding cur grammar to hist_new?
     ) {
@@ -1458,47 +1457,19 @@ where
     ) {
         if let Some(last)=self.stk.last_mut() {
             //
-            // println!("==gggr {:?}",last.grammar);
-
-            //
             if self.debug {
                 println!("==do_groups_primitives_clamp: cur_group_ind={cur_group_ind}, last.group_ind={}",last.group_ind);
             }
-
-
-            //
-            let groups=&mut self.groups;
-
-            //
-            // let last_group_prim_len=last.primitives.len();
 
             //
             let mut g=cur_group_ind;
 
             //
-            // println!("--- cur_group_ind={g}, last.group_ind={}",last.group_ind);
-            // println!("---g={g} to lg={}",last.group_ind);
-
-            //
             while g>last.group_ind {
-                let group=&mut groups[g];
-
-                //
-                // if self.debug {
-                //     println!("\tg={g} parent={}",group.parent);
-                // }
-
-                //
-                // let mut last_primitives=group.primitives;
-                // println!("\tg={g} lg={} : {} {}",last.group_ind,group.primitives.len(),cur_primitives.len(),);
+                let group=&mut self.groups[g];
 
                 //
                 let n=group.tokens.len()-cur_primitives.len();
-
-                //
-                // println!("\tn={n} {:?}",group.primitives.get_range(0..n).unwrap());
-                // println!("\t{:?}",group.primitives);
-                // let group_prims=group.primitives.get_range(0..n).unwrap();
 
                 //
                 let group_prims=group.tokens.get_amount(n).unwrap();
