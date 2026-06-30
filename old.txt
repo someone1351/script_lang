@@ -941,4 +941,220 @@ pub struct TempGroupsElement<'t,'g> {
                         // tokens_start,
         // last_takeables
 		
-		
+//
+
+    fn grammar_string(&mut self,cur :Work<'t,'g>,) {
+        if let Some(v)=self.do_primtive(
+            cur,
+            |ps|ps.pop_string(),
+            |v,self2|{
+                if self2.debug {
+                    let Some(TempGrammarNodeDebug::String(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                    *x=Some(v);
+                }
+            }
+        ) {
+            if self.debug {
+                println!("--- string {v:?}");
+            }
+        }
+    }
+
+    fn grammar_identifier(&mut self,cur :Work<'t,'g>,) {
+        if let Some(v)=self.do_primtive(cur,|ps|ps.pop_identifier(),|v,self2|{
+            if self2.debug {
+                let Some(TempGrammarNodeDebug::Identifier(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                *x=Some(v);
+            }
+        }) {
+            if self.debug {
+                println!("--- identifier {v:?}");
+            }
+            // println!("==={}",self.grammar_debug_stk.last().map(|x|format!("{x}")).unwrap_or("None".to_string()));
+        }
+    }
+
+    fn grammar_int(&mut self,cur :Work<'t,'g>,) {
+        if let Some(v)=self.do_primtive(cur,|ps|ps.pop_int(),|v,self2|{
+            if self2.debug {
+                let Some(TempGrammarNodeDebug::Int(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                *x=Some(v);
+            }
+        }) {
+            if self.debug {
+                println!("--- int {v:?}");
+            }
+        }
+    }
+
+    fn grammar_float(&mut self,cur :Work<'t,'g>,) {
+        if let Some(v)=self.do_primtive(cur,|ps|ps.pop_float(),|v,self2|{
+            if self2.debug {
+                let Some(TempGrammarNodeDebug::Float(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                *x=Some(v);
+            }
+        }) {
+            if self.debug {
+                println!("--- float {v:?}");
+            }
+        }
+    }
+
+    fn grammar_symbol(&mut self,cur :Work<'t,'g>,s:&'g str) {
+        if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_symbol(s),|v,self2|{
+            if self2.debug {
+                println!("=={:?}",self2.grammar_debug_stk.last());
+                let Some(TempGrammarNodeDebug::Symbol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");}; //{s:?}
+                *x=Some(v);
+            }
+        }) {
+            if self.debug {
+                println!("--- symbol {v:?}");
+            }
+        }
+    }
+
+    fn grammar_keyword(&mut self,cur :Work<'t,'g>,s:&'g str) {
+        if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_keyword(s),|v,self2|{
+            if self2.debug {
+                let Some(TempGrammarNodeDebug::Keyword(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                *x=Some(v);
+            }
+        }) {
+            if self.debug {
+                println!("--- keyword {v:?}");
+            }
+        }
+    }
+
+    fn grammar_eol(&mut self,cur :Work<'t,'g>,) {
+        if let Some(_)=self.do_primtive(cur,|ps|ps.pop_eol(),|v,self2|{
+            if self2.debug {
+                let Some(TempGrammarNodeDebug::Eol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
+                *x=Some(v);
+            }
+        }) {
+            if self.debug {
+                println!("--- eol");
+            }
+        }
+    }
+	
+
+    fn do_primtive<Q,P,K>(&mut self,mut cur:Work<'t,'g>,prim_func:Q,on_ok:K) -> Option<ValueContainer<'t,P>>
+    where
+        P:Clone,
+        Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
+        K: Fn(ValueContainer<'t,P>,&mut Self),
+    {
+        //
+        let _hist_news_len=self.hist_news_add(&cur);
+
+        match prim_func(&mut cur.tokens) {
+            Ok(v) => {
+                //
+                let vprim=v.token;
+
+                //
+                on_ok(v.clone(),self);
+
+                //
+                if vprim.start_loc() >= self.expected_loc {
+                    self.clear_expected();
+                }
+
+                //
+                self.stk.truncate(cur.success_len);
+
+                //
+                if let Some(last)=self.stk.last_mut() {
+                    last.tokens=cur.tokens;
+                    last.group_len=cur.group_len;
+                    last.expected=Default::default();
+                }
+
+                //
+                if self.debug {
+                    self.consolidate_grammar_debug_stk();
+                }
+
+                //
+                self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
+
+                //
+                self.last_hist_ends_remove_previous();
+                self.hist_news_add_to_last(&cur,true);
+
+                //
+                if self.debug {
+                    println!("--- hmm stk={:?}",self.stk.iter().map(|x|x.grammar.clone()).collect::<Vec<_>>());
+
+                    if let Some(last)=self.stk.last() {
+                        let last_hist_ends=&self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
+                        println!("---last_hist_ends={:?}, len={}",last_hist_ends,last_hist_ends.len());
+                    }
+                }
+
+                //
+                self.set_remaining_prims(cur.tokens);
+
+                //
+                Some(v)
+            }
+            Err(loc) => {
+                //
+                // if self.stk.last().map(|last|!last.expected_non_term.is_none() ).unwrap_or_default()
+
+                //
+                if cur.expected.id==0{
+                    self.add_expected(loc,0,cur.grammar.clone());
+                }
+
+                //
+                self.stk.truncate(cur.fail_len);
+
+                //
+                if let Some(last)=self.stk.last_mut() {
+
+                    //
+                    if self.debug {
+                        // println!("===---==--- gdb_stk_len cur={}, last={}",cur.grammar_debug_len,last.grammar_debug_len);
+                        // println!("\tcur={:?}",self.grammar_debug_stk);
+                        self.grammar_debug_stk.truncate(last.grammar_debug_len);
+                        // println!("\tlast={:?}",self.grammar_debug_stk);
+                    }
+
+                    //
+                    // if let Some(x)=cur.expected_non_term {
+                    //     if last.expected_non_term.is_none() {
+                    //         self.add_expected(loc, GrammarNode::NonTerm(x));
+                    //     }
+                    // //     last.expected_non_term=None;
+                    // }
+
+                    //
+                    if cur.expected.id!=last.expected.id && cur.expected.id!=0 {
+                        last.expected=Default::default();
+                        self.add_expected(loc, cur.expected.priority,GrammarNode::NonTerm(cur.expected.name));
+                    }
+                }
+
+                //
+                self.hist_news_truncate_to_last();
+
+                //
+                self.set_remaining_prims(cur.tokens);
+
+                //
+                None
+            }
+        }
+    }
+	
+            GrammarNode::String => {self.grammar_string(cur);}
+            GrammarNode::Identifier => {self.grammar_identifier(cur);}
+            GrammarNode::Int => {self.grammar_int(cur);}
+            GrammarNode::Float => {self.grammar_float(cur);}
+            GrammarNode::Symbol(s) => {self.grammar_symbol(cur,s);}
+            GrammarNode::Keyword(s) => {self.grammar_keyword(cur,s);}
+            GrammarNode::Eol => {self.grammar_eol(cur);}

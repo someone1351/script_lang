@@ -419,7 +419,7 @@ where
     }
 
     fn grammar_string(&mut self,cur :Work<'t,'g>,) {
-        if let Some(v)=self.do_primtive(
+        if let Some(v)=self.do_primitive(
             cur,
             |ps|ps.pop_string(),
             |v,self2|{
@@ -436,7 +436,7 @@ where
     }
 
     fn grammar_identifier(&mut self,cur :Work<'t,'g>,) {
-        if let Some(v)=self.do_primtive(cur,|ps|ps.pop_identifier(),|v,self2|{
+        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_identifier(),|v,self2|{
             if self2.debug {
                 let Some(TempGrammarNodeDebug::Identifier(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
                 *x=Some(v);
@@ -450,7 +450,7 @@ where
     }
 
     fn grammar_int(&mut self,cur :Work<'t,'g>,) {
-        if let Some(v)=self.do_primtive(cur,|ps|ps.pop_int(),|v,self2|{
+        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_int(),|v,self2|{
             if self2.debug {
                 let Some(TempGrammarNodeDebug::Int(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
                 *x=Some(v);
@@ -463,7 +463,7 @@ where
     }
 
     fn grammar_float(&mut self,cur :Work<'t,'g>,) {
-        if let Some(v)=self.do_primtive(cur,|ps|ps.pop_float(),|v,self2|{
+        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_float(),|v,self2|{
             if self2.debug {
                 let Some(TempGrammarNodeDebug::Float(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
                 *x=Some(v);
@@ -476,7 +476,7 @@ where
     }
 
     fn grammar_symbol(&mut self,cur :Work<'t,'g>,s:&'g str) {
-        if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_symbol(s),|v,self2|{
+        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_with_symbol(s),|v,self2|{
             if self2.debug {
                 println!("=={:?}",self2.grammar_debug_stk.last());
                 let Some(TempGrammarNodeDebug::Symbol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");}; //{s:?}
@@ -490,7 +490,7 @@ where
     }
 
     fn grammar_keyword(&mut self,cur :Work<'t,'g>,s:&'g str) {
-        if let Some(v)=self.do_primtive(cur,|ps|ps.pop_with_keyword(s),|v,self2|{
+        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_with_keyword(s),|v,self2|{
             if self2.debug {
                 let Some(TempGrammarNodeDebug::Keyword(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
                 *x=Some(v);
@@ -503,7 +503,7 @@ where
     }
 
     fn grammar_eol(&mut self,cur :Work<'t,'g>,) {
-        if let Some(_)=self.do_primtive(cur,|ps|ps.pop_eol(),|v,self2|{
+        if let Some(_)=self.do_primitive(cur,|ps|ps.pop_eol(),|v,self2|{
             if self2.debug {
                 let Some(TempGrammarNodeDebug::Eol(x))=self2.grammar_debug_stk.last_mut() else {panic!("");};
                 *x=Some(v);
@@ -824,7 +824,7 @@ where
         false
     }
 
-    fn do_primtive<Q,P,K>(&mut self,mut cur:Work<'t,'g>,prim_func:Q,on_ok:K) -> Option<ValueContainer<'t,P>>
+    fn do_primitive<Q,P,K>(&mut self,mut cur:Work<'t,'g>,prim_func:Q,on_ok:K) -> Option<ValueContainer<'t,P>>
     where
         P:Clone,
         Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
@@ -1131,7 +1131,6 @@ where
 
         //
         if cur_visiteds.contains(&v) {
-            // break;
             return Err(GrammarWalkError::RecursiveNonTerm(t));
         }
 
@@ -1143,23 +1142,11 @@ where
         Ok(visiteds)
     }
 
-
     fn new_group(&mut self,name : &'g str, parent:usize, ps:TokenIterContainer<'t>) -> usize {
-
-        //
         let groups=&mut self.groups;
-
-        //
         let new_group_ind=groups.len();
 
-        //
-        groups.push(TempGroupInfo {
-            name,
-            parent,
-            tokens:ps,
-        });
-
-        //
+        groups.push(TempGroupInfo { name, parent, tokens:ps, });
         new_group_ind
     }
 
@@ -1170,8 +1157,6 @@ where
     }
 
     //
-
-
     fn clear_expected(&mut self) {
         // println!("-------==== expected cleared, {}",self.expected_loc);
 
@@ -1578,6 +1563,7 @@ where
             GrammarNode::NonTerm(t) => {self.grammar_non_term(cur, t)?;}
             GrammarNode::Always => {self.grammar_always(cur);}
             GrammarNode::Error(e) => {return Err(self.grammar_error(cur, e));}
+
             GrammarNode::String => {self.grammar_string(cur);}
             GrammarNode::Identifier => {self.grammar_identifier(cur);}
             GrammarNode::Int => {self.grammar_int(cur);}
