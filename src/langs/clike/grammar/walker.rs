@@ -415,63 +415,6 @@ where
         return e;
     }
 
-    fn grammar_string(&mut self,cur :Work<'t,'g>,) {
-        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_string(),) {
-            if self.debug {
-                println!("--- string {v:?}");
-            }
-        }
-    }
-
-    fn grammar_identifier(&mut self,cur :Work<'t,'g>,) {
-        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_identifier(),) {
-            if self.debug {
-                println!("--- identifier {v:?}");
-            }
-            // println!("==={}",self.grammar_debug_stk.last().map(|x|format!("{x}")).unwrap_or("None".to_string()));
-        }
-    }
-
-    fn grammar_int(&mut self,cur :Work<'t,'g>,) {
-        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_int(),) {
-            if self.debug {
-                println!("--- int {v:?}");
-            }
-        }
-    }
-
-    fn grammar_float(&mut self,cur :Work<'t,'g>,) {
-        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_float(),) {
-            if self.debug {
-                println!("--- float {v:?}");
-            }
-        }
-    }
-
-    fn grammar_symbol(&mut self,cur :Work<'t,'g>,s:&'g str) {
-        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_with_symbol(s),) {
-            if self.debug {
-                println!("--- symbol {v:?}");
-            }
-        }
-    }
-
-    fn grammar_keyword(&mut self,cur :Work<'t,'g>,s:&'g str) {
-        if let Some(v)=self.do_primitive(cur,|ps|ps.pop_with_keyword(s),) {
-            if self.debug {
-                println!("--- keyword {v:?}");
-            }
-        }
-    }
-
-    fn grammar_eol(&mut self,cur :Work<'t,'g>,) {
-        if let Some(_)=self.do_primitive(cur,|ps|ps.pop_eol(),) {
-            if self.debug {
-                println!("--- eol");
-            }
-        }
-    }
-
     fn grammar_and(&mut self,cur :Work<'t,'g>,gs:Vec<GrammarNode<'g>>,) {
         //
         let Some(first)=gs.first().cloned() else { return ; };
@@ -754,7 +697,7 @@ where
         false
     }
 
-    fn do_primitive<Q,P>(&mut self,mut cur:Work<'t,'g>,prim_func:Q) -> Option<ValueContainer<'t,P>>
+    fn grammar_primitive<Q,P>(&mut self,mut cur:Work<'t,'g>,prim_func:Q) -> Option<ValueContainer<'t,P>>
     where
         P:Clone,
         Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
@@ -1337,13 +1280,34 @@ where
             GrammarNode::Always => {self.grammar_always(cur);}
             GrammarNode::Error(e) => {return Err(self.grammar_error(cur, e));}
 
-            GrammarNode::String => {self.grammar_string(cur);}
-            GrammarNode::Identifier => {self.grammar_identifier(cur);}
-            GrammarNode::Int => {self.grammar_int(cur);}
-            GrammarNode::Float => {self.grammar_float(cur);}
-            GrammarNode::Symbol(s) => {self.grammar_symbol(cur,s);}
-            GrammarNode::Keyword(s) => {self.grammar_keyword(cur,s);}
-            GrammarNode::Eol => {self.grammar_eol(cur);}
+            GrammarNode::String => {
+                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_string(),) else{return Ok(());};
+                if self.debug {println!("--- string {v:?}");}
+            }
+            GrammarNode::Identifier => {
+                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_identifier(),) else{return Ok(());};
+                if self.debug {println!("--- identifier {v:?}");}
+            }
+            GrammarNode::Int => {
+                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_int(),) else{return Ok(());};
+                if self.debug {println!("--- int {v:?}");}
+            }
+            GrammarNode::Float => {
+                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_float(),) else{return Ok(());};
+                if self.debug {println!("--- float {v:?}");}
+            }
+            GrammarNode::Symbol(s) => {
+                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_with_symbol(s),) else{return Ok(());};
+                if self.debug {println!("--- symbol {v:?}");}
+            }
+            GrammarNode::Keyword(s) => {
+                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_with_keyword(s),) else{return Ok(());};
+                if self.debug {println!("--- keyword {v:?}");}
+            }
+            GrammarNode::Eol => {
+                let Some(_)=self.grammar_primitive(cur,|ps|ps.pop_eol(),) else{return Ok(());};
+                if self.debug {println!("--- eol");}
+            }
         }
 
         //
