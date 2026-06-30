@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 
 use crate::build::Loc;
+use crate::clike::tokenizer::TokenContainer;
 use super::super::grammar::data::{Walk,WalkGroup};
 use super::super::tokenizer::{TokenIterContainer, ValueContainer};
 
@@ -566,8 +567,9 @@ where
 
                 //
                 if cur.expected.id!=last.expected.id {
-                    last.expected=Default::default();
+                    self.clear_last_expected();
                 }
+
             }
 
             //
@@ -626,7 +628,7 @@ where
 
             //
             if cur.expected.id!=last.expected.id {
-                last.expected=Default::default();
+                self.clear_last_expected();
             }
         }
 
@@ -644,57 +646,54 @@ where
     }
 
     fn grammar_try_from_hist_begins(&mut self,cur :&Work<'t,'g>) -> bool {
-        if cur.from_user && cur.is_first {
-            if let Some(hist_begins)=self.hist_begins_stk.last() {
-                if let Some(hist_begin)=hist_begins.elements.get(&cur.grammar) {
-                    //
-                    self.stk.truncate(cur.success_len);
+        //
+        if !cur.from_user || !cur.is_first { // !(cur.from_user && cur.is_first)
+            return false;
+        }
 
-                    //
-                    if let Some(last)=self.stk.last_mut() {
-                        //
-                        // last.tokens=cur.tokens;
-                        last.tokens=hist_begin.tokens_after;
+        //
+        let Some(hist_begins)=self.hist_begins_stk.last() else {return false;};
+        let Some(hist_begin)=hist_begins.elements.get(&cur.grammar) else {return false;};
 
-                        //add groups
-                        for g in hist_begin.groups.iter() {
-                            self.groups.push(TempGroupInfo { parent: cur.group_ind+g.parent, ..g.clone()});
-                        }
+        //
+        self.stk.truncate(cur.success_len);
 
-                        //
-                        last.group_len=self.groups.len(); //cur.group_len+or_element.groups;
+        //
+        if let Some(last)=self.stk.last_mut() {
+            //
+            last.tokens=hist_begin.tokens_after; //cur.tokens
 
-                        //
-                        last.hist_ends_stk_len=cur.hist_ends_stk_len;
+            //add groups
+            for g in hist_begin.groups.iter() {
+                self.groups.push(TempGroupInfo { parent: cur.group_ind+g.parent, ..g.clone()});
+            }
 
-                        //
-                        if cur.expected.id!=last.expected.id {
-                            last.expected=Default::default();
-                        }
-                    }
+            //
+            last.group_len=self.groups.len(); //cur.group_len+or_element.groups;
 
-                    //
-                    let hist_begin=hist_begin.clone();
+            //
+            last.hist_ends_stk_len=cur.hist_ends_stk_len;
 
-                    //
-                    self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
-
-                    //a
-                    self.hist_news_add_to_last(&cur,false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
-
-                    //
-                    self.set_remaining_prims(cur.tokens);
-
-                    //
-                    println!("---- grabbed from or {:?}, {hist_begin:?}",cur.grammar);
-
-                    //
-                    return true;
-                }
+            //
+            if cur.expected.id!=last.expected.id {
+                self.clear_last_expected();
             }
         }
 
-        false
+        //
+        self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
+
+        //a
+        self.hist_news_add_to_last(&cur,false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+
+        //
+        self.set_remaining_prims(cur.tokens);
+
+        //
+        println!("---- grabbed from or {:?},",cur.grammar);
+
+        //
+        true
     }
 
     fn grammar_primitive<Q,P>(&mut self,mut cur:Work<'t,'g>,prim_func:Q) -> Option<ValueContainer<'t,P>>
@@ -708,13 +707,7 @@ where
         match prim_func(&mut cur.tokens) {
             Ok(v) => {
                 //
-                let vprim=v.token;
-
-
-                //
-                if vprim.start_loc() >= self.expected_loc {
-                    self.clear_expected();
-                }
+                self.clear_expected(v.token);
 
                 //
                 self.stk.truncate(cur.success_len);
@@ -723,8 +716,10 @@ where
                 if let Some(last)=self.stk.last_mut() {
                     last.tokens=cur.tokens;
                     last.group_len=cur.group_len;
-                    last.expected=Default::default();
                 }
+
+                //
+                self.clear_last_expected();
 
                 //
                 self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
@@ -775,7 +770,7 @@ where
 
                     //
                     if cur.expected.id!=last.expected.id && cur.expected.id!=0 {
-                        last.expected=Default::default();
+                        self.clear_last_expected();
                         self.add_expected(loc, cur.expected.priority,GrammarNode::NonTerm(cur.expected.name));
                     }
                 }
@@ -972,12 +967,14 @@ where
     }
 
     //
-    fn clear_expected(&mut self) {
+    fn clear_expected(&mut self,vprim:TokenContainer<'t>) {
         // println!("-------==== expected cleared, {}",self.expected_loc);
 
         //
-        self.expected_loc=Loc::zero();
-        self.expecteds.clear();
+        if vprim.start_loc() >= self.expected_loc {
+            self.expected_loc=Loc::zero();
+            self.expecteds.clear();
+        }
     }
 
     fn add_expected(&mut self,loc:Loc,p:u32,g:GrammarNode<'g>) {
@@ -997,6 +994,12 @@ where
             // println!("-------==== expected new {g:?}, {loc}=={}",self.expected_loc);
         } else {
             // println!("-------==== expected not added {g:?}, {loc}=={}",self.expected_loc);
+        }
+    }
+
+    fn clear_last_expected(&mut self) {
+        if let Some(last)=self.stk.last_mut() {
+            last.expected=Default::default();
         }
     }
 
