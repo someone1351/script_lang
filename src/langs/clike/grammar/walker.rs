@@ -877,7 +877,6 @@ where
             and_id:cur.and_id,
 
             // groups_stk_len: cur.groups_stk_len,
-
             // takeable_starts_len:cur.takeable_starts_len,
             // takeables:cur.takeables,
 
@@ -887,11 +886,7 @@ where
             from_user:true,
             is_first:cur.is_first,
 
-            // takeable_starts_ind2:cur.takeable_starts_ind2,
-            // takeable_starts_len2:cur.takeable_starts_len2,
             hist_news_len,
-            // hist_ends:cur.hist_ends,
-
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
         });
@@ -914,7 +909,7 @@ where
         // }
 
         //
-        let takeable_starts_len2=self.hist_news_add(&cur);
+        let hist_news_len=self.hist_news_add(&cur);
 
         //
         self.stk.push(Work {
@@ -930,7 +925,6 @@ where
             and_id:cur.and_id,
 
             // groups_stk_len: cur.groups_stk_len,
-
             // takeable_starts_len:cur.takeable_starts_len,
             // takeables:cur.takeables,
 
@@ -940,11 +934,7 @@ where
             from_user:true,
             is_first:cur.is_first,
 
-            // takeable_starts_ind2:cur.takeable_starts_ind2,
-            // takeable_starts_len2:cur.takeable_starts_len2,
-            hist_news_len: takeable_starts_len2,
-            // hist_ends:cur.hist_ends,
-
+            hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
         });
@@ -952,7 +942,7 @@ where
 
     fn grammar_opt(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>,) {
         //
-        let takeable_starts_len2=self.hist_news_add(&cur);
+        let hist_news_len=self.hist_news_add(&cur);
 
         //
         self.stk.push(Work {
@@ -968,7 +958,6 @@ where
             and_id:cur.and_id,
 
             // groups_stk_len: cur.groups_stk_len,
-
             // takeable_starts_len:cur.takeable_starts_len,
             // takeables:cur.takeables.clone(),
 
@@ -978,11 +967,7 @@ where
             from_user:false,
             is_first:cur.is_first,
 
-            // takeable_starts_ind2:cur.takeable_starts_ind2,
-            // takeable_starts_len2:cur.takeable_starts_len2,
-            hist_news_len: takeable_starts_len2,
-            // hist_ends:cur.hist_ends.clone(),
-
+            hist_news_len,
 
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
@@ -1010,7 +995,6 @@ where
             and_id:cur.and_id,
 
             // groups_stk_len: cur.groups_stk_len,
-
             // takeable_starts_len:cur.takeable_starts_len,
             // takeables:cur.takeables,
 
@@ -1020,11 +1004,7 @@ where
             from_user:true,
             is_first:cur.is_first,
 
-            // takeable_starts_ind2:cur.takeable_starts_ind2,
-            // takeable_starts_len2:cur.takeable_starts_len2,
-            hist_news_len: takeable_starts_len2,
-            // hist_ends:cur.hist_ends,
-
+            hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
         });
@@ -1033,7 +1013,7 @@ where
         //in always/prev they check if their success_ind is a many (which could be a problem if ands/ors were handled more efficiently),
         //  but could store maybe a many_id to check whether to exit? eg if id is eq, and/or tokens.inds.start is eq?
         //
-        let takeable_starts_len2=self.hist_news_add(&cur);
+        let hist_news_len=self.hist_news_add(&cur);
 
         //
         // let fail_len2=self.stk.len(); //only remove everything past here on fail
@@ -1052,7 +1032,6 @@ where
             and_id:cur.and_id,
 
             // groups_stk_len: cur.groups_stk_len,
-
             // takeable_starts_len:cur.takeable_starts_len,
             // takeables:cur.takeables.clone(),
 
@@ -1062,11 +1041,7 @@ where
             from_user:false,
             is_first:cur.is_first,
 
-            // takeable_starts_ind2:cur.takeable_starts_ind2,
-            // takeable_starts_len2:cur.takeable_starts_len2,
-            hist_news_len: takeable_starts_len2,
-            // hist_ends:cur.hist_ends.clone(),
-
+            hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
         });
@@ -1088,7 +1063,6 @@ where
             and_id:cur.and_id,
 
             // groups_stk_len: cur.groups_stk_len,
-
             // takeable_starts_len:cur.takeable_starts_len,
             // takeables:cur.takeables.clone(),
 
@@ -1098,11 +1072,7 @@ where
             from_user:false,
             is_first:cur.is_first,
 
-            // takeable_starts_ind2:cur.takeable_starts_ind2,
-            // takeable_starts_len2:cur.takeable_starts_len2,
-            hist_news_len: takeable_starts_len2,
-            // hist_ends:cur.hist_ends.clone(),
-
+            hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
         });
@@ -1129,7 +1099,6 @@ where
             and_id:cur.and_id,
 
             // groups_stk_len: cur.groups_stk_len,
-
             // takeable_starts_len:cur.takeable_starts_len,
             // takeables:cur.takeables,
 
@@ -1139,18 +1108,14 @@ where
             from_user:true,
             is_first:cur.is_first,
 
-            // takeable_starts_ind2:cur.takeable_starts_ind2,
-            // takeable_starts_len2:cur.takeable_starts_len2,
-            hist_news_len: takeable_starts_len2,
-            // hist_ends:cur.hist_ends,
-
+            hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
         });
     }
     fn grammar_non_term(&mut self,cur :Work<'t,'g>,t:&'g str) -> Result<(),GrammarWalkError<'g>>{
         //
-        let takeable_starts_len2=self.hist_news_add(&cur);
+        let hist_news_len=self.hist_news_add(&cur);
 
         //
         let visiteds=self.do_non_term_visiteds(t,cur.tokens,cur.visiteds)?;
@@ -1176,7 +1141,6 @@ where
             and_id:cur.and_id,
 
             // groups_stk_len: cur.groups_stk_len,
-
             // takeables:cur.takeables,
             // takeable_starts_len:cur.takeable_starts_len,
 
@@ -1186,11 +1150,7 @@ where
             from_user:true,
             is_first:cur.is_first,
 
-            // takeable_starts_ind2:cur.takeable_starts_ind2,
-            // takeable_starts_len2:cur.takeable_starts_len2,
-            hist_news_len: takeable_starts_len2,
-            // hist_ends:cur.hist_ends,
-
+            hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
         });
@@ -1317,7 +1277,7 @@ where
         let Some(first)=gs.first().cloned() else { return ; };
 
         //
-        let takeable_starts_len2=self.hist_news_add(&cur);
+        let hist_news_len=self.hist_news_add(&cur);
 
         //
         if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
@@ -1334,7 +1294,6 @@ where
                 and_id:cur.and_id+1,
 
                 // groups_stk_len: cur.groups_stk_len,
-
                 // takeable_starts_len:cur.takeable_starts_len,
                 // takeables:cur.takeables.clone(),
 
@@ -1344,10 +1303,7 @@ where
                 from_user:false,
                 is_first:false,
 
-                // takeable_starts_ind2:cur.takeable_starts_ind2,
-                // takeable_starts_len2:cur.takeable_starts_len2,
-                hist_news_len: takeable_starts_len2,
-                // hist_ends:cur.hist_ends.clone(),
+                hist_news_len,
 
                 hist_begins_stk_len:cur.hist_begins_stk_len,
                 hist_ends_stk_len:cur.hist_ends_stk_len,
@@ -1373,11 +1329,11 @@ where
             visiteds:cur.visiteds,
             grammar_debug_len: cur.grammar_debug_len+1,
             expected:cur.expected,
+
             // and_id:cur.and_id+1,
             and_id:if gs.len()==1{cur.and_id}else{cur.and_id+1}, //don't need if single element in And?
 
             // groups_stk_len: cur.groups_stk_len,
-
             // takeable_starts_len:cur.takeable_starts_len,
             // takeables:cur.takeables,
 
@@ -1387,10 +1343,7 @@ where
             from_user:true,
             is_first:cur.is_first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
 
-            // takeable_starts_ind2:cur.takeable_starts_ind2,
-            // takeable_starts_len2:cur.takeable_starts_len2,
-            hist_news_len: takeable_starts_len2,
-            // hist_ends:cur.hist_ends,
+            hist_news_len,
 
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
@@ -1431,7 +1384,6 @@ where
                 and_id:cur.and_id,
 
                 // groups_stk_len: cur.groups_stk_len,
-
                 // takeable_starts_len:cur.takeable_starts_len,
                 // takeables:cur.takeables.clone(),
 
@@ -1441,10 +1393,7 @@ where
                 from_user:false,
                 is_first:cur.is_first,
 
-                // takeable_starts_ind2:cur.takeable_starts_ind2,
-                // takeable_starts_len2:cur.takeable_starts_len2,
                 hist_news_len,
-                // hist_ends:cur.hist_ends.clone(),
 
                 hist_begins_stk_len:self.hist_begins_stk.len(),
                 hist_ends_stk_len:self.hist_ends_stk.len(),
@@ -1473,7 +1422,6 @@ where
             and_id:cur.and_id,
 
             // groups_stk_len: cur.groups_stk_len,
-
             // takeable_starts_len:cur.takeable_starts_len,
             // takeables:cur.takeables,
 
@@ -1483,11 +1431,7 @@ where
             from_user:true,
             is_first:cur.is_first,
 
-            // takeable_starts_ind2:cur.takeable_starts_ind2,
-            // takeable_starts_len2:cur.takeable_starts_len2,
             hist_news_len,
-            // hist_ends:cur.hist_ends,
-
 
             hist_begins_stk_len:self.hist_begins_stk.len(),
             hist_ends_stk_len:self.hist_ends_stk.len(),
