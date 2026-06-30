@@ -935,4 +935,10 @@ pub struct TempGroupsElement<'t,'g> {
             //let groups=&self.groups;
 			
 //hist_news_add_to_last
+
+                        // group_ind,
+                        // inner_groups:group_ind+1 .. self.groups.len(),
+                        // tokens_start,
         // last_takeables
+		
+		
