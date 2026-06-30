@@ -25,28 +25,6 @@ pub struct TempHistEnd<'t> {
     // pub inner_groups:Range<usize>, //groups inside the takeable?
 }
 
-
-// #[derive(Clone, Debug)]
-// pub struct TempTakeableStart<'t,'g> {
-//     pub grammar:GrammarNode<'g>,
-//     pub tokens_start:TokenIterContainer<'t>,
-//     pub group_ind:usize,
-// }
-
-// #[derive(Clone, Debug)]
-// pub struct WorkTakeable<'t> {
-//     pub tokens:TokenIterContainer<'t>,
-//     pub tokens_start:TokenIterContainer<'t>,
-//     pub group_ind:usize,
-//     pub inner_groups:Range<usize>, //groups inside the takeable?
-// }
-
-// #[derive(Clone, Default, Debug)]
-// pub struct TempGroupsElement<'t,'g> {
-//     pub groups:Vec<TempGroupInfo<'t,'g>>,
-//     // pub tokens_start:usize, //not used?
-// }
-
 #[derive(Clone,Default,Debug)]
 pub struct TempHistBegins<'t,'g> {
     pub elements:HashMap<GrammarNode<'g>,TempHistBegin<'t,'g>>,
@@ -103,21 +81,11 @@ pub struct Work<'t,'g> {
     pub expected:WorkExpected<'g>, //(u64,u32,&'g str), //id,priority,expected
     pub and_id:usize, //for take, to know when continuing on an And, or leaving
 
-    // pub groups_stk_len:usize, //used for take
-
-    // pub takeable_starts_len:usize,
-    // pub takeables:HashMap<GrammarNode<'g>,WorkTakeable<'t>>,
-
-    // pub discard:bool,
-    // pub opt:bool,
-
-
     pub from_user:bool, //gramamr added by input grammar, not walker
     pub is_first:bool,
 
     pub hist_news_len:usize,
     pub hist_begins_stk_len:usize,
-    // pub hist_ends:HashMap<GrammarNode<'g>,TempHistEnd<'t>>, //could store as a stk in Walker,
     pub hist_ends_stk_len:usize,
 }
 
@@ -132,13 +100,7 @@ pub enum TempGrammarNodeDebug<'t,'g> {
     Expected(u32,&'g str,Option<Box<Self>>),
     NonTerm(&'g str,Option<Box<Self>>),
 
-    // EndsIn(Option<Box<Self>>, ), //Box<GrammarNode<'g>>
     Prev(Option<Box<Self>>),
-
-    // Cede(Option<Box<Self>>),
-    // Take(Option<Box<Self>>),
-
-    // Discard(Option<Box<Self>>),
 
     String(Option<ValueContainer<'t,&'t str>>),
     Identifier(Option<ValueContainer<'t,&'t str>>),
@@ -199,21 +161,6 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                             stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
                             write!(f,"Opt(")?;
                         }
-                        // Self::Cede(arg0) => {
-                        //     stk.push(Work::Write(")"));
-                        //     stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
-                        //     write!(f,"Cede(")?;
-                        // }
-                        // Self::Take(arg0) => {
-                        //     stk.push(Work::Write(")"));
-                        //     stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
-                        //     write!(f,"Take(")?;
-                        // }
-                        // Self::EndsIn(arg0, ) => {
-                        //     stk.push(Work::Write(")"));
-                        //     stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
-                        //     write!(f,"EndsIn(")?;
-                        // }
                         Self::Prev(arg0, ) => {
                             stk.push(Work::Write(")"));
                             stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
@@ -229,11 +176,6 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                             stk.push(if let Some(x)=arg2 {Work::Node(x)} else {Work::Write("_")});
                             write!(f,"Expect({arg0}:{arg1:?},")?;
                         }
-                        // Self::Discard(arg0) => {
-                        //     stk.push(Work::Write(")"));
-                        //     stk.push(if let Some(x)=arg0 {Work::Node(x)} else {Work::Write("_")});
-                        //     write!(f,"Discard(")?;
-                        // }
                         Self::NonTerm(arg0, arg1) => {
                             stk.push(Work::Write(")"));
                             stk.push(if let Some(x)=arg1 {Work::Node(x)} else {Work::Write("_")});
@@ -241,7 +183,6 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                         }
                         Self::String(arg0) => {
                             write!(f,"String({})",if let Some(x)=arg0{format!("{}:{:?}",x.token.ind(),x.value)}else{"_".into()})?;
-
                         }
                         Self::Identifier(arg0) => {
                             write!(f,"Identifier({})",if let Some(x)=arg0{format!("{}:{:?}",x.token.ind(),x.value)}else{"_".into()})?;
@@ -251,7 +192,6 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
                         }
                         Self::Float(arg0) => {
                             write!(f,"Float({})",if let Some(x)=arg0{format!("{}:{}",x.token.ind(),x.value)}else{"_".into()})?;
-
                         }
                         Self::Symbol(arg0) => {
                             write!(f,"Symbol({})",if let Some(x)=arg0{format!("{}:{}",x.token.ind(),x.value)}else{"_".into()})?;
