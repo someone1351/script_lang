@@ -1713,12 +1713,6 @@ where
         false
     }
 
-    fn step_truncates(&mut self,cur :&Work<'t,'g>) {
-        self.groups.truncate(cur.group_len);
-        self.hist_begins_stk.truncate(cur.hist_begins_stk_len);
-        self.hist_ends_stk.truncate(cur.hist_ends_stk_len);
-    }
-
     fn do_primtive<Q,P,K>(&mut self,mut cur:Work<'t,'g>,prim_func:Q,on_ok:K) -> Option<ValueContainer<'t,P>>
     where
         P:Clone,
@@ -1867,6 +1861,124 @@ where
             }
         }
     }
+
+    fn hist_news_add_to_last(&mut self,
+        // cur_tokens:TokenIterContainer<'t>,
+        cur:&Work<'t,'g>,
+        gotten:bool, //what was this for again? something to do with not adding cur grammar to hist_begins? it was for not adding cur grammar to hist_new?
+    ) {
+        let cur_tokens=cur.tokens;
+
+        //
+        if let Some(last)=self.stk.last_mut() {
+            let drained_hist_news=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
+            let hist_news=drained_hist_news.iter().map(|hist_new|{
+                //
+                let tokens_len=hist_new.tokens_start.len()-cur_tokens.len();
+                let tokens=hist_new.tokens_start.get_amount(tokens_len).unwrap();
+
+                //
+                if self.debug {
+                    println!("--- inserting hist_new {:?} {tokens:?}",hist_new.grammar);
+                }
+
+                //
+                (
+                    hist_new.grammar.clone(),
+                    TempHistEnd {
+                        // tokens_start,
+                        tokens,
+                        // group_ind,
+                        // inner_groups:group_ind+1 .. self.groups.len(),
+                    }
+                )
+
+            }).collect::<Vec<_>>();
+
+            //
+
+            //
+            for i in 0..drained_hist_news.len()
+            {
+                let hist_new=&drained_hist_news[i];
+
+                //
+                if self.debug {
+                    println!("---going i={i}, is_first={}, g={:?} self.or_stk.len={}",
+                        hist_new.is_first,hist_new.grammar,
+                        self.hist_begins_stk.len(),
+                    );
+                }
+
+                //
+                if hist_new.is_first {
+                    if let Some(hist_begins)=self.hist_begins_stk.last_mut() {
+                        let mut groups=self.groups[cur.group_ind..cur.group_len].to_vec();
+
+                        //offset parents in group
+                        if !groups.is_empty() {
+                            let first_parent=groups[0].parent;
+
+                            for group in groups.iter_mut() {
+                                group.parent-=first_parent;
+                            }
+                        }
+
+                        //if or(and(A0,A1),A2)
+                        //  after A0, it gets added to the hist_begins, that A1 can see, but not use because it isn't a first
+
+                        //
+                        hist_begins.elements.entry(hist_new.grammar.clone()).or_insert_with(||TempHistBegin {
+                            groups,
+                            hist_ends: HashMap::from_iter(hist_news[i+1..].into_iter().cloned()),
+                            tokens_after: cur_tokens,
+                        });
+                    }
+                }
+
+            }
+
+            //
+
+            let last_hist_ends=&mut self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
+            last_hist_ends.extend(hist_news.into_iter());
+
+        }
+        // last_takeables
+    }
+
+    fn last_hist_ends_remove_old(&mut self) {
+        if let Some(last)=self.stk.last_mut() {
+            let last_hist_ends=&mut self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
+            last_hist_ends.retain(|_k,v|v.tokens.inds().start>=last.tokens.inds().start);
+        }
+    }
+
+    fn hist_news_truncate_to_last(&mut self) {
+        if let Some(last)=self.stk.last() {
+            self.hist_news.truncate(last.hist_news_len); //what is it for? clears failed takeable_starts?
+        }
+    }
+
+    fn hist_news_add(&mut self,cur:&Work<'t,'g>) -> usize {
+        if cur.from_user { //ignore grammars added by walker
+            self.hist_news.push(TempHistNew {
+                grammar: cur.grammar.clone(),
+                tokens_start: cur.tokens.clone(),
+                // group_ind: cur.group_ind,
+                is_first:cur.is_first,
+            });
+        }
+
+        self.hist_news.len()
+    }
+
+    fn step_truncates(&mut self,cur :&Work<'t,'g>) {
+        self.groups.truncate(cur.group_len);
+        self.hist_begins_stk.truncate(cur.hist_begins_stk_len);
+        self.hist_ends_stk.truncate(cur.hist_ends_stk_len);
+    }
+
 
     // fn do_groups_stk_success(&mut self,cur:Work<'t,'g>,cur_and_id:usize) {
 
@@ -2172,116 +2284,6 @@ where
     //     }
     // }
 
-    fn hist_news_add_to_last(&mut self,
-        // cur_tokens:TokenIterContainer<'t>,
-        cur:&Work<'t,'g>,
-        gotten:bool, //what was this for again? something to do with not adding cur grammar to hist_begins? it was for not adding cur grammar to hist_new?
-    ) {
-        let cur_tokens=cur.tokens;
-
-        //
-        if let Some(last)=self.stk.last_mut() {
-            let drained_hist_news=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
-            let hist_news=drained_hist_news.iter().map(|hist_new|{
-                //
-                let tokens_len=hist_new.tokens_start.len()-cur_tokens.len();
-                let tokens=hist_new.tokens_start.get_amount(tokens_len).unwrap();
-
-                //
-                if self.debug {
-                    println!("--- inserting hist_new {:?} {tokens:?}",hist_new.grammar);
-                }
-
-                //
-                (
-                    hist_new.grammar.clone(),
-                    TempHistEnd {
-                        // tokens_start,
-                        tokens,
-                        // group_ind,
-                        // inner_groups:group_ind+1 .. self.groups.len(),
-                    }
-                )
-
-            }).collect::<Vec<_>>();
-
-            //
-
-            //
-            for i in 0..drained_hist_news.len()
-            {
-                let hist_new=&drained_hist_news[i];
-
-                //
-                if self.debug {
-                    println!("---going i={i}, is_first={}, g={:?} self.or_stk.len={}",
-                        hist_new.is_first,hist_new.grammar,
-                        self.hist_begins_stk.len(),
-                    );
-                }
-
-                //
-                if hist_new.is_first {
-                    if let Some(hist_begins)=self.hist_begins_stk.last_mut() {
-                        let mut groups=self.groups[cur.group_ind..cur.group_len].to_vec();
-
-                        //offset parents in group
-                        if !groups.is_empty() {
-                            let first_parent=groups[0].parent;
-
-                            for group in groups.iter_mut() {
-                                group.parent-=first_parent;
-                            }
-                        }
-
-                        //if or(and(A0,A1),A2)
-                        //  after A0, it gets added to the hist_begins, that A1 can see, but not use because it isn't a first
-
-                        //
-                        hist_begins.elements.entry(hist_new.grammar.clone()).or_insert_with(||TempHistBegin {
-                            groups,
-                            hist_ends: HashMap::from_iter(hist_news[i+1..].into_iter().cloned()),
-                            tokens_after: cur_tokens,
-                        });
-                    }
-                }
-
-            }
-
-            //
-
-            let last_hist_ends=&mut self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
-            last_hist_ends.extend(hist_news.into_iter());
-
-        }
-        // last_takeables
-    }
-
-    fn last_hist_ends_remove_old(&mut self) {
-        if let Some(last)=self.stk.last_mut() {
-            let last_hist_ends=&mut self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
-            last_hist_ends.retain(|_k,v|v.tokens.inds().start>=last.tokens.inds().start);
-        }
-    }
-
-    fn hist_news_truncate_to_last(&mut self) {
-        if let Some(last)=self.stk.last() {
-            self.hist_news.truncate(last.hist_news_len); //what is it for? clears failed takeable_starts?
-        }
-    }
-
-    fn hist_news_add(&mut self,cur:&Work<'t,'g>) -> usize {
-        if cur.from_user { //ignore grammars added by walker
-            self.hist_news.push(TempHistNew {
-                grammar: cur.grammar.clone(),
-                tokens_start: cur.tokens.clone(),
-                // group_ind: cur.group_ind,
-                is_first:cur.is_first,
-            });
-        }
-
-        self.hist_news.len()
-    }
 
     fn clear_expected(&mut self) {
         // println!("-------==== expected cleared, {}",self.expected_loc);
