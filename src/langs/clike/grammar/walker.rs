@@ -441,18 +441,8 @@ where
 
         //
         let hist_news_len=self.hist_news_add(&cur);
-
-        //
-        if  self.hist_begins_stk.is_empty() //reason? shouldn't it not be empty, as would be created by first? there was a reason ...
-            || !cur.is_first //don't need to use cur.from_user, first is better, as could handle potential Or not added by user
-        {
-            self.hist_begins_stk.push(Default::default());
-        }
-
-        //
-        if cur.is_first {
-            self.hist_ends_stk.push(self.hist_ends_stk.last().cloned().unwrap());
-        }
+        let hist_begins_stk_len=self.hist_begins_stk_push(&cur);
+        let hist_ends_stk_len=self.hist_ends_stk_push(&cur);
 
         //
         if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
@@ -471,8 +461,8 @@ where
                 is_first:cur.is_first,
 
                 hist_news_len,
-                hist_begins_stk_len:self.hist_begins_stk.len(),
-                hist_ends_stk_len:self.hist_ends_stk.len(),
+                hist_begins_stk_len,
+                hist_ends_stk_len,
 
                 expected_news_len:cur.expected_news_len,
             });
@@ -497,8 +487,8 @@ where
             is_first:cur.is_first,
 
             hist_news_len,
-            hist_begins_stk_len:self.hist_begins_stk.len(),
-            hist_ends_stk_len:self.hist_ends_stk.len(),
+            hist_begins_stk_len,
+            hist_ends_stk_len,
 
             expected_news_len:cur.expected_news_len,
         });
@@ -532,7 +522,6 @@ where
 
             //
             // self.hist_news_truncate_to_last(); //why on success??
-
 
             //
             self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
@@ -663,9 +652,9 @@ where
         //
         let _hist_news_len=self.hist_news_add(&cur);
 
+        //
         match prim_func(&mut cur.tokens) {
             Ok(v) => {
-
                 //
                 self.stk.truncate(cur.success_len);
 
@@ -843,6 +832,24 @@ where
         if let Some(last)=self.stk.last() {
             self.hist_news.truncate(last.hist_news_len); //what is it for? clears failed takeable_starts?
         }
+    }
+
+    fn hist_begins_stk_push(&mut self,cur:&Work<'t,'g>) -> usize {
+        if  self.hist_begins_stk.is_empty() //reason? shouldn't it not be empty, as would be created by first? there was a reason ...
+            || !cur.is_first //don't need to use cur.from_user, first is better, as could handle potential Or not added by user
+        {
+            self.hist_begins_stk.push(Default::default());
+        }
+
+        self.hist_begins_stk.len()
+
+    }
+    fn hist_ends_stk_push(&mut self,cur:&Work<'t,'g>) -> usize {
+        if cur.is_first {
+            self.hist_ends_stk.push(self.hist_ends_stk.last().cloned().unwrap());
+        }
+
+        self.hist_ends_stk.len()
     }
 
     fn hist_news_add(&mut self,cur:&Work<'t,'g>) -> usize {
