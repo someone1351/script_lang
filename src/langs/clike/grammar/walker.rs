@@ -528,12 +528,19 @@ where
             }
 
             //
-            self.hist_news_truncate_to_last();
+            // self.hist_news_truncate_to_last(); //why on success??
 
 
             //
             self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
+
+            //
             self.hist_news_drain(&cur,true);
+
+            //
+            self.expect_news_truncate_to_last();
+
+            //
             self.set_remaining_prims(cur.tokens);
         } else {
             //
@@ -585,6 +592,9 @@ where
         self.hist_news_drain(&cur,true);
 
         //
+        self.expect_news_truncate_to_last();
+
+        //
         self.set_remaining_prims(cur.tokens);
 
         //
@@ -628,6 +638,9 @@ where
         self.hist_news_drain(&cur,false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
 
         //
+        self.expect_news_truncate_to_last();
+
+        //
         self.set_remaining_prims(cur.tokens);
 
         //
@@ -665,6 +678,9 @@ where
                 //
                 self.last_hist_ends_remove_previous();
                 self.hist_news_drain(&cur,true);
+
+                //
+                self.expect_news_truncate_to_last();
 
                 //
                 if self.debug {
@@ -727,8 +743,17 @@ where
         //
         let drained_expect_news=self.expect_news.drain(last.expect_news_len ..).collect::<Vec<_>>();
 
+        //
+        for i in 0..drained_expect_news.len() {
+            let drained_expect_new=&drained_expect_news[i];
+        }
     }
 
+    fn expect_news_truncate_to_last(&mut self) {
+        if let Some(last)=self.stk.last() {
+            self.expect_news.truncate(last.expect_news_len);
+        }
+    }
     fn hist_news_drain(&mut self,
         cur:&Work<'t,'g>,
         gotten:bool, //what was this for again? something to do with not adding cur grammar to hist_begins? it was for not adding cur grammar to hist_new?
