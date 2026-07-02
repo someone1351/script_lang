@@ -10,6 +10,35 @@ use super::node::*;
 
 
 #[derive(Clone, Debug)]
+pub struct TempExpectNew<'g> {
+    // pub name:&'g str,
+    // pub grammar:GrammarNode<'g>,
+    pub expect_type:TempExpectType<'g>,
+}
+
+// #[derive(Clone, Debug)]
+// pub struct TempExpectNews<'g> {
+
+// }
+
+
+
+#[derive(Clone, Debug)]
+pub enum TempExpectType<'g> {
+    Expected(&'g str),
+
+    Int,
+    Float,
+    String,
+    Identifier,
+    Symbol(&'g str),
+    Keyword(&'g str),
+
+    Eol,
+    Prev,
+}
+
+#[derive(Clone, Debug)]
 pub struct TempHistNew<'t,'g> {
     pub grammar:GrammarNode<'g>,
     pub tokens_start:TokenIterContainer<'t>,
@@ -61,12 +90,6 @@ impl<'t,'g> Debug for  TempGroupInfo<'t,'g> {
     }
 }
 
-#[derive(Default,Copy,Clone)]
-pub struct WorkExpected<'g> {
-    pub id:u64,
-    pub priority:u32,
-    pub name:&'g str,
-}
 
 #[derive(Clone)]
 pub struct Work<'t,'g> {
@@ -78,7 +101,6 @@ pub struct Work<'t,'g> {
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
     pub visiteds:HashSet<(&'g str,usize)>, //used for checking recursive nonterms
     pub grammar_debug_len:usize,
-    pub expected:WorkExpected<'g>, //(u64,u32,&'g str), //id,priority,expected
     pub and_id:usize, //for take, to know when continuing on an And, or leaving
 
     pub from_user:bool, //gramamr added by input grammar, not walker
@@ -87,5 +109,7 @@ pub struct Work<'t,'g> {
     pub hist_news_len:usize,
     pub hist_begins_stk_len:usize,
     pub hist_ends_stk_len:usize,
+
+    pub expect_news_len:usize,
 }
 

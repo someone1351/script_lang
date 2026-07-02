@@ -5,19 +5,13 @@ use super::super::grammar::error::GrammarWalkError;
 #[derive(Clone,Debug,Hash,PartialEq,Eq)]
 pub enum GrammarNode<'g> {
     Many(Box<GrammarNode<'g>>),
-    // Many1(Box<GrammarItem<'a>>),
     And(Vec<GrammarNode<'g>>), //should store reversed?
     Or(Vec<GrammarNode<'g>>), //should store reversed?
-    Opt(Box<GrammarNode<'g>>),
-    // Cede(Box<GrammarNode<'g>>),
-    // Take(Box<GrammarNode<'g>>),
-    Group(&'g str,Box<GrammarNode<'g>>),
-    Expected(u32,&'g str,Box<GrammarNode<'g>>), //priority, expected,
-    // EndsIn(Box<GrammarNode<'g>>,Box<GrammarNode<'g>>), //grammar, ends_in_grammar
-    Prev(Box<GrammarNode<'g>>),
 
-    // List(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
-    // ListNoTrail(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
+    NonTerm(&'g str),
+    Group(Box<GrammarNode<'g>>,&'g str,),
+    Expected(Box<GrammarNode<'g>>, &'g str,),
+    Prev(Box<GrammarNode<'g>>),
 
     String,
     Identifier,
@@ -27,14 +21,8 @@ pub enum GrammarNode<'g> {
     Keyword(&'g str),
     Eol,
 
-    NonTerm(&'g str),
     Always, //always succeeds
-    // Never, //replace with Error ?
     Error(GrammarWalkError<'g>),
-    // Not(Box<GrammarItem<'a>>), //todo, needed? better to have NotIdentifier etc?
-
-    //todo remove:
-    // Discard(Box<GrammarNode<'g>>), //todo, removes token from output (via just hding it, ie have hashmap of tokens to hide)
 }
 
 impl<'g> GrammarNode<'g> {
@@ -42,62 +30,37 @@ impl<'g> GrammarNode<'g> {
         Self::Many(self.into())
     }
     pub fn many1(self) -> GrammarNode<'g> {
-        let x=self.clone();
-        [x,self.many0(),].and()
-        // Self::Many1(self.into())
+        [self.clone(),self.many0(),].and()
     }
     pub fn opt(self) -> GrammarNode<'g> {
-        Self::Opt(self.into())
+        [self.into(),Self::Always].or()
     }
     pub fn group(self,name: &'g str) -> GrammarNode<'g> {
-        Self::Group(name,self.into())
+        Self::Group(self.into(),name)
     }
-    pub fn expected(self,name: &'g str,priority:u32,) -> GrammarNode<'g> {
-        Self::Expected(priority,name,self.into())
+    pub fn expected(self,name: &'g str,) -> GrammarNode<'g> {
+        Self::Expected(self.into(),name)
     }
-    pub fn expected0(self,name: &'g str) -> GrammarNode<'g> {
-        Self::Expected(0,name,self.into())
-    }
-    pub fn expected1(self,name: &'g str) -> GrammarNode<'g> {
-        Self::Expected(1,name,self.into())
-    }
-    pub fn expected2(self,name: &'g str) -> GrammarNode<'g> {
-        Self::Expected(2,name,self.into())
-    }
-    pub fn expected3(self,name: &'g str) -> GrammarNode<'g> {
-        Self::Expected(3,name,self.into())
-    }
-    // pub fn discard(self,) -> GrammarNode<'g> {
-    //     Self::Discard(self.into())
-    // }
-
-    // pub fn cede(self,) -> GrammarNode<'g> {
-    //     Self::Cede(self.into())
-    // }
-    // pub fn take(self,) -> GrammarNode<'g> {
-    //     Self::Take(self.into())
-    // }
-
-    // pub fn ends_in(self,ends_in_grammar:GrammarNode<'g>) -> GrammarNode<'g> {
-    //     Self::EndsIn(self.into(),ends_in_grammar.into()) //grammar, ends_in_grammar
-    // }
-
     pub fn prev(self) -> GrammarNode<'g> {
         Self::Prev(self.into())
     }
-    // pub fn d(self,) -> GrammarNode<'g> {
-    //     self.discard()
-    // }
     pub fn is_many(&self) -> bool {
-        if let GrammarNode::Many(_)=self {
-            true
-        } else {
-            false
-        }
-        // match self {
-        //     GrammarItem::Many(_)|GrammarItem::Many1(_) => true,
-        //     _ =>false,
-        // }
+        if let GrammarNode::Many(_)=self {true} else {false}
+    }
+}
+
+//todo have array stored in rev for or/and
+pub trait GrammarArrayTrait<'g> {
+    fn and(&self) -> GrammarNode<'g>;
+    fn or(&self) -> GrammarNode<'g>;
+}
+
+impl<'a,const N: usize> GrammarArrayTrait <'a> for [GrammarNode<'a>; N] {
+    fn and(&self) -> GrammarNode<'a> {
+        GrammarNode::And(self.into())
+    }
+    fn or(&self) -> GrammarNode<'a> {
+        GrammarNode::Or(self.into())
     }
 }
 
@@ -125,17 +88,3 @@ impl<'g> GrammarNode<'g> {
 //     }};
 // }
 
-//todo have array stored in rev for or/and
-pub trait GrammarArrayTrait<'g> {
-    fn and(&self) -> GrammarNode<'g>;
-    fn or(&self) -> GrammarNode<'g>;
-}
-impl<'a,const N: usize> GrammarArrayTrait <'a> for [GrammarNode<'a>; N] {
-    fn and(&self) -> GrammarNode<'a> {
-        GrammarNode::And(self.into())
-    }
-    fn or(&self) -> GrammarNode<'a> {
-        GrammarNode::Or(self.into())
-
-    }
-}

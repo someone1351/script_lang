@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 
 use crate::build::Loc;
-use crate::clike::tokenizer::TokenContainer;
+// use crate::clike::tokenizer::TokenContainer;
 use super::super::grammar::data::{Walk,WalkGroup};
 use super::super::tokenizer::{TokenIterContainer, ValueContainer};
 
@@ -28,8 +28,8 @@ where
     stk: Vec<Work<'t,'g>>,
     c:usize,
     expected_loc:Loc,
-    expecteds:Vec<(u32,GrammarNode<'g>)>, //(priority,gramamr)//(u64,GrammarNode<'g>) //(id,grammar) //todo change grammar to &'g
-    expected_count:u64,
+    expect_news:Vec<TempExpectNew<'g>>,
+
     debug:bool,
     non_term_recursive_check:bool,
 
@@ -49,14 +49,15 @@ where
         Self {
             stk:Default::default(),
             c:Default::default(),
+
             expected_loc:Loc::zero(),
-            expecteds:Vec::new(),
+            expect_news:Default::default(),
+
             grammar_func,
             primitives_remaining:top_primitives.clone(),
             top_primitives,
             debug:false,
             non_term_recursive_check:true,
-            expected_count: 0,
 
             groups:Default::default(),
 
@@ -81,7 +82,6 @@ where
             group_ind: 0, group_len: 1,
             visiteds:Default::default(),
             grammar_debug_len: 0,
-            expected:Default::default(),
             and_id: 0,
 
             from_user:false,
@@ -90,6 +90,8 @@ where
             hist_news_len:0,
             hist_begins_stk_len:0,
             hist_ends_stk_len:1,
+
+            expect_news_len:0,
         });
 
         //
@@ -104,7 +106,6 @@ where
             group_ind: 0, group_len: 1,
             visiteds:Default::default(),
             grammar_debug_len: 1,
-            expected:Default::default(),
             and_id: 0,
 
             from_user:true,
@@ -113,6 +114,8 @@ where
             hist_news_len:0,
             hist_begins_stk_len:0,
             hist_ends_stk_len:1,
+
+            expect_news_len:0,
         });
 
         //
@@ -135,7 +138,6 @@ where
                 group_ind: 0, group_len: 1,
                 visiteds:Default::default(),
                 grammar_debug_len: 1,
-                expected:Default::default(),
                 and_id: 0,
 
                 from_user:true,
@@ -144,6 +146,8 @@ where
                 hist_news_len:0,
                 hist_begins_stk_len:0,
                 hist_ends_stk_len:1,
+
+                expect_news_len:0,
             });
         }
 
@@ -163,19 +167,13 @@ where
         //
         self.c=0;
         self.expected_loc=Loc::zero();
-        self.expecteds.clear();
-        self.expected_count=0;
+        self.expect_news.clear();
+
     }
 
-    fn grammar_expect(&mut self,cur :Work<'t,'g>,priority:u32, name:&'g str,g:Box<GrammarNode<'g>>) {
-        self.expected_count+=1;
-        let expected=if cur.expected.id==0 {
-            // (self.expected_count,name)
-            let priority=priority+1; //so primitives/tokens are at priority 0, expected(s) are 1+
-            WorkExpected{ id: self.expected_count, priority, name }
-        } else {
-            cur.expected
-        };
+    fn grammar_expect(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>, name:&'g str) {
+        //
+        let expect_news_len=self.add_expect_new(&cur);
 
         //
         let hist_news_len=self.hist_news_add(&cur);
@@ -190,7 +188,6 @@ where
             group_len: cur.group_len,
             visiteds:cur.visiteds,
             grammar_debug_len: cur.grammar_debug_len+1,
-            expected,
             and_id:cur.and_id,
 
             from_user:true,
@@ -199,10 +196,12 @@ where
             hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
+
+            expect_news_len,
         });
     }
 
-    fn grammar_group(&mut self,cur :Work<'t,'g>,name:&'g str,g:Box<GrammarNode<'g>>) {
+    fn grammar_group(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>,name:&'g str) {
         //
         let new_group_ind=self.new_group(name, cur.group_ind, cur.tokens);
 
@@ -223,7 +222,6 @@ where
             group_len: new_group_len,
             visiteds:cur.visiteds,
             grammar_debug_len: cur.grammar_debug_len+1,
-            expected:cur.expected,
             and_id:cur.and_id,
 
             from_user:true,
@@ -232,56 +230,8 @@ where
             hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
-        });
-    }
 
-    fn grammar_opt(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>,) {
-        //
-        let hist_news_len=self.hist_news_add(&cur);
-
-        //
-        self.stk.push(Work {
-            grammar: GrammarNode::Always,
-            success_len: cur.success_len,
-            fail_len: 0, //fail is not used
-            tokens: cur.tokens,
-            group_ind: cur.group_ind,
-            group_len: cur.group_len,
-            visiteds:cur.visiteds.clone(),
-            grammar_debug_len: cur.grammar_debug_len,
-            expected:cur.expected,
-            and_id:cur.and_id,
-
-            from_user:false,
-            is_first:cur.is_first,
-
-            hist_news_len,
-            hist_begins_stk_len:cur.hist_begins_stk_len,
-            hist_ends_stk_len:cur.hist_ends_stk_len,
-        });
-
-        //
-        let fail_len=self.stk.len();
-
-        //
-        self.stk.push(Work {
-            grammar: *g,
-            success_len: cur.success_len,
-            fail_len,
-            tokens: cur.tokens,
-            group_ind: cur.group_ind,
-            group_len: cur.group_len,
-            visiteds:cur.visiteds,
-            grammar_debug_len: cur.grammar_debug_len+1,
-            expected:cur.expected,
-            and_id:cur.and_id,
-
-            from_user:true,
-            is_first:cur.is_first,
-
-            hist_news_len,
-            hist_begins_stk_len:cur.hist_begins_stk_len,
-            hist_ends_stk_len:cur.hist_ends_stk_len,
+            expect_news_len:cur.expect_news_len,
         });
     }
 
@@ -301,7 +251,6 @@ where
             group_len: cur.group_len,
             visiteds:cur.visiteds.clone(),
             grammar_debug_len: cur.grammar_debug_len,
-            expected:cur.expected,
             and_id:cur.and_id,
 
             from_user:false,
@@ -310,6 +259,8 @@ where
             hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
+
+            expect_news_len:cur.expect_news_len,
         });
 
         //
@@ -325,7 +276,6 @@ where
             group_len: cur.group_len,
             visiteds:cur.visiteds.clone(),
             grammar_debug_len: cur.grammar_debug_len,
-            expected:cur.expected,
             and_id:cur.and_id,
 
             from_user:false,
@@ -334,6 +284,8 @@ where
             hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
+
+            expect_news_len:cur.expect_news_len,
         });
 
         //
@@ -349,7 +301,6 @@ where
             group_len: cur.group_len,
             visiteds:cur.visiteds,
             grammar_debug_len: cur.grammar_debug_len+1,
-            expected:cur.expected,
             and_id:cur.and_id,
 
             from_user:true,
@@ -358,6 +309,8 @@ where
             hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
+
+            expect_news_len:cur.expect_news_len,
         });
     }
 
@@ -385,7 +338,6 @@ where
             group_len: cur.group_len,
             visiteds,
             grammar_debug_len: cur.grammar_debug_len+1,
-            expected:cur.expected,
             and_id:cur.and_id,
 
             from_user:true,
@@ -394,6 +346,8 @@ where
             hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
+
+            expect_news_len:cur.expect_news_len,
         });
 
         Ok(())
@@ -401,7 +355,7 @@ where
 
     fn grammar_error(&mut self,cur :Work<'t,'g>,e:GrammarWalkError<'g>) -> GrammarWalkError<'g> {
         if self.debug {
-            println!("====error {:?} {:?}",self.expected_loc,self.expecteds,);
+            println!("====error {:?} ",self.expected_loc,); //self.expecteds,
         }
 
         //necesaary? any point to it?
@@ -411,6 +365,9 @@ where
 
         //
         self.set_remaining_prims(cur.tokens);
+
+        //
+        // self.expect_news_drain(&cur); //necessary here? no since it is finishing here?
 
         //
         return e;
@@ -434,7 +391,6 @@ where
                 group_len: cur.group_len,
                 visiteds:cur.visiteds.clone(),
                 grammar_debug_len: cur.grammar_debug_len,
-                expected:cur.expected,
                 and_id:cur.and_id+1,
 
                 from_user:false,
@@ -443,6 +399,8 @@ where
                 hist_news_len,
                 hist_begins_stk_len:cur.hist_begins_stk_len,
                 hist_ends_stk_len:cur.hist_ends_stk_len,
+
+                expect_news_len:cur.expect_news_len,
             });
         }
 
@@ -459,7 +417,6 @@ where
             group_len: cur.group_len,
             visiteds:cur.visiteds,
             grammar_debug_len: cur.grammar_debug_len+1,
-            expected:cur.expected,
 
             // and_id:cur.and_id+1,
             and_id:if gs.len()==1{cur.and_id}else{cur.and_id+1}, //don't need if single element in And?
@@ -470,6 +427,8 @@ where
             hist_news_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
+
+            expect_news_len:cur.expect_news_len,
         });
     }
 
@@ -503,7 +462,6 @@ where
                 group_len: cur.group_len,
                 visiteds:cur.visiteds.clone(),
                 grammar_debug_len: cur.grammar_debug_len,
-                expected:cur.expected,
                 and_id:cur.and_id,
 
                 from_user:false,
@@ -512,6 +470,8 @@ where
                 hist_news_len,
                 hist_begins_stk_len:self.hist_begins_stk.len(),
                 hist_ends_stk_len:self.hist_ends_stk.len(),
+
+                expect_news_len:cur.expect_news_len,
             });
         }
 
@@ -528,7 +488,6 @@ where
             group_len: cur.group_len,
             visiteds:cur.visiteds,
             grammar_debug_len: cur.grammar_debug_len+1,
-            expected:cur.expected,
             and_id:cur.and_id,
 
             from_user:true,
@@ -537,6 +496,8 @@ where
             hist_news_len,
             hist_begins_stk_len:self.hist_begins_stk.len(),
             hist_ends_stk_len:self.hist_ends_stk.len(),
+
+            expect_news_len:cur.expect_news_len,
         });
     }
 
@@ -564,12 +525,6 @@ where
 
                 // last.hist_ends=cur.hist_ends.clone(); //should use move
                 last.hist_ends_stk_len=cur.hist_ends_stk_len;
-
-                //
-                if cur.expected.id!=last.expected.id {
-                    self.clear_last_expected();
-                }
-
             }
 
             //
@@ -578,22 +533,18 @@ where
 
             //
             self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
-            self.hist_news_add_to_last(&cur,true);
+            self.hist_news_drain(&cur,true);
             self.set_remaining_prims(cur.tokens);
         } else {
-            //
-            if cur.expected.id==0{
-                self.add_expected(
-                    cur.tokens.first().map(|t|t.start_loc()).unwrap_or_default(),
-                    0,cur.grammar.clone(),
-                );
-            }
-
             //
             self.stk.truncate(cur.fail_len);
 
             //
             self.hist_news_truncate_to_last();
+
+            //
+            let _expect_news_len=self.add_expect_new(&cur);
+            self.expect_news_drain(&cur);
         }
     }
 
@@ -625,18 +576,13 @@ where
 
             //
             last.hist_ends_stk_len=cur.hist_ends_stk_len;
-
-            //
-            if cur.expected.id!=last.expected.id {
-                self.clear_last_expected();
-            }
         }
 
         //
         self.do_groups_primitives_clamp(cur.group_ind,cur.tokens); //here
 
         //
-        self.hist_news_add_to_last(&cur,true);
+        self.hist_news_drain(&cur,true);
 
         //
         self.set_remaining_prims(cur.tokens);
@@ -673,24 +619,21 @@ where
 
             //
             last.hist_ends_stk_len=cur.hist_ends_stk_len;
-
-            //
-            if cur.expected.id!=last.expected.id {
-                self.clear_last_expected();
-            }
         }
 
         //
         self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
 
-        //a
-        self.hist_news_add_to_last(&cur,false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+        //
+        self.hist_news_drain(&cur,false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
 
         //
         self.set_remaining_prims(cur.tokens);
 
         //
-        println!("---- grabbed from or {:?},",cur.grammar);
+        if self.debug {
+            println!("---- grabbed from or {:?},",cur.grammar);
+        }
 
         //
         true
@@ -706,8 +649,6 @@ where
 
         match prim_func(&mut cur.tokens) {
             Ok(v) => {
-                //
-                self.clear_expected(v.token);
 
                 //
                 self.stk.truncate(cur.success_len);
@@ -719,14 +660,11 @@ where
                 }
 
                 //
-                self.clear_last_expected();
-
-                //
                 self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
 
                 //
                 self.last_hist_ends_remove_previous();
-                self.hist_news_add_to_last(&cur,true);
+                self.hist_news_drain(&cur,true);
 
                 //
                 if self.debug {
@@ -746,37 +684,14 @@ where
             }
             Err(loc) => {
                 //
-                // if self.stk.last().map(|last|!last.expected_non_term.is_none() ).unwrap_or_default()
-
-                //
-                if cur.expected.id==0{
-                    self.add_expected(loc,0,cur.grammar.clone());
-                }
-
-                //
                 self.stk.truncate(cur.fail_len);
 
                 //
-                if let Some(last)=self.stk.last_mut() {
-
-
-                    //
-                    // if let Some(x)=cur.expected_non_term {
-                    //     if last.expected_non_term.is_none() {
-                    //         self.add_expected(loc, GrammarNode::NonTerm(x));
-                    //     }
-                    // //     last.expected_non_term=None;
-                    // }
-
-                    //
-                    if cur.expected.id!=last.expected.id && cur.expected.id!=0 {
-                        self.clear_last_expected();
-                        self.add_expected(loc, cur.expected.priority,GrammarNode::NonTerm(cur.expected.name));
-                    }
-                }
+                self.hist_news_truncate_to_last();
 
                 //
-                self.hist_news_truncate_to_last();
+                let _expect_news_len=self.add_expect_new(&cur);
+                self.expect_news_drain(&cur);
 
                 //
                 self.set_remaining_prims(cur.tokens);
@@ -787,75 +702,101 @@ where
         }
     }
 
-    fn hist_news_add_to_last(&mut self,
+    fn add_expect_new(&mut self, cur:&Work<'t,'g>,) -> usize {
+        let expect_type=match cur.grammar {
+            GrammarNode::Expected(_, name) => TempExpectType::Expected(name),
+            GrammarNode::Prev(_) => TempExpectType::Prev,
+            GrammarNode::String => TempExpectType::String,
+            GrammarNode::Identifier => TempExpectType::Identifier,
+            GrammarNode::Int => TempExpectType::Int,
+            GrammarNode::Float => TempExpectType::Float,
+            GrammarNode::Symbol(s) => TempExpectType::Symbol(s),
+            GrammarNode::Keyword(s) => TempExpectType::Keyword(s),
+            GrammarNode::Eol => TempExpectType::Eol,
+           _ => {panic!("");}
+        };
+
+        self.expect_news.push(TempExpectNew { expect_type, });
+        self.expect_news.len()
+    }
+
+    fn expect_news_drain(&mut self, cur:&Work<'t,'g>,) {
+        //should always be some (due to init), use panic instead of ret?
+        let Some(last)=self.stk.last_mut() else {return;};
+
+        //
+        let drained_expect_news=self.expect_news.drain(last.expect_news_len ..).collect::<Vec<_>>();
+
+    }
+
+    fn hist_news_drain(&mut self,
         cur:&Work<'t,'g>,
         gotten:bool, //what was this for again? something to do with not adding cur grammar to hist_begins? it was for not adding cur grammar to hist_new?
     ) {
-        let cur_tokens=cur.tokens;
+        //should always be some (due to init), use panic instead of ret?
+        let Some(last)=self.stk.last_mut() else {return;};
 
         //
-        if let Some(last)=self.stk.last_mut() {
+        let drained_hist_news=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
+
+        //
+        let added_hist_ends=drained_hist_news.iter().map(|hist_new|{
             //
-            let drained_hist_news=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
-
-            //
-            let hist_news=drained_hist_news.iter().map(|hist_new|{
-                //
-                let tokens_len=hist_new.tokens_start.len()-cur_tokens.len();
-                let tokens=hist_new.tokens_start.get_amount(tokens_len).unwrap();
-
-                //
-                if self.debug {
-                    println!("--- inserting hist_new {:?} {tokens:?}",hist_new.grammar);
-                }
-
-                //
-                (  hist_new.grammar.clone(), TempHistEnd { tokens, } )
-            }).collect::<Vec<_>>();
+            let tokens_len=hist_new.tokens_start.len()-cur.tokens.len();
+            let tokens=hist_new.tokens_start.get_amount(tokens_len).unwrap();
 
             //
-            for i in 0..drained_hist_news.len() {
-                let hist_new=&drained_hist_news[i];
-
-                // //
-                // if self.debug {
-                //     println!("---going i={i}, is_first={}, g={:?} self.or_stk.len={}",
-                //         hist_new.is_first,hist_new.grammar,
-                //         self.hist_begins_stk.len(),
-                //     );
-                // }
-
-                //
-                if !hist_new.is_first { continue; }
-                let Some(hist_begins)=self.hist_begins_stk.last_mut() else {continue;};
-
-                //
-                let mut groups=self.groups[cur.group_ind..cur.group_len].to_vec();
-
-                //offset parents in group
-                if !groups.is_empty() { //cur.group_ind!=cur.group_len
-                    let first_parent=groups[0].parent;
-
-                    for group in groups.iter_mut() {
-                        group.parent-=first_parent;
-                    }
-                }
-
-                //if or(and(A0,A1),A2)
-                //  after A0, it gets added to the hist_begins, that A1 can see, but not use because it isn't a first
-
-                //
-                hist_begins.elements.entry(hist_new.grammar.clone()).or_insert_with(||TempHistBegin {
-                    groups,
-                    hist_ends: HashMap::from_iter(hist_news[i+1..].into_iter().cloned()),
-                    tokens_after: cur_tokens,
-                });
+            if self.debug {
+                println!("--- inserting hist_end {:?} {tokens:?}",hist_new.grammar);
             }
 
             //
-            let last_hist_ends=&mut self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
-            last_hist_ends.extend(hist_news.into_iter());
+            (  hist_new.grammar.clone(), TempHistEnd { tokens, } )
+        }).collect::<Vec<_>>();
+
+        //
+        for i in 0..drained_hist_news.len() {
+            let drained_hist_new=&drained_hist_news[i];
+
+            // //
+            // if self.debug {
+            //     println!("---going i={i}, is_first={}, g={:?} self.or_stk.len={}",
+            //         hist_new.is_first,hist_new.grammar,
+            //         self.hist_begins_stk.len(),
+            //     );
+            // }
+
+            //
+            if !drained_hist_new.is_first { continue; }
+            let Some(hist_begins)=self.hist_begins_stk.last_mut() else {continue;};
+
+            //
+            let mut groups=self.groups[cur.group_ind..cur.group_len].to_vec();
+
+            //offset parents in group
+            if !groups.is_empty() { //cur.group_ind!=cur.group_len
+                let first_parent=groups[0].parent;
+
+                for group in groups.iter_mut() {
+                    group.parent-=first_parent;
+                }
+            }
+
+            //if or(and(A0,A1),A2)
+            //  after A0, it gets added to the hist_begins, that A1 can see, but not use because it isn't a first
+
+            //
+            hist_begins.elements.entry(drained_hist_new.grammar.clone()).or_insert_with(||TempHistBegin {
+                groups,
+                hist_ends: HashMap::from_iter(added_hist_ends[i+1..].into_iter().cloned()),
+                tokens_after: cur.tokens,
+            });
         }
+
+        //
+        let last_hist_ends=&mut self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
+        last_hist_ends.extend(added_hist_ends.into_iter());
+
     }
 
     fn last_hist_ends_remove_previous(&mut self) {
@@ -966,60 +907,6 @@ where
         }
     }
 
-    //
-    fn clear_expected(&mut self,vprim:TokenContainer<'t>) {
-        // println!("-------==== expected cleared, {}",self.expected_loc);
-
-        //
-        if vprim.start_loc() >= self.expected_loc {
-            self.expected_loc=Loc::zero();
-            self.expecteds.clear();
-        }
-    }
-
-    fn add_expected(&mut self,loc:Loc,p:u32,g:GrammarNode<'g>) {
-        //
-        if loc==self.expected_loc {
-            //
-            self.expecteds.push((p,g.clone()));
-
-            //
-            // println!("-------==== expected added {g:?}, {loc}=={}",self.expected_loc);
-        } else if loc>self.expected_loc  { //|| self.expecteds.is_empty()
-            //
-            self.expected_loc=loc;
-            self.expecteds=vec![(p,g.clone())];
-
-            //
-            // println!("-------==== expected new {g:?}, {loc}=={}",self.expected_loc);
-        } else {
-            // println!("-------==== expected not added {g:?}, {loc}=={}",self.expected_loc);
-        }
-    }
-
-    fn clear_last_expected(&mut self) {
-        if let Some(last)=self.stk.last_mut() {
-            last.expected=Default::default();
-        }
-    }
-
-    //
-    pub fn expecteds_string(&self) -> String {
-        let max_priority=self.expecteds.iter().map(|&(p,_)|p).max().unwrap_or(0);
-
-        self.expecteds.iter().filter_map(|(p,g)|(*p==max_priority).then_some(g)).map(|g|match g {
-            GrammarNode::String => "string".to_string(),
-            GrammarNode::Identifier => "identifier".to_string(),
-            GrammarNode::Int => "int".to_string(),
-            GrammarNode::Float => "float".to_string(),
-            GrammarNode::Symbol(s) => format!("'{s}'"),
-            GrammarNode::Keyword(s) => format!("'{s}'"),
-            GrammarNode::Eol => "eol".to_string(),
-            GrammarNode::NonTerm(s) => format!("{s}"),
-            _ =>"".to_string(),
-        }).collect::<Vec<_>>().join(", ")
-    }
-
     pub fn last_loc(&self) -> Loc {
         if self.expected_loc.is_zero() {
             self.primitives_remaining.loc()
@@ -1114,7 +1001,7 @@ where
                             println!("Missing NonTerm {t:?}, At {}",self.expected_loc);
                         }
                         GrammarWalkError::FailedParse => {
-                            println!("Failed parse, At {}, expected {:?}",self.expected_loc,self.expecteds_string());
+                            println!("Failed parse, At {}, expected {:?}",self.expected_loc,"self.expecteds_string()");
                         }
                         GrammarWalkError::Unfinished =>{}
                     }
@@ -1135,13 +1022,14 @@ where
             if self.debug {
                 // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
                 println!("error, failed to parse all tokens, at {}",self.expected_loc);
-                println!("{:?}",self.expecteds); //self.expected.1 should be empty?
+                // println!("{:?}",self.expecteds); //self.expected.1 should be empty?
             }
 
             //
-            if self.expecteds.is_empty() {
-                result=Err(GrammarWalkError::Unfinished);
-            } else {
+            // if self.expecteds.is_empty() {
+            //     result=Err(GrammarWalkError::Unfinished);
+            // } else
+            {
                 result=Err(GrammarWalkError::FailedParse);
             }
 
@@ -1272,12 +1160,11 @@ where
 
         //
         match cur.grammar.clone() {
-            GrammarNode::Expected(priority, name, g) => {self.grammar_expect(cur, priority, name, g);}
+            GrammarNode::Expected(g,name, ) => {self.grammar_expect(cur, g,name, );}
             GrammarNode::Prev(g) => {self.grammar_prev(cur, g);}
-            GrammarNode::Group(name, g) => {self.grammar_group(cur, name, g);}
+            GrammarNode::Group(g,name, ) => {self.grammar_group(cur,  g,name,);}
             GrammarNode::And(gs) => {self.grammar_and(cur, gs);}
             GrammarNode::Or(gs) => {self.grammar_or(cur, gs);}
-            GrammarNode::Opt(g) => {self.grammar_opt(cur,g);}
             GrammarNode::Many(g) => {self.grammar_many(cur,g);}
             GrammarNode::NonTerm(t) => {self.grammar_non_term(cur, t)?;}
             GrammarNode::Always => {self.grammar_always(cur);}

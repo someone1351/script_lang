@@ -1,4 +1,101 @@
 
+    Opt(Box<GrammarNode<'g>>),
+        // Self::Opt(self.into())
+
+            GrammarNode::Opt(g) => {self.grammar_opt(cur,g);}
+			
+
+    fn grammar_opt(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>,) {
+        //
+        let hist_news_len=self.hist_news_add(&cur);
+
+        //
+        self.stk.push(Work {
+            grammar: GrammarNode::Always,
+            success_len: cur.success_len,
+            fail_len: 0, //fail is not used
+            tokens: cur.tokens,
+            group_ind: cur.group_ind,
+            group_len: cur.group_len,
+            visiteds:cur.visiteds.clone(),
+            grammar_debug_len: cur.grammar_debug_len,
+            and_id:cur.and_id,
+
+            from_user:false,
+            is_first:cur.is_first,
+
+            hist_news_len,
+            hist_begins_stk_len:cur.hist_begins_stk_len,
+            hist_ends_stk_len:cur.hist_ends_stk_len,
+        });
+
+        //
+        let fail_len=self.stk.len();
+
+        //
+        self.stk.push(Work {
+            grammar: *g,
+            success_len: cur.success_len,
+            fail_len,
+            tokens: cur.tokens,
+            group_ind: cur.group_ind,
+            group_len: cur.group_len,
+            visiteds:cur.visiteds,
+            grammar_debug_len: cur.grammar_debug_len+1,
+            and_id:cur.and_id,
+
+            from_user:true,
+            is_first:cur.is_first,
+
+            hist_news_len,
+            hist_begins_stk_len:cur.hist_begins_stk_len,
+            hist_ends_stk_len:cur.hist_ends_stk_len,
+        });
+    }
+=====
+
+        let x=self.clone();
+        // Self::Many1(self.into())
+    // pub fn discard(self,) -> GrammarNode<'g> {
+    //     Self::Discard(self.into())
+    // }
+
+    pub fn cede(self,) -> GrammarNode<'g> {
+        Self::Cede(self.into())
+    }
+    pub fn take(self,) -> GrammarNode<'g> {
+        Self::Take(self.into())
+    }
+
+    // pub fn ends_in(self,ends_in_grammar:GrammarNode<'g>) -> GrammarNode<'g> {
+    //     Self::EndsIn(self.into(),ends_in_grammar.into()) //grammar, ends_in_grammar
+    // }
+
+    // pub fn d(self,) -> GrammarNode<'g> {
+    //     self.discard()
+    // }
+	
+
+        // match self {
+        //     GrammarItem::Many(_)|GrammarItem::Many1(_) => true,
+        //     _ =>false,
+        // }
+		
+    Cede(Box<GrammarNode<'g>>),
+    Take(Box<GrammarNode<'g>>),
+	
+	
+    // Never, //replace with Error ?
+    // Not(Box<GrammarItem<'a>>), //todo, needed? better to have NotIdentifier etc?
+
+    //todo remove:
+    // Discard(Box<GrammarNode<'g>>), //todo, removes token from output (via just hding it, ie have hashmap of tokens to hide)
+    // Many1(Box<GrammarItem<'a>>),
+    // EndsIn(Box<GrammarNode<'g>>,Box<GrammarNode<'g>>), //grammar, ends_in_grammar
+    // List(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
+    // ListNoTrail(Box<GrammarItem<'a>>,Box<GrammarItem<'a>>), //val,sep
+	
+	
             GrammarNode::EndsIn(g, ends_in_g ) => {
 
                 //
@@ -1365,6 +1462,220 @@ impl<'t,'g> std::fmt::Display for TempGrammarNodeDebug<'t,'g> {
         if let Some(_)=self.do_primitive(cur,|ps|ps.pop_eol(),) {
             if self.debug {println!("--- eol");}
         }
+    }
+////////
+priority:u32,
+GrammarNode::Expected(priority, name, g) => {self.grammar_expect(cur, priority, name, g);}
+Work
+    pub expected:WorkExpected<'g>, //(u64,u32,&'g str), //id,priority,expected
+//
+
+#[derive(Default,Copy,Clone)]
+pub struct WorkExpected<'g> {
+    pub id:u64,
+    pub priority:u32,
+    pub name:&'g str,
+}
+
+//Walker
+    expecteds:Vec<(u32,GrammarNode<'g>)>, //(priority,gramamr)//(u64,GrammarNode<'g>) //(id,grammar) //todo change grammar to &'g
+    expected_count:u64,
+//new
+
+            expecteds:Vec::new(),
+            expected_count: 0,
+//init
+            expected:Default::default(),
+			
+            expected:Default::default(),
+                expected:Default::default(),
+        self.expecteds.clear();
+        self.expected_count=0;
+//grammar_group
+            expected:cur.expected,
+//grammar_opt
+            expected:cur.expected,
+            expected:cur.expected,
+//grammar_many
+            expected:cur.expected,
+            expected:cur.expected,
+            expected:cur.expected,
+//grammar_non_term
+            expected:cur.expected,
+//grammar_and
+                expected:cur.expected,
+            expected:cur.expected,
+//grammar_or
+                expected:cur.expected,
+            expected:cur.expected,
+			
+//grammar_prev
+                //
+                if cur.expected.id!=last.expected.id {
+                    self.clear_last_expected();
+                }
+	//err
+            //
+            if cur.expected.id==0{
+                self.add_expected(
+                    cur.tokens.first().map(|t|t.start_loc()).unwrap_or_default(),
+                    0,cur.grammar.clone(),
+                );
+            }
+			
+//grammar_always
+            //
+            if cur.expected.id!=last.expected.id {
+                self.clear_last_expected();
+            }
+			
+//grammar_try_from_hist_begins
+
+            //
+            if cur.expected.id!=last.expected.id {
+                self.clear_last_expected();
+            }
+			
+
+//grammar_primitive
+
+
+                    //
+                    // if let Some(x)=cur.expected_non_term {
+                    //     if last.expected_non_term.is_none() {
+                    //         self.add_expected(loc, GrammarNode::NonTerm(x));
+                    //     }
+                    // //     last.expected_non_term=None;
+                    // }
+					
+
+                //
+                self.clear_expected(v.token);
+
+                //
+                self.clear_last_expected();
+	//err
+				//
+                // if self.stk.last().map(|last|!last.expected_non_term.is_none() ).unwrap_or_default()
+
+                //
+                if cur.expected.id==0 {
+                    self.add_expected(loc,0,cur.grammar.clone());
+                }
+				
+                //
+                if let Some(last)=self.stk.last() {
+                    if cur.expected.id!=last.expected.id && cur.expected.id!=0 {
+                        self.clear_last_expected();
+                        self.add_expected(loc, cur.expected.priority,GrammarNode::NonTerm(cur.expected.name));
+                    }
+                }
+				
+    fn grammar_expect(&mut self,cur :Work<'t,'g>,priority:u32, name:&'g str,g:Box<GrammarNode<'g>>) {
+        self.expected_count+=1;
+        let expected=if cur.expected.id==0 {
+            // (self.expected_count,name)
+            let priority=priority+1; //so primitives/tokens are at priority 0, expected(s) are 1+
+            WorkExpected{ id: self.expected_count, priority, name }
+        } else {
+            cur.expected
+        };
+
+        //
+        let hist_news_len=self.hist_news_add(&cur);
+
+        //TODO
+        self.stk.push(Work {
+            grammar: *g,
+            success_len: cur.success_len,
+            fail_len: cur.fail_len,
+            tokens: cur.tokens,
+            group_ind: cur.group_ind,
+            group_len: cur.group_len,
+            visiteds:cur.visiteds,
+            grammar_debug_len: cur.grammar_debug_len+1,
+            expected,
+            and_id:cur.and_id,
+
+            from_user:true,
+            is_first:cur.is_first,
+
+            hist_news_len,
+            hist_begins_stk_len:cur.hist_begins_stk_len,
+            hist_ends_stk_len:cur.hist_ends_stk_len,
+        });
+    }
+
+    //
+    fn clear_expected(&mut self,vprim:TokenContainer<'t>) {
+        // println!("-------==== expected cleared, {}",self.expected_loc);
+
+        //
+        if vprim.start_loc() >= self.expected_loc {
+            self.expected_loc=Loc::zero();
+            self.expecteds.clear();
+        }
+    }
+
+    fn add_expected(&mut self,loc:Loc,p:u32,g:GrammarNode<'g>) {
+        //
+        if loc==self.expected_loc {
+            //
+            self.expecteds.push((p,g.clone()));
+
+            //
+            // println!("-------==== expected added {g:?}, {loc}=={}",self.expected_loc);
+        } else if loc>self.expected_loc  { //|| self.expecteds.is_empty()
+            //
+            self.expected_loc=loc;
+            self.expecteds=vec![(p,g.clone())];
+
+            //
+            // println!("-------==== expected new {g:?}, {loc}=={}",self.expected_loc);
+        } else {
+            // println!("-------==== expected not added {g:?}, {loc}=={}",self.expected_loc);
+        }
+    }
+
+    fn clear_last_expected(&mut self) {
+        if let Some(last)=self.stk.last_mut() {
+            last.expected=Default::default();
+        }
+    }
+
+    //
+    pub fn expecteds_string(&self) -> String {
+        let max_priority=self.expecteds.iter().map(|&(p,_)|p).max().unwrap_or(0);
+
+        self.expecteds.iter().filter_map(|(p,g)|(*p==max_priority).then_some(g)).map(|g|match g {
+            GrammarNode::String => "string".to_string(),
+            GrammarNode::Identifier => "identifier".to_string(),
+            GrammarNode::Int => "int".to_string(),
+            GrammarNode::Float => "float".to_string(),
+            GrammarNode::Symbol(s) => format!("'{s}'"),
+            GrammarNode::Keyword(s) => format!("'{s}'"),
+            GrammarNode::Eol => "eol".to_string(),
+            GrammarNode::NonTerm(s) => format!("{s}"),
+            _ =>"".to_string(),
+        }).collect::<Vec<_>>().join(", ")
+    }
+
+    Expected(u32,&'g str,Box<GrammarNode<'g>>), //priority, expected,
+	
+    pub fn expected(self,name: &'g str,priority:u32,) -> GrammarNode<'g> {
+        Self::Expected(priority,name,self.into())
+    }
+    pub fn expected0(self,name: &'g str) -> GrammarNode<'g> {
+        Self::Expected(0,name,self.into())
+    }
+    pub fn expected1(self,name: &'g str) -> GrammarNode<'g> {
+        Self::Expected(1,name,self.into())
+    }
+    pub fn expected2(self,name: &'g str) -> GrammarNode<'g> {
+        Self::Expected(2,name,self.into())
+    }
+    pub fn expected3(self,name: &'g str) -> GrammarNode<'g> {
+        Self::Expected(3,name,self.into())
     }
 ////////
 

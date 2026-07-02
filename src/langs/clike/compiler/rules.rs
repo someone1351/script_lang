@@ -155,10 +155,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         ].and(),
 
         "block" => [
-            NonTerm("lcurly").expected0("block")
+            NonTerm("lcurly").expected("block") //0
             ,
             NonTerm("stmts"), //.group("block"),
-            NonTerm("rcurly").expected1("closing brace")
+            NonTerm("rcurly").expected("closing brace") //1
             ,
         ].and() //.expected("block")
         ,
@@ -250,7 +250,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 ].and().many1(),
             ].and().group("expr_or"),
             NonTerm("expr_xor"),
-        ].or().expected0("or"),
+        ].or().expected("or"), //0
 
         "expr_xor" => [
             [
@@ -261,7 +261,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 ].and().many1(),
             ].and().group("expr_xor"),
             NonTerm("expr_and"),
-        ].or().expected0("xor"),
+        ].or().expected("xor"), //0
 
         "expr_and" => [
             [
@@ -272,7 +272,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 ].and().many1(),
             ].and().group("expr_and"),
             NonTerm("expr_compare"),
-        ].or().expected0("and"),
+        ].or().expected("and"), //0
 
         "expr_compare" => [
             [
@@ -288,7 +288,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 NonTerm("expr_factor"),
             ].and().group("expr_compare"),
             NonTerm("expr_factor"),
-        ].or().expected0("compare"),
+        ].or().expected("compare"), //0
 
         "expr_factor" => [
             [
@@ -299,7 +299,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 ].and().many1(),
             ].and().group("expr_factor"),
             NonTerm("expr_term"),
-        ].or().expected0("factor"),
+        ].or().expected("factor"), //0
 
         "expr_term" => [
             [
@@ -314,7 +314,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                 ].and().many1(),
             ].and().group("expr_term"),
             NonTerm("val"),
-        ].or().expected0("term"),
+        ].or().expected("term"), //0
 
         // // "expr_term" => [
         // //     [NonTerm("val"),NonTerm("mul"),NonTerm("expr_term"),].and().group("mul"),
@@ -331,7 +331,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         // //     ].and().many0(),
         // // ].and().group("expr").expected0("expr"),
 
-        "expr" => NonTerm("expr_or").group("expr").expected0("expr"),
+        "expr" => NonTerm("expr_or").group("expr").expected("expr"), //0
         // "expr" => NonTerm("val").group("expr").expected0("expr"),
 
         "prefixes" => [
@@ -374,11 +374,11 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "val_field" => [
             NonTerm("field_name"),
             NonTerm("field_index"),
-        ].or().expected0("field"),
+        ].or().expected("field"), //0
 
         "val_index" => [
             NonTerm("lsquare"),
-            NonTerm("expr").group("index").expected0("index"),
+            NonTerm("expr").group("index").expected("index"), //0
             NonTerm("rsquare"),
         ].and(),
 
@@ -425,9 +425,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
                         NonTerm("rparen"),
                     ].and(),
                 ].or(),
-            ].or().expected0("val"),
+            ].or().expected("val"), //0
             NonTerm("val_field_index_call").many0(),
-        ].and().group("val").expected0("val"),
+        ].and().group("val").expected("val"), //0
 
         "dict_key_val" => [
             [
