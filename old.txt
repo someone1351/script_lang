@@ -53,7 +53,16 @@
         });
     }
 =====
+                if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //if not parsing anything, exit the many
+                    last.grammar=GrammarNode::Always;
+                }
 
+            //
+            if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //to stop the many getting stuck in a loop
+                last.grammar=GrammarNode::Always;
+            }
+
+=====
         let x=self.clone();
         // Self::Many1(self.into())
     // pub fn discard(self,) -> GrammarNode<'g> {

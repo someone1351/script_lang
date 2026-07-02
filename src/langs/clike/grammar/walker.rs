@@ -174,11 +174,9 @@ where
 
     }
 
-    fn grammar_expect(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>, name:&'g str) {
+    fn grammar_expect(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>, _name:&'g str) {
         //
         let expected_news_len=self.add_expected_new(&cur);
-
-        //
         let hist_news_len=self.hist_news_add(&cur);
 
         //TODO
@@ -206,13 +204,7 @@ where
 
     fn grammar_group(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>,name:&'g str) {
         //
-        let new_group_ind=self.new_group(name, cur.group_ind, cur.tokens);
-
-        //
-        let groups=&self.groups;
-        let new_group_len=groups.len();
-
-        //
+        let (group_ind,group_len)=self.new_group(name, cur.group_ind, cur.tokens);
         let hist_news_len=self.hist_news_add(&cur);
 
         //
@@ -221,8 +213,8 @@ where
             success_len: cur.success_len,
             fail_len: cur.fail_len,
             tokens: cur.tokens,
-            group_ind: new_group_ind,
-            group_len: new_group_len,
+            group_ind,
+            group_len,
             visiteds:cur.visiteds,
             grammar_debug_len: cur.grammar_debug_len+1,
             and_id:cur.and_id,
@@ -320,8 +312,6 @@ where
     fn grammar_non_term(&mut self,cur :Work<'t,'g>,t:&'g str) -> Result<(),GrammarWalkError<'g>>{
         //
         let hist_news_len=self.hist_news_add(&cur);
-
-        //
         let visiteds=self.do_non_term_visiteds(t,cur.tokens,cur.visiteds)?;
 
         //
@@ -498,50 +488,29 @@ where
         //
         let _hist_news_len=self.hist_news_add(&cur);
 
-        let cur_hist_ends=&self.hist_ends_stk.last().unwrap().elements;
-
         //
-        if cur_hist_ends.contains_key(&g) {
-
+        if self.hist_ends_stk.last().unwrap().elements.contains_key(&g) {
             //
             self.stk.truncate(cur.success_len);
+            self.handle_exit_last_many(&cur);
 
             //
             if let Some(last)=self.stk.last_mut() {
-                if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //if not parsing anything, exit the many
-                    last.grammar=GrammarNode::Always;
-                }
-
-                //
                 last.tokens=cur.tokens;
                 last.group_len=cur.group_len;
-
-                // last.hist_ends=cur.hist_ends.clone(); //should use move
                 last.hist_ends_stk_len=cur.hist_ends_stk_len;
             }
 
             //
             // self.hist_news_truncate_to_last(); //why on success??
-
-            //
             self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
-
-            //
             self.hist_news_drain(&cur,true);
-
-            //
             self.expect_news_truncate_to_last();
-
-            //
             self.set_remaining_prims(cur.tokens);
         } else {
             //
             self.stk.truncate(cur.fail_len);
-
-            //
             self.hist_news_truncate_to_last();
-
-            //
             let _expected_news_len=self.add_expected_new(&cur);
             self.expected_news_drain(&cur);
         }
@@ -550,13 +519,11 @@ where
     fn grammar_always(&mut self,cur :Work<'t,'g>,) {
         //
         self.stk.truncate(cur.success_len);
-
-        //
         let _hist_news_len=self.hist_news_add(&cur);
+        self.handle_exit_last_many(&cur);
 
         //
         if let Some(last)=self.stk.last_mut() {
-            //
             if self.debug {
                 println!("---- last.group_len={}, cur.group_len={}, last.group_ind={}, cur.group_ind={}",
                     last.group_len,cur.group_len,
@@ -565,39 +532,22 @@ where
             }
 
             //
-            if last.grammar.is_many() && last.tokens.len()==cur.tokens.len() { //to stop the many getting stuck in a loop
-                last.grammar=GrammarNode::Always;
-            }
-
-            //
             last.tokens=cur.tokens;
             last.group_len=cur.group_len; //done below //not anymore
-
-            //
             last.hist_ends_stk_len=cur.hist_ends_stk_len;
         }
 
         //
         self.do_groups_primitives_clamp(cur.group_ind,cur.tokens); //here
-
-        //
         self.hist_news_drain(&cur,true);
-
-        //
         self.expect_news_truncate_to_last();
-
-        //
         self.set_remaining_prims(cur.tokens);
-
-        //
         // self.clear_expected();
     }
 
     fn grammar_try_from_hist_begins(&mut self,cur :&Work<'t,'g>) -> bool {
         //
-        if !cur.from_user || !cur.is_first { // !(cur.from_user && cur.is_first)
-            return false;
-        }
+        if !cur.from_user || !cur.is_first {return false;} // !(cur.from_user && cur.is_first)
 
         //
         let Some(hist_begins)=self.hist_begins_stk.last() else {return false;};
@@ -608,9 +558,6 @@ where
 
         //
         if let Some(last)=self.stk.last_mut() {
-            //
-            last.tokens=hist_begin.tokens_after; //cur.tokens
-
             //add groups
             for g in hist_begin.groups.iter() {
                 self.groups.push(TempGroupInfo { parent: cur.group_ind+g.parent, ..g.clone()});
@@ -618,21 +565,14 @@ where
 
             //
             last.group_len=self.groups.len(); //cur.group_len+or_element.groups;
-
-            //
+            last.tokens=hist_begin.tokens_after; //cur.tokens
             last.hist_ends_stk_len=cur.hist_ends_stk_len;
         }
 
         //
         self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
-
-        //
         self.hist_news_drain(&cur,false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
-
-        //
         self.expect_news_truncate_to_last();
-
-        //
         self.set_remaining_prims(cur.tokens);
 
         //
@@ -666,13 +606,10 @@ where
 
                 //
                 self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
-
-                //
                 self.last_hist_ends_remove_previous();
                 self.hist_news_drain(&cur,true);
-
-                //
                 self.expect_news_truncate_to_last();
+                self.set_remaining_prims(cur.tokens);
 
                 //
                 if self.debug {
@@ -685,23 +622,14 @@ where
                 }
 
                 //
-                self.set_remaining_prims(cur.tokens);
-
-                //
                 Some(v)
             }
             Err(loc) => {
                 //
                 self.stk.truncate(cur.fail_len);
-
-                //
                 self.hist_news_truncate_to_last();
-
-                //
                 let _expected_news_len=self.add_expected_new(&cur);
                 self.expected_news_drain(&cur);
-
-                //
                 self.set_remaining_prims(cur.tokens);
 
                 //
@@ -729,10 +657,7 @@ where
     }
 
     fn expected_news_drain(&mut self, cur:&Work<'t,'g>,) {
-        //should always be some (due to init), use panic instead of ret?
-        let Some(last)=self.stk.last_mut() else {return;};
-
-        //
+        let Some(last)=self.stk.last_mut() else {panic!("");};
         let drained_expected_news=self.expected_news.drain(last.expected_news_len ..).collect::<Vec<_>>();
 
         //
@@ -740,10 +665,10 @@ where
             self.expecteds.push(TempExpected { expect_type: drained_expected_new.expected_type });
         }
     }
+
     fn expect_news_truncate_to_last(&mut self) {
-        if let Some(last)=self.stk.last() {
-            self.expected_news.truncate(last.expected_news_len);
-        }
+        let Some(last)=self.stk.last() else {panic!("");};
+        self.expected_news.truncate(last.expected_news_len);
     }
 
     fn hist_news_drain(&mut self,
@@ -811,27 +736,23 @@ where
         }
 
         //
-        let last_hist_ends=&mut self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
-        last_hist_ends.extend(added_hist_ends.into_iter());
-
+        self.hist_ends_stk[last.hist_ends_stk_len-1].elements.extend(added_hist_ends.into_iter());
     }
 
     fn last_hist_ends_remove_previous(&mut self) {
-        if let Some(last)=self.stk.last_mut() {
-            let last_tokens_start=last.tokens.inds().start;
+        let Some(last)=self.stk.last_mut() else {panic!("");};
+        let last_tokens_start=last.tokens.inds().start;
 
-            let last_hist_ends=&mut self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
-            last_hist_ends.retain(|_k,v|{
-                v.tokens.inds().start>=last_tokens_start
-                // last_tokens_start<v.tokens.inds().start
-            });
-        }
+        self.hist_ends_stk[last.hist_ends_stk_len-1].elements.retain(|_k,v|{
+            v.tokens.inds().start>=last_tokens_start
+            // last_tokens_start<v.tokens.inds().start
+        });
+
     }
 
     fn hist_news_truncate_to_last(&mut self) {
-        if let Some(last)=self.stk.last() {
-            self.hist_news.truncate(last.hist_news_len); //what is it for? clears failed takeable_starts?
-        }
+        let Some(last)=self.stk.last() else {panic!("");};
+        self.hist_news.truncate(last.hist_news_len); //what is it for? clears failed takeable_starts?
     }
 
     fn hist_begins_stk_push(&mut self,cur:&Work<'t,'g>) -> usize {
@@ -887,11 +808,7 @@ where
             //
             while g>last.group_ind {
                 let group=&mut self.groups[g];
-
-                //
                 let n=group.tokens.len()-cur_primitives.len();
-
-                //
                 let group_prims=group.tokens.get_amount(n).unwrap();
 
                 //
@@ -906,19 +823,14 @@ where
         cur_primitives:TokenIterContainer<'t>,
         cur_visiteds: HashSet<(&'g str, usize)>,
     ) -> Result<HashSet<(&'g str, usize)>,GrammarWalkError<'g>> {
-
         //
-        if !self.non_term_recursive_check {
-            return  Ok(Default::default());
-        }
+        if !self.non_term_recursive_check { return  Ok(Default::default()); }
 
         //
         let v=(t,cur_primitives.inds().start);
 
         //
-        if cur_visiteds.contains(&v) {
-            return Err(GrammarWalkError::RecursiveNonTerm(t));
-        }
+        if cur_visiteds.contains(&v) { return Err(GrammarWalkError::RecursiveNonTerm(t)); }
 
         //
         let mut visiteds=cur_visiteds;
@@ -928,18 +840,23 @@ where
         Ok(visiteds)
     }
 
-    fn new_group(&mut self,name : &'g str, parent:usize, ps:TokenIterContainer<'t>) -> usize {
+    fn new_group(&mut self,name : &'g str, parent:usize, ps:TokenIterContainer<'t>) -> (usize,usize) {
         let groups=&mut self.groups;
         let new_group_ind=groups.len();
 
         groups.push(TempGroupInfo { name, parent, tokens:ps, });
-        new_group_ind
+        (new_group_ind,groups.len())
     }
 
     fn set_remaining_prims(&mut self,cur_primitives:TokenIterContainer<'t>,) {
-        if self.stk.is_empty() {
-            self.primitives_remaining=cur_primitives;
-        }
+        if !self.stk.is_empty() {return;}
+        self.primitives_remaining=cur_primitives;
+    }
+
+    fn handle_exit_last_many(&mut self,cur:&Work<'t,'g>) { //if not parsing anything, exit the many
+        let Some(last)=self.stk.last_mut() else {panic!("");};
+        if !last.grammar.is_many() || last.tokens.len()!=cur.tokens.len() {return;}
+        last.grammar=GrammarNode::Always;
     }
 
     pub fn last_loc(&self) -> Loc {
