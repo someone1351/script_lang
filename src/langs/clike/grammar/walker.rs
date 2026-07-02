@@ -440,7 +440,7 @@ where
         let GrammarNode::Or(gs)=&cur.grammar else{panic!("");};
 
         //
-        let Some(first)=gs.first().cloned() else { return; };
+        let Some(g_first)=gs.first().cloned() else { return; };
 
         //
         let hist_news_len=self.hist_news_add(&cur);
@@ -448,9 +448,9 @@ where
         let hist_ends_stk_len=self.hist_ends_stk_push(&cur);
 
         //
-        if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
+        if let Some(g_rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
             self.stk.push(Work {
-                grammar: GrammarNode::Or(rest.into()),
+                grammar: GrammarNode::Or(g_rest.into()),
                 success_len: cur.success_len,
                 fail_len: cur.fail_len,
                 tokens: cur.tokens,
@@ -476,7 +476,7 @@ where
 
         //
         self.stk.push(Work {
-            grammar: first,
+            grammar: g_first,
             success_len: cur.success_len,
             fail_len,
             tokens: cur.tokens,
