@@ -10,10 +10,10 @@ use super::node::*;
 
 
 #[derive(Clone, Debug)]
-pub struct TempExpectNew<'g> {
+pub struct TempExpectedNew<'g> {
     // pub name:&'g str,
     // pub grammar:GrammarNode<'g>,
-    pub expect_type:TempExpectType<'g>,
+    pub expected_type:TempExpectedType<'g>,
 }
 
 // #[derive(Clone, Debug)]
@@ -24,7 +24,7 @@ pub struct TempExpectNew<'g> {
 
 
 #[derive(Clone, Debug)]
-pub enum TempExpectType<'g> {
+pub enum TempExpectedType<'g> {
     Expected(&'g str),
 
     Int,
@@ -36,6 +36,11 @@ pub enum TempExpectType<'g> {
 
     Eol,
     Prev,
+}
+
+#[derive(Clone, Debug)]
+pub struct TempExpected<'g> {
+    pub expect_type:TempExpectedType<'g>,
 }
 
 #[derive(Clone, Debug)]
@@ -110,6 +115,6 @@ pub struct Work<'t,'g> {
     pub hist_begins_stk_len:usize,
     pub hist_ends_stk_len:usize,
 
-    pub expect_news_len:usize,
+    pub expected_news_len:usize,
 }
 

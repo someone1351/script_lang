@@ -28,7 +28,8 @@ where
     stk: Vec<Work<'t,'g>>,
     c:usize,
     expected_loc:Loc,
-    expect_news:Vec<TempExpectNew<'g>>,
+    expected_news:Vec<TempExpectedNew<'g>>,
+    expecteds:Vec<TempExpected<'g>>,
 
     debug:bool,
     non_term_recursive_check:bool,
@@ -51,7 +52,8 @@ where
             c:Default::default(),
 
             expected_loc:Loc::zero(),
-            expect_news:Default::default(),
+            expected_news:Default::default(),
+            expecteds:Default::default(),
 
             grammar_func,
             primitives_remaining:top_primitives.clone(),
@@ -91,7 +93,7 @@ where
             hist_begins_stk_len:0,
             hist_ends_stk_len:1,
 
-            expect_news_len:0,
+            expected_news_len:0,
         });
 
         //
@@ -115,7 +117,7 @@ where
             hist_begins_stk_len:0,
             hist_ends_stk_len:1,
 
-            expect_news_len:0,
+            expected_news_len:0,
         });
 
         //
@@ -147,7 +149,7 @@ where
                 hist_begins_stk_len:0,
                 hist_ends_stk_len:1,
 
-                expect_news_len:0,
+                expected_news_len:0,
             });
         }
 
@@ -167,13 +169,14 @@ where
         //
         self.c=0;
         self.expected_loc=Loc::zero();
-        self.expect_news.clear();
+        self.expected_news.clear();
+        self.expecteds.clear();
 
     }
 
     fn grammar_expect(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>, name:&'g str) {
         //
-        let expect_news_len=self.add_expect_new(&cur);
+        let expected_news_len=self.add_expected_new(&cur);
 
         //
         let hist_news_len=self.hist_news_add(&cur);
@@ -197,7 +200,7 @@ where
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            expect_news_len,
+            expected_news_len,
         });
     }
 
@@ -231,7 +234,7 @@ where
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            expect_news_len:cur.expect_news_len,
+            expected_news_len:cur.expected_news_len,
         });
     }
 
@@ -260,7 +263,7 @@ where
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            expect_news_len:cur.expect_news_len,
+            expected_news_len:cur.expected_news_len,
         });
 
         //
@@ -285,7 +288,7 @@ where
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            expect_news_len:cur.expect_news_len,
+            expected_news_len:cur.expected_news_len,
         });
 
         //
@@ -310,7 +313,7 @@ where
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            expect_news_len:cur.expect_news_len,
+            expected_news_len:cur.expected_news_len,
         });
     }
 
@@ -347,7 +350,7 @@ where
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            expect_news_len:cur.expect_news_len,
+            expected_news_len:cur.expected_news_len,
         });
 
         Ok(())
@@ -400,7 +403,7 @@ where
                 hist_begins_stk_len:cur.hist_begins_stk_len,
                 hist_ends_stk_len:cur.hist_ends_stk_len,
 
-                expect_news_len:cur.expect_news_len,
+                expected_news_len:cur.expected_news_len,
             });
         }
 
@@ -428,7 +431,7 @@ where
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            expect_news_len:cur.expect_news_len,
+            expected_news_len:cur.expected_news_len,
         });
     }
 
@@ -471,7 +474,7 @@ where
                 hist_begins_stk_len:self.hist_begins_stk.len(),
                 hist_ends_stk_len:self.hist_ends_stk.len(),
 
-                expect_news_len:cur.expect_news_len,
+                expected_news_len:cur.expected_news_len,
             });
         }
 
@@ -497,7 +500,7 @@ where
             hist_begins_stk_len:self.hist_begins_stk.len(),
             hist_ends_stk_len:self.hist_ends_stk.len(),
 
-            expect_news_len:cur.expect_news_len,
+            expected_news_len:cur.expected_news_len,
         });
     }
 
@@ -550,8 +553,8 @@ where
             self.hist_news_truncate_to_last();
 
             //
-            let _expect_news_len=self.add_expect_new(&cur);
-            self.expect_news_drain(&cur);
+            let _expected_news_len=self.add_expected_new(&cur);
+            self.expected_news_drain(&cur);
         }
     }
 
@@ -706,8 +709,8 @@ where
                 self.hist_news_truncate_to_last();
 
                 //
-                let _expect_news_len=self.add_expect_new(&cur);
-                self.expect_news_drain(&cur);
+                let _expected_news_len=self.add_expected_new(&cur);
+                self.expected_news_drain(&cur);
 
                 //
                 self.set_remaining_prims(cur.tokens);
@@ -718,42 +721,42 @@ where
         }
     }
 
-    fn add_expect_new(&mut self, cur:&Work<'t,'g>,) -> usize {
-        let expect_type=match cur.grammar {
-            GrammarNode::Expected(_, name) => TempExpectType::Expected(name),
-            GrammarNode::Prev(_) => TempExpectType::Prev,
-            GrammarNode::String => TempExpectType::String,
-            GrammarNode::Identifier => TempExpectType::Identifier,
-            GrammarNode::Int => TempExpectType::Int,
-            GrammarNode::Float => TempExpectType::Float,
-            GrammarNode::Symbol(s) => TempExpectType::Symbol(s),
-            GrammarNode::Keyword(s) => TempExpectType::Keyword(s),
-            GrammarNode::Eol => TempExpectType::Eol,
+    fn add_expected_new(&mut self, cur:&Work<'t,'g>,) -> usize {
+        let expected_type=match cur.grammar {
+            GrammarNode::Expected(_, name) => TempExpectedType::Expected(name),
+            GrammarNode::Prev(_) => TempExpectedType::Prev,
+            GrammarNode::String => TempExpectedType::String,
+            GrammarNode::Identifier => TempExpectedType::Identifier,
+            GrammarNode::Int => TempExpectedType::Int,
+            GrammarNode::Float => TempExpectedType::Float,
+            GrammarNode::Symbol(s) => TempExpectedType::Symbol(s),
+            GrammarNode::Keyword(s) => TempExpectedType::Keyword(s),
+            GrammarNode::Eol => TempExpectedType::Eol,
            _ => {panic!("");}
         };
 
-        self.expect_news.push(TempExpectNew { expect_type, });
-        self.expect_news.len()
+        self.expected_news.push(TempExpectedNew { expected_type, });
+        self.expected_news.len()
     }
 
-    fn expect_news_drain(&mut self, cur:&Work<'t,'g>,) {
+    fn expected_news_drain(&mut self, cur:&Work<'t,'g>,) {
         //should always be some (due to init), use panic instead of ret?
         let Some(last)=self.stk.last_mut() else {return;};
 
         //
-        let drained_expect_news=self.expect_news.drain(last.expect_news_len ..).collect::<Vec<_>>();
+        let drained_expected_news=self.expected_news.drain(last.expected_news_len ..).collect::<Vec<_>>();
 
         //
-        for i in 0..drained_expect_news.len() {
-            let drained_expect_new=&drained_expect_news[i];
+        for drained_expected_new in drained_expected_news {
+            self.expecteds.push(TempExpected { expect_type: drained_expected_new.expected_type });
+        }
+    }
+    fn expect_news_truncate_to_last(&mut self) {
+        if let Some(last)=self.stk.last() {
+            self.expected_news.truncate(last.expected_news_len);
         }
     }
 
-    fn expect_news_truncate_to_last(&mut self) {
-        if let Some(last)=self.stk.last() {
-            self.expect_news.truncate(last.expect_news_len);
-        }
-    }
     fn hist_news_drain(&mut self,
         cur:&Work<'t,'g>,
         gotten:bool, //what was this for again? something to do with not adding cur grammar to hist_begins? it was for not adding cur grammar to hist_new?
