@@ -367,7 +367,7 @@ where
         // }
 
         //
-        self.set_remaining_prims(&cur);
+        self.do_tokens(&cur,false); //could be true, but would do nothing
 
         //
         // self.expect_news_drain(&cur); //necessary here? no since it is finishing here?
@@ -504,73 +504,43 @@ where
 
         //
         if self.hist_ends_stk.last().unwrap().elements.contains_key(&g) {
-            //
             self.stk.truncate(cur.success_len);
             self.handle_exit_last_many(&cur);
-
-            //
-            if let Some(last)=self.stk.last_mut() {
-                last.tokens=cur.tokens;
-                last.group_len=cur.group_len;
-            }
-
-            //
             // self.hist_news_truncate_to_last(); //why on success??
+            self.do_tokens(&cur,true);
             self.do_groups_primitives_clamp(&cur);
             self.hist_news_drain(&cur,true,false);
             self.expect_news_truncate_to_last();
-            self.set_remaining_prims(&cur);
         } else {
-            //
             self.stk.truncate(cur.fail_len);
+            self.do_tokens(&cur,false);
             self.hist_news_truncate_to_last();
             let _expected_news_len=self.add_expected_new(&cur);
             self.expected_news_drain(&cur);
-            self.set_remaining_prims(&cur);
         }
     }
 
     fn grammar_always(&mut self,cur :Work<'t,'g>,) {
-        //
         self.stk.truncate(cur.success_len);
         let _hist_news_len=self.hist_news_add(&cur);
         self.handle_exit_last_many(&cur);
-
-        //
-        if let Some(last)=self.stk.last_mut() {
-            last.tokens=cur.tokens;
-            last.group_len=cur.group_len; //done below //not anymore
-        }
-
-        //
+        self.do_tokens(&cur,true);
         self.do_groups_primitives_clamp(&cur); //here
         self.hist_news_drain(&cur,true,false);
         self.expect_news_truncate_to_last();
-        self.set_remaining_prims(&cur);
     }
 
     fn grammar_try_from_hist_begins(&mut self,cur :&Work<'t,'g>) -> bool {
         //
         if !cur.from_user || !cur.is_first {return false;} // !(cur.from_user && cur.is_first)
-
-        //
         let Some(hist_begins)=self.hist_begins_stk.last() else {return false;};
         let Some(hist_begin)=hist_begins.elements.get(&cur.grammar) else {return false;};
 
         //
         self.stk.truncate(cur.success_len);
 
-        //
         //add groups
         self.groups.extend(hist_begin.groups.iter().map(|g|TempGroupInfo{parent:cur.group_ind+g.parent,..g.clone()}));
-
-        //
-        if let Some(last)=self.stk.last_mut() {
-
-            //
-            last.group_len=self.groups.len(); //cur.group_len+or_element.groups;
-            last.tokens=hist_begin.tokens_after; //cur.tokens
-        }
 
         let cur=Work {
             group_len:self.groups.len(),
@@ -580,10 +550,10 @@ where
         };
 
         //
+        self.do_tokens(&cur,true);
         self.do_groups_primitives_clamp(&cur);
         self.hist_news_drain(&cur,false, false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
         self.expect_news_truncate_to_last();
-        self.set_remaining_prims(&cur);
 
         //
         if self.debug {
@@ -609,16 +579,10 @@ where
                 self.stk.truncate(cur.success_len);
 
                 //
-                if let Some(last)=self.stk.last_mut() {
-                    last.tokens=cur.tokens;
-                    last.group_len=cur.group_len;
-                }
-
-                //
+                self.do_tokens(&cur,true);
                 self.do_groups_primitives_clamp(&cur);
                 self.hist_news_drain(&cur,true,true);
                 self.expect_news_truncate_to_last();
-                self.set_remaining_prims(&cur);
 
                 //
                 if self.debug {
@@ -634,12 +598,11 @@ where
                 Some(v)
             }
             Err(loc) => {
-                //
                 self.stk.truncate(cur.fail_len);
+                self.do_tokens(&cur,false);
                 self.hist_news_truncate_to_last();
                 let _expected_news_len=self.add_expected_new(&cur);
                 self.expected_news_drain(&cur);
-                self.set_remaining_prims(&cur);
 
                 //
                 None
@@ -676,7 +639,7 @@ where
     }
 
     fn expect_news_truncate_to_last(&mut self) {
-        let Some(last)=self.stk.last() else {panic!("");};
+        let Some(last)=self.stk.last() else {return;};
         self.expected_news.truncate(last.expected_news_len);
     }
 
@@ -685,7 +648,7 @@ where
         gotten:bool, //what was this for again? something to do with not adding cur grammar to hist_begins? it was for not adding cur grammar to hist_new?
         hist_ends_remove_previous:bool,
     ) {
-        //should always be some (due to init), use panic instead of ret?
+        //should always be some (due to init), use panic instead of ret? no, it will end on an always if successful
         let Some(last)=self.stk.last_mut() else {return;};
 
         //
@@ -811,6 +774,9 @@ where
         let Some(last)=self.stk.last_mut() else {panic!("");};
 
         //
+        last.group_len=cur.group_len;
+
+        //
         if self.debug {
             println!("==do_groups_primitives_clamp: cur_group_ind={}, last.group_ind={}",cur.group_ind,last.group_ind);
         }
@@ -863,23 +829,19 @@ where
         (new_group_ind,self.groups.len())
     }
 
-    fn set_remaining_prims(&mut self,cur:&Work<'t,'g>) {
-        if !self.stk.is_empty() {return;}
-        self.primitives_remaining=cur.tokens;
+    fn do_tokens(&mut self,cur:&Work<'t,'g>, set_last_tokens:bool) {
+        if self.stk.is_empty() {
+            self.primitives_remaining=cur.tokens;
+        } else if set_last_tokens {
+            let Some(last)=self.stk.last_mut() else {panic!("");};
+            last.tokens=cur.tokens;
+        }
     }
 
     fn handle_exit_last_many(&mut self,cur:&Work<'t,'g>) { //if not parsing anything, exit the many
-        let Some(last)=self.stk.last_mut() else {panic!("");};
+        let Some(last)=self.stk.last_mut() else {return;};
         if !last.grammar.is_many() || last.tokens.len()!=cur.tokens.len() {return;}
         last.grammar=GrammarNode::Always;
-    }
-
-    fn handle_success(&mut self,cur:&Work<'t,'g>) {
-        self.stk.truncate(cur.success_len);
-
-        let Some(last)=self.stk.last_mut() else {panic!("");};
-        last.tokens=cur.tokens;
-        last.group_len=cur.group_len;
     }
 
     pub fn last_loc(&self) -> Loc {

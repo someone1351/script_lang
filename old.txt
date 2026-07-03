@@ -1,3 +1,34 @@
+
+        if !self.stk.is_empty() {return;}
+
+            //
+            if let Some(last)=self.stk.last_mut() {
+                last.tokens=cur.tokens;
+            }
+
+        //
+        // if let Some(last)=self.stk.last_mut() {
+        //     last.tokens=cur.tokens;
+        // }
+
+        //
+        //
+
+        //
+        //
+		
+                //
+                // if let Some(last)=self.stk.last_mut() {
+                //     last.tokens=cur.tokens;
+                // }
+                //
+//grammar_try_from_hist_begins
+        //
+        if let Some(last)=self.stk.last_mut() {
+            last.group_len=self.groups.len(); //cur.group_len+or_element.groups;
+            last.tokens=hist_begin.tokens_after; //cur.tokens
+        }
+=====
     fn last_hist_ends_remove_previous(&mut self) {
         let Some(last)=self.stk.last_mut() else {panic!("");};
         let last_tokens_start=last.tokens.inds().start;
