@@ -508,15 +508,15 @@ where
             self.handle_exit_last_many(&cur);
             // self.hist_news_truncate_to_last(); //why on success??
             self.do_tokens(&cur,true);
-            self.do_groups_primitives_clamp(&cur);
-            self.hist_news_drain(&cur,true,false);
-            self.expect_news_truncate_to_last();
+            self.do_groups(&cur);
+            self.submit_hist_news(&cur,true,false);
+            self.remove_expected_news();
         } else {
             self.stk.truncate(cur.fail_len);
             self.do_tokens(&cur,false);
-            self.hist_news_truncate_to_last();
+            self.remove_hist_news();
             let _expected_news_len=self.add_expected_new(&cur);
-            self.expected_news_drain(&cur);
+            self.submit_expected_news(&cur);
         }
     }
 
@@ -525,9 +525,9 @@ where
         let _hist_news_len=self.hist_news_add(&cur);
         self.handle_exit_last_many(&cur);
         self.do_tokens(&cur,true);
-        self.do_groups_primitives_clamp(&cur); //here
-        self.hist_news_drain(&cur,true,false);
-        self.expect_news_truncate_to_last();
+        self.do_groups(&cur); //here
+        self.submit_hist_news(&cur,true,false);
+        self.remove_expected_news();
     }
 
     fn grammar_try_from_hist_begins(&mut self,cur :&Work<'t,'g>) -> bool {
@@ -551,9 +551,9 @@ where
 
         //
         self.do_tokens(&cur,true);
-        self.do_groups_primitives_clamp(&cur);
-        self.hist_news_drain(&cur,false, false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
-        self.expect_news_truncate_to_last();
+        self.do_groups(&cur);
+        self.submit_hist_news(&cur,false, false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+        self.remove_expected_news();
 
         //
         if self.debug {
@@ -580,9 +580,9 @@ where
 
                 //
                 self.do_tokens(&cur,true);
-                self.do_groups_primitives_clamp(&cur);
-                self.hist_news_drain(&cur,true,true);
-                self.expect_news_truncate_to_last();
+                self.do_groups(&cur);
+                self.submit_hist_news(&cur,true,true);
+                self.remove_expected_news();
 
                 //
                 if self.debug {
@@ -600,9 +600,9 @@ where
             Err(loc) => {
                 self.stk.truncate(cur.fail_len);
                 self.do_tokens(&cur,false);
-                self.hist_news_truncate_to_last();
+                self.remove_hist_news();
                 let _expected_news_len=self.add_expected_new(&cur);
-                self.expected_news_drain(&cur);
+                self.submit_expected_news(&cur);
 
                 //
                 None
@@ -628,7 +628,7 @@ where
         self.expected_news.len()
     }
 
-    fn expected_news_drain(&mut self, cur:&Work<'t,'g>,) {
+    fn submit_expected_news(&mut self, cur:&Work<'t,'g>,) {
         let Some(last)=self.stk.last_mut() else {panic!("");};
         let drained_expected_news=self.expected_news.drain(last.expected_news_len ..).collect::<Vec<_>>();
 
@@ -638,14 +638,16 @@ where
         }
     }
 
-    fn expect_news_truncate_to_last(&mut self) {
+    fn remove_expected_news(&mut self) {
         let Some(last)=self.stk.last() else {return;};
         self.expected_news.truncate(last.expected_news_len);
     }
 
-    fn hist_news_drain(&mut self,
+    fn submit_hist_news(&mut self,
         cur:&Work<'t,'g>,
-        gotten:bool, //what was this for again? something to do with not adding cur grammar to hist_begins? it was for not adding cur grammar to hist_new?
+        //what was this for again? something to do with not adding cur grammar to hist_begins?
+        //  it was for not adding cur grammar to hist_new?
+        gotten:bool,
         hist_ends_remove_previous:bool,
     ) {
         //should always be some (due to init), use panic instead of ret? no, it will end on an always if successful
@@ -725,7 +727,7 @@ where
         self.hist_ends_stk[last.hist_ends_stk_len-1].elements.extend(added_hist_ends.into_iter());
     }
 
-    fn hist_news_truncate_to_last(&mut self) {
+    fn remove_hist_news(&mut self) {
         let Some(last)=self.stk.last() else {panic!("");};
         self.hist_news.truncate(last.hist_news_len); //what is it for? clears failed takeable_starts?
     }
@@ -767,11 +769,11 @@ where
         self.hist_ends_stk.truncate(cur.hist_ends_stk_len);
     }
 
-    fn do_groups_primitives_clamp(&mut self,cur :&Work<'t,'g>,
+    fn do_groups(&mut self,cur :&Work<'t,'g>,
         // cur_group_ind:usize,
         // cur_primitives:TokenIterContainer<'t>,
     ) {
-        let Some(last)=self.stk.last_mut() else {panic!("");};
+        let Some(last)=self.stk.last_mut() else {return;};
 
         //
         last.group_len=cur.group_len;
@@ -781,7 +783,7 @@ where
             println!("==do_groups_primitives_clamp: cur_group_ind={}, last.group_ind={}",cur.group_ind,last.group_ind);
         }
 
-        //
+        //clamp groups tokens (for groups that have ended)
         let mut g=cur.group_ind;
 
         //
