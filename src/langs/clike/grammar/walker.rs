@@ -512,13 +512,12 @@ where
             if let Some(last)=self.stk.last_mut() {
                 last.tokens=cur.tokens;
                 last.group_len=cur.group_len;
-                last.hist_ends_stk_len=cur.hist_ends_stk_len;
             }
 
             //
             // self.hist_news_truncate_to_last(); //why on success??
             self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
-            self.hist_news_drain(&cur,true);
+            self.hist_news_drain(&cur,true,false);
             self.expect_news_truncate_to_last();
             self.set_remaining_prims(&cur);
         } else {
@@ -548,12 +547,11 @@ where
             //
             last.tokens=cur.tokens;
             last.group_len=cur.group_len; //done below //not anymore
-            last.hist_ends_stk_len=cur.hist_ends_stk_len;
         }
 
         //
         self.do_groups_primitives_clamp(cur.group_ind,cur.tokens); //here
-        self.hist_news_drain(&cur,true);
+        self.hist_news_drain(&cur,true,false);
         self.expect_news_truncate_to_last();
         self.set_remaining_prims(&cur);
         // self.clear_expected();
@@ -580,12 +578,11 @@ where
             //
             last.group_len=self.groups.len(); //cur.group_len+or_element.groups;
             last.tokens=hist_begin.tokens_after; //cur.tokens
-            last.hist_ends_stk_len=cur.hist_ends_stk_len;
         }
 
         //
         self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
-        self.hist_news_drain(&cur,false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+        self.hist_news_drain(&cur,false, false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
         self.expect_news_truncate_to_last();
         self.set_remaining_prims(&cur);
 
@@ -620,8 +617,7 @@ where
 
                 //
                 self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
-                self.last_hist_ends_remove_previous();
-                self.hist_news_drain(&cur,true);
+                self.hist_news_drain(&cur,true,true);
                 self.expect_news_truncate_to_last();
                 self.set_remaining_prims(&cur);
 
@@ -688,9 +684,23 @@ where
     fn hist_news_drain(&mut self,
         cur:&Work<'t,'g>,
         gotten:bool, //what was this for again? something to do with not adding cur grammar to hist_begins? it was for not adding cur grammar to hist_new?
+        hist_ends_remove_previous:bool,
     ) {
         //should always be some (due to init), use panic instead of ret?
         let Some(last)=self.stk.last_mut() else {return;};
+
+        //
+        last.hist_ends_stk_len=cur.hist_ends_stk_len;
+
+        //why only use for primitives?
+        if hist_ends_remove_previous {
+            let last_tokens_start=last.tokens.inds().start;
+
+            self.hist_ends_stk[last.hist_ends_stk_len-1].elements.retain(|_k,v|{
+                v.tokens.inds().start>=last_tokens_start
+                // last_tokens_start<v.tokens.inds().start
+            });
+        }
 
         //
         let drained_hist_news=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
@@ -751,17 +761,6 @@ where
 
         //
         self.hist_ends_stk[last.hist_ends_stk_len-1].elements.extend(added_hist_ends.into_iter());
-    }
-
-    fn last_hist_ends_remove_previous(&mut self) {
-        let Some(last)=self.stk.last_mut() else {panic!("");};
-        let last_tokens_start=last.tokens.inds().start;
-
-        self.hist_ends_stk[last.hist_ends_stk_len-1].elements.retain(|_k,v|{
-            v.tokens.inds().start>=last_tokens_start
-            // last_tokens_start<v.tokens.inds().start
-        });
-
     }
 
     fn hist_news_truncate_to_last(&mut self) {

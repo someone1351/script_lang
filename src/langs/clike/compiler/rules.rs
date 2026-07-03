@@ -1,3 +1,9 @@
+/*
+TODO
+* don't allow field_ind (eg a.5) to be used for int/float/bool
+* don't allow spaces between the decimal point and numbers in a float?
+** allow floats like .5 ?
+*/
 use super::super::grammar::node::*;
 
 pub fn is_keyword(n:& str) -> bool {

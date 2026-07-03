@@ -1,3 +1,27 @@
+    fn last_hist_ends_remove_previous(&mut self) {
+        let Some(last)=self.stk.last_mut() else {panic!("");};
+        let last_tokens_start=last.tokens.inds().start;
+
+        self.hist_ends_stk[last.hist_ends_stk_len-1].elements.retain(|_k,v|{
+            v.tokens.inds().start>=last_tokens_start
+            // last_tokens_start<v.tokens.inds().start
+        });
+
+    }
+//grammar_primitive
+                    //last.hist_ends_stk_len=cur.hist_ends_stk_len; //needed??? always/prev have it
+
+                self.last_hist_ends_remove_previous();
+				
+//grammar_prev
+                // last.hist_ends_stk_len=cur.hist_ends_stk_len; //done below now
+				
+//grammar_always
+            // last.hist_ends_stk_len=cur.hist_ends_stk_len; //done below now
+			
+//grammar_try_from_hist_begins
+            // last.hist_ends_stk_len=cur.hist_ends_stk_len; //done below now
+======
 
     Opt(Box<GrammarNode<'g>>),
         // Self::Opt(self.into())
