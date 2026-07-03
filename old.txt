@@ -17,10 +17,22 @@
                 // last.hist_ends_stk_len=cur.hist_ends_stk_len; //done below now
 				
 //grammar_always
+            if self.debug {
+                println!("---- last.group_len={}, cur.group_len={}, last.group_ind={}, cur.group_ind={}",
+                    last.group_len,cur.group_len,
+                    last.group_ind, cur.group_ind,
+                );
+            }
             // last.hist_ends_stk_len=cur.hist_ends_stk_len; //done below now
+        // self.clear_expected();
 			
 //grammar_try_from_hist_begins
             // last.hist_ends_stk_len=cur.hist_ends_stk_len; //done below now
+
+        //add groups
+        for g in hist_begin.groups.iter() {
+            self.groups.push(TempGroupInfo { parent: cur.group_ind+g.parent, ..g.clone()});
+        }
 ======
 
     Opt(Box<GrammarNode<'g>>),

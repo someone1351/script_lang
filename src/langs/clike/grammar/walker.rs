@@ -516,7 +516,7 @@ where
 
             //
             // self.hist_news_truncate_to_last(); //why on success??
-            self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
+            self.do_groups_primitives_clamp(&cur);
             self.hist_news_drain(&cur,true,false);
             self.expect_news_truncate_to_last();
             self.set_remaining_prims(&cur);
@@ -537,24 +537,15 @@ where
 
         //
         if let Some(last)=self.stk.last_mut() {
-            if self.debug {
-                println!("---- last.group_len={}, cur.group_len={}, last.group_ind={}, cur.group_ind={}",
-                    last.group_len,cur.group_len,
-                    last.group_ind, cur.group_ind,
-                );
-            }
-
-            //
             last.tokens=cur.tokens;
             last.group_len=cur.group_len; //done below //not anymore
         }
 
         //
-        self.do_groups_primitives_clamp(cur.group_ind,cur.tokens); //here
+        self.do_groups_primitives_clamp(&cur); //here
         self.hist_news_drain(&cur,true,false);
         self.expect_news_truncate_to_last();
         self.set_remaining_prims(&cur);
-        // self.clear_expected();
     }
 
     fn grammar_try_from_hist_begins(&mut self,cur :&Work<'t,'g>) -> bool {
@@ -569,19 +560,26 @@ where
         self.stk.truncate(cur.success_len);
 
         //
+        //add groups
+        self.groups.extend(hist_begin.groups.iter().map(|g|TempGroupInfo{parent:cur.group_ind+g.parent,..g.clone()}));
+
+        //
         if let Some(last)=self.stk.last_mut() {
-            //add groups
-            for g in hist_begin.groups.iter() {
-                self.groups.push(TempGroupInfo { parent: cur.group_ind+g.parent, ..g.clone()});
-            }
 
             //
             last.group_len=self.groups.len(); //cur.group_len+or_element.groups;
             last.tokens=hist_begin.tokens_after; //cur.tokens
         }
 
+        let cur=Work {
+            group_len:self.groups.len(),
+            tokens:hist_begin.tokens_after,
+            // hist_ends_stk_len:todo!(),
+            ..cur.clone()
+        };
+
         //
-        self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
+        self.do_groups_primitives_clamp(&cur);
         self.hist_news_drain(&cur,false, false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
         self.expect_news_truncate_to_last();
         self.set_remaining_prims(&cur);
@@ -616,7 +614,7 @@ where
                 }
 
                 //
-                self.do_groups_primitives_clamp(cur.group_ind,cur.tokens);
+                self.do_groups_primitives_clamp(&cur);
                 self.hist_news_drain(&cur,true,true);
                 self.expect_news_truncate_to_last();
                 self.set_remaining_prims(&cur);
@@ -805,30 +803,31 @@ where
         self.hist_ends_stk.truncate(cur.hist_ends_stk_len);
     }
 
-    fn do_groups_primitives_clamp(&mut self,
-        cur_group_ind:usize,
-        cur_primitives:TokenIterContainer<'t>,
+    fn do_groups_primitives_clamp(&mut self,cur :&Work<'t,'g>,
+        // cur_group_ind:usize,
+        // cur_primitives:TokenIterContainer<'t>,
     ) {
-        if let Some(last)=self.stk.last_mut() {
-            //
-            if self.debug {
-                println!("==do_groups_primitives_clamp: cur_group_ind={cur_group_ind}, last.group_ind={}",last.group_ind);
-            }
+        let Some(last)=self.stk.last_mut() else {panic!("");};
 
-            //
-            let mut g=cur_group_ind;
-
-            //
-            while g>last.group_ind {
-                let group=&mut self.groups[g];
-                let n=group.tokens.len()-cur_primitives.len();
-                let group_prims=group.tokens.get_amount(n).unwrap();
-
-                //
-                group.tokens=group_prims;
-                g=group.parent;
-            }
+        //
+        if self.debug {
+            println!("==do_groups_primitives_clamp: cur_group_ind={}, last.group_ind={}",cur.group_ind,last.group_ind);
         }
+
+        //
+        let mut g=cur.group_ind;
+
+        //
+        while g>last.group_ind {
+            let group=&mut self.groups[g];
+            let n=group.tokens.len()-cur.tokens.len();
+            let group_prims=group.tokens.get_amount(n).unwrap();
+
+            //
+            group.tokens=group_prims;
+            g=group.parent;
+        }
+
     }
 
     fn do_non_term_visiteds(&mut self,
@@ -872,6 +871,14 @@ where
         let Some(last)=self.stk.last_mut() else {panic!("");};
         if !last.grammar.is_many() || last.tokens.len()!=cur.tokens.len() {return;}
         last.grammar=GrammarNode::Always;
+    }
+
+    fn handle_success(&mut self,cur:&Work<'t,'g>) {
+        self.stk.truncate(cur.success_len);
+
+        let Some(last)=self.stk.last_mut() else {panic!("");};
+        last.tokens=cur.tokens;
+        last.group_len=cur.group_len;
     }
 
     pub fn last_loc(&self) -> Loc {
