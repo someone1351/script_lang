@@ -526,6 +526,7 @@ where
             self.hist_news_truncate_to_last();
             let _expected_news_len=self.add_expected_new(&cur);
             self.expected_news_drain(&cur);
+            self.set_remaining_prims(&cur);
         }
     }
 
