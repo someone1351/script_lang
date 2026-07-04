@@ -13,6 +13,9 @@ pub enum GrammarNode<'g> {
     Expected(Box<GrammarNode<'g>>, &'g str,),
     Prev(Box<GrammarNode<'g>>),
 
+    // Stow(Box<GrammarNode<'g>>),
+    //save, stow, spare keep retain note
+
     String,
     Identifier,
     Int,
@@ -44,8 +47,46 @@ impl<'g> GrammarNode<'g> {
     pub fn prev(self) -> GrammarNode<'g> {
         Self::Prev(self.into())
     }
+    // pub fn stow(self) -> GrammarNode<'g> {
+    //     Self::Stow(self.into())
+    // }
     pub fn is_many(&self) -> bool {
         if let GrammarNode::Many(_)=self {true} else {false}
+    }
+    pub fn get_non_term_name(&self) -> Option<&'g str> {
+        if let Self::NonTerm(n)=self {
+            Some(n)
+        } else {
+            None
+        }
+    }
+    pub fn is_non_term(&self) -> bool {
+        if let Self::NonTerm(..)=self {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_primtive(&self) -> bool {
+        match self {
+            // GrammarNode::Many(grammar_node) => todo!(),
+            // GrammarNode::And(grammar_nodes) => todo!(),
+            // GrammarNode::Or(grammar_nodes) => todo!(),
+            // GrammarNode::NonTerm(_) => todo!(),
+            // GrammarNode::Group(grammar_node, _) => todo!(),
+            // GrammarNode::Expected(grammar_node, _) => todo!(),
+            // GrammarNode::Prev(grammar_node) => todo!(),
+            GrammarNode::String => true,
+            GrammarNode::Identifier => true,
+            GrammarNode::Int => true,
+            GrammarNode::Float => true,
+            GrammarNode::Symbol(_) => true,
+            GrammarNode::Keyword(_) => true,
+            GrammarNode::Eol => true,
+            // GrammarNode::Always => todo!(),
+            // GrammarNode::Error(grammar_walk_error) => todo!(),
+            _ => false,
+        }
     }
 }
 

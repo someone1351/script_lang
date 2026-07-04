@@ -68,7 +68,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "start" => NonTerm("factor"),
         "factor" => [
             [
-                NonTerm("term"),
+                NonTerm("term"), //.stow(),
                 [Symbol("+"),NonTerm("term")].and().many1(),
             ].and().group("factor"),
             NonTerm("term"),

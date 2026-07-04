@@ -1,3 +1,46 @@
+                    // println!("        hist_news");
+                    // for (i,h) in self.hist_news.iter().enumerate() {
+                    //     println!("            {i}:[{:?}]: {:?}",h.tokens_start.inds(),h.grammar)
+                    // }
+                    // println!("        hist_begins_last");
+                    // if let Some(h)=self.hist_begins_stk.last() {
+                    //     for (i,(g,x)) in h.elements.iter().enumerate() {
+                    //         println!("            {i}:[{:?}]: {g:?}",x.tokens_after.inds())
+                    //     }
+                    // }
+                    // println!("        hist_ends_last");
+                    // if let Some(h)=self.hist_ends_stk.last() {
+                    //     for (i,(g,x)) in h.elements.iter().enumerate() {
+                    //         println!("            {i}:[{:?}]: {g:?}",x.tokens.inds())
+                    //     }
+                    // }
+                    println!("        hist_news={}",
+                        self.hist_news.iter().map(|x|x.grammar.clone().get_non_term_name().unwrap())
+                            .map(|x|format!("{x:?}"))
+                            .map(|x|{let mut s=x; s.retain(|y|!['"',' '].contains(&y));s})
+                            .collect::<Vec<_>>().join(", ")
+                    );
+                    println!("        hist_begins_last={}",
+                        self.hist_begins_stk.last().map(|q|format!("{}",q.elements.iter()
+                            .map(|x|{
+                                format!("{}:{:?}",
+                                    {let mut s=format!("{:?}",x.0.clone().get_non_term_name().unwrap()); s.retain(|y|!['"',' '].contains(&y));s},
+                                    x.1.tokens_after.inds(),
+                                )
+                            }).collect::<Vec<_>>().join(", ")
+                        )).unwrap_or_default(),
+                    );
+                    println!("        hist_ends_last={}",
+                        self.hist_ends_stk.last().map(|q|format!("{}",q.elements.iter()
+                            .map(|x|{
+                                format!("{}:{:?}",
+                                    {let mut s=format!("{:?}",x.0.clone().get_non_term_name().unwrap()); s.retain(|y|!['"',' '].contains(&y));s},
+                                    x.1.tokens.inds(),
+                                )
+                            }).collect::<Vec<_>>().join(", ")
+                        )).unwrap_or_default(),
+                    );
+=====
 
         if !self.stk.is_empty() {return;}
 

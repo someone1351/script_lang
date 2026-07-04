@@ -38,7 +38,7 @@ where
 
     hist_news:Vec<TempHistNew<'t,'g>>,
     hist_begins_stk:Vec<TempHistBegins<'t,'g>>,
-    hist_ends_stk:Vec<TempHistEnds<'t,'g>>,
+    hist_ends_stk:Vec<TempHistEnds<'g>>,
 }
 
 impl<'t,'g,G> GrammarWalker<'t,'g,G>
@@ -577,8 +577,6 @@ where
             Ok(v) => {
                 //
                 self.stk.truncate(cur.success_len);
-
-                //
                 self.update_tokens(&cur,true);
                 self.update_groups(&cur);
                 self.submit_hist_news(&cur,true,true);
@@ -661,7 +659,9 @@ where
             let last_tokens_start=last.tokens.inds().start;
 
             self.hist_ends_stk[last.hist_ends_stk_len-1].elements.retain(|_k,v|{
-                v.tokens.inds().start>=last_tokens_start
+                // v.tokens.inds().start
+                v.tokens_start_ind
+                >=last_tokens_start
                 // last_tokens_start<v.tokens.inds().start
             });
         }
@@ -681,7 +681,10 @@ where
             }
 
             //
-            (  hist_new.grammar.clone(), TempHistEnd { tokens, } )
+            (  hist_new.grammar.clone(), TempHistEnd {
+                tokens_start_ind:tokens.start,
+                // tokens,
+            } )
         }).collect::<Vec<_>>();
 
         //
@@ -720,6 +723,7 @@ where
                 groups,
                 hist_ends: HashMap::from_iter(added_hist_ends[i+1..].into_iter().cloned()),
                 tokens_after: cur.tokens,
+                tokens_start_ind:drained_hist_new.tokens_start.start,
             });
         }
 
@@ -751,7 +755,10 @@ where
     }
 
     fn hist_news_add(&mut self,cur:&Work<'t,'g>) -> usize {
-        if cur.from_user { //ignore grammars added by walker
+        if cur.from_user
+            // && (cur.grammar.is_primtive() || cur.grammar.is_non_term())
+            && cur.grammar.is_non_term() //should only do nonterms?
+        { //ignore grammars added by walker
             self.hist_news.push(TempHistNew {
                 grammar: cur.grammar.clone(),
                 tokens_start: cur.tokens.clone(),
@@ -1048,30 +1055,37 @@ where
                 );
 
                 if true {
-                    println!("        hist_news={}",
-                        self.hist_news.iter().map(|x|x.grammar.clone())
-                            .map(|x|format!("{x:?}"))
-                            .map(|x|{let mut s=x; s.retain(|y|!['"',' '].contains(&y));s})
+                    // println!("        hist_news");
+                    // for (i,h) in self.hist_news.iter().enumerate() {
+                    //     println!("            {i}:[{:?}]: {:?}",h.tokens_start.inds(),h.grammar)
+                    // }
+                    // println!("        hist_begins_last");
+                    // if let Some(h)=self.hist_begins_stk.last() {
+                    //     for (i,(g,x)) in h.elements.iter().enumerate() {
+                    //         println!("            {i}:[{:?}]: {g:?}",x.tokens_after.inds())
+                    //     }
+                    // }
+                    // println!("        hist_ends_last");
+                    // if let Some(h)=self.hist_ends_stk.last() {
+                    //     for (i,(g,x)) in h.elements.iter().enumerate() {
+                    //         println!("            {i}:[{:?}]: {g:?}",x.tokens.inds())
+                    //     }
+                    // }
+                    println!("        hist_news=[{}]",
+                        self.hist_news.iter()
+                            .map(|x|format!("{}:{}",x.tokens_start.inds().start,x.grammar.get_non_term_name().unwrap()))
                             .collect::<Vec<_>>().join(", ")
                     );
                     println!("        hist_begins_last={}",
-                        self.hist_begins_stk.last().map(|q|format!("{}",q.elements.iter()
-                            .map(|x|{
-                                format!("{}:{:?}",
-                                    {let mut s=format!("{:?}",x.0.clone()); s.retain(|y|!['"',' '].contains(&y));s},
-                                    x.1.tokens_after.inds(),
-                                )
-                            }).collect::<Vec<_>>().join(", ")
+                        self.hist_begins_stk.last().map(|q|format!("[{}]",q.elements.iter()
+                            .map(|x|format!("{}:{}",x.1.tokens_start_ind,x.0.get_non_term_name().unwrap()))
+                            .collect::<Vec<_>>().join(", ")
                         )).unwrap_or_default(),
                     );
                     println!("        hist_ends_last={}",
-                        self.hist_ends_stk.last().map(|q|format!("{}",q.elements.iter()
-                            .map(|x|{
-                                format!("{}:{:?}",
-                                    {let mut s=format!("{:?}",x.0.clone()); s.retain(|y|!['"',' '].contains(&y));s},
-                                    x.1.tokens.inds(),
-                                )
-                            }).collect::<Vec<_>>().join(", ")
+                        self.hist_ends_stk.last().map(|q|format!("[{}]",q.elements.iter()
+                            .map(|x|format!("{}:{}",x.1.tokens_start_ind,x.0.get_non_term_name().unwrap()))
+                            .collect::<Vec<_>>().join(", ")
                         )).unwrap_or_default(),
                     );
                 }
