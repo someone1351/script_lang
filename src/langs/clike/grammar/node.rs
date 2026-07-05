@@ -16,7 +16,7 @@ pub enum GrammarNode<'g> {
     // Stow(Box<GrammarNode<'g>>),
     //save, stow, spare keep retain note
 
-    Mark(Box<GrammarNode<'g>>),
+    // Mark(Box<GrammarNode<'g>>),
 
     //for hist_begins, only use for nonterms, eg NonTerm(name,is_stow), "name".non_term(), "name".non_term_stow()
     //  no need to have a Take(g), or g.take(), as automatically do for nonterms
