@@ -47,8 +47,8 @@ pub struct TempExpected<'g> {
 pub struct TempHistNew<'t,'g> {
     pub grammar:GrammarNode<'g>,
     pub tokens_start:TokenIterContainer<'t>,
-    // pub group_ind:usize,
     pub is_first:bool,
+    pub group_ind:usize,
 }
 
 
@@ -64,7 +64,7 @@ pub struct TempHistBegin<'t,'g> {
 #[derive(Clone, Debug)]
 pub struct TempHistEnd {
     pub tokens_start_ind:usize,
-    // pub tokens:TokenIterContainer<'t>, //could be removed later, use dif way
+    // pub tokens:TokenIterContainer<'t>,
     // pub tokens_start:TokenIterContainer<'t>,
     // pub group_ind:usize,
     // pub inner_groups:Range<usize>, //groups inside the takeable?

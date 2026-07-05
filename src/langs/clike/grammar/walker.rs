@@ -659,6 +659,7 @@ where
             let last_tokens_start=last.tokens.inds().start;
 
             self.hist_ends_stk[last.hist_ends_stk_len-1].elements.retain(|_k,v|{
+                //could be removed later, use dif way, through and/or ids ?
                 // v.tokens.inds().start
                 v.tokens_start_ind
                 >=last_tokens_start
@@ -702,9 +703,18 @@ where
             //
             if !drained_hist_new.is_first { continue; }
             let Some(hist_begins)=self.hist_begins_stk.last_mut() else {continue;};
+// drained_hist_new.
+
 
             //
-            let mut groups=self.groups[cur.group_ind..cur.group_len].to_vec();
+            println!("===hmm1 {:?}",self.groups);
+            println!("===hmm2 {:?} {:?}",drained_hist_new.group_ind+1..cur.group_len, self.groups.get(drained_hist_new.group_ind+1..cur.group_len));
+            let mut groups=self.groups[drained_hist_new.group_ind+1..cur.group_len].to_vec();
+
+            println!("--- sub hist news, gr={:?}, gs=[{}], gsr={:?}",
+                drained_hist_new.grammar,
+                groups.iter().enumerate().map(|(i,g)|format!("g{i}:p{}:{:?}:{:?}",g.parent,g.name,g.tokens.inds())).collect::<Vec<_>>().join(", "),
+                drained_hist_new.group_ind..cur.group_len);
 
             //offset parents in group
             if !groups.is_empty() { //cur.group_ind!=cur.group_len
@@ -762,7 +772,7 @@ where
             self.hist_news.push(TempHistNew {
                 grammar: cur.grammar.clone(),
                 tokens_start: cur.tokens.clone(),
-                // group_ind: cur.group_ind,
+                group_ind: cur.group_ind,
                 is_first:cur.is_first,
             });
         }
@@ -1078,7 +1088,11 @@ where
                     );
                     println!("        hist_begins_last={}",
                         self.hist_begins_stk.last().map(|q|format!("[{}]",q.elements.iter()
-                            .map(|x|format!("{}:{}",x.1.tokens_start_ind,x.0.get_non_term_name().unwrap()))
+                            .map(|x|format!("{}:{}", //: gs={:?}
+                                x.1.tokens_start_ind,
+                                x.0.get_non_term_name().unwrap(),
+                                // x.1.groups,
+                            ))
                             .collect::<Vec<_>>().join(", ")
                         )).unwrap_or_default(),
                     );
