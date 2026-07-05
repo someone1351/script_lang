@@ -14,15 +14,9 @@ pub enum GrammarNode<'g> {
     Prev(Box<GrammarNode<'g>>),
 
     // Stow(Box<GrammarNode<'g>>),
-    //save, stow, spare keep retain note
 
     // Mark(Box<GrammarNode<'g>>),
 
-    //for hist_begins, only use for nonterms, eg NonTerm(name,is_stow), "name".non_term(), "name".non_term_stow()
-    //  no need to have a Take(g), or g.take(), as automatically do for nonterms
-    //for hist_ends,
-    //  use with g.prev(), Prev(g)
-    //  store with Mark(g) or g.mark()
     String,
     Identifier,
     Int,
