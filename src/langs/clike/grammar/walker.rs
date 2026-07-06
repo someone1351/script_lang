@@ -646,7 +646,7 @@ where
         //what was this for again? something to do with not adding cur grammar to hist_begins?
         //  it was for not adding cur grammar to hist_new?
         _gotten:bool,
-        hist_ends_remove_previous:bool,
+        _hist_ends_remove_previous:bool,
     ) {
         //should always be some (due to init), use panic instead of ret? no, it will end on an always if successful
         let Some(last)=self.stk.last_mut() else {return;};
@@ -655,16 +655,21 @@ where
         last.hist_ends_stk_len=cur.hist_ends_stk_len;
 
         //why only use for primitives?
-        if hist_ends_remove_previous {
-            let last_tokens_start=last.tokens.inds().start;
+        // if hist_ends_remove_previous {
+        //     let last_tokens_start=last.tokens.inds().start;
 
-            self.hist_ends_stk[last.hist_ends_stk_len-1].elements.retain(|_k,v|{
-                //could be removed later, use dif way, through and/or ids ?
-                // v.tokens.inds().start
-                v.tokens_start_ind
-                >=last_tokens_start
-                // last_tokens_start<v.tokens.inds().start
-            });
+        //     self.hist_ends_stk[last.hist_ends_stk_len-1].elements.retain(|_k,v|{
+        //         //could be removed later, use dif way, through and/or ids ?
+        //         // v.tokens.inds().start
+        //         v.tokens_start_ind
+        //         >=last_tokens_start
+        //         // last_tokens_start<v.tokens.inds().start
+        //     });
+        // }
+
+        //whipe previous hist
+        if cur.from_user {
+            self.hist_ends_stk[last.hist_ends_stk_len-1].elements.clear();
         }
 
         //
