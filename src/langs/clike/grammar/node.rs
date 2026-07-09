@@ -13,7 +13,7 @@ pub enum GrammarNode<'g> {
     Expected(Box<GrammarNode<'g>>, &'g str,),
     Prev(Box<GrammarNode<'g>>),
 
-    // Stow(Box<GrammarNode<'g>>),
+    Stow(Box<GrammarNode<'g>>),
 
     // Mark(Box<GrammarNode<'g>>),
 
@@ -48,9 +48,9 @@ impl<'g> GrammarNode<'g> {
     pub fn prev(self) -> GrammarNode<'g> {
         Self::Prev(self.into())
     }
-    // pub fn stow(self) -> GrammarNode<'g> {
-    //     Self::Stow(self.into())
-    // }
+    pub fn stow(self) -> GrammarNode<'g> {
+        Self::Stow(self.into())
+    }
     pub fn is_many(&self) -> bool {
         if let GrammarNode::Many(_)=self {true} else {false}
     }

@@ -22,6 +22,9 @@ pub struct GrammarWalker<'t,'g,G>
 where
     G: Fn(&str)->Option<GrammarNode<'g>>,
 {
+    prev_non_term_only:bool,
+    stow_non_term_only:bool,
+
     top_primitives:TokenIterContainer<'t>,
     primitives_remaining: TokenIterContainer<'t>,
     grammar_func:G,
@@ -48,6 +51,9 @@ where
 
     pub fn new(top_primitives:TokenIterContainer<'t>, grammar_func:G,) -> Self {
         Self {
+            prev_non_term_only:true,
+            stow_non_term_only:true,
+
             stk:Default::default(),
             c:Default::default(),
 
@@ -497,6 +503,39 @@ where
         });
     }
 
+
+    fn grammar_stow(&mut self,cur :Work<'t,'g>,) {
+        let GrammarNode::Stow(g)=&cur.grammar else {panic!("");};
+
+
+
+
+        //
+        let hist_news_len=self.hist_news_add(&cur);
+
+        //
+        self.stk.push(Work {
+            grammar: *g.clone(),
+            success_len: cur.success_len,
+            fail_len: cur.fail_len,
+            tokens: cur.tokens,
+            group_ind:cur.group_ind,
+            group_len:cur.group_len,
+            visiteds:cur.visiteds,
+            grammar_debug_len: cur.grammar_debug_len+1,
+            and_id:cur.and_id,
+
+            from_user:true,
+            is_first:cur.is_first,
+
+            hist_news_len,
+            hist_begins_stk_len:cur.hist_begins_stk_len,
+            hist_ends_stk_len:cur.hist_ends_stk_len,
+
+            expected_news_len:cur.expected_news_len,
+        });
+    }
+
     fn grammar_prev(&mut self,cur :Work<'t,'g>,) {
         let GrammarNode::Prev(g)=&cur.grammar else {panic!("");};
         //
@@ -771,8 +810,8 @@ where
 
     fn hist_news_add(&mut self,cur:&Work<'t,'g>) -> usize {
         if cur.from_user
-            // && (cur.grammar.is_primtive() || cur.grammar.is_non_term())
-            && cur.grammar.is_non_term() //should only do nonterms?
+            // // && (cur.grammar.is_primtive() || cur.grammar.is_non_term())
+            // && cur.grammar.is_non_term() //should only do nonterms?
         { //ignore grammars added by walker
             self.hist_news.push(TempHistNew {
                 grammar: cur.grammar.clone(),
@@ -1070,43 +1109,43 @@ where
                 );
 
                 if true {
-                    // println!("        hist_news");
-                    // for (i,h) in self.hist_news.iter().enumerate() {
-                    //     println!("            {i}:[{:?}]: {:?}",h.tokens_start.inds(),h.grammar)
-                    // }
-                    // println!("        hist_begins_last");
-                    // if let Some(h)=self.hist_begins_stk.last() {
-                    //     for (i,(g,x)) in h.elements.iter().enumerate() {
-                    //         println!("            {i}:[{:?}]: {g:?}",x.tokens_after.inds())
-                    //     }
-                    // }
-                    // println!("        hist_ends_last");
-                    // if let Some(h)=self.hist_ends_stk.last() {
-                    //     for (i,(g,x)) in h.elements.iter().enumerate() {
-                    //         println!("            {i}:[{:?}]: {g:?}",x.tokens.inds())
-                    //     }
-                    // }
-                    println!("        hist_news=[{}]",
-                        self.hist_news.iter()
-                            .map(|x|format!("{}:{}",x.tokens_start.inds().start,x.grammar.get_non_term_name().unwrap()))
-                            .collect::<Vec<_>>().join(", ")
-                    );
-                    println!("        hist_begins_last={}",
-                        self.hist_begins_stk.last().map(|q|format!("[{}]",q.elements.iter()
-                            .map(|x|format!("{}:{}", //: gs={:?}
-                                x.1.tokens_start_ind,
-                                x.0.get_non_term_name().unwrap(),
-                                // x.1.groups,
-                            ))
-                            .collect::<Vec<_>>().join(", ")
-                        )).unwrap_or_default(),
-                    );
-                    println!("        hist_ends_last={}",
-                        self.hist_ends_stk.last().map(|q|format!("[{}]",q.elements.iter()
-                            .map(|x|format!("{}:{}",x.1.tokens_start_ind,x.0.get_non_term_name().unwrap()))
-                            .collect::<Vec<_>>().join(", ")
-                        )).unwrap_or_default(),
-                    );
+                    println!("        hist_news");
+                    for (i,h) in self.hist_news.iter().enumerate() {
+                        println!("            {i}:[{:?}]: {:?}",h.tokens_start.inds(),h.grammar)
+                    }
+                    println!("        hist_begins_last");
+                    if let Some(h)=self.hist_begins_stk.last() {
+                        for (i,(g,x)) in h.elements.iter().enumerate() {
+                            println!("            {i}:[{:?}]: {g:?}",x.tokens_after.inds())
+                        }
+                    }
+                    println!("        hist_ends_last");
+                    if let Some(h)=self.hist_ends_stk.last() {
+                        for (i,(g,x)) in h.elements.iter().enumerate() {
+                            println!("            {i}:[{:?}]: {g:?}",x.tokens_start_ind)
+                        }
+                    }
+                    // println!("        hist_news=[{}]",
+                    //     self.hist_news.iter()
+                    //         .map(|x|format!("{}:{}",x.tokens_start.inds().start,x.grammar.get_non_term_name().unwrap()))
+                    //         .collect::<Vec<_>>().join(", ")
+                    // );
+                    // println!("        hist_begins_last={}",
+                    //     self.hist_begins_stk.last().map(|q|format!("[{}]",q.elements.iter()
+                    //         .map(|x|format!("{}:{}", //: gs={:?}
+                    //             x.1.tokens_start_ind,
+                    //             x.0.get_non_term_name().unwrap(),
+                    //             // x.1.groups,
+                    //         ))
+                    //         .collect::<Vec<_>>().join(", ")
+                    //     )).unwrap_or_default(),
+                    // );
+                    // println!("        hist_ends_last={}",
+                    //     self.hist_ends_stk.last().map(|q|format!("[{}]",q.elements.iter()
+                    //         .map(|x|format!("{}:{}",x.1.tokens_start_ind,x.0.get_non_term_name().unwrap()))
+                    //         .collect::<Vec<_>>().join(", ")
+                    //     )).unwrap_or_default(),
+                    // );
                 }
 
                 //
@@ -1134,6 +1173,7 @@ where
         //
         match cur.grammar.clone() {
             GrammarNode::Expected(..) => {self.grammar_expect(cur);}
+            GrammarNode::Stow(..) => {self.grammar_stow(cur);}
             GrammarNode::Prev(..) => {self.grammar_prev(cur);}
             GrammarNode::Group(..) => {self.grammar_group(cur);}
             GrammarNode::And(..) => {self.grammar_and(cur);}
@@ -1180,5 +1220,13 @@ where
     //
     pub fn set_debug(&mut self,debug:bool) {
         self.debug=debug;
+    }
+
+    pub fn set_prev_non_term_only(&mut self,prev_non_term_only:bool) {
+        self.prev_non_term_only=prev_non_term_only;
+    }
+
+    pub fn set_stow_non_term_only(&mut self,stow_non_term_only:bool) {
+        self.stow_non_term_only=stow_non_term_only;
     }
 }
