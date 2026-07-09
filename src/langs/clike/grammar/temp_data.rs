@@ -54,15 +54,17 @@ pub struct TempHistNew<'t,'g> {
 
 #[derive(Clone,Debug)]
 pub struct TempHistBegin<'t,'g> {
+    pub grammar: GrammarNode<'g>,
     pub groups:Vec<TempGroupInfo<'t,'g>>, //inside the grammar this represents
-    pub hist_ends:HashMap<GrammarNode<'g>,TempHistEnd>, //inside the grammar this represents //todo
+    pub hist_ends:Vec<TempHistEnd<'g>>, //inside the grammar this represents //todo
     pub tokens_after:TokenIterContainer<'t>,
 
     pub tokens_start_ind:usize,
 }
 
 #[derive(Clone, Debug)]
-pub struct TempHistEnd {
+pub struct TempHistEnd<'g> {
+    pub grammar: GrammarNode<'g>,
     pub tokens_start_ind:usize,
     // pub tokens:TokenIterContainer<'t>,
     // pub tokens_start:TokenIterContainer<'t>,
@@ -72,14 +74,17 @@ pub struct TempHistEnd {
 
 #[derive(Clone,Default,Debug)]
 pub struct TempHistBegins<'t,'g> {
-    pub elements:HashMap<GrammarNode<'g>,TempHistBegin<'t,'g>>,
+    // pub elements:HashMap<GrammarNode<'g>,TempHistBegin<'t,'g>>,
+    pub elements:Vec<TempHistBegin<'t,'g>>,
+
     // pub last_or_stk_len:usize, //used for
     //todo: store groups, hist_ends here, and in TempHistBegin store inds into them
 }
 
 #[derive(Clone,Default,Debug)]
 pub struct TempHistEnds<'g> {
-    pub elements:HashMap<GrammarNode<'g>,TempHistEnd>,
+    // pub elements:HashMap<GrammarNode<'g>,TempHistEnd>,
+    pub elements:Vec<TempHistEnd<'g>>,
 }
 
 #[derive(Clone)]

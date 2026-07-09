@@ -542,7 +542,10 @@ where
         let _hist_news_len=self.hist_news_add(&cur);
 
         //
-        if self.hist_ends_stk.last().unwrap().elements.contains_key(&g) {
+        if self.hist_ends_stk.last().unwrap().elements
+            .iter().find(|x|x.grammar.eq(g)).is_some()
+        // .contains_key(&g)
+        {
             self.stk.truncate(cur.success_len);
             self.handle_exit_last_many(&cur);
             // self.hist_news_truncate_to_last(); //why on success??
@@ -573,7 +576,10 @@ where
         //
         if !cur.from_user || !cur.is_first {return false;} // !(cur.from_user && cur.is_first)
         let Some(hist_begins)=self.hist_begins_stk.last() else {return false;};
-        let Some(hist_begin)=hist_begins.elements.get(&cur.grammar) else {return false;};
+        let Some(hist_begin)=hist_begins.elements
+            // .get(&cur.grammar)
+            .iter().rev().find(|x|x.grammar.eq(&cur.grammar))
+            else {return false;};
 
         //
         self.stk.truncate(cur.success_len);
@@ -725,11 +731,17 @@ where
                 println!("--- inserting hist_end {:?} {tokens:?}",hist_new.grammar);
             }
 
-            //
-            (  hist_new.grammar.clone(), TempHistEnd {
+            // //
+            // (  hist_new.grammar.clone(), TempHistEnd {
+            //     tokens_start_ind:tokens.start,
+            //     // tokens,
+            // } )
+
+            TempHistEnd {
+                grammar:hist_new.grammar.clone(),
                 tokens_start_ind:tokens.start,
                 // tokens,
-            } )
+            }
         }).collect::<Vec<_>>();
 
         //
@@ -772,10 +784,18 @@ where
             //if or(and(A0,A1),A2)
             //  after A0, it gets added to the hist_begins, that A1 can see, but not use because it isn't a first
 
-            //
-            hist_begins.elements.entry(drained_hist_new.grammar.clone()).or_insert_with(||TempHistBegin {
+            // //
+            // hist_begins.elements.entry(drained_hist_new.grammar.clone()).or_insert_with(||TempHistBegin {
+            //     groups,
+            //     hist_ends: HashMap::from_iter(added_hist_ends[i+1..].into_iter().cloned()),
+            //     tokens_after: cur.tokens,
+            //     tokens_start_ind:drained_hist_new.tokens_start.start,
+            // });
+
+            hist_begins.elements.push(TempHistBegin {
+                grammar:drained_hist_new.grammar.clone(),
                 groups,
-                hist_ends: HashMap::from_iter(added_hist_ends[i+1..].into_iter().cloned()),
+                hist_ends: added_hist_ends[i+1..].to_vec(),
                 tokens_after: cur.tokens,
                 tokens_start_ind:drained_hist_new.tokens_start.start,
             });
@@ -1115,14 +1135,20 @@ where
                     }
                     println!("        hist_begins_last");
                     if let Some(h)=self.hist_begins_stk.last() {
-                        for (i,(g,x)) in h.elements.iter().enumerate() {
-                            println!("            {i}:[{:?}]: {g:?}",x.tokens_after.inds())
+                        for (i,
+                            // (g,x)
+                            x
+                            ) in h.elements.iter().enumerate() {
+                            println!("            {i}:[{:?}]: {:?}",x.tokens_after.inds(),x.grammar)
                         }
                     }
                     println!("        hist_ends_last");
                     if let Some(h)=self.hist_ends_stk.last() {
-                        for (i,(g,x)) in h.elements.iter().enumerate() {
-                            println!("            {i}:[{:?}]: {g:?}",x.tokens_start_ind)
+                        for (i,
+                            // (g,x)
+                            x
+                        ) in h.elements.iter().enumerate() {
+                            println!("            {i}:[{:?}]: {:?}",x.tokens_start_ind,x.grammar)
                         }
                     }
                     // println!("        hist_news=[{}]",
