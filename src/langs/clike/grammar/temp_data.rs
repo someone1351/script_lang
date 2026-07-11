@@ -122,8 +122,15 @@ pub struct Work<'t,'g> {
     pub is_first:bool,
 
     pub hist_news_len:usize,
-    pub hist_begins_stk_len:usize,
-    pub hist_ends_stk_len:usize,
+
+    pub hist_begins_ind:usize,
+    pub hist_begins_len:usize,
+
+    pub hist_ends_ind:usize,
+    pub hist_ends_len:usize,
+
+    // pub hist_begins_stk_len:usize,
+    // pub hist_ends_stk_len:usize,
 
     pub expected_news_len:usize,
 }
