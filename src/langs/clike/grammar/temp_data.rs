@@ -73,19 +73,24 @@ pub struct TempHistEnd<'g> {
 }
 
 #[derive(Clone,Default,Debug)]
-pub struct TempHistBegins<'t,'g> {
-    // pub elements:HashMap<GrammarNode<'g>,TempHistBegin<'t,'g>>,
-    pub elements:Vec<TempHistBegin<'t,'g>>,
-
-    // pub last_or_stk_len:usize, //used for
-    //todo: store groups, hist_ends here, and in TempHistBegin store inds into them
+pub struct TempHistBeginsInfo {
+    pub ind_start:usize,
+    pub ind_end:usize,
 }
+// #[derive(Clone,Default,Debug)]
+// pub struct TempHistBegins<'t,'g> {
+//     // pub elements:HashMap<GrammarNode<'g>,TempHistBegin<'t,'g>>,
+//     pub elements:Vec<TempHistBegin<'t,'g>>,
 
-#[derive(Clone,Default,Debug)]
-pub struct TempHistEnds<'g> {
-    // pub elements:HashMap<GrammarNode<'g>,TempHistEnd>,
-    pub elements:Vec<TempHistEnd<'g>>,
-}
+//     // pub last_or_stk_len:usize, //used for
+//     //todo: store groups, hist_ends here, and in TempHistBegin store inds into them
+// }
+
+// #[derive(Clone,Default,Debug)]
+// pub struct TempHistEnds<'g> {
+//     // pub elements:HashMap<GrammarNode<'g>,TempHistEnd>,
+//     pub elements:Vec<TempHistEnd<'g>>,
+// }
 
 #[derive(Clone)]
 pub struct TempGroupInfo<'t,'g> {
@@ -123,8 +128,9 @@ pub struct Work<'t,'g> {
 
     pub hist_news_len:usize,
 
-    pub hist_begins_ind:usize,
-    pub hist_begins_len:usize,
+    // pub hist_begins_ind:usize,
+    // pub hist_begins_len:usize,
+    pub hist_begins_stk_len:usize,
 
     pub hist_ends_ind:usize,
     pub hist_ends_len:usize,

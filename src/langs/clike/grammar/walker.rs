@@ -5,6 +5,7 @@ use super::temp_data::*;
 use core::panic;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::ops::Range;
 
 use crate::build::Loc;
 // use crate::clike::tokenizer::TokenContainer;
@@ -41,7 +42,14 @@ where
 
     hist_news:Vec<TempHistNew<'t,'g>>,
 
-    hist_begins:Vec<TempHistBegin<'t,'g>>,
+    //simpler to use hist_begins_stk:Vec<Vec<TempHistBegin<'t,'g>>>
+    //and maybe don't truncate it, instead use lens  to keep it
+    // hist_begins_stk:Vec<Range<usize>>,
+    // hist_begins_elements:Vec<TempHistBegin<'t,'g>>,
+    hist_begins_stk:Vec<Vec<TempHistBegin<'t,'g>>>,
+
+
+    //
     hist_ends:Vec<TempHistEnd<'g>>,
 
     // hist_begins_stk:Vec<TempHistBegins<'t,'g>>,
@@ -75,7 +83,8 @@ where
 
             hist_news: Default::default(),
 
-            hist_begins: Default::default(),
+            hist_begins_stk:Default::default(),
+            // hist_begins_elements: Default::default(),
             hist_ends: Default::default(),
 
             // hist_begins_stk: Default::default(),
@@ -109,8 +118,11 @@ where
             // hist_begins_stk_len:0,
             // hist_ends_stk_len:1,
 
-            hist_begins_ind: 0,
-            hist_begins_len: 0,
+            hist_begins_stk_len:0,
+
+            // hist_begins_ind: 0,
+            // hist_begins_len: 0,
+
             hist_ends_ind: 0,
             hist_ends_len: 0,
 
@@ -138,8 +150,11 @@ where
             // hist_begins_stk_len:0,
             // hist_ends_stk_len:1,
 
-            hist_begins_ind: 0,
-            hist_begins_len: 0,
+            hist_begins_stk_len:0,
+
+            // hist_begins_ind: 0,
+            // hist_begins_len: 0,
+
             hist_ends_ind: 0,
             hist_ends_len: 0,
 
@@ -175,8 +190,11 @@ where
                 // hist_begins_stk_len:0,
                 // hist_ends_stk_len:1,
 
-                hist_begins_ind: 0,
-                hist_begins_len: 0,
+                hist_begins_stk_len:0,
+
+                // hist_begins_ind: 0,
+                // hist_begins_len: 0,
+
                 hist_ends_ind: 0,
                 hist_ends_len: 0,
 
@@ -194,7 +212,8 @@ where
         //
         self.hist_news.clear();
 
-        self.hist_begins.clear();
+        self.hist_begins_stk.clear();
+        // self.hist_begins_elements.clear();
         self.hist_ends.clear();
 
         // self.hist_begins_stk.clear(); //don't need initial one because don't need to store begins before an Or exists
@@ -235,8 +254,11 @@ where
             // hist_begins_stk_len:cur.hist_begins_stk_len,
             // hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            hist_begins_ind: cur.hist_begins_ind,
-            hist_begins_len: cur.hist_begins_len,
+            // hist_begins_ind: cur.hist_begins_ind,
+            // hist_begins_len: cur.hist_begins_len,
+
+            hist_begins_stk_len:cur.hist_begins_stk_len,
+
             hist_ends_ind: cur.hist_ends_ind,
             hist_ends_len: cur.hist_ends_len,
 
@@ -271,8 +293,11 @@ where
             // hist_begins_stk_len:cur.hist_begins_stk_len,
             // hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            hist_begins_ind: cur.hist_begins_ind,
-            hist_begins_len: cur.hist_begins_len,
+            // hist_begins_ind: cur.hist_begins_ind,
+            // hist_begins_len: cur.hist_begins_len,
+
+            hist_begins_stk_len:cur.hist_begins_stk_len,
+
             hist_ends_ind: cur.hist_ends_ind,
             hist_ends_len: cur.hist_ends_len,
 
@@ -308,8 +333,11 @@ where
             // hist_begins_stk_len:cur.hist_begins_stk_len,
             // hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            hist_begins_ind: cur.hist_begins_ind,
-            hist_begins_len: cur.hist_begins_len,
+            // hist_begins_ind: cur.hist_begins_ind,
+            // hist_begins_len: cur.hist_begins_len,
+
+            hist_begins_stk_len:cur.hist_begins_stk_len,
+
             hist_ends_ind: cur.hist_ends_ind,
             hist_ends_len: cur.hist_ends_len,
 
@@ -339,8 +367,11 @@ where
             // hist_begins_stk_len:cur.hist_begins_stk_len,
             // hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            hist_begins_ind: cur.hist_begins_ind,
-            hist_begins_len: cur.hist_begins_len,
+            // hist_begins_ind: cur.hist_begins_ind,
+            // hist_begins_len: cur.hist_begins_len,
+
+            hist_begins_stk_len:cur.hist_begins_stk_len,
+
             hist_ends_ind: cur.hist_ends_ind,
             hist_ends_len: cur.hist_ends_len,
 
@@ -370,8 +401,11 @@ where
             // hist_begins_stk_len:cur.hist_begins_stk_len,
             // hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            hist_begins_ind: cur.hist_begins_ind,
-            hist_begins_len: cur.hist_begins_len,
+            // hist_begins_ind: cur.hist_begins_ind,
+            // hist_begins_len: cur.hist_begins_len,
+
+            hist_begins_stk_len:cur.hist_begins_stk_len,
+
             hist_ends_ind: cur.hist_ends_ind,
             hist_ends_len: cur.hist_ends_len,
 
@@ -413,8 +447,11 @@ where
             // hist_begins_stk_len:cur.hist_begins_stk_len,
             // hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            hist_begins_ind: cur.hist_begins_ind,
-            hist_begins_len: cur.hist_begins_len,
+            // hist_begins_ind: cur.hist_begins_ind,
+            // hist_begins_len: cur.hist_begins_len,
+
+            hist_begins_stk_len:cur.hist_begins_stk_len,
+
             hist_ends_ind: cur.hist_ends_ind,
             hist_ends_len: cur.hist_ends_len,
 
@@ -475,8 +512,11 @@ where
                 // hist_begins_stk_len:cur.hist_begins_stk_len,
                 // hist_ends_stk_len:cur.hist_ends_stk_len,
 
-                hist_begins_ind: cur.hist_begins_ind,
-                hist_begins_len: cur.hist_begins_len,
+                // hist_begins_ind: cur.hist_begins_ind,
+                // hist_begins_len: cur.hist_begins_len,
+
+                hist_begins_stk_len:cur.hist_begins_stk_len,
+
                 hist_ends_ind: cur.hist_ends_ind,
                 hist_ends_len: cur.hist_ends_len,
 
@@ -509,8 +549,11 @@ where
             // hist_begins_stk_len:cur.hist_begins_stk_len,
             // hist_ends_stk_len:cur.hist_ends_stk_len,
 
-            hist_begins_ind: cur.hist_begins_ind,
-            hist_begins_len: cur.hist_begins_len,
+            // hist_begins_ind: cur.hist_begins_ind,
+            // hist_begins_len: cur.hist_begins_len,
+
+            hist_begins_stk_len:cur.hist_begins_stk_len,
+
             hist_ends_ind: cur.hist_ends_ind,
             hist_ends_len: cur.hist_ends_len,
 
@@ -526,11 +569,12 @@ where
 
         //
         let hist_news_len=self.hist_news_add(&cur);
-        // let hist_begins_stk_len=self.hist_begins_stk_push(&cur);
+        let hist_begins_stk_len=self.hist_begins_stk_push(&cur);
         // let hist_ends_stk_len=self.hist_ends_stk_push(&cur);
-        let hist_begins_ind=if !cur.is_first{cur.hist_begins_len}else{cur.hist_begins_ind};
+        // let hist_begins_ind=if !cur.is_first{cur.hist_begins_len}else{cur.hist_begins_ind};
 
-        let hist_ends_ind=if cur.is_first{}else{};
+
+        // let hist_ends_ind=if cur.is_first{}else{};
 
         //
         if let Some(g_rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
@@ -553,8 +597,11 @@ where
                 // hist_begins_stk_len,
                 // hist_ends_stk_len,
 
-                hist_begins_ind,
-                hist_begins_len: cur.hist_begins_len,
+                // hist_begins_ind,
+                // hist_begins_len: cur.hist_begins_len,
+
+                hist_begins_stk_len,
+
                 hist_ends_ind: cur.hist_ends_ind,
                 hist_ends_len: cur.hist_ends_len,
 
@@ -582,11 +629,11 @@ where
 
             hist_news_len,
 
-            // hist_begins_stk_len,
+            hist_begins_stk_len,
             // hist_ends_stk_len,
 
-            hist_begins_ind,
-            hist_begins_len: cur.hist_begins_len,
+            // hist_begins_ind,
+            // hist_begins_len: cur.hist_begins_len,
             hist_ends_ind: cur.hist_ends_ind,
             hist_ends_len: cur.hist_ends_len,
 
@@ -670,12 +717,16 @@ where
     fn grammar_try_from_hist_begins(&mut self,cur :&Work<'t,'g>) -> bool {
         //
         if !cur.from_user || !cur.is_first {return false;} // !(cur.from_user && cur.is_first)
+        if cur.hist_begins_stk_len==0 {return false;}
+
         // let Some(hist_begins)=self.hist_begins_stk.last() else {return false;};
         let Some(hist_begin)=
             // hist_begins.elements
             // // .get(&cur.grammar)
             // .iter().rev().find(|x|x.grammar.eq(&cur.grammar))
-            self.hist_begins[cur.hist_begins_ind..].iter().rev().find(|x|x.grammar.eq(&cur.grammar))
+            // self.hist_begins_elements[cur.hist_begins_ind..]
+            self.hist_begins_stk[cur.hist_begins_stk_len-1]
+                .iter().rev().find(|x|x.grammar.eq(&cur.grammar))
             else {return false;};
 
         //
@@ -895,14 +946,16 @@ where
             // });
 
             // hist_begins.elements.
-            self.hist_begins.
-                push(TempHistBegin {
+            if cur.hist_begins_stk_len!=0 {
+
+            self.hist_begins_stk[cur.hist_begins_stk_len-1].push(TempHistBegin {
                     grammar:drained_hist_new.grammar.clone(),
                     groups,
                     hist_ends: added_hist_ends[i+1..].to_vec(),
                     tokens_after: cur.tokens,
                     tokens_start_ind:drained_hist_new.tokens_start.start,
                 });
+            }
         }
 
         //
@@ -913,7 +966,7 @@ where
 
         //
 
-        last.hist_begins_len=self.hist_begins.len();
+        // last.hist_begins_len=self.hist_begins_elements.len();
         last.hist_ends_len=self.hist_ends.len();
     }
 
@@ -921,14 +974,34 @@ where
     fn update_hist_on_fail(&mut self,cur:&Work<'t,'g>,) {
         let Some(last)=self.stk.last_mut() else {panic!("");};
 
-        last.hist_begins_len=cur.hist_begins_len;
+        // last.hist_begins_len=cur.hist_begins_len;
     }
     // fn revert_last_hist_news(&mut self) {
     //     let Some(last)=self.stk.last() else {panic!("");};
     //     self.hist_news.truncate(last.hist_news_len); //what is it for? clears failed takeable_starts?
     // }
 
+    fn hist_begins_stk_push(&mut self,cur:&Work<'t,'g>) -> usize {
+        if cur.from_user //so not an added OR for rest,
+            && ( !cur.is_first || //not part of current OR, eg: or(A, and(B,or(C,D))) A in dif OR stk than C,D
+            // self.hist_begins_stk.is_empty()
+            cur.hist_begins_stk_len==0 //init first, for if all part of same OR stk, eg: or(A,or(B,C))
+            //if not need to init first, then it just reuses existing one
+        ) //add current/initial OR
+        {
+            if self.hist_begins_stk.len()<cur.hist_begins_stk_len+1 {
+                if cur.hist_begins_stk_len-self.hist_begins_stk.len() > 1 {panic!("");} //shouldn't happen
+                self.hist_begins_stk.push(Default::default());
+            } else {
+                self.hist_begins_stk[cur.hist_begins_stk_len].clear();
+            }
+        }
+
+        self.hist_begins_stk.len()
+    }
+
     // fn hist_begins_stk_push(&mut self,cur:&Work<'t,'g>) -> usize {
+
     //     if  self.hist_begins_stk.is_empty() //reason? shouldn't it not be empty, as would be created by first? there was a reason ...
     //         || !cur.is_first //don't need to use cur.from_user, first is better, as could handle potential Or not added by user
     //     {
@@ -969,7 +1042,7 @@ where
         // self.hist_begins_stk.truncate(cur.hist_begins_stk_len);
         // self.hist_ends_stk.truncate(cur.hist_ends_stk_len);
 
-        self.hist_begins.truncate(cur.hist_begins_len);
+        // self.hist_begins_elements.truncate(cur.hist_begins_len);
         self.hist_ends.truncate(cur.hist_ends_len);
     }
 
@@ -1235,7 +1308,8 @@ where
                     group_ind, group_len,and_id,is_first,
                     hist_news_len,
                     // hist_begins_stk_len,hist_ends_stk_len,
-                    hist_begins_ind,hist_begins_len,
+                    // hist_begins_ind,hist_begins_len,
+                    hist_begins_stk_len,
                     hist_ends_ind,hist_ends_len,
                     ..
                 }=&cur;
@@ -1253,9 +1327,13 @@ where
                 //     self.hist_begins_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
                 //     self.hist_ends_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
                 // );
-
-                println!("        first={is_first}, hist_news_len={hist_news_len}, hist_begins_ind={hist_begins_ind}, hist_begins_len={hist_begins_len}, hist_ends_ind={hist_ends_ind}, hist_ends_len={hist_ends_len}",);
-
+                let hist_begins_len=if *hist_begins_stk_len==0{None}else{
+                    self.hist_begins_stk.get(hist_begins_stk_len-1).map(|x|x.len())
+                };
+                println!("        first={is_first}, hist_news_len={hist_news_len}, hist_begins_stk_len={hist_begins_stk_len}, hist_begins_len={hist_begins_len:?}, hist_ends_ind={hist_ends_ind}, hist_ends_len={hist_ends_len}",);
+                // println!("        hist_begins_ind={hist_begins_ind}, hist_begins_len={hist_begins_len},",
+                //     self.stk.get(cur.)
+                // );
                 if true {
                     println!("        hist_news");
                     for (i,h) in self.hist_news.iter().enumerate() {
@@ -1284,9 +1362,11 @@ where
                     //
                     println!("        hist_begins");
 
-                    for i in *hist_begins_ind..*hist_begins_len {
-                        let x=&self.hist_begins[i];
-                        println!("            {i}:[{:?}]: {:?}",x.tokens_after.inds(),x.grammar)
+                    if *hist_begins_stk_len!=0 {
+                        for (i,x) in self.hist_begins_stk.get(*hist_begins_stk_len-1).unwrap().iter().enumerate() {
+                            println!("            {i}:[{:?}]: {:?}",x.tokens_after.inds(),x.grammar)
+                        }
+
                     }
 
                     println!("        hist_ends_last");
