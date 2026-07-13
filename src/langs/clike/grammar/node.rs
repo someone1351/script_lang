@@ -68,6 +68,20 @@ impl<'g> GrammarNode<'g> {
             false
         }
     }
+    pub fn is_always(&self) -> bool {
+        if let GrammarNode::Always=self {
+            true
+        }else{
+            false
+        }
+    }
+    pub fn is_prev(&self) -> bool {
+        if let GrammarNode::Prev(_)=self {
+            true
+        }else{
+            false
+        }
+    }
     pub fn is_primtive(&self) -> bool {
         match self {
             // GrammarNode::Many(grammar_node) => todo!(),

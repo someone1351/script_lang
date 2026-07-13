@@ -66,10 +66,13 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         // ].and(),
         // "start" => NonTerm("expr"),
         "start" => [
-            [Keyword("a"),Keyword("b")].and(),
+            [NonTerm("a0"),Keyword("b")].and(),
+            [NonTerm("a1"),Keyword("c")].and(),
             Keyword("a"),
 
         ].or(),
+        "a0" => Keyword("a"),
+        "a1" => Keyword("a"),
         // "start" => NonTerm("factor"),
         "factor" => [
             [

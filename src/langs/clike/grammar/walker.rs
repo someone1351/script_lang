@@ -677,7 +677,8 @@ where
     fn grammar_prev(&mut self,cur :Work<'t,'g>,) {
         let GrammarNode::Prev(g)=&cur.grammar else {panic!("");};
         //
-        let _hist_news_len=self.hist_news_add(&cur);
+        // let _hist_news_len=self.hist_news_add(&cur);
+        self.hist_begins_stk_clear(&cur);
 
 
         //
@@ -706,7 +707,8 @@ where
 
     fn grammar_always(&mut self,cur :Work<'t,'g>,) {
         self.stk.truncate(cur.success_len);
-        let _hist_news_len=self.hist_news_add(&cur);
+        // let _hist_news_len=self.hist_news_add(&cur);
+        self.hist_begins_stk_clear(&cur);
         self.handle_exit_last_many(&cur);
         self.update_tokens(&cur,true);
         self.update_groups(&cur); //here
@@ -763,7 +765,8 @@ where
         Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
     {
         //
-        let _hist_news_len=self.hist_news_add(&cur);
+        // let _hist_news_len=self.hist_news_add(&cur);
+        self.hist_begins_stk_clear(&cur);
 
         //
         match prim_func(&mut cur.tokens) {
@@ -998,6 +1001,18 @@ where
         }
 
         self.hist_begins_stk.len()
+    }
+
+    fn hist_begins_stk_clear(&mut self,cur:&Work<'t,'g>) {
+
+        if cur.hist_begins_stk_len==0 || !cur.from_user || !cur.is_first {
+            return;
+        }
+        if !(cur.grammar.is_primtive() || cur.grammar.is_always() || cur.grammar.is_prev()) {
+            return;
+        }
+
+        self.hist_begins_stk[cur.hist_begins_stk_len-1].clear();
     }
 
     // fn hist_begins_stk_push(&mut self,cur:&Work<'t,'g>) -> usize {
