@@ -678,7 +678,7 @@ where
         let GrammarNode::Prev(g)=&cur.grammar else {panic!("");};
         //
         // let _hist_news_len=self.hist_news_add(&cur);
-        self.hist_begins_stk_clear(&cur);
+        self.hist_begins_clear(&cur);
 
 
         //
@@ -708,7 +708,7 @@ where
     fn grammar_always(&mut self,cur :Work<'t,'g>,) {
         self.stk.truncate(cur.success_len);
         // let _hist_news_len=self.hist_news_add(&cur);
-        self.hist_begins_stk_clear(&cur);
+        self.hist_begins_clear(&cur);
         self.handle_exit_last_many(&cur);
         self.update_tokens(&cur,true);
         self.update_groups(&cur); //here
@@ -766,7 +766,7 @@ where
     {
         //
         // let _hist_news_len=self.hist_news_add(&cur);
-        self.hist_begins_stk_clear(&cur);
+        self.hist_begins_clear(&cur);
 
         //
         match prim_func(&mut cur.tokens) {
@@ -1003,7 +1003,7 @@ where
         self.hist_begins_stk.len()
     }
 
-    fn hist_begins_stk_clear(&mut self,cur:&Work<'t,'g>) {
+    fn hist_begins_clear(&mut self,cur:&Work<'t,'g>) {
 
         if cur.hist_begins_stk_len==0 || !cur.from_user || !cur.is_first {
             return;
