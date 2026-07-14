@@ -60,6 +60,9 @@ pub struct TempHistBegin<'t,'g> {
     pub tokens_after:TokenIterContainer<'t>,
 
     pub tokens_start_ind:usize,
+    // pub group_ind:usize,
+    // pub inner_group_ind:usize,
+    // pub inner_hist_ends_ind:usize,
 }
 
 #[derive(Clone, Debug)]
@@ -77,14 +80,16 @@ pub struct TempHistBeginsInfo {
     pub ind_start:usize,
     pub ind_end:usize,
 }
-// #[derive(Clone,Default,Debug)]
-// pub struct TempHistBegins<'t,'g> {
-//     // pub elements:HashMap<GrammarNode<'g>,TempHistBegin<'t,'g>>,
-//     pub elements:Vec<TempHistBegin<'t,'g>>,
+#[derive(Clone,Default,Debug)]
+pub struct TempHistBegins<'t,'g> {
+    // pub elements:HashMap<GrammarNode<'g>,TempHistBegin<'t,'g>>,
+    pub hist_begins:Vec<TempHistBegin<'t,'g>>,
+    pub groups:Vec<TempGroupInfo<'t,'g>>, //inside the grammar this represents
+    pub hist_ends:Vec<TempHistEnd<'g>>, //inside the grammar this represents //todo
 
-//     // pub last_or_stk_len:usize, //used for
-//     //todo: store groups, hist_ends here, and in TempHistBegin store inds into them
-// }
+    // pub last_or_stk_len:usize, //used for
+    //todo: store groups, hist_ends here, and in TempHistBegin store inds into them
+}
 
 // #[derive(Clone,Default,Debug)]
 // pub struct TempHistEnds<'g> {

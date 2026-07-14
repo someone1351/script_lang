@@ -46,7 +46,7 @@ where
     //and maybe don't truncate it, instead use lens  to keep it
     // hist_begins_stk:Vec<Range<usize>>,
     // hist_begins_elements:Vec<TempHistBegin<'t,'g>>,
-    hist_begins_stk:Vec<Vec<TempHistBegin<'t,'g>>>,
+    hist_begins_stk:Vec<TempHistBegins<'t,'g>>,
 
 
     //
@@ -677,7 +677,7 @@ where
     fn grammar_prev(&mut self,cur :Work<'t,'g>,) {
         let GrammarNode::Prev(g)=&cur.grammar else {panic!("");};
         //
-        // let _hist_news_len=self.hist_news_add(&cur);
+        let _hist_news_len=self.hist_news_add(&cur);
         self.hist_begins_clear(&cur);
 
 
@@ -707,7 +707,7 @@ where
 
     fn grammar_always(&mut self,cur :Work<'t,'g>,) {
         self.stk.truncate(cur.success_len);
-        // let _hist_news_len=self.hist_news_add(&cur);
+        let _hist_news_len=self.hist_news_add(&cur);
         self.hist_begins_clear(&cur);
         self.handle_exit_last_many(&cur);
         self.update_tokens(&cur,true);
@@ -727,7 +727,7 @@ where
             // // .get(&cur.grammar)
             // .iter().rev().find(|x|x.grammar.eq(&cur.grammar))
             // self.hist_begins_elements[cur.hist_begins_ind..]
-            self.hist_begins_stk[cur.hist_begins_stk_len-1]
+            self.hist_begins_stk[cur.hist_begins_stk_len-1].hist_begins
                 .iter().rev().find(|x|x.grammar.eq(&cur.grammar))
             else {return false;};
 
@@ -765,7 +765,7 @@ where
         Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
     {
         //
-        // let _hist_news_len=self.hist_news_add(&cur);
+        let _hist_news_len=self.hist_news_add(&cur);
         self.hist_begins_clear(&cur);
 
         //
@@ -900,10 +900,17 @@ where
             }
         }).collect::<Vec<_>>();
 
-        //
+        //add hist begins
         for i in (0..drained_hist_news.len()).rev() {
             let drained_hist_new=&drained_hist_news[i];
 
+            {
+                let g=&drained_hist_new.grammar;
+
+                if g.is_always() || g.is_prev() || g.is_primtive() {
+                    continue;
+                }
+            }
             // //
             // if self.debug {
             //     println!("---going i={i}, is_first={}, g={:?} self.or_stk.len={}",
@@ -951,7 +958,7 @@ where
             // hist_begins.elements.
             if cur.hist_begins_stk_len!=0 {
 
-            self.hist_begins_stk[cur.hist_begins_stk_len-1].push(TempHistBegin {
+                self.hist_begins_stk[cur.hist_begins_stk_len-1].hist_begins.push(TempHistBegin {
                     grammar:drained_hist_new.grammar.clone(),
                     groups,
                     hist_ends: added_hist_ends[i+1..].to_vec(),
@@ -992,11 +999,14 @@ where
             //if not need to init first, then it just reuses existing one
         ) //add current/initial OR
         {
-            if self.hist_begins_stk.len()<cur.hist_begins_stk_len+1 {
+            if self.hist_begins_stk.len()<cur.hist_begins_stk_len+1 { //make room
                 if cur.hist_begins_stk_len-self.hist_begins_stk.len() > 1 {panic!("");} //shouldn't happen
                 self.hist_begins_stk.push(Default::default());
-            } else {
-                self.hist_begins_stk[cur.hist_begins_stk_len].clear();
+            } else { //clear existing room
+                let x=&mut self.hist_begins_stk[cur.hist_begins_stk_len];
+                x.hist_begins.clear();
+                x.groups.clear();
+                x.hist_ends.clear();
             }
         }
 
@@ -1005,14 +1015,22 @@ where
 
     fn hist_begins_clear(&mut self,cur:&Work<'t,'g>) {
 
-        if cur.hist_begins_stk_len==0 || !cur.from_user || !cur.is_first {
+        if cur.hist_begins_stk_len==0
+            // || !cur.from_user //dont care, eg or(Y,opt(X)) even if X fails, throw away anything from inside Y or even X
+            || !cur.is_first
+        {
             return;
         }
-        if !(cur.grammar.is_primtive() || cur.grammar.is_always() || cur.grammar.is_prev()) {
-            return;
-        }
+        // if !(cur.grammar.is_primtive() || cur.grammar.is_always() || cur.grammar.is_prev()) { //just call from these places
+        //     return;
+        // }
 
-        self.hist_begins_stk[cur.hist_begins_stk_len-1].clear();
+        // self.hist_begins_stk[cur.hist_begins_stk_len-1].clear();
+
+        let x=&mut self.hist_begins_stk[cur.hist_begins_stk_len-1];
+        x.hist_begins.clear();
+        x.groups.clear();
+        x.hist_ends.clear();
     }
 
     // fn hist_begins_stk_push(&mut self,cur:&Work<'t,'g>) -> usize {
@@ -1343,7 +1361,7 @@ where
                 //     self.hist_ends_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
                 // );
                 let hist_begins_len=if *hist_begins_stk_len==0{None}else{
-                    self.hist_begins_stk.get(hist_begins_stk_len-1).map(|x|x.len())
+                    self.hist_begins_stk.get(hist_begins_stk_len-1).map(|x|x.hist_begins.len())
                 };
                 println!("        first={is_first}, hist_news_len={hist_news_len}, hist_begins_stk_len={hist_begins_stk_len}, hist_begins_len={hist_begins_len:?}, hist_ends_ind={hist_ends_ind}, hist_ends_len={hist_ends_len}",);
                 // println!("        hist_begins_ind={hist_begins_ind}, hist_begins_len={hist_begins_len},",
@@ -1378,7 +1396,7 @@ where
                     println!("        hist_begins");
 
                     if *hist_begins_stk_len!=0 {
-                        for (i,x) in self.hist_begins_stk.get(*hist_begins_stk_len-1).unwrap().iter().enumerate() {
+                        for (i,x) in self.hist_begins_stk.get(*hist_begins_stk_len-1).unwrap().hist_begins.iter().enumerate() {
                             println!("            {i}:[{:?}]: {:?}",x.tokens_after.inds(),x.grammar)
                         }
 
