@@ -722,21 +722,29 @@ where
         if cur.hist_begins_stk_len==0 {return false;}
 
         // let Some(hist_begins)=self.hist_begins_stk.last() else {return false;};
+        let hist_begins=&self.hist_begins_stk[cur.hist_begins_stk_len-1];
+
         let Some(hist_begin)=
             // hist_begins.elements
             // // .get(&cur.grammar)
             // .iter().rev().find(|x|x.grammar.eq(&cur.grammar))
             // self.hist_begins_elements[cur.hist_begins_ind..]
-            self.hist_begins_stk[cur.hist_begins_stk_len-1].hist_begins
-                .iter().rev().find(|x|x.grammar.eq(&cur.grammar))
+            hist_begins.elements.iter().rev().find(|x|x.grammar.eq(&cur.grammar))
             else {return false;};
 
         //
         self.stk.truncate(cur.success_len);
 
-        //add groups
-        self.groups.extend(hist_begin.groups.iter().map(|g|TempGroupInfo{parent:cur.group_ind+g.parent,..g.clone()}));
+        println!("=====gr {:?}, {:?}",hist_begin.inner_groups_range.clone(),hist_begins.inner_groups);
+        let groups=&hist_begins.inner_groups[hist_begin.inner_groups_range.clone()].to_vec();
 
+        //add groups
+        self.groups.extend(groups.iter().map(|g|TempGroupInfo{
+            parent:cur.group_ind+g.parent-hist_begin.group_ind,
+            ..g.clone()
+        }));
+
+        //
         let cur=Work {
             group_len:self.groups.len(),
             tokens:hist_begin.tokens_after,
@@ -877,102 +885,104 @@ where
         let drained_hist_news=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
 
         //
-        let added_hist_ends=drained_hist_news.iter().map(|hist_new|{
-            //
-            let tokens_len=hist_new.tokens_start.len()-cur.tokens.len();
-            let tokens=hist_new.tokens_start.get_amount(tokens_len).unwrap();
+        // let added_hist_ends=drained_hist_news.iter().map(|hist_new|{
+        //     //
+        //     let tokens_len=hist_new.tokens_start.len()-cur.tokens.len();
+        //     let tokens=hist_new.tokens_start.get_amount(tokens_len).unwrap();
 
-            //
-            if self.debug {
-                println!("--- inserting hist_end {:?} {tokens:?}",hist_new.grammar);
-            }
+        //     //
+        //     if self.debug {
+        //         println!("--- inserting hist_end {:?} {tokens:?}",hist_new.grammar);
+        //     }
 
-            // // //
-            // // (  hist_new.grammar.clone(), TempHistEnd {
-            // //     tokens_start_ind:tokens.start,
-            // //     // tokens,
-            // // } )
+        //     // // //
+        //     // // (  hist_new.grammar.clone(), TempHistEnd {
+        //     // //     tokens_start_ind:tokens.start,
+        //     // //     // tokens,
+        //     // // } )
 
-            TempHistEnd {
-                grammar:hist_new.grammar.clone(),
-                tokens_start_ind:tokens.start,
-                // tokens,
-            }
-        }).collect::<Vec<_>>();
+        //     TempHistEnd {
+        //         grammar:hist_new.grammar.clone(),
+        //         tokens_start_ind:tokens.start,
+        //         // tokens,
+        //     }
+        // }).collect::<Vec<_>>();
 
         //add hist begins
-        for i in (0..drained_hist_news.len()).rev() {
-            let drained_hist_new=&drained_hist_news[i];
-
-            {
-                let g=&drained_hist_new.grammar;
-
-                if g.is_always() || g.is_prev() || g.is_primtive() {
-                    continue;
-                }
-            }
-            // //
-            // if self.debug {
-            //     println!("---going i={i}, is_first={}, g={:?} self.or_stk.len={}",
-            //         hist_new.is_first,hist_new.grammar,
-            //         self.hist_begins_stk.len(),
-            //     );
-            // }
+        if cur.hist_begins_stk_len!=0 {
 
             //
-            if !drained_hist_new.is_first { continue; }
-            // let Some(hist_begins)=self.hist_begins_stk.last_mut() else {continue;};
-// drained_hist_new.
-
+            let drained_hist_news2=(0..drained_hist_news.len()).rev()
+                .filter_map(|i|{
+                    let drained_hist_new=&drained_hist_news[i];
+                    if !drained_hist_new.is_first { return None; }
+                    Some(i)
+                }).collect::<Vec<_>>();
 
             //
-            println!("===hmm1 {:?}",self.groups);
-            println!("===hmm2 {:?} {:?}",drained_hist_new.group_ind+1..cur.group_len, self.groups.get(drained_hist_new.group_ind+1..cur.group_len));
-            let mut groups=self.groups[drained_hist_new.group_ind+1..cur.group_len].to_vec();
+            if !drained_hist_news2.is_empty() {
 
-            println!("--- sub hist news, gr={:?}, gs=[{}], gsr={:?}",
-                drained_hist_new.grammar,
-                groups.iter().enumerate().map(|(i,g)|format!("g{i}:p{}:{:?}:{:?}",g.parent,g.name,g.tokens.inds())).collect::<Vec<_>>().join(", "),
-                drained_hist_new.group_ind..cur.group_len);
+                //
+                let hist_begins=&mut self.hist_begins_stk[cur.hist_begins_stk_len-1];
 
-            //offset parents in group
-            if !groups.is_empty() { //cur.group_ind!=cur.group_len
-                let first_parent=groups[0].parent;
+                //
+                println!("1==== {:?} : {:?} {:?}",hist_begins.last_group_len..cur.group_len,hist_begins.group_ind,hist_begins.group_len);
+                println!("2==== {:?}",self.groups.iter().map(|g|g.name).collect::<Vec<_>>());
 
-                for group in groups.iter_mut() {
-                    group.parent-=first_parent;
+                hist_begins.inner_groups.extend_from_slice(&self.groups[hist_begins.last_group_len..cur.group_len]);
+                hist_begins.last_group_len=cur.group_len;
+
+                for i in drained_hist_news2 {
+                    let drained_hist_new=&drained_hist_news[i];
+
+                    //groups
+                    let mut inner_groups_range=
+                        // hist_begins.last_group_len
+                        // hist_begins.group_len
+                        drained_hist_new.group_len
+                        ..
+                        // drained_hist_new.group_len
+                        cur.group_len
+                        ;
+                    // let inner_groups_range =inner_groups_range.
+                    println!("==== {inner_groups_range:?}, {} {}",hist_begins.group_ind,hist_begins.group_len);
+                    inner_groups_range.start-=hist_begins.group_ind;
+                    inner_groups_range.end-=hist_begins.group_ind;
+
+
+                    //skip adding prims/prev/always
+                    {
+                        let g=&drained_hist_new.grammar;
+
+                        if g.is_always() || g.is_prev() || g.is_primtive() {
+                            continue;
+                        }
+                    }
+
+                    //
+
+                    hist_begins.elements.push(TempHistBegin {
+                        grammar:drained_hist_new.grammar.clone(),
+                        // groups,
+                        // hist_ends: added_hist_ends[i+1..].to_vec(),
+                        hist_ends:Default::default(),
+                        tokens_after: cur.tokens,
+                        // tokens_start_ind:drained_hist_new.tokens_start.start,
+                        group_ind:drained_hist_new.group_ind,
+                        inner_groups_range,
+                    });
                 }
             }
 
-            //if or(and(A0,A1),A2)
-            //  after A0, it gets added to the hist_begins, that A1 can see, but not use because it isn't a first
+            //
 
-            // //
-            // hist_begins.elements.entry(drained_hist_new.grammar.clone()).or_insert_with(||TempHistBegin {
-            //     groups,
-            //     hist_ends: HashMap::from_iter(added_hist_ends[i+1..].into_iter().cloned()),
-            //     tokens_after: cur.tokens,
-            //     tokens_start_ind:drained_hist_new.tokens_start.start,
-            // });
-
-            // hist_begins.elements.
-            if cur.hist_begins_stk_len!=0 {
-
-                self.hist_begins_stk[cur.hist_begins_stk_len-1].hist_begins.push(TempHistBegin {
-                    grammar:drained_hist_new.grammar.clone(),
-                    groups,
-                    hist_ends: added_hist_ends[i+1..].to_vec(),
-                    tokens_after: cur.tokens,
-                    tokens_start_ind:drained_hist_new.tokens_start.start,
-                });
-            }
         }
 
         //
         // self.hist_ends_stk[last.hist_ends_stk_len-1].elements.extend(added_hist_ends.into_iter());
 
         //
-        self.hist_ends.extend(added_hist_ends.into_iter());
+        // self.hist_ends.extend(added_hist_ends.into_iter());
 
         //
 
@@ -999,15 +1009,46 @@ where
             //if not need to init first, then it just reuses existing one
         ) //add current/initial OR
         {
+            println!("------ hist_begins_stk_push");
             if self.hist_begins_stk.len()<cur.hist_begins_stk_len+1 { //make room
                 if cur.hist_begins_stk_len-self.hist_begins_stk.len() > 1 {panic!("");} //shouldn't happen
                 self.hist_begins_stk.push(Default::default());
             } else { //clear existing room
-                let x=&mut self.hist_begins_stk[cur.hist_begins_stk_len];
-                x.hist_begins.clear();
-                x.groups.clear();
-                x.hist_ends.clear();
+
             }
+
+            //
+            println!("--=-=-=-= {:?} {:?}",
+                self.hist_begins_stk.len(),
+                cur.hist_begins_stk_len,
+
+            );
+
+            //
+
+            let hist_begins=&mut self.hist_begins_stk[cur.hist_begins_stk_len];
+
+            hist_begins.group_len=cur.group_len;
+
+            //
+
+            hist_begins.elements.clear();
+            hist_begins.inner_groups.clear();
+            hist_begins.hist_ends.clear();
+            hist_begins.group_ind=cur.group_ind;
+            hist_begins.last_group_len=hist_begins.group_len;
+
+            //
+            // self.hist_begins_clear(cur);
+
+            //
+            // let hist_begins=&mut self.hist_begins_stk[cur.hist_begins_stk_len];
+            // hist_begins.elements.clear();
+            // hist_begins.inner_groups.clear();
+            // hist_begins.hist_ends.clear();
+            // hist_begins.group_ind=cur.group_ind;
+            // hist_begins.group_len=cur.group_len;
+            // hist_begins.last_group_len=cur.group_len;
         }
 
         self.hist_begins_stk.len()
@@ -1021,16 +1062,22 @@ where
         {
             return;
         }
+
+            println!("------ hist_begins_clear");
+
         // if !(cur.grammar.is_primtive() || cur.grammar.is_always() || cur.grammar.is_prev()) { //just call from these places
         //     return;
         // }
 
         // self.hist_begins_stk[cur.hist_begins_stk_len-1].clear();
 
-        let x=&mut self.hist_begins_stk[cur.hist_begins_stk_len-1];
-        x.hist_begins.clear();
-        x.groups.clear();
-        x.hist_ends.clear();
+        let hist_begins=&mut self.hist_begins_stk[cur.hist_begins_stk_len-1];
+
+        hist_begins.elements.clear();
+        hist_begins.inner_groups.clear();
+        hist_begins.hist_ends.clear();
+        hist_begins.group_ind=cur.group_ind;
+        hist_begins.last_group_len=hist_begins.group_len;
     }
 
     // fn hist_begins_stk_push(&mut self,cur:&Work<'t,'g>) -> usize {
@@ -1061,6 +1108,7 @@ where
                 grammar: cur.grammar.clone(),
                 tokens_start: cur.tokens.clone(),
                 group_ind: cur.group_ind,
+                group_len:cur.group_len,
                 is_first:cur.is_first,
             });
         }
@@ -1361,7 +1409,7 @@ where
                 //     self.hist_ends_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
                 // );
                 let hist_begins_len=if *hist_begins_stk_len==0{None}else{
-                    self.hist_begins_stk.get(hist_begins_stk_len-1).map(|x|x.hist_begins.len())
+                    self.hist_begins_stk.get(hist_begins_stk_len-1).map(|x|x.elements.len())
                 };
                 println!("        first={is_first}, hist_news_len={hist_news_len}, hist_begins_stk_len={hist_begins_stk_len}, hist_begins_len={hist_begins_len:?}, hist_ends_ind={hist_ends_ind}, hist_ends_len={hist_ends_len}",);
                 // println!("        hist_begins_ind={hist_begins_ind}, hist_begins_len={hist_begins_len},",
@@ -1393,10 +1441,12 @@ where
                     // }
 
                     //
-                    println!("        hist_begins");
+                    println!("        hist_begins",);
 
                     if *hist_begins_stk_len!=0 {
-                        for (i,x) in self.hist_begins_stk.get(*hist_begins_stk_len-1).unwrap().hist_begins.iter().enumerate() {
+                        let hist_begins=self.hist_begins_stk.get(*hist_begins_stk_len-1).unwrap();
+                        println!("            g={:?}",hist_begins.inner_groups);
+                        for (i,x) in hist_begins.elements.iter().enumerate() {
                             println!("            {i}:[{:?}]: {:?}",x.tokens_after.inds(),x.grammar)
                         }
 

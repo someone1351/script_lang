@@ -1,5 +1,5 @@
 
-use std::{collections::{HashMap, HashSet}, fmt::Debug};
+use std::{collections::{HashMap, HashSet}, fmt::Debug, ops::Range};
 
 // use crate::clike::tokenizer::ValueContainer;
 
@@ -49,20 +49,37 @@ pub struct TempHistNew<'t,'g> {
     pub tokens_start:TokenIterContainer<'t>,
     pub is_first:bool,
     pub group_ind:usize,
+    pub group_len:usize,
 }
 
+#[derive(Clone,Default,Debug)]
+pub struct TempHistBegins<'t,'g> {
+    // pub elements:HashMap<GrammarNode<'g>,TempHistBegin<'t,'g>>,
+    pub elements:Vec<TempHistBegin<'t,'g>>,
+    pub inner_groups:Vec<TempGroupInfo<'t,'g>>, //inside the grammar this represents
+    pub hist_ends:Vec<TempHistEnd<'g>>, //inside the grammar this represents //todo
+
+    pub group_ind:usize,
+    pub last_group_len:usize,
+    // pub last_or_stk_len:usize, //used for
+    //todo: store groups, hist_ends here, and in TempHistBegin store inds into them
+    pub group_len:usize,
+}
 
 #[derive(Clone,Debug)]
 pub struct TempHistBegin<'t,'g> {
     pub grammar: GrammarNode<'g>,
-    pub groups:Vec<TempGroupInfo<'t,'g>>, //inside the grammar this represents
+    // pub groups:Vec<TempGroupInfo<'t,'g>>, //inside the grammar this represents
     pub hist_ends:Vec<TempHistEnd<'g>>, //inside the grammar this represents //todo
     pub tokens_after:TokenIterContainer<'t>,
 
-    pub tokens_start_ind:usize,
+    // pub tokens_start_ind:usize,
     // pub group_ind:usize,
     // pub inner_group_ind:usize,
     // pub inner_hist_ends_ind:usize,
+
+    pub inner_groups_range:Range<usize>, //parent group is not in groups, only inner groups, and groups of stuff from ands
+    pub group_ind:usize,
 }
 
 #[derive(Clone, Debug)]
@@ -75,21 +92,11 @@ pub struct TempHistEnd<'g> {
     // pub inner_groups:Range<usize>, //groups inside the takeable?
 }
 
-#[derive(Clone,Default,Debug)]
-pub struct TempHistBeginsInfo {
-    pub ind_start:usize,
-    pub ind_end:usize,
-}
-#[derive(Clone,Default,Debug)]
-pub struct TempHistBegins<'t,'g> {
-    // pub elements:HashMap<GrammarNode<'g>,TempHistBegin<'t,'g>>,
-    pub hist_begins:Vec<TempHistBegin<'t,'g>>,
-    pub groups:Vec<TempGroupInfo<'t,'g>>, //inside the grammar this represents
-    pub hist_ends:Vec<TempHistEnd<'g>>, //inside the grammar this represents //todo
-
-    // pub last_or_stk_len:usize, //used for
-    //todo: store groups, hist_ends here, and in TempHistBegin store inds into them
-}
+// #[derive(Clone,Default,Debug)]
+// pub struct TempHistBeginsInfo {
+//     pub ind_start:usize,
+//     pub ind_end:usize,
+// }
 
 // #[derive(Clone,Default,Debug)]
 // pub struct TempHistEnds<'g> {
