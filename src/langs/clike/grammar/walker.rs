@@ -351,7 +351,7 @@ where
             and_id:cur.and_id,
 
             from_user:false,
-            or_first:cur.or_first,
+            or_first:false,
             can_hist_begin:false,
 
             hist_news_len,
@@ -729,7 +729,7 @@ where
             // self.hist_news_truncate_to_last(); //why on success??
             self.update_tokens(&cur,true);
             self.update_groups(&cur);
-            self.submit_hist_news(&cur,true,false);
+            self.submit_hist_news(&cur,false,);
             self.revert_last_expected_news();
         } else {
             self.stk.truncate(cur.fail_len);
@@ -748,7 +748,7 @@ where
         self.handle_exit_last_many(&cur);
         self.update_tokens(&cur,true);
         self.update_groups(&cur); //here
-        self.submit_hist_news(&cur,true,false);
+        self.submit_hist_news(&cur,false);
         self.revert_last_expected_news();
     }
 
@@ -807,7 +807,7 @@ where
         //
         self.update_tokens(&cur,true);
         self.update_groups(&cur);
-        self.submit_hist_news(&cur,false, false); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+        self.submit_hist_news(&cur,true); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
         self.revert_last_expected_news();
 
         //
@@ -835,7 +835,7 @@ where
                 self.stk.truncate(cur.success_len);
                 self.update_tokens(&cur,true);
                 self.update_groups(&cur);
-                self.submit_hist_news(&cur,true,true);
+                self.submit_hist_news(&cur,false);
                 self.revert_last_expected_news();
 
                 //
@@ -902,8 +902,8 @@ where
         cur:&Work<'t,'g>,
         //what was this for again? something to do with not adding cur grammar to hist_begins?
         //  it was for not adding cur grammar to hist_new?
-        _gotten:bool,
-        _hist_ends_remove_previous:bool,
+        gotten:bool,
+        // _hist_ends_remove_previous:bool,
     ) {
 
         //should always be some (due to init), use panic instead of ret? no, it will end on an always if successful
@@ -935,7 +935,9 @@ where
         }
 
         //
-        if self.hist_news.len()==last.hist_news_len { panic!(""); } //should always be some
+        // if self.hist_news.len()!=last.hist_news_len { panic!("self.hist_news.len={}, last.hist_news_len={}",
+        // self.hist_news.len(),last.hist_news_len,
+        // ); } //should always be same
 
         //
         let drained_hist_news=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
@@ -983,8 +985,11 @@ where
                 let hist_begin=self.hist_begins.last_mut().unwrap();
 
                 //
-                self.hist_begins_prevs.truncate(hist_begin.temp_prevs_start);
-                self.hist_begins_prevs.extend(added_hist_ends.iter().cloned());
+                if !gotten {
+                    self.hist_begins_prevs.truncate(hist_begin.temp_prevs_start);
+                }
+
+                self.hist_begins_prevs.extend(added_hist_ends.iter().rev().cloned());
 
                 //
                 self.hist_begins_groups.truncate(hist_begin.temp_groups_start);
@@ -1006,7 +1011,7 @@ where
         // self.hist_ends_stk[last.hist_ends_stk_len-1].elements.extend(added_hist_ends.into_iter());
 
         //
-        self.hist_prevs.extend(added_hist_ends.into_iter());
+        self.hist_prevs.extend(added_hist_ends.into_iter().rev());
 
         //
 
