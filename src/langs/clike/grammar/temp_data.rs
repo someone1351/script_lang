@@ -93,7 +93,7 @@ pub struct TempHistStowVal<'t,'g> { //TempHistStow
 }
 
 #[derive(Clone,Debug,)]
-pub struct TempHistBegin2<'t,'g> { //TempHistStow
+pub struct TempHistStow<'t,'g> { //TempHistStow
     pub val : Option<TempHistStowVal<'t,'g>>,
     pub temp_groups_start:usize,
     pub temp_prevs_start:usize,
@@ -104,7 +104,7 @@ pub struct TempHistBegin2<'t,'g> { //TempHistStow
 }
 
 #[derive(Clone, Debug)]
-pub struct TempHistEnd<'g> { //TempHistPrev
+pub struct TempHistPrev<'g> { //TempHistPrev
     pub grammar: GrammarNode<'g>,
     pub tokens_start_ind:usize,
     // pub tokens:TokenIterContainer<'t>,
@@ -158,6 +158,7 @@ pub struct Work<'t,'g> {
 
     pub from_user:bool, //gramamr added by input grammar, not walker //used to know whether to push hist_begins stk or not
     pub or_first:bool,
+    // pub and_first:bool,
 
     // pub in_or:bool,
     pub can_hist_begin:bool,
@@ -169,8 +170,8 @@ pub struct Work<'t,'g> {
     pub hist_begins_len:usize,
     // pub hist_begins_stk_len:usize,
 
-    pub hist_ends_ind:usize,
-    pub hist_ends_len:usize,
+    pub hist_prevs_ind:usize,
+    pub hist_prevs_len:usize,
 
     // pub hist_begins_stk_len:usize,
     // pub hist_ends_stk_len:usize,

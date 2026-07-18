@@ -48,12 +48,12 @@ where
     // hist_begins_elements:Vec<TempHistBegin<'t,'g>>,
     // hist_begins_stk:Vec<TempHistBegins<'t,'g>>,
 
-    hist_begins:Vec<TempHistBegin2<'t,'g>>,
+    hist_begins:Vec<TempHistStow<'t,'g>>,
     hist_begins_groups:Vec<TempGroupInfo<'t,'g>>,
-    hist_begins_prevs:Vec<TempHistEnd<'g>>,
+    hist_begins_prevs:Vec<TempHistPrev<'g>>,
 
     //
-    hist_ends:Vec<TempHistEnd<'g>>,
+    hist_prevs:Vec<TempHistPrev<'g>>,
 
     // hist_begins_stk:Vec<TempHistBegins<'t,'g>>,
     // hist_ends_stk:Vec<TempHistEnds<'g>>,
@@ -91,7 +91,7 @@ where
             hist_begins_groups:Default::default(),
             hist_begins_prevs:Default::default(),
             // hist_begins_elements: Default::default(),
-            hist_ends: Default::default(),
+            hist_prevs: Default::default(),
 
             // hist_begins_stk: Default::default(),
             // hist_ends_stk: Default::default(),
@@ -116,7 +116,7 @@ where
             and_id: 0,
 
             from_user:false,
-            or_first:true,
+            or_first:false,
 
             hist_news_len:0,
 
@@ -132,8 +132,8 @@ where
             // in_or:false,
             can_hist_begin:false,
 
-            hist_ends_ind: 0,
-            hist_ends_len: 0,
+            hist_prevs_ind: 0,
+            hist_prevs_len: 0,
 
             expected_news_len:0,
         });
@@ -153,7 +153,7 @@ where
             and_id: 0,
 
             from_user:true,
-            or_first:true,
+            or_first:false,
 
             // in_or:false,
             can_hist_begin:false,
@@ -169,8 +169,8 @@ where
             // hist_begins_ind: 0,
             hist_begins_len: 0,
 
-            hist_ends_ind: 0,
-            hist_ends_len: 0,
+            hist_prevs_ind: 0,
+            hist_prevs_len: 0,
 
             expected_news_len:0,
         });
@@ -198,7 +198,7 @@ where
                 and_id: 0,
 
                 from_user:true,
-                or_first:true,
+                or_first:false,
 
                 // in_or:false,
                 can_hist_begin:false,
@@ -212,8 +212,8 @@ where
                 // hist_begins_ind: 0,
                 hist_begins_len: 0,
 
-                hist_ends_ind: 0,
-                hist_ends_len: 0,
+                hist_prevs_ind: 0,
+                hist_prevs_len: 0,
 
                 expected_news_len:0,
             });
@@ -235,7 +235,7 @@ where
         self.hist_begins_prevs.clear();
 
         // self.hist_begins_elements.clear();
-        self.hist_ends.clear();
+        self.hist_prevs.clear();
 
         // self.hist_begins_stk.clear(); //don't need initial one because don't need to store begins before an Or exists
         // // self.hist_ends_stk.clear();
@@ -283,8 +283,8 @@ where
 
             // hist_begins_stk_len:cur.hist_begins_stk_len,
 
-            hist_ends_ind: cur.hist_ends_ind,
-            hist_ends_len: cur.hist_ends_len,
+            hist_prevs_ind: cur.hist_prevs_ind,
+            hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len,
         });
@@ -323,8 +323,8 @@ where
 
             // hist_begins_stk_len:cur.hist_begins_stk_len,
 
-            hist_ends_ind: cur.hist_ends_ind,
-            hist_ends_len: cur.hist_ends_len,
+            hist_prevs_ind: cur.hist_prevs_ind,
+            hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
         });
@@ -364,8 +364,8 @@ where
 
             // hist_begins_stk_len:cur.hist_begins_stk_len,
 
-            hist_ends_ind: cur.hist_ends_ind,
-            hist_ends_len: cur.hist_ends_len,
+            hist_prevs_ind: cur.hist_prevs_ind,
+            hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
         });
@@ -399,8 +399,8 @@ where
 
             // hist_begins_stk_len:cur.hist_begins_stk_len,
 
-            hist_ends_ind: cur.hist_ends_ind,
-            hist_ends_len: cur.hist_ends_len,
+            hist_prevs_ind: cur.hist_prevs_ind,
+            hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
         });
@@ -434,8 +434,8 @@ where
 
             // hist_begins_stk_len:cur.hist_begins_stk_len,
 
-            hist_ends_ind: cur.hist_ends_ind,
-            hist_ends_len: cur.hist_ends_len,
+            hist_prevs_ind: cur.hist_prevs_ind,
+            hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
         });
@@ -481,8 +481,8 @@ where
 
             // hist_begins_stk_len:cur.hist_begins_stk_len,
 
-            hist_ends_ind: cur.hist_ends_ind,
-            hist_ends_len: cur.hist_ends_len,
+            hist_prevs_ind: cur.hist_prevs_ind,
+            hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
         });
@@ -547,8 +547,8 @@ where
 
                 // hist_begins_stk_len:cur.hist_begins_stk_len,
 
-                hist_ends_ind: cur.hist_ends_ind,
-                hist_ends_len: cur.hist_ends_len,
+                hist_prevs_ind: cur.hist_prevs_ind,
+                hist_prevs_len: cur.hist_prevs_len,
 
                 expected_news_len:cur.expected_news_len,
             });
@@ -585,8 +585,8 @@ where
 
             // hist_begins_stk_len:cur.hist_begins_stk_len,
 
-            hist_ends_ind: cur.hist_ends_ind,
-            hist_ends_len: cur.hist_ends_len,
+            hist_prevs_ind: cur.hist_prevs_ind,
+            hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
         });
@@ -636,8 +636,8 @@ where
                 // hist_begins_stk_len,
                 hist_begins_len,
 
-                hist_ends_ind: cur.hist_ends_ind,
-                hist_ends_len: cur.hist_ends_len,
+                hist_prevs_ind: cur.hist_prevs_ind,
+                hist_prevs_len: cur.hist_prevs_len,
 
                 expected_news_len:cur.expected_news_len,
             });
@@ -659,7 +659,7 @@ where
             and_id:cur.and_id,
 
             from_user:true,
-            or_first:cur.or_first,
+            or_first:true,
             can_hist_begin:false,
 
             hist_news_len,
@@ -670,8 +670,8 @@ where
 
             // hist_begins_ind,
             // hist_begins_len: cur.hist_begins_len,
-            hist_ends_ind: cur.hist_ends_ind,
-            hist_ends_len: cur.hist_ends_len,
+            hist_prevs_ind: cur.hist_prevs_ind,
+            hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
         });
@@ -722,7 +722,7 @@ where
             // self.hist_ends_stk.last().unwrap().elements
             //     .iter().find(|x|x.grammar.eq(g)).is_some()
             //     // .contains_key(&g)
-            self.hist_ends[cur.hist_ends_ind..].iter().find(|x|x.grammar.eq(g)).is_some()
+            self.hist_prevs[cur.hist_prevs_ind..].iter().find(|x|x.grammar.eq(g)).is_some()
         {
             self.stk.truncate(cur.success_len);
             self.handle_exit_last_many(&cur);
@@ -794,7 +794,7 @@ where
         //
         //add groups
         self.groups.extend(stow_groups.iter().map(|g|TempGroupInfo{ parent:cur.group_ind+g.parent,..g.clone()}));
-        self.hist_ends.extend_from_slice(stow_prevs);
+        self.hist_prevs.extend_from_slice(stow_prevs);
 
         //
         let cur=Work {
@@ -913,7 +913,7 @@ where
         // last.hist_ends_stk_len=cur.hist_ends_stk_len;
 
         //
-        last.hist_ends_len=cur.hist_ends_len;
+        last.hist_prevs_len=cur.hist_prevs_len;
 
         // //why only use for primitives?
         // // if hist_ends_remove_previous {
@@ -931,7 +931,7 @@ where
         //whipe previous hist
         if cur.from_user { //why only if from_user??
             // self.hist_ends_stk[last.hist_ends_stk_len-1].elements.clear();
-            self.hist_ends.truncate(cur.hist_ends_ind);
+            self.hist_prevs.truncate(cur.hist_prevs_ind);
         }
 
         //
@@ -957,7 +957,7 @@ where
             // //     // tokens,
             // // } )
 
-            TempHistEnd {
+            TempHistPrev {
                 grammar:hist_new.grammar.clone(),
                 tokens_start_ind:tokens.start,
                 // tokens,
@@ -969,9 +969,10 @@ where
 
             //
             let drained_hist_new2=drained_hist_news.iter().find(|x|{
-                let b=x.grammar.is_always() || x.grammar.is_prev() || x.grammar.is_primtive();
+                // let b=x.grammar.is_always() || x.grammar.is_prev() || x.grammar.is_primtive();
+                let b = x.grammar.is_and() || x.grammar.is_or() || x.grammar.is_many() || x.grammar.is_non_term();
                 println!("---hm? {:?} {b} {}",x.grammar,x.is_first);
-                !b && x.is_first
+                b && x.is_first
             });
 
             println!("-------found {:?} : {:?}",drained_hist_new2,drained_hist_news.iter().map(|x|&x.grammar).collect::<Vec<_>>());
@@ -1005,12 +1006,12 @@ where
         // self.hist_ends_stk[last.hist_ends_stk_len-1].elements.extend(added_hist_ends.into_iter());
 
         //
-        self.hist_ends.extend(added_hist_ends.into_iter());
+        self.hist_prevs.extend(added_hist_ends.into_iter());
 
         //
 
         // last.hist_begins_len=self.hist_begins_elements.len();
-        last.hist_ends_len=self.hist_ends.len();
+        last.hist_prevs_len=self.hist_prevs.len();
     }
 
 
@@ -1032,7 +1033,7 @@ fn hist_begins_push(&mut self,cur:&Work<'t,'g>) -> usize {
         ) //add current/initial OR
         {
             println!("------ hist_begins_push");
-            self.hist_begins.push(TempHistBegin2 {
+            self.hist_begins.push(TempHistStow {
                 val: None,
                 temp_groups_start: self.hist_begins_groups.len(),
                 temp_prevs_start: self.hist_begins_prevs.len(),
@@ -1171,7 +1172,7 @@ fn hist_begins_push(&mut self,cur:&Work<'t,'g>) -> usize {
         // self.hist_begins_elements.truncate(cur.hist_begins_len);
 
         //
-        self.hist_ends.truncate(cur.hist_ends_len);
+        self.hist_prevs.truncate(cur.hist_prevs_len);
 
         //
         self.hist_begins.truncate(cur.hist_begins_len);
@@ -1454,7 +1455,7 @@ fn hist_begins_push(&mut self,cur:&Work<'t,'g>) -> usize {
                     // hist_begins_ind,
                     hist_begins_len,
                     // hist_begins_stk_len,
-                    hist_ends_ind,hist_ends_len,
+                    hist_prevs_ind: hist_ends_ind,hist_prevs_len: hist_ends_len,
                     ..
                 }=&cur;
 
@@ -1526,7 +1527,7 @@ fn hist_begins_push(&mut self,cur:&Work<'t,'g>) -> usize {
 
                     println!("        hist_ends_last");
                     for i in *hist_ends_ind..*hist_ends_len {
-                        let x=&self.hist_ends[i];
+                        let x=&self.hist_prevs[i];
                         println!("            {i}:[{:?}]: {:?}",x.tokens_start_ind,x.grammar)
                     }
 
