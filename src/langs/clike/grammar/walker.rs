@@ -30,7 +30,7 @@ where
     primitives_remaining: TokenIterContainer<'t>,
     grammar_func:G,
     stk: Vec<Work<'t,'g>>,
-    c:usize,
+    step_count:usize,
     expected_loc:Loc,
     expected_news:Vec<TempExpectedNew<'g>>,
     expecteds:Vec<TempExpected<'g>>,
@@ -38,7 +38,7 @@ where
     debug:bool,
     // non_term_recursive_check:bool,
     // non_term_visiteds_stk:Vec<HashSet<(&'g str,usize)>>,
-    recurse_num:u64,
+    // recurse_num:u64,
 
     groups:Vec<TempGroupInfo<'t,'g>>,
 
@@ -50,9 +50,9 @@ where
     // hist_begins_elements:Vec<TempHistBegin<'t,'g>>,
     // hist_begins_stk:Vec<TempHistBegins<'t,'g>>,
 
-    hist_begins:Vec<TempHistStow<'t,'g>>,
-    hist_begins_groups:Vec<TempGroupInfo<'t,'g>>,
-    hist_begins_prevs:Vec<TempHistPrev<'g>>,
+    hist_stows:Vec<TempHistStow<'t,'g>>,
+    hist_stows_groups:Vec<TempGroupInfo<'t,'g>>,
+    hist_stows_prevs:Vec<TempHistPrev<'g>>,
 
     //
     hist_prevs:Vec<TempHistPrev<'g>>,
@@ -72,7 +72,7 @@ where
             stow_non_term_only:true,
 
             stk:Default::default(),
-            c:Default::default(),
+            step_count:Default::default(),
 
             expected_loc:Loc::zero(),
             expected_news:Default::default(),
@@ -84,16 +84,16 @@ where
             debug:false,
             // non_term_recursive_check:true,
             // non_term_visiteds_stk:Default::default(),
-            recurse_num:0,
+            // recurse_num:0,
 
             groups:Default::default(),
 
             hist_news: Default::default(),
 
             // hist_begins_stk:Default::default(),
-            hist_begins:Default::default(),
-            hist_begins_groups:Default::default(),
-            hist_begins_prevs:Default::default(),
+            hist_stows:Default::default(),
+            hist_stows_groups:Default::default(),
+            hist_stows_prevs:Default::default(),
             // hist_begins_elements: Default::default(),
             hist_prevs: Default::default(),
 
@@ -243,9 +243,9 @@ where
         self.hist_news.clear();
 
         // self.hist_begins_stk.clear();
-        self.hist_begins.clear();
-        self.hist_begins_groups.clear();
-        self.hist_begins_prevs.clear();
+        self.hist_stows.clear();
+        self.hist_stows_groups.clear();
+        self.hist_stows_prevs.clear();
 
         // self.hist_begins_elements.clear();
         self.hist_prevs.clear();
@@ -255,7 +255,7 @@ where
         // self.hist_ends_stk=vec![Default::default()]; //need an initial one because require ends regardless of an Or existing
 
         //
-        self.c=0;
+        self.step_count=0;
         self.expected_loc=Loc::zero();
         self.expected_news.clear();
         self.expecteds.clear();
@@ -763,7 +763,7 @@ where
         if cur.hist_stows_len==0 {return false;}
 
 
-        let hist_begin=&self.hist_begins[cur.hist_stows_len-1];
+        let hist_begin=&self.hist_stows[cur.hist_stows_len-1];
         let Some(hist_begin_val)=&hist_begin.val else {return false;};
 
         //
@@ -777,8 +777,8 @@ where
         let temp_groups_end=hist_begin.val.as_ref().map(|x|x.stow_groups_end).unwrap_or(hist_begin.stow_groups_start);
         let temp_prevs_end=hist_begin.val.as_ref().map(|x|x.stow_prevs_end).unwrap_or(hist_begin.stow_prevs_start);
 
-        let stow_groups=&self.hist_begins_groups[hist_begin.stow_groups_start .. temp_groups_end];
-        let stow_prevs=&self.hist_begins_prevs[hist_begin.stow_prevs_start..temp_prevs_end];
+        let stow_groups=&self.hist_stows_groups[hist_begin.stow_groups_start .. temp_groups_end];
+        let stow_prevs=&self.hist_stows_prevs[hist_begin.stow_prevs_start..temp_prevs_end];
 
         //
         //add groups
@@ -945,21 +945,21 @@ where
                 println!("------ stowed {:?}",drained_hist_new2.grammar.clone());
 
                 //
-                let hist_begin=self.hist_begins.last_mut().unwrap();
+                let hist_begin=self.hist_stows.last_mut().unwrap();
 
                 //
                 if !gotten {
-                    self.hist_begins_prevs.truncate(hist_begin.stow_prevs_start);
+                    self.hist_stows_prevs.truncate(hist_begin.stow_prevs_start);
                 }
 
-                self.hist_begins_prevs.extend(added_hist_ends.iter().rev().cloned());
+                self.hist_stows_prevs.extend(added_hist_ends.iter().rev().cloned());
 
                 //
                 let group_ind_offset=self.groups[drained_hist_new2.group_len].parent;
 
                 //
-                self.hist_begins_groups.truncate(hist_begin.stow_groups_start);
-                self.hist_begins_groups.extend(self.groups[drained_hist_new2.group_len..cur.group_len].iter().map(|x|TempGroupInfo{
+                self.hist_stows_groups.truncate(hist_begin.stow_groups_start);
+                self.hist_stows_groups.extend(self.groups[drained_hist_new2.group_len..cur.group_len].iter().map(|x|TempGroupInfo{
                     parent: x.parent-group_ind_offset, ..x.clone()
                 }));
 
@@ -967,8 +967,8 @@ where
                 hist_begin.val=Some(TempHistStowVal {
                     grammar: drained_hist_new2.grammar.clone(),
                     tokens_after: cur.tokens,
-                    stow_groups_end: self.hist_begins_groups.len(),
-                    stow_prevs_end: self.hist_begins_prevs.len(),
+                    stow_groups_end: self.hist_stows_groups.len(),
+                    stow_prevs_end: self.hist_stows_prevs.len(),
                 })
             }
 
@@ -1007,19 +1007,19 @@ where
         ) //add current/initial OR
         {
             println!("------ hist_begins_push");
-            self.hist_begins.push(TempHistStow {
+            self.hist_stows.push(TempHistStow {
                 val: None,
-                stow_groups_start: self.hist_begins_groups.len(),
-                stow_prevs_start: self.hist_begins_prevs.len(),
+                stow_groups_start: self.hist_stows_groups.len(),
+                stow_prevs_start: self.hist_stows_prevs.len(),
             });
 
-            if self.hist_begins.len()!=cur.hist_stows_len+1 {
+            if self.hist_stows.len()!=cur.hist_stows_len+1 {
                 panic!("");
             }
 
         }
 
-        self.hist_begins.len()
+        self.hist_stows.len()
     }
 
 
@@ -1055,18 +1055,18 @@ where
         self.hist_prevs.truncate(cur.hist_prevs_len);
 
         //
-        self.hist_begins.truncate(cur.hist_stows_len);
+        self.hist_stows.truncate(cur.hist_stows_len);
 
         //
-        if let Some(hist_begin)=self.hist_begins.last() {
+        if let Some(hist_begin)=self.hist_stows.last() {
             let (groups_len,prevs_len)=if let Some(hist_begin_val)= &hist_begin.val {
                 (hist_begin_val.stow_groups_end,hist_begin_val.stow_prevs_end)
             } else {
                 (hist_begin.stow_groups_start,hist_begin.stow_prevs_start)
             };
 
-            self.hist_begins_groups.truncate(groups_len);
-            self.hist_begins_prevs.truncate(prevs_len);
+            self.hist_stows_groups.truncate(groups_len);
+            self.hist_stows_prevs.truncate(prevs_len);
         }
     }
 
@@ -1317,14 +1317,14 @@ where
 
         //
         if self.debug {
-            self.c+=1;
+            self.step_count+=1;
 
             {
                 //
                 let groups=&self.groups;
 
                 //
-                let c=self.c;
+                let c=self.step_count;
 
                 //
                 let Work {
@@ -1392,12 +1392,12 @@ where
                     println!("        hist_begins",);
 
                     if *hist_begins_len!=0 {
-                        let hist_begin=self.hist_begins.last().unwrap();
+                        let hist_begin=self.hist_stows.last().unwrap();
                         if let Some(hist_begin_val)=&hist_begin.val {
-                            let hist_begin_groups=&self.hist_begins_groups[
+                            let hist_begin_groups=&self.hist_stows_groups[
                                 hist_begin.stow_groups_start..hist_begin_val.stow_groups_end
                             ];
-                            let hist_begin_prev=&self.hist_begins_prevs[
+                            let hist_begin_prev=&self.hist_stows_prevs[
                                 hist_begin.stow_prevs_start..hist_begin_val.stow_prevs_end
                             ];
 
