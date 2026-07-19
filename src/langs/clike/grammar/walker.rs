@@ -116,8 +116,8 @@ where
             // and_id: 0,
 
             from_user:false,
-            or_first:false,
-            and_first:false,
+            first:false,
+            // and_first:false,
 
             hist_news_len:0,
 
@@ -154,8 +154,8 @@ where
             // and_id: 0,
 
             from_user:true,
-            or_first:false,
-            and_first:false,
+            first:false,
+            // and_first:false,
 
             // in_or:false,
             // can_hist_begin:false,
@@ -200,8 +200,8 @@ where
                 // and_id: 0,
 
                 from_user:true,
-                or_first:false,
-                and_first:false,
+                first:false,
+                // and_first:false,
 
                 // in_or:false,
                 // can_hist_begin:false,
@@ -272,8 +272,8 @@ where
             // and_id:cur.and_id,
 
             from_user:true,
-            or_first:cur.or_first,
-            and_first:cur.and_first,
+            first:cur.first,
+            // and_first:cur.and_first,
 
             // in_or:cur.in_or,
             // can_hist_begin:false,
@@ -314,8 +314,8 @@ where
             // and_id:cur.and_id,
 
             from_user:true,
-            or_first:cur.or_first,
-            and_first:cur.and_first,
+            first:cur.first,
+            // and_first:cur.and_first,
 
             // can_hist_begin:false,
             hist_news_len,
@@ -356,8 +356,8 @@ where
             // and_id:cur.and_id,
 
             from_user:false,
-            or_first:false,
-            and_first:false,
+            first:false,
+            // and_first:false,
             // can_hist_begin:false,
 
             hist_news_len,
@@ -392,8 +392,8 @@ where
             // and_id:cur.and_id,
 
             from_user:false,
-            or_first:false,
-            and_first:false,
+            first:false,
+            // and_first:false,
             // can_hist_begin:false,
 
             hist_news_len,
@@ -428,8 +428,8 @@ where
             // and_id:cur.and_id,
 
             from_user:true,
-            or_first:cur.or_first,
-            and_first:cur.and_first,
+            first:cur.first,
+            // and_first:cur.and_first,
             // can_hist_begin:false,
 
             hist_news_len,
@@ -476,8 +476,8 @@ where
             // and_id:cur.and_id,
 
             from_user:true,
-            or_first:cur.or_first,
-            and_first:cur.and_first,
+            first:cur.first,
+            // and_first:cur.and_first,
 
             // can_hist_begin:false,
 
@@ -544,8 +544,8 @@ where
                 // and_id:cur.and_id+1,
 
                 from_user:false,
-                or_first:false,
-                and_first:false,
+                first:false,
+                // and_first:false,
                 // can_hist_begin:false,
 
                 hist_news_len,
@@ -583,8 +583,8 @@ where
             // and_id:if gs.len()==1{cur.and_id}else{cur.and_id+1}, //don't need if single element in And?
 
             from_user:true,
-            or_first:cur.or_first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
-            and_first:true,
+            first:cur.first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
+            // and_first:true,
 
             // can_hist_begin:cur.or_first,
 
@@ -614,7 +614,7 @@ where
         //
         let hist_news_len=self.hist_news_add(&cur);
         // let hist_begins_stk_len=self.hist_begins_stk_push(&cur);
-        let hist_begins_len=self.hist_begins_push(&cur);
+        let hist_stows_len=self.hist_begins_push(&cur);
         // let hist_ends_stk_len=self.hist_ends_stk_push(&cur);
         // let hist_begins_ind=if !cur.is_first{cur.hist_begins_len}else{cur.hist_begins_ind};
 
@@ -635,8 +635,8 @@ where
                 // and_id:cur.and_id,
 
                 from_user:false,
-                or_first:cur.or_first,
-                and_first:cur.and_first,
+                first:cur.first,
+                // and_first:cur.and_first,
                 // can_hist_begin:false,
 
                 hist_news_len,
@@ -648,7 +648,7 @@ where
                 // hist_begins_len: cur.hist_begins_len,
 
                 // hist_begins_stk_len,
-                hist_begins_len,
+                hist_begins_len: hist_stows_len,
 
                 hist_prevs_ind: cur.hist_prevs_ind,
                 hist_prevs_len: cur.hist_prevs_len,
@@ -673,14 +673,14 @@ where
             // and_id:cur.and_id,
 
             from_user:true,
-            or_first:true,
-            and_first:cur.and_first,
+            first:true,
+            // and_first:cur.and_first,
             // can_hist_begin:false,
 
             hist_news_len,
 
             // hist_begins_stk_len,
-            hist_begins_len,
+            hist_begins_len: hist_stows_len,
             // hist_ends_stk_len,
 
             // hist_begins_ind,
@@ -769,7 +769,7 @@ where
 
     fn grammar_try_from_hist_begins(&mut self,cur :&Work<'t,'g>) -> bool {
         //
-        if !cur.from_user || !cur.or_first {return false;} // !(cur.from_user && cur.is_first)
+        if !cur.from_user || !cur.first {return false;} // !(cur.from_user && cur.is_first)
         // if cur.hist_begins_stk_len==0 {return false;}
         if cur.hist_begins_len==0 {return false;}
 
@@ -1058,7 +1058,7 @@ where
     // }
     fn hist_begins_push(&mut self,cur:&Work<'t,'g>) -> usize {
         if cur.from_user //so not an added OR for rest,
-            && ( !cur.or_first || //not part of current OR, eg: or(A, and(B,or(C,D))) A in dif OR stk than C,D
+            && ( !cur.first || //not part of current OR, eg: or(A, and(B,or(C,D))) A in dif OR stk than C,D
             // self.hist_begins_stk.is_empty()
             cur.hist_begins_len==0 //init first, for if all part of same OR stk, eg: or(A,or(B,C))
             //if not need to init first, then it just reuses existing one
@@ -1187,7 +1187,7 @@ where
                 tokens_start: cur.tokens.clone(),
                 group_ind: cur.group_ind,
                 group_len:cur.group_len,
-                is_first:cur.or_first
+                is_first:cur.first
                     // &&cur.and_first
                 ,
             });
@@ -1485,7 +1485,7 @@ where
                     grammar, success_len, fail_len, tokens,
                     group_ind, group_len,
                     // and_id,
-                    or_first: is_first,
+                    first: is_first,
                     hist_news_len,
                     // hist_begins_stk_len,hist_ends_stk_len,
                     // hist_begins_ind,
