@@ -5,7 +5,7 @@ use super::temp_data::*;
 use core::panic;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::ops::Range;
+// use std::ops::Range;
 
 use crate::build::Loc;
 // use crate::clike::tokenizer::TokenContainer;
@@ -36,7 +36,9 @@ where
     expecteds:Vec<TempExpected<'g>>,
 
     debug:bool,
-    non_term_recursive_check:bool,
+    // non_term_recursive_check:bool,
+    // non_term_visiteds_stk:Vec<HashSet<(&'g str,usize)>>,
+    recurse_num:u64,
 
     groups:Vec<TempGroupInfo<'t,'g>>,
 
@@ -80,7 +82,9 @@ where
             primitives_remaining:top_primitives.clone(),
             top_primitives,
             debug:false,
-            non_term_recursive_check:true,
+            // non_term_recursive_check:true,
+            // non_term_visiteds_stk:Default::default(),
+            recurse_num:0,
 
             groups:Default::default(),
 
@@ -98,9 +102,9 @@ where
         }
     }
 
-    pub fn set_non_term_recursive_check(&mut self,non_term_recursive_check:bool) {
-        self.non_term_recursive_check=non_term_recursive_check;
-    }
+    // pub fn set_non_term_recursive_check(&mut self,non_term_recursive_check:bool) {
+    //     self.non_term_recursive_check=non_term_recursive_check;
+    // }
 
     fn init(&mut self,start_non_term:&'g str,) {
         self.stk.clear();
@@ -111,7 +115,8 @@ where
             success_len:0,fail_len:0,
             tokens:self.top_primitives,
             group_ind: 0, group_len: 1,
-            visiteds:Default::default(),
+            // visiteds:Default::default(),
+            non_term_visiteds_stk_len:0,
             // grammar_debug_len: 0,
             // and_id: 0,
 
@@ -149,7 +154,8 @@ where
             fail_len:0, //not used
             tokens:self.top_primitives,
             group_ind: 0, group_len: 1,
-            visiteds:Default::default(),
+            // visiteds:Default::default(),
+            non_term_visiteds_stk_len:0,
             // grammar_debug_len: 1,
             // and_id: 0,
 
@@ -195,7 +201,8 @@ where
                 fail_len, //1
                 tokens:self.top_primitives,
                 group_ind: 0, group_len: 1,
-                visiteds:Default::default(),
+                // visiteds:Default::default(),
+                non_term_visiteds_stk_len:0,
                 // grammar_debug_len: 1,
                 // and_id: 0,
 
@@ -228,6 +235,9 @@ where
             parent: 0,
             tokens:self.top_primitives,
         }];
+
+        //
+        // self.non_term_visiteds_stk.clear(); //not necessary really...
 
         //
         self.hist_news.clear();
@@ -267,7 +277,8 @@ where
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
-            visiteds:cur.visiteds,
+            // visiteds:cur.visiteds,
+            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
@@ -309,7 +320,8 @@ where
             tokens: cur.tokens,
             group_ind,
             group_len,
-            visiteds:cur.visiteds,
+            // visiteds:cur.visiteds,
+            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
@@ -351,7 +363,8 @@ where
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
-            visiteds:cur.visiteds.clone(),
+            // visiteds:cur.visiteds.clone(),
+            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len,
             // and_id:cur.and_id,
 
@@ -387,7 +400,8 @@ where
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
-            visiteds:cur.visiteds.clone(),
+            // visiteds:cur.visiteds.clone(),
+            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len,
             // and_id:cur.and_id,
 
@@ -423,7 +437,8 @@ where
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
-            visiteds:cur.visiteds,
+            // visiteds:cur.visiteds,
+            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
@@ -454,7 +469,7 @@ where
 
         //
         let hist_news_len=self.hist_news_add(&cur);
-        let visiteds=self.do_non_term_visiteds(t,cur.tokens,cur.visiteds)?;
+        // let visiteds=self.do_non_term_visiteds(t,cur.tokens,cur.visiteds)?;
 
         //
         let grammar=if let Some(g)=(self.grammar_func)(t) {
@@ -471,7 +486,8 @@ where
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
-            visiteds,
+            // visiteds,
+            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len+1,
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
@@ -539,7 +555,8 @@ where
                 tokens: cur.tokens, //not really necessary? since gets updated by always/primtitives
                 group_ind: cur.group_ind,
                 group_len: cur.group_len,
-                visiteds:cur.visiteds.clone(),
+                // visiteds:cur.visiteds.clone(),
+                non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
                 // grammar_debug_len: cur.grammar_debug_len,
                 // and_id:cur.and_id+1,
 
@@ -576,7 +593,8 @@ where
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
-            visiteds:cur.visiteds,
+            // visiteds:cur.visiteds,
+            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len+1,
 
             // // and_id:cur.and_id+1,
@@ -630,7 +648,8 @@ where
                 tokens: cur.tokens,
                 group_ind: cur.group_ind,
                 group_len: cur.group_len,
-                visiteds:cur.visiteds.clone(),
+                // visiteds:cur.visiteds.clone(),
+                non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
                 // grammar_debug_len: cur.grammar_debug_len,
                 // and_id:cur.and_id,
 
@@ -668,7 +687,8 @@ where
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
-            visiteds:cur.visiteds,
+            // visiteds:cur.visiteds,
+            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
@@ -1080,27 +1100,27 @@ where
 
     }
 
-    fn do_non_term_visiteds(&mut self,
-        t:&'g str,
-        cur_primitives:TokenIterContainer<'t>,
-        cur_visiteds: HashSet<(&'g str, usize)>,
-    ) -> Result<HashSet<(&'g str, usize)>,GrammarWalkError<'g>> {
-        //
-        if !self.non_term_recursive_check { return  Ok(Default::default()); }
+    // fn do_non_term_visiteds(&mut self,
+    //     t:&'g str,
+    //     cur_primitives:TokenIterContainer<'t>,
+    //     cur_visiteds: HashSet<(&'g str, usize)>,
+    // ) -> Result<HashSet<(&'g str, usize)>,GrammarWalkError<'g>> {
+    //     //
+    //     if !self.non_term_recursive_check { return  Ok(Default::default()); }
 
-        //
-        let v=(t,cur_primitives.inds().start);
+    //     //
+    //     let v=(t,cur_primitives.inds().start);
 
-        //
-        if cur_visiteds.contains(&v) { return Err(GrammarWalkError::RecursiveNonTerm(t)); }
+    //     //
+    //     if cur_visiteds.contains(&v) { return Err(GrammarWalkError::RecursiveNonTerm(t)); }
 
-        //
-        let mut visiteds=cur_visiteds;
-        visiteds.insert(v);
+    //     //
+    //     let mut visiteds=cur_visiteds;
+    //     visiteds.insert(v);
 
-        //
-        Ok(visiteds)
-    }
+    //     //
+    //     Ok(visiteds)
+    // }
 
     fn new_group(&mut self,cur:&Work<'t,'g>) -> (usize,usize) {
         let GrammarNode::Group(_,name)=cur.grammar else {panic!("");};
