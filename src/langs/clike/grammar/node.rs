@@ -7,15 +7,12 @@ pub enum GrammarNode<'g> {
     Many(Box<GrammarNode<'g>>),
     And(Vec<GrammarNode<'g>>), //should store reversed?
     Or(Vec<GrammarNode<'g>>), //should store reversed?
-
     NonTerm(&'g str),
+
     Group(Box<GrammarNode<'g>>,&'g str,),
     Expected(Box<GrammarNode<'g>>, &'g str,),
     Prev(Box<GrammarNode<'g>>),
 
-    // Stow(Box<GrammarNode<'g>>),
-
-    // Mark(Box<GrammarNode<'g>>),
 
     String,
     Identifier,
@@ -27,6 +24,11 @@ pub enum GrammarNode<'g> {
 
     Always, //always succeeds
     Error(GrammarWalkError<'g>),
+
+
+    // Stow(Box<GrammarNode<'g>>),
+
+    // Mark(Box<GrammarNode<'g>>),
 }
 
 impl<'g> GrammarNode<'g> {

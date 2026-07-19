@@ -153,15 +153,15 @@ pub struct Work<'t,'g> {
     pub group_ind:usize,
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
     pub visiteds:HashSet<(&'g str,usize)>, //used for checking recursive nonterms
-    pub grammar_debug_len:usize,
-    pub and_id:usize, //for take, to know when continuing on an And, or leaving
+    // pub grammar_debug_len:usize,
+    // pub and_id:usize, //for take, to know when continuing on an And, or leaving
 
     pub from_user:bool, //gramamr added by input grammar, not walker //used to know whether to push hist_begins stk or not
-    pub or_first:bool,
-    // pub and_first:bool,
+    pub or_first:bool, //used to know whether to store a HistStow
+    pub and_first:bool, //same, but not that important, just makes sure it's in an And
 
     // pub in_or:bool,
-    pub can_hist_begin:bool,
+    // pub can_hist_begin:bool,
 
 
     pub hist_news_len:usize,
