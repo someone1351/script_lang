@@ -116,7 +116,7 @@ where
             tokens:self.top_primitives,
             group_ind: 0, group_len: 1,
             // visiteds:Default::default(),
-            non_term_visiteds_stk_len:0,
+            // non_term_visiteds_stk_len:0,
             // grammar_debug_len: 0,
             // and_id: 0,
 
@@ -155,7 +155,7 @@ where
             tokens:self.top_primitives,
             group_ind: 0, group_len: 1,
             // visiteds:Default::default(),
-            non_term_visiteds_stk_len:0,
+            // non_term_visiteds_stk_len:0,
             // grammar_debug_len: 1,
             // and_id: 0,
 
@@ -202,7 +202,7 @@ where
                 tokens:self.top_primitives,
                 group_ind: 0, group_len: 1,
                 // visiteds:Default::default(),
-                non_term_visiteds_stk_len:0,
+                // non_term_visiteds_stk_len:0,
                 // grammar_debug_len: 1,
                 // and_id: 0,
 
@@ -278,7 +278,7 @@ where
             group_ind: cur.group_ind,
             group_len: cur.group_len,
             // visiteds:cur.visiteds,
-            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
+            // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
@@ -321,7 +321,7 @@ where
             group_ind,
             group_len,
             // visiteds:cur.visiteds,
-            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
+            // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
@@ -364,7 +364,7 @@ where
             group_ind: cur.group_ind,
             group_len: cur.group_len,
             // visiteds:cur.visiteds.clone(),
-            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
+            // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len,
             // and_id:cur.and_id,
 
@@ -401,7 +401,7 @@ where
             group_ind: cur.group_ind,
             group_len: cur.group_len,
             // visiteds:cur.visiteds.clone(),
-            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
+            // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len,
             // and_id:cur.and_id,
 
@@ -438,7 +438,7 @@ where
             group_ind: cur.group_ind,
             group_len: cur.group_len,
             // visiteds:cur.visiteds,
-            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
+            // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
@@ -487,7 +487,7 @@ where
             group_ind: cur.group_ind,
             group_len: cur.group_len,
             // visiteds,
-            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len+1,
+            // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len+1,
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
@@ -556,7 +556,7 @@ where
                 group_ind: cur.group_ind,
                 group_len: cur.group_len,
                 // visiteds:cur.visiteds.clone(),
-                non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
+                // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
                 // grammar_debug_len: cur.grammar_debug_len,
                 // and_id:cur.and_id+1,
 
@@ -594,7 +594,7 @@ where
             group_ind: cur.group_ind,
             group_len: cur.group_len,
             // visiteds:cur.visiteds,
-            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
+            // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len+1,
 
             // // and_id:cur.and_id+1,
@@ -649,7 +649,7 @@ where
                 group_ind: cur.group_ind,
                 group_len: cur.group_len,
                 // visiteds:cur.visiteds.clone(),
-                non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
+                // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
                 // grammar_debug_len: cur.grammar_debug_len,
                 // and_id:cur.and_id,
 
@@ -688,7 +688,7 @@ where
             group_ind: cur.group_ind,
             group_len: cur.group_len,
             // visiteds:cur.visiteds,
-            non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
+            // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
