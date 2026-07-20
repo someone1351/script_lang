@@ -129,5 +129,6 @@ pub struct Work<'t,'g> {
     // pub hist_ends_stk_len:usize,
 
     pub expected_news_len:usize,
+    pub expecteds_len:usize,
 }
 

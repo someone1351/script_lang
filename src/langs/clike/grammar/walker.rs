@@ -142,6 +142,7 @@ where
             hist_prevs_len: 0,
 
             expected_news_len:0,
+            expecteds_len:0,
         });
 
         //
@@ -181,6 +182,7 @@ where
             hist_prevs_len: 0,
 
             expected_news_len:0,
+            expecteds_len:0,
         });
 
         //
@@ -226,6 +228,7 @@ where
                 hist_prevs_len: 0,
 
                 expected_news_len:0,
+                expecteds_len:0,
             });
         }
 
@@ -302,6 +305,7 @@ where
             hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len,
+            expecteds_len:cur.expecteds_len,
         });
     }
 
@@ -344,6 +348,7 @@ where
             hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
+            expecteds_len:cur.expecteds_len,
         });
     }
 
@@ -387,6 +392,7 @@ where
             hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
+            expecteds_len:cur.expecteds_len,
         });
 
         //
@@ -424,6 +430,7 @@ where
             hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
+            expecteds_len:cur.expecteds_len,
         });
 
         //
@@ -461,6 +468,7 @@ where
             hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
+            expecteds_len:cur.expecteds_len,
         });
     }
 
@@ -511,6 +519,7 @@ where
             hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
+            expecteds_len:cur.expecteds_len,
         });
 
         Ok(())
@@ -579,6 +588,7 @@ where
                 hist_prevs_len: cur.hist_prevs_len,
 
                 expected_news_len:cur.expected_news_len,
+                expecteds_len:cur.expecteds_len,
             });
         }
 
@@ -620,6 +630,7 @@ where
             hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
+            expecteds_len:cur.expecteds_len,
         });
     }
 
@@ -673,6 +684,7 @@ where
                 hist_prevs_len: cur.hist_prevs_len,
 
                 expected_news_len:cur.expected_news_len,
+                expecteds_len:cur.expecteds_len,
             });
         }
 
@@ -709,6 +721,7 @@ where
             hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len:cur.expected_news_len,
+            expecteds_len:cur.expecteds_len,
         });
     }
 
@@ -868,7 +881,13 @@ where
            _ => {panic!("");}
         };
 
-        self.expected_news.push(TempExpectedNew { expected_type, });
+        //so primtives/prevs are not added if there is already an expected in expected_news
+        //  if a primitive/prev is added to expected_news, nothing else will be in it
+        if self.expected_news.is_empty() || !(cur.grammar.is_primtive() || cur.grammar.is_prev()) {
+            self.expected_news.push(TempExpectedNew { expected_type, });
+        }
+
+        //
         self.expected_news.len()
     }
 

@@ -11,8 +11,8 @@ pub enum GrammarNode<'g> {
 
     Group(Box<GrammarNode<'g>>,&'g str,),
     Expected(Box<GrammarNode<'g>>, &'g str,),
-    Prev(Box<GrammarNode<'g>>),
 
+    Prev(Box<GrammarNode<'g>>),
 
     String,
     Identifier,
