@@ -893,17 +893,33 @@ where
 
     fn submit_expected_news(&mut self, cur:&Work<'t,'g>,) {
         let Some(last)=self.stk.last_mut() else {panic!("");};
-        let drained_expected_news=self.expected_news.drain(last.expected_news_len ..).collect::<Vec<_>>();
+
+        if self.expected_news.len()>last.expected_news_len {
+            let x=self.expected_news.pop().unwrap();
+            self.expecteds.push(TempExpected { expect_type: x.expected_type });
+        }
+
+        // if let Some(x)=self.expected_news[last.expected_news_len..].poplast() {
+        //     self.expecteds.push(TempExpected { expect_type: x.expected_type.cl });
+        // }
+
+        // let drained_expected_news=self.expected_news.drain(last.expected_news_len ..).collect::<Vec<_>>();
+
+        // //
+        // for drained_expected_new in drained_expected_news {
+        //     self.expecteds.push(TempExpected { expect_type: drained_expected_new.expected_type });
+        // }
 
         //
-        for drained_expected_new in drained_expected_news {
-            self.expecteds.push(TempExpected { expect_type: drained_expected_new.expected_type });
-        }
+        self.expected_news.truncate(last.expected_news_len);
+        // self.expecteds.truncate(last.expecteds_len);
+        last.expecteds_len=self.expecteds.len();
     }
 
     fn revert_last_expected_news(&mut self) {
         let Some(last)=self.stk.last() else {return;};
         self.expected_news.truncate(last.expected_news_len);
+        self.expecteds.truncate(last.expecteds_len);
     }
 
     fn submit_hist_news(&mut self,
@@ -1174,6 +1190,36 @@ where
         }
     }
 
+    //
+
+    //
+    pub fn expecteds_string(&self) -> String {
+        // let max_priority=self.expecteds.iter().map(|&(p,_)|p).max().unwrap_or(0);
+
+        self.expecteds.iter().map(|x|match &x.expect_type {
+            TempExpectedType::Expected(n) => n,
+            TempExpectedType::Int => "int",
+            TempExpectedType::Float => "float",
+            TempExpectedType::String => "string",
+            TempExpectedType::Identifier => "identifier",
+            TempExpectedType::Symbol(s) => s,
+            TempExpectedType::Keyword(s) => s,
+            TempExpectedType::Eol => "eol",
+            TempExpectedType::Prev => "prev",
+        })
+        // self.expecteds.iter()..map(|x|match x.ex {
+        //     GrammarNode::String => "string".to_string(),
+        //     GrammarNode::Identifier => "identifier".to_string(),
+        //     GrammarNode::Int => "int".to_string(),
+        //     GrammarNode::Float => "float".to_string(),
+        //     GrammarNode::Symbol(s) => format!("'{s}'"),
+        //     GrammarNode::Keyword(s) => format!("'{s}'"),
+        //     GrammarNode::Eol => "eol".to_string(),
+        //     GrammarNode::NonTerm(s) => format!("{s}"),
+        //     _ =>"".to_string(),
+        // })
+        .collect::<Vec<_>>().join(", ")
+    }
     //
     pub fn get_walk(&self) -> Walk<'t,'g> {
         //
@@ -1532,11 +1578,13 @@ where
         self.debug=debug;
     }
 
-    pub fn set_prev_non_term_only(&mut self,prev_non_term_only:bool) {
-        self.prev_non_term_only=prev_non_term_only;
-    }
+    // pub fn set_prev_non_term_only(&mut self,prev_non_term_only:bool) {
+    //     self.prev_non_term_only=prev_non_term_only;
+    // }
 
-    pub fn set_stow_non_term_only(&mut self,stow_non_term_only:bool) {
-        self.stow_non_term_only=stow_non_term_only;
-    }
+    // pub fn set_stow_non_term_only(&mut self,stow_non_term_only:bool) {
+    //     self.stow_non_term_only=stow_non_term_only;
+    // }
+
+
 }
