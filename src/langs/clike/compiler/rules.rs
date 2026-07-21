@@ -69,8 +69,11 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             [
                 [NonTerm("a0"),NonTerm("b")].and().expected("0"),
                 NonTerm("c"),
-            ].or().expected("s"),
-        ].and(),
+                // Always,
+            ].or(),
+            NonTerm("a0"),
+            NonTerm("c"),
+        ].and().expected("s"),
         // "start" => [[
         //     [
         //         [

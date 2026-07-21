@@ -896,8 +896,21 @@ where
 
         if self.expected_news.len()>last.expected_news_len {
             let x=self.expected_news.pop().unwrap();
-            self.expecteds.push(TempExpected { expect_type: x.expected_type });
+            println!("----- added expected {:?} : news={:?} exps={:?}",
+                x.expected_type,
+                self.expected_news.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
+                self.expecteds.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
+            );
+            self.expecteds.push(TempExpected { expected_type: x.expected_type });
+
+            // self.expected_news.clear();
+            // last.expected_news_len=cur.expected_news_len;
+        } else {
+
+            // self.expected_news.truncate(last.expected_news_len);
+
         }
+        self.expected_news.truncate(last.expected_news_len);
 
         // if let Some(x)=self.expected_news[last.expected_news_len..].poplast() {
         //     self.expecteds.push(TempExpected { expect_type: x.expected_type.cl });
@@ -911,7 +924,6 @@ where
         // }
 
         //
-        self.expected_news.truncate(last.expected_news_len);
         // self.expecteds.truncate(last.expecteds_len);
         last.expecteds_len=self.expecteds.len();
     }
@@ -1196,7 +1208,7 @@ where
     pub fn expecteds_string(&self) -> String {
         // let max_priority=self.expecteds.iter().map(|&(p,_)|p).max().unwrap_or(0);
 
-        self.expecteds.iter().map(|x|match &x.expect_type {
+        self.expecteds.iter().map(|x|match &x.expected_type {
             TempExpectedType::Expected(n) => n,
             TempExpectedType::Int => "int",
             TempExpectedType::Float => "float",
@@ -1428,7 +1440,20 @@ where
                 // println!("        hist_begins_ind={hist_begins_ind}, hist_begins_len={hist_begins_len},",
                 //     self.stk.get(cur.)
                 // );
+
+                //
                 if true {
+                    println!("        expected news={:?}",
+                        self.expected_news.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
+                    );
+                     println!("        expected={:?}",
+                        self.expecteds.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
+                    );
+
+                }
+
+                //
+                if false {
                     println!("        hist_news");
                     for (i,h) in self.hist_news.iter().enumerate() {
                         println!("            {i}:[{:?}]: {:?}",h.tokens_start.inds(),h.grammar)

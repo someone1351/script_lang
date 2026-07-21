@@ -40,7 +40,7 @@ pub enum TempExpectedType<'g> {
 
 #[derive(Clone, Debug)]
 pub struct TempExpected<'g> {
-    pub expect_type:TempExpectedType<'g>,
+    pub expected_type:TempExpectedType<'g>,
 }
 
 #[derive(Clone, Debug)]
