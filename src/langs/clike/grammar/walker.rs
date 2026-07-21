@@ -841,14 +841,14 @@ where
                 self.revert_last_expected_news();
 
                 //
-                if self.debug {
-                    println!("--- hmm stk={:?}",self.stk.iter().map(|x|x.grammar.clone()).collect::<Vec<_>>());
+                // if self.debug {
+                //     println!("--- hmm stk={:?}",self.stk.iter().map(|x|x.grammar.clone()).collect::<Vec<_>>());
 
-                    // if let Some(last)=self.stk.last() {
-                    //     let last_hist_ends=&self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
-                    //     println!("---last_hist_ends={:?}, len={}",last_hist_ends,last_hist_ends.len());
-                    // }
-                }
+                //     // if let Some(last)=self.stk.last() {
+                //     //     let last_hist_ends=&self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
+                //     //     println!("---last_hist_ends={:?}, len={}",last_hist_ends,last_hist_ends.len());
+                //     // }
+                // }
 
                 //
                 Some(v)
@@ -955,9 +955,9 @@ where
             let tokens=hist_new.tokens_start.get_amount(tokens_len).unwrap();
 
             //
-            if self.debug {
-                println!("--- inserting hist_end {:?} {tokens:?}",hist_new.grammar);
-            }
+            // if self.debug {
+            //     println!("--- inserting hist_end {:?} {tokens:?}",hist_new.grammar);
+            // }
 
             // // //
             // // (  hist_new.grammar.clone(), TempHistEnd {
@@ -981,15 +981,15 @@ where
             let drained_hist_new2=drained_hist_news.iter().find(|x|{
                 // let b=x.grammar.is_always() || x.grammar.is_prev() || x.grammar.is_primtive();
                 let b = x.grammar.is_and() || x.grammar.is_many() || x.grammar.is_non_term(); // || x.grammar.is_or()
-                println!("---hm? {:?} {b} {}",x.grammar,x.is_first);
+                // println!("---hm? {:?} {b} {}",x.grammar,x.is_first);
                 b &&
                 x.is_first
             });
 
-            println!("-------found {:?} : {:?}",drained_hist_new2,drained_hist_news.iter().map(|x|&x.grammar).collect::<Vec<_>>());
+            // println!("-------found {:?} : {:?}",drained_hist_new2,drained_hist_news.iter().map(|x|&x.grammar).collect::<Vec<_>>());
             //
             if let Some(drained_hist_new2)=drained_hist_new2 {
-                println!("------ stowed {:?}",drained_hist_new2.grammar.clone());
+                // println!("------ stowed {:?}",drained_hist_new2.grammar.clone());
 
                 //
                 let hist_begin=self.hist_stows.last_mut().unwrap();
@@ -1053,7 +1053,8 @@ where
             //if not need to init first, then it just reuses existing one
         ) //add current/initial OR
         {
-            println!("------ hist_begins_push");
+            // println!("------ hist_begins_push");
+
             self.hist_stows.push(TempHistStow {
                 val: None,
                 stow_groups_start: self.hist_stows_groups.len(),
@@ -1127,9 +1128,9 @@ where
         last.group_len=cur.group_len;
 
         //
-        if self.debug {
-            println!("==do_groups_primitives_clamp: cur_group_ind={}, last.group_ind={}",cur.group_ind,last.group_ind);
-        }
+        // if self.debug {
+        //     println!("==do_groups_primitives_clamp: cur_group_ind={}, last.group_ind={}",cur.group_ind,last.group_ind);
+        // }
 
         //clamp groups tokens (for groups that have ended)
         let mut g=cur.group_ind;
@@ -1380,14 +1381,14 @@ where
 
     fn step(&mut self,cur:Work<'t,'g>) -> Result<(),GrammarWalkError<'g>> {
         //
-        if self.debug {
-            if self.groups.len() != cur.group_len {
-                println!("--- groups dif len, groups.len={}, cur.group_len={}",self.groups.len(),cur.group_len);
-            }
-            // if self.hist_begins_stk.len() != cur.hist_begins_stk_len {
-            //     println!("--- or_stk dif len, or_stk.len={}, cur.or_stk_len={}",self.hist_begins_stk.len(),cur.hist_begins_stk_len);
-            // }
-        }
+        // if self.debug {
+        //     if self.groups.len() != cur.group_len {
+        //         println!("--- groups dif len, groups.len={}, cur.group_len={}",self.groups.len(),cur.group_len);
+        //     }
+        //     // if self.hist_begins_stk.len() != cur.hist_begins_stk_len {
+        //     //     println!("--- or_stk dif len, or_stk.len={}, cur.or_stk_len={}",self.hist_begins_stk.len(),cur.hist_begins_stk_len);
+        //     // }
+        // }
 
         //
         self.step_truncates(&cur);
@@ -1415,6 +1416,7 @@ where
                     hist_stows_len: hist_begins_len,
                     // hist_begins_stk_len,
                     hist_prevs_ind: hist_ends_ind,hist_prevs_len: hist_ends_len,
+                    expected_news_len,expecteds_len,
                     ..
                 }=&cur;
 
@@ -1443,6 +1445,7 @@ where
 
                 //
                 if true {
+                    println!("        expected_news_len={expected_news_len}, expecteds_len={expecteds_len}");
                     println!("        expected news={:?}",
                         self.expected_news.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
                     );
