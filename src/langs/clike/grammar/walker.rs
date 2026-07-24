@@ -149,6 +149,7 @@ where
             expected_news_len:0,
             expecteds_len:0,
 
+            expected_ind2:0,
             expecteds_len2:0,
         });
 
@@ -191,6 +192,8 @@ where
             expected_news_len:0,
             expecteds_len:0,
 
+
+            expected_ind2:0,
             expecteds_len2:0,
         });
 
@@ -239,6 +242,7 @@ where
                 expected_news_len:0,
                 expecteds_len:0,
 
+                expected_ind2:0,
                 expecteds_len2:0,
             });
         }
@@ -284,6 +288,7 @@ where
 
         //
         let expected_news_len=self.add_expected_new(&cur);
+        let (expected_ind2,expecteds_len2)=self.add_expected2(&cur);
         let hist_news_len=self.hist_news_add(&cur);
 
         //TODO
@@ -321,7 +326,8 @@ where
             expected_news_len,
             expecteds_len:cur.expecteds_len,
 
-            expecteds_len2:cur.expecteds_len2,
+            expected_ind2,
+            expecteds_len2,
         });
     }
 
@@ -366,6 +372,7 @@ where
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
 
+            expected_ind2:cur.expected_ind2,
             expecteds_len2:cur.expecteds_len2,
         });
     }
@@ -412,6 +419,7 @@ where
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
 
+            expected_ind2:cur.expected_ind2,
             expecteds_len2:cur.expecteds_len2,
         });
 
@@ -452,6 +460,7 @@ where
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
 
+            expected_ind2:cur.expected_ind2,
             expecteds_len2:cur.expecteds_len2,
         });
 
@@ -492,6 +501,7 @@ where
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
 
+            expected_ind2:cur.expected_ind2,
             expecteds_len2:cur.expecteds_len2,
         });
     }
@@ -545,6 +555,7 @@ where
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
 
+            expected_ind2:cur.expected_ind2,
             expecteds_len2:cur.expecteds_len2,
         });
 
@@ -616,6 +627,7 @@ where
                 expected_news_len:cur.expected_news_len,
                 expecteds_len:cur.expecteds_len,
 
+                expected_ind2:cur.expected_ind2,
                 expecteds_len2:cur.expecteds_len2,
             });
         }
@@ -660,6 +672,7 @@ where
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
 
+            expected_ind2:cur.expected_ind2,
             expecteds_len2:cur.expecteds_len2,
         });
     }
@@ -716,6 +729,7 @@ where
                 expected_news_len:cur.expected_news_len,
                 expecteds_len:cur.expecteds_len,
 
+                expected_ind2:cur.expected_ind2,
                 expecteds_len2:cur.expecteds_len2,
             });
         }
@@ -755,6 +769,7 @@ where
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
 
+            expected_ind2:cur.expected_ind2,
             expecteds_len2:cur.expecteds_len2,
         });
     }
@@ -899,6 +914,33 @@ where
                 None
             }
         }
+    }
+
+    fn add_expected2(&mut self, cur:&Work<'t,'g>,) -> (usize,usize) {
+        let expected_type=match cur.grammar {
+            GrammarNode::Expected(_, name) => TempExpectedType::Expected(name),
+            GrammarNode::Prev(_) => TempExpectedType::Prev,
+            GrammarNode::String => TempExpectedType::String,
+            GrammarNode::Identifier => TempExpectedType::Identifier,
+            GrammarNode::Int => TempExpectedType::Int,
+            GrammarNode::Float => TempExpectedType::Float,
+            GrammarNode::Symbol(s) => TempExpectedType::Symbol(s),
+            GrammarNode::Keyword(s) => TempExpectedType::Keyword(s),
+            GrammarNode::Eol => TempExpectedType::Eol,
+           _ => {panic!("");}
+        };
+
+        //
+        let expected_ind=self.expecteds2.len();
+        //
+        self.expecteds2.push(TempExpected2 {
+            expected_type,
+            parent: cur.expected_ind2,
+            token_start_ind: cur.tokens.inds().start,
+        });
+
+        //
+        (expected_ind,self.expecteds2.len())
     }
 
     fn add_expected_new(&mut self, cur:&Work<'t,'g>,) -> usize {

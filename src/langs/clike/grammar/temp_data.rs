@@ -138,6 +138,8 @@ pub struct Work<'t,'g> {
     pub expected_news_len:usize,
     pub expecteds_len:usize,
 
+
+    pub expected_ind2:usize,
     pub expecteds_len2:usize,
 }
 
