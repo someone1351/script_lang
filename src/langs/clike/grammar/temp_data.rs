@@ -46,7 +46,7 @@ pub struct TempExpected<'g> {
 #[derive(Clone, Debug)]
 pub struct TempExpected2<'g> {
     pub expected_type:TempExpectedType<'g>,
-    pub parent:usize,
+    pub parent:Option<usize>,
     pub token_start_ind:usize,
 }
 
@@ -139,7 +139,7 @@ pub struct Work<'t,'g> {
     pub expecteds_len:usize,
 
 
-    pub expected_ind2:usize,
+    pub expected_ind2:Option<usize>,
     pub expecteds_len2:usize,
 }
 

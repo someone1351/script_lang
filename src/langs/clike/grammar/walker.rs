@@ -149,7 +149,7 @@ where
             expected_news_len:0,
             expecteds_len:0,
 
-            expected_ind2:0,
+            expected_ind2:None,
             expecteds_len2:0,
         });
 
@@ -193,7 +193,7 @@ where
             expecteds_len:0,
 
 
-            expected_ind2:0,
+            expected_ind2:None,
             expecteds_len2:0,
         });
 
@@ -242,7 +242,7 @@ where
                 expected_news_len:0,
                 expecteds_len:0,
 
-                expected_ind2:0,
+                expected_ind2:None,
                 expecteds_len2:0,
             });
         }
@@ -797,13 +797,17 @@ where
             self.update_groups(&cur);
             self.submit_hist_news(&cur,false,);
             self.revert_last_expected_news();
+            self.expected2_on_success(&cur);
         } else {
             self.stk.truncate(cur.fail_len);
             self.update_tokens(&cur,false);
             // self.revert_last_hist_news();
             self.update_hist_on_fail(&cur);
             let _expected_news_len=self.add_expected_new(&cur);
+            let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
+
             self.submit_expected_news(&cur);
+            self.expected2_on_fail(&cur);
         }
     }
 
@@ -816,6 +820,7 @@ where
         self.update_groups(&cur); //here
         self.submit_hist_news(&cur,false);
         self.revert_last_expected_news();
+        self.expected2_on_success(&cur);
     }
 
     fn grammar_try_from_hist_begins(&mut self,cur :&Work<'t,'g>) -> bool {
@@ -860,6 +865,7 @@ where
         self.update_groups(&cur);
         self.submit_hist_news(&cur,true); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
         self.revert_last_expected_news();
+        self.expected2_on_success(&cur);
 
         //
         if self.debug {
@@ -888,6 +894,7 @@ where
                 self.update_groups(&cur);
                 self.submit_hist_news(&cur,false);
                 self.revert_last_expected_news();
+                self.expected2_on_success(&cur);
 
                 //
                 // if self.debug {
@@ -909,6 +916,8 @@ where
                 self.update_hist_on_fail(&cur);
                 let _expected_news_len=self.add_expected_new(&cur);
                 self.submit_expected_news(&cur);
+                self.expected2_on_fail(&cur);
+                let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
 
                 //
                 None
@@ -916,7 +925,13 @@ where
         }
     }
 
-    fn add_expected2(&mut self, cur:&Work<'t,'g>,) -> (usize,usize) {
+    fn add_expected2(&mut self, cur:&Work<'t,'g>,) -> (Option<usize>,usize) {
+        //
+        if cur.expected_ind2.is_some() && (cur.grammar.is_prev() || cur.grammar.is_primtive()) {
+            return (cur.expected_ind2,cur.expecteds_len2);
+        }
+
+        //
         let expected_type=match cur.grammar {
             GrammarNode::Expected(_, name) => TempExpectedType::Expected(name),
             GrammarNode::Prev(_) => TempExpectedType::Prev,
@@ -932,6 +947,7 @@ where
 
         //
         let expected_ind=self.expecteds2.len();
+
         //
         self.expecteds2.push(TempExpected2 {
             expected_type,
@@ -940,7 +956,13 @@ where
         });
 
         //
-        (expected_ind,self.expecteds2.len())
+        (Some(expected_ind),self.expecteds2.len())
+    }
+
+
+    fn expected2_on_success(&mut self, cur:&Work<'t,'g>,) {
+    }
+    fn expected2_on_fail(&mut self, cur:&Work<'t,'g>,) {
     }
 
     fn add_expected_new(&mut self, cur:&Work<'t,'g>,) -> usize {
