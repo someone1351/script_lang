@@ -44,6 +44,13 @@ pub struct TempExpected<'g> {
 }
 
 #[derive(Clone, Debug)]
+pub struct TempExpected2<'g> {
+    pub expected_type:TempExpectedType<'g>,
+    pub parent:usize,
+    pub token_start_ind:usize,
+}
+
+#[derive(Clone, Debug)]
 pub struct TempHistNew<'t,'g> {
     pub grammar:GrammarNode<'g>,
     pub tokens_start:TokenIterContainer<'t>,
@@ -130,5 +137,7 @@ pub struct Work<'t,'g> {
 
     pub expected_news_len:usize,
     pub expecteds_len:usize,
+
+    pub expecteds_len2:usize,
 }
 

@@ -31,9 +31,13 @@ where
     grammar_func:G,
     stk: Vec<Work<'t,'g>>,
     step_count:usize,
+
     expected_loc:Loc,
+
     expected_news:Vec<TempExpectedNew<'g>>,
     expecteds:Vec<TempExpected<'g>>,
+
+    expecteds2:Vec<TempExpected2<'g>>,
 
     debug:bool,
     // non_term_recursive_check:bool,
@@ -77,6 +81,7 @@ where
             expected_loc:Loc::zero(),
             expected_news:Default::default(),
             expecteds:Default::default(),
+            expecteds2:Default::default(),
 
             grammar_func,
             primitives_remaining:top_primitives.clone(),
@@ -143,6 +148,8 @@ where
 
             expected_news_len:0,
             expecteds_len:0,
+
+            expecteds_len2:0,
         });
 
         //
@@ -183,6 +190,8 @@ where
 
             expected_news_len:0,
             expecteds_len:0,
+
+            expecteds_len2:0,
         });
 
         //
@@ -229,6 +238,8 @@ where
 
                 expected_news_len:0,
                 expecteds_len:0,
+
+                expecteds_len2:0,
             });
         }
 
@@ -259,9 +270,12 @@ where
 
         //
         self.step_count=0;
+
+        //
         self.expected_loc=Loc::zero();
         self.expected_news.clear();
         self.expecteds.clear();
+        self.expecteds2.clear();
 
     }
 
@@ -306,6 +320,8 @@ where
 
             expected_news_len,
             expecteds_len:cur.expecteds_len,
+
+            expecteds_len2:cur.expecteds_len2,
         });
     }
 
@@ -349,6 +365,8 @@ where
 
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
+
+            expecteds_len2:cur.expecteds_len2,
         });
     }
 
@@ -393,6 +411,8 @@ where
 
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
+
+            expecteds_len2:cur.expecteds_len2,
         });
 
         //
@@ -431,6 +451,8 @@ where
 
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
+
+            expecteds_len2:cur.expecteds_len2,
         });
 
         //
@@ -469,6 +491,8 @@ where
 
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
+
+            expecteds_len2:cur.expecteds_len2,
         });
     }
 
@@ -520,6 +544,8 @@ where
 
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
+
+            expecteds_len2:cur.expecteds_len2,
         });
 
         Ok(())
@@ -589,6 +615,8 @@ where
 
                 expected_news_len:cur.expected_news_len,
                 expecteds_len:cur.expecteds_len,
+
+                expecteds_len2:cur.expecteds_len2,
             });
         }
 
@@ -631,6 +659,8 @@ where
 
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
+
+            expecteds_len2:cur.expecteds_len2,
         });
     }
 
@@ -685,6 +715,8 @@ where
 
                 expected_news_len:cur.expected_news_len,
                 expecteds_len:cur.expecteds_len,
+
+                expecteds_len2:cur.expecteds_len2,
             });
         }
 
@@ -722,6 +754,8 @@ where
 
             expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
+
+            expecteds_len2:cur.expecteds_len2,
         });
     }
 
