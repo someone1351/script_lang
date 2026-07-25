@@ -1556,10 +1556,14 @@ where
                 if true {
                     println!("        expected_ind2={expected_ind2:?}, expecteds_len={expecteds_len2}");
 
-                     println!("        expecteds2={:?}",
+                     println!("        expecteds2=[{}]",
                         self.expecteds2.iter().enumerate()
-                            .map(|(i,x)|format!("{i}:p{}:{:?}",x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),x.expected_type))
-                            .collect::<Vec<_>>(),
+                            .map(|(i,x)|format!("e{i}:p{}:t{}:{:?}",
+                                x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
+                                x.token_start_ind,
+                                x.expected_type,
+                            ))
+                            .collect::<Vec<_>>().join(", "),
                     );
 
                 }
