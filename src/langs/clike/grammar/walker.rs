@@ -324,10 +324,15 @@ where
             hist_prevs_len: cur.hist_prevs_len,
 
             expected_news_len,
+            // expected_news_len:cur.expected_news_len,
             expecteds_len:cur.expecteds_len,
 
             expected_ind2,
             expecteds_len2,
+
+
+            // expected_ind2:cur.expected_ind2,
+            // expecteds_len2:cur.expecteds_len2,
         });
     }
 
@@ -803,8 +808,8 @@ where
             self.update_tokens(&cur,false);
             // self.revert_last_hist_news();
             self.update_hist_on_fail(&cur);
-            let _expected_news_len=self.add_expected_new(&cur);
-            let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
+            // let _expected_news_len=self.add_expected_new(&cur);
+            // let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
 
             self.submit_expected_news(&cur);
             self.expected2_on_fail();
@@ -927,14 +932,14 @@ where
 
     fn add_expected2(&mut self, cur:&Work<'t,'g>,) -> (Option<usize>,usize) {
         //
-        if cur.expected_ind2.is_some() && (cur.grammar.is_prev() || cur.grammar.is_primtive()) {
+        if cur.expected_ind2.is_some() && cur.grammar.is_primtive() { //(cur.grammar.is_prev() || )
             return (cur.expected_ind2,cur.expecteds_len2);
         }
 
         //
         let expected_type=match cur.grammar {
             GrammarNode::Expected(_, name) => TempExpectedType::Expected(name),
-            GrammarNode::Prev(_) => TempExpectedType::Prev,
+            // GrammarNode::Prev(_) => TempExpectedType::Prev,
             GrammarNode::String => TempExpectedType::String,
             GrammarNode::Identifier => TempExpectedType::Identifier,
             GrammarNode::Int => TempExpectedType::Int,
@@ -973,7 +978,7 @@ where
     fn add_expected_new(&mut self, cur:&Work<'t,'g>,) -> usize {
         let expected_type=match cur.grammar {
             GrammarNode::Expected(_, name) => TempExpectedType::Expected(name),
-            GrammarNode::Prev(_) => TempExpectedType::Prev,
+            // GrammarNode::Prev(_) => TempExpectedType::Prev,
             GrammarNode::String => TempExpectedType::String,
             GrammarNode::Identifier => TempExpectedType::Identifier,
             GrammarNode::Int => TempExpectedType::Int,
@@ -1312,7 +1317,7 @@ where
     pub fn expecteds_string(&self) -> String {
         // let max_priority=self.expecteds.iter().map(|&(p,_)|p).max().unwrap_or(0);
 
-        self.expecteds.iter().map(|x|match &x.expected_type {
+        self.expecteds2.iter().map(|x|match &x.expected_type {
             TempExpectedType::Expected(n) => n,
             TempExpectedType::Int => "int",
             TempExpectedType::Float => "float",
@@ -1321,19 +1326,8 @@ where
             TempExpectedType::Symbol(s) => s,
             TempExpectedType::Keyword(s) => s,
             TempExpectedType::Eol => "eol",
-            TempExpectedType::Prev => "prev",
+            // TempExpectedType::Prev => "prev",
         })
-        // self.expecteds.iter()..map(|x|match x.ex {
-        //     GrammarNode::String => "string".to_string(),
-        //     GrammarNode::Identifier => "identifier".to_string(),
-        //     GrammarNode::Int => "int".to_string(),
-        //     GrammarNode::Float => "float".to_string(),
-        //     GrammarNode::Symbol(s) => format!("'{s}'"),
-        //     GrammarNode::Keyword(s) => format!("'{s}'"),
-        //     GrammarNode::Eol => "eol".to_string(),
-        //     GrammarNode::NonTerm(s) => format!("{s}"),
-        //     _ =>"".to_string(),
-        // })
         .collect::<Vec<_>>().join(", ")
     }
     //
@@ -1520,6 +1514,7 @@ where
                     // hist_begins_stk_len,
                     hist_prevs_ind: hist_ends_ind,hist_prevs_len: hist_ends_len,
                     expected_news_len,expecteds_len,
+                    expected_ind2,expecteds_len2,
                     ..
                 }=&cur;
 
@@ -1548,6 +1543,17 @@ where
 
                 //
                 if true {
+                    println!("        expected_ind2={expected_ind2:?}, expecteds_len={expecteds_len2}");
+
+                     println!("        expecteds2={:?}",
+                        self.expecteds2.iter().enumerate()
+                            .map(|(i,x)|format!("{i}:p{}:{:?}",x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),x.expected_type))
+                            .collect::<Vec<_>>(),
+                    );
+
+                }
+                //
+                if false {
                     println!("        expected_news_len={expected_news_len}, expecteds_len={expecteds_len}");
                     println!("        expected news={:?}",
                         self.expected_news.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),

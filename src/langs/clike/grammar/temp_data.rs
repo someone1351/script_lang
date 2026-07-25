@@ -35,7 +35,7 @@ pub enum TempExpectedType<'g> {
     Keyword(&'g str),
 
     Eol,
-    Prev,
+    // Prev, //remove?
 }
 
 #[derive(Clone, Debug)]
