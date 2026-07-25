@@ -797,7 +797,7 @@ where
             self.update_groups(&cur);
             self.submit_hist_news(&cur,false,);
             self.revert_last_expected_news();
-            self.expected2_on_success(&cur);
+            self.expected2_on_success();
         } else {
             self.stk.truncate(cur.fail_len);
             self.update_tokens(&cur,false);
@@ -807,7 +807,7 @@ where
             let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
 
             self.submit_expected_news(&cur);
-            self.expected2_on_fail(&cur);
+            self.expected2_on_fail();
         }
     }
 
@@ -820,7 +820,7 @@ where
         self.update_groups(&cur); //here
         self.submit_hist_news(&cur,false);
         self.revert_last_expected_news();
-        self.expected2_on_success(&cur);
+        // self.expected2_on_success(&cur);
     }
 
     fn grammar_try_from_hist_begins(&mut self,cur :&Work<'t,'g>) -> bool {
@@ -865,7 +865,7 @@ where
         self.update_groups(&cur);
         self.submit_hist_news(&cur,true); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
         self.revert_last_expected_news();
-        self.expected2_on_success(&cur);
+        self.expected2_on_success();
 
         //
         if self.debug {
@@ -894,7 +894,7 @@ where
                 self.update_groups(&cur);
                 self.submit_hist_news(&cur,false);
                 self.revert_last_expected_news();
-                self.expected2_on_success(&cur);
+                self.expected2_on_success();
 
                 //
                 // if self.debug {
@@ -916,7 +916,7 @@ where
                 self.update_hist_on_fail(&cur);
                 let _expected_news_len=self.add_expected_new(&cur);
                 self.submit_expected_news(&cur);
-                self.expected2_on_fail(&cur);
+                self.expected2_on_fail();
                 let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
 
                 //
@@ -960,9 +960,14 @@ where
     }
 
 
-    fn expected2_on_success(&mut self, cur:&Work<'t,'g>,) {
+    fn expected2_on_success(&mut self, ) {
+        let Some(last)=self.stk.last() else {panic!("");}; //the func, not run on always
+        self.expecteds2.truncate(last.expecteds_len2);
     }
-    fn expected2_on_fail(&mut self, cur:&Work<'t,'g>,) {
+
+    fn expected2_on_fail(&mut self, ) {
+        let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
+        last.expecteds_len2=self.expecteds2.len();
     }
 
     fn add_expected_new(&mut self, cur:&Work<'t,'g>,) -> usize {
