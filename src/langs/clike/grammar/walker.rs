@@ -3,6 +3,7 @@
 use super::error::*;
 use super::temp_data::*;
 use core::panic;
+use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::collections::HashSet;
 // use std::ops::Range;
@@ -1317,18 +1318,28 @@ where
     pub fn expecteds_string(&self) -> String {
         // let max_priority=self.expecteds.iter().map(|&(p,_)|p).max().unwrap_or(0);
 
-        self.expecteds2.iter().map(|x|match &x.expected_type {
-            TempExpectedType::Expected(n) => n,
-            TempExpectedType::Int => "int",
-            TempExpectedType::Float => "float",
-            TempExpectedType::String => "string",
-            TempExpectedType::Identifier => "identifier",
-            TempExpectedType::Symbol(s) => s,
-            TempExpectedType::Keyword(s) => s,
-            TempExpectedType::Eol => "eol",
-            // TempExpectedType::Prev => "prev",
-        })
-        .collect::<Vec<_>>().join(", ")
+        let mut parents_seen: HashSet<usize>=HashSet::new();
+        let mut out=BTreeMap::new();
+        let max_token_start_ind = self.expecteds2.iter().map(|x|x.token_start_ind).max().unwrap_or_default();
+
+        for (i,x) in self.expecteds2.iter().enumerate().rev() {
+            if x.token_start_ind != max_token_start_ind {continue;}
+            if parents_seen.contains(&i) { continue; }
+            if let Some(p)=x.parent { parents_seen.insert(p); }
+
+            out.entry(x).or_insert_with(||match &x.expected_type {
+                TempExpectedType::Expected(n) => n,
+                TempExpectedType::Int => "int",
+                TempExpectedType::Float => "float",
+                TempExpectedType::String => "string",
+                TempExpectedType::Identifier => "identifier",
+                TempExpectedType::Symbol(s) => s,
+                TempExpectedType::Keyword(s) => s,
+                TempExpectedType::Eol => "eol",
+            });
+        }
+
+        out.iter().map(|(_k,&v)|v).collect::<Vec<_>>().join(", ")
     }
     //
     pub fn get_walk(&self) -> Walk<'t,'g> {

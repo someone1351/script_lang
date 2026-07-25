@@ -23,7 +23,7 @@ pub struct TempExpectedNew<'g> {
 
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TempExpectedType<'g> {
     Expected(&'g str),
 
@@ -43,7 +43,7 @@ pub struct TempExpected<'g> {
     pub expected_type:TempExpectedType<'g>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TempExpected2<'g> {
     pub expected_type:TempExpectedType<'g>,
     pub parent:Option<usize>,
