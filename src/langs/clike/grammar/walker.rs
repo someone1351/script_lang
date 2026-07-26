@@ -860,8 +860,22 @@ where
         let stow_prevs=&self.hist_stows_prevs[hist_begin.stow_prevs_start..temp_prevs_end];
 
         //
+        // let group_ind_offset=stow_groups.first().map(|g|g.parent).unwrap_or_default();
+
+
+
+        //
+        let glen=self.groups.len();
+        println!("===--- glen={glen}, cur.group_ind={}, cur.group_len={}",cur.group_ind,cur.group_len);
         //add groups
-        self.groups.extend(stow_groups.iter().map(|g|TempGroupInfo{ parent:cur.group_ind+g.parent,..g.clone()}));
+        self.groups.extend(stow_groups.iter().enumerate().map(|(i,g)|{
+            println!("===--- {i}:p{}:{} = {}",g.parent,g.name, cur.group_ind+g.parent + if g.parent==0{0}else{glen});
+            TempGroupInfo{
+                parent:if g.parent==0{cur.group_ind}else{glen+g.parent-1},
+                ..g.clone()
+            }
+        }));
+
         self.hist_prevs.extend_from_slice(stow_prevs);
 
         //
@@ -1122,7 +1136,9 @@ where
                 //
                 self.hist_stows_groups.truncate(hist_begin.stow_groups_start);
                 self.hist_stows_groups.extend(self.groups[drained_hist_new2.group_len..cur.group_len].iter().map(|x|TempGroupInfo{
-                    parent: x.parent-group_ind_offset, ..x.clone()
+                    parent: x.parent
+                    -group_ind_offset
+                    , ..x.clone()
                 }));
 
                 //
@@ -1570,7 +1586,7 @@ where
                 // );
 
                 //
-                if true {
+                if false {
                     println!("        expected_ind2={expected_ind2:?}, expecteds_len={expecteds_len2}");
 
                      println!("        expecteds2=[{}]",
@@ -1597,7 +1613,7 @@ where
                 }
 
                 //
-                if false {
+                if true {
                     println!("        hist_news");
                     for (i,h) in self.hist_news.iter().enumerate() {
                         println!("            {i}:[{:?}]: {:?}",h.tokens_start.inds(),h.grammar)
@@ -1636,8 +1652,11 @@ where
                             ];
 
                             println!("            grammar={:?}",hist_begin_val.grammar);
-                            println!("            groups={:?}",hist_begin_groups.iter().map(|g|g.name).collect::<Vec<_>>());
-                            println!("            prevs={:?}",hist_begin_prev.iter().map(|p|&p.grammar).collect::<Vec<_>>());
+                            println!("            groups={:?}",hist_begin_groups.iter().enumerate().map(|(i,g)|format!("{i}:p{}:{}",
+                                g.parent,
+                                g.name,
+                            )).collect::<Vec<_>>());
+                            // println!("            prevs={:?}",hist_begin_prev.iter().map(|p|&p.grammar).collect::<Vec<_>>());
 
                         }
 

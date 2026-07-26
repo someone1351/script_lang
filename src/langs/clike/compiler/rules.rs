@@ -121,23 +121,23 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("ending").many0(),
         ].and(),
 
-        // "start" => NonTerm("factor"),
-        "factor" => [
-            [
-                NonTerm("term"), //.stow(),
-                [Symbol("+"),NonTerm("term")].and().many1(),
-            ].and().group("factor"),
-            NonTerm("term"),
-        ].or(),
-        // "start" => NonTerm("term"),
-        "term" => [
-            [
-                NonTerm("num"),
-                [Symbol("*"),NonTerm("num"),].and().many1(),
-            ].and().group("term"),
-            NonTerm("num"),
-        ].or(),
-        "num" => Int.group("num"),
+        // "start" => NonTerm("expr_factor"),
+        // "factor" => [
+        //     [
+        //         NonTerm("term"), //.stow(),
+        //         [Symbol("+"),NonTerm("term")].and().many1(),
+        //     ].and().group("factor"),
+        //     NonTerm("term"),
+        // ].or(),
+        // // "start" => NonTerm("term"),
+        // "term" => [
+        //     [
+        //         NonTerm("num"),
+        //         [Symbol("*"),NonTerm("num"),].and().many1(),
+        //     ].and().group("term"),
+        //     NonTerm("num"),
+        // ].or(),
+        // "num" => Int.group("num"),
 
         // "start" => [
         //     [NonTerm("a"),NonTerm("b"),NonTerm("c"),].and(),
