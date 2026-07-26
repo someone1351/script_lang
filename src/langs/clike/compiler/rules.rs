@@ -52,7 +52,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "stmts" => [
             NonTerm("stmt"),
             [NonTerm("ending"), NonTerm("stmt"),].and().many0(),
-            NonTerm("ending").many0(),
+            // NonTerm("ending").many0(),
         ].and().opt(),
 
         "stmt" => [

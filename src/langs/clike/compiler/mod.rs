@@ -356,10 +356,17 @@ impl Compiler {
         let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
         // walker.set_debug(true);
 
+        let start_time = std::time::Instant::now();
+        let result=walker.run("start") ;
+        println!("Time elapsed: {:?}", start_time.elapsed().as_secs_f64());
         //
-        if let Err(e)=walker.run("start") {
+        if let Err(e)=result {
+
+
+
             match e {
                 GrammarWalkError::FailedParse => {
+
                     return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expecteds_string())});
                 }
                 // GrammarWalkError::Unfinished => todo!(),

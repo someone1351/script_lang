@@ -56,9 +56,9 @@ impl<'g> GrammarNode<'g> {
     pub fn is_many(&self) -> bool {
         if let GrammarNode::Many(..)=self {true} else {false}
     }
-    pub fn is_nonterm(&self) -> bool {
-        if let GrammarNode::NonTerm(..)=self {true} else {false}
-    }
+    // pub fn is_nonterm(&self) -> bool {
+    //     if let GrammarNode::NonTerm(..)=self {true} else {false}
+    // }
     pub fn is_or(&self) -> bool {
         if let GrammarNode::Or(..)=self {true} else {false}
     }
