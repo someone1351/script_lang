@@ -41,117 +41,18 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
     */
     use GrammarNode::*;
     Some(match n {
-        "test0" => [
-            Int.opt(),
-            String,
-        ].and(),
-
-        // "start" => [
-        //     [Keyword("a"),Keyword("b"),].and(),
-        //     [Keyword("a"),Keyword("b"),].and().prev(),
-        // ].and(),
-
-        // "start" => [
-        //     [
-        //         [[Keyword("a"),Keyword("c").group("c")].and(),Keyword("b"),].and(),
-        //         [Keyword("a"),Keyword("c").group("c")].and(),
-        //     ].or(),
-        //     Keyword("d"),
-        // ].and(),
-
-        // "start" => [[Keyword("a"),Keyword("b")].or().many0(), Keyword("b").prev()].and(),
-
-        // "start" => NonTerm("expr"),
-        // "start" => [
-        //     Int,
-        //     [
-        //         [NonTerm("a"),NonTerm("b"),NonTerm("c")].and().expected("ABc"),
-        //         NonTerm("c").expected("C"),
-        //         NonTerm("d").expected("D"),
-        //     ].or().expected("S")
-        // ].or(),
-        //,
-        // "start"=>[
-        //     [
-        //         [NonTerm("a0"),NonTerm("b")].and().expected("0"),
-        //         NonTerm("c"),
-        //         // Always,
-        //     ].or(),
-        //     NonTerm("a0"),
-        //     NonTerm("c"),
-        // ].and().expected("s"),
-        // "start" => [[
-        //     [
-        //         [
-        //             [NonTerm("a0")].or()
-        //         ].or(),
-        //         NonTerm("b"),
-        //     ].and(),
-        //     NonTerm("a0")
-        // ].or(),
-        //         NonTerm("c"),NonTerm("c").prev()].and(),
-        // "start" => [
-        //     [NonTerm("a0").group("Q"),NonTerm("b"),].and().group("X"),
-        //     // [[NonTerm("a0"),NonTerm("c"),].and(),NonTerm("b")].and(),
-        //     // [NonTerm("a0"),NonTerm("c"),].and(),
-        //     NonTerm("a0"),
-        //     // [[NonTerm("a0")].and(),Always].and(),
-        // ].or(),
-        // "start" => //[
-        // [
-        //     [NonTerm("a0"),NonTerm("b"),].or(),
-        //     Always,
-        // ].and(),
-        //].or(),
-        // "start" => [
-        //     [NonTerm("a0"),Keyword("b")].and(),
-        //     [NonTerm("a1"),Keyword("c")].and(),
-        //     Keyword("a"),
-
-        // ].or(),
-        // "a" => Keyword("a").group("A"),
-        // "a0" => Keyword("a").group("A"),
-        // "a1" => Keyword("a"),
-        // "b" => Keyword("b").group("B"),
-        // "c" => Keyword("c").group("C"),
-        // "d" => Keyword("d").group("D"),
 
         "start" => [
             NonTerm("stmts"),
             NonTerm("ending").many0(),
         ].and(),
 
-        // "start" => NonTerm("expr_factor"),
-        // "factor" => [
-        //     [
-        //         NonTerm("term"), //.stow(),
-        //         [Symbol("+"),NonTerm("term")].and().many1(),
-        //     ].and().group("factor"),
-        //     NonTerm("term"),
-        // ].or(),
-        // // "start" => NonTerm("term"),
-        // "term" => [
-        //     [
-        //         NonTerm("num"),
-        //         [Symbol("*"),NonTerm("num"),].and().many1(),
-        //     ].and().group("term"),
-        //     NonTerm("num"),
-        // ].or(),
-        // "num" => Int.group("num"),
-
-        // "start" => [
-        //     [NonTerm("a"),NonTerm("b"),NonTerm("c"),].and(),
-        //     [NonTerm("a"),NonTerm("b"),].and(),
-        // ].or(),
-        // "a" => Keyword("a"),
-        // "b" => Keyword("b"),
-        // "c" => Keyword("c"),
 
         "ending" => [NonTerm("semicolon"),Eol].or().many1(),
         "stmts" => [
             NonTerm("stmt"),
             [NonTerm("ending"), NonTerm("stmt"),].and().many0(),
-            // NonTerm("ending").many0(),
+            NonTerm("ending").many0(),
         ].and().opt(),
 
         "stmt" => [
@@ -292,16 +193,6 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             // NonTerm("rcurly"),
         ].and().group("lambda"),
 
-        // "compare_op" => [
-
-        // ].or(),
-        // "infix" => [
-        //     NonTerm("add").group("add"),NonTerm("sub").group("sub"),
-        //     NonTerm("mul").group("mul"),NonTerm("div").group("div"),
-        //     NonTerm("percent").group("mod"),NonTerm("hat").group("pow"),
-
-        //     NonTerm("and").group("and"),NonTerm("or").group("or"),
-        // ].or(),
 
         "expr_or" => [
             [
@@ -378,23 +269,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
             NonTerm("val"),
         ].or().expected("term"), //0
 
-        // // "expr_term" => [
-        // //     [NonTerm("val"),NonTerm("mul"),NonTerm("expr_term"),].and().group("mul"),
-        // //     [NonTerm("val"),NonTerm("div"),NonTerm("expr_term"),].and().group("div"),
-        // //     [NonTerm("val"),NonTerm("mod"),NonTerm("expr_term"),].and().group("mod"),
-        // //     NonTerm("val"),
-        // // ].or(),
-
-        // // "expr" => [
-        // //     NonTerm("val"),
-        // //     [
-        // //         NonTerm("infix"),
-        // //         NonTerm("val"),
-        // //     ].and().many0(),
-        // // ].and().group("expr").expected0("expr"),
 
         "expr" => NonTerm("expr_or").group("expr").expected("expr"), //0
-        // "expr" => NonTerm("val").group("expr").expected0("expr"),
 
         "prefixes" => [
             NonTerm("add").group("pos"),

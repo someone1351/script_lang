@@ -866,10 +866,11 @@ where
 
         //
         let glen=self.groups.len();
-        println!("===--- glen={glen}, cur.group_ind={}, cur.group_len={}",cur.group_ind,cur.group_len);
+        // println!("===--- glen={glen}, cur.group_ind={}, cur.group_len={}",cur.group_ind,cur.group_len);
+
         //add groups
-        self.groups.extend(stow_groups.iter().enumerate().map(|(i,g)|{
-            println!("===--- {i}:p{}:{} = {}",g.parent,g.name, cur.group_ind+g.parent + if g.parent==0{0}else{glen});
+        self.groups.extend(stow_groups.iter().enumerate().map(|(_i,g)|{
+            // println!("===--- {i}:p{}:{} = {}",g.parent,g.name, cur.group_ind+g.parent + if g.parent==0{0}else{glen});
             TempGroupInfo{
                 parent:if g.parent==0{cur.group_ind}else{glen+g.parent-1},
                 ..g.clone()
@@ -1025,11 +1026,11 @@ where
 
         if self.expected_news.len()>last.expected_news_len {
             let x=self.expected_news.pop().unwrap();
-            println!("----- added expected {:?} : news={:?} exps={:?}",
-                x.expected_type,
-                self.expected_news.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
-                self.expecteds.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
-            );
+            // println!("----- added expected {:?} : news={:?} exps={:?}",
+            //     x.expected_type,
+            //     self.expected_news.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
+            //     self.expecteds.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
+            // );
             self.expecteds.push(TempExpected { expected_type: x.expected_type });
 
             // self.expected_news.clear();
@@ -1131,15 +1132,20 @@ where
                 self.hist_stows_prevs.extend(added_hist_ends.iter().rev().cloned());
 
                 //
-                let group_ind_offset=self.groups[drained_hist_new2.group_len].parent;
+                self.hist_stows_groups.truncate(hist_begin.stow_groups_start);
 
                 //
-                self.hist_stows_groups.truncate(hist_begin.stow_groups_start);
-                self.hist_stows_groups.extend(self.groups[drained_hist_new2.group_len..cur.group_len].iter().map(|x|TempGroupInfo{
-                    parent: x.parent
-                    -group_ind_offset
-                    , ..x.clone()
-                }));
+                if self.groups.len()!=drained_hist_new2.group_len {
+
+                    //
+                    let group_ind_offset=self.groups[drained_hist_new2.group_len].parent;
+
+                    self.hist_stows_groups.extend(self.groups[drained_hist_new2.group_len..cur.group_len].iter().map(|x|TempGroupInfo{
+                        parent: x.parent
+                        -group_ind_offset
+                        , ..x.clone()
+                    }));
+                }
 
                 //
                 hist_begin.val=Some(TempHistStowVal {
@@ -1345,9 +1351,14 @@ where
 
         let parents= self.expecteds2.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
 
-        self.expecteds2=self.expecteds2.iter().enumerate().rev().filter_map(|(i,x)|(
+        let expecteds=self.expecteds2.iter().enumerate().rev().filter_map(|(i,x)|(
             x.tokens_start.inds().start == max_token_start_ind && !parents.contains(&i)
-        ).then(||x.clone())).collect();
+        ).then(||(x.expected_type.clone(),x.clone()))).collect::<BTreeMap<_,_>>();
+        println!("hmmm {:?}",expecteds);
+        self.expecteds2=expecteds.iter().map(|(_k,v)|v.clone()).collect();
+        // self.expecteds2=self.expecteds2.iter().enumerate().rev().filter_map(|(i,x)|(
+        //     x.tokens_start.inds().start == max_token_start_ind && !parents.contains(&i)
+        // ).then(||x.clone())).collect();
 
 
     }
@@ -1446,6 +1457,7 @@ where
            if let Err(e)=self.step(cur) {
 
 
+                self.organise_expecteds();
                 //
                 if self.debug {
                     // let err_loc=self.last_loc();
@@ -1458,7 +1470,6 @@ where
                             println!("Missing NonTerm {t:?}, At {}",self.tokens_remaining.loc());
                         }
                         GrammarWalkError::FailedParse => {
-                            self.organise_expecteds();
 
                             println!("Failed parse, At {}, expected {:?}",self.last_loc(),"self.expecteds_string()");
                         }
