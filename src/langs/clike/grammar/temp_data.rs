@@ -43,11 +43,11 @@ pub struct TempExpected<'g> {
     pub expected_type:TempExpectedType<'g>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct TempExpected2<'g> {
+#[derive(Clone, Debug, )]
+pub struct TempExpected2<'t,'g> {
     pub expected_type:TempExpectedType<'g>,
     pub parent:Option<usize>,
-    pub token_start_ind:usize,
+    pub tokens_start:TokenIterContainer<'t>,
 }
 
 #[derive(Clone, Debug)]
