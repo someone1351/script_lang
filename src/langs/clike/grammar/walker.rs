@@ -700,7 +700,7 @@ where
         //
         let hist_news_len=self.hist_news_add(&cur);
         // let hist_begins_stk_len=self.hist_begins_stk_push(&cur);
-        let hist_stows_len=self.hist_begins_push(&cur);
+        let hist_stows_len=self.hist_stows_push(&cur);
         // let hist_ends_stk_len=self.hist_ends_stk_push(&cur);
         // let hist_begins_ind=if !cur.is_first{cur.hist_begins_len}else{cur.hist_begins_ind};
 
@@ -843,6 +843,8 @@ where
         // if cur.hist_begins_stk_len==0 {return false;}
         if cur.hist_stows_len==0 {return false;}
 
+        // if self.hist_non_term_only && !cur.grammar.is_non_term() {return false;}
+
 
         let hist_begin=&self.hist_stows[cur.hist_stows_len-1];
         let Some(hist_begin_val)=&hist_begin.val else {return false;};
@@ -955,6 +957,8 @@ where
     }
 
     fn add_expected2(&mut self, cur:&Work<'t,'g>,) -> (Option<usize>,usize) {
+        // return (cur.expected_ind2,cur.expecteds_len2);
+
         //
         if cur.expected_ind2.is_some() && cur.grammar.is_primtive() { //(cur.grammar.is_prev() || )
             return (cur.expected_ind2,cur.expecteds_len2);
@@ -1081,7 +1085,7 @@ where
         let drained_hist_news=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
 
         //
-        let added_hist_ends=drained_hist_news.iter().map(|hist_new|{
+        let added_hist_prevs=drained_hist_news.iter().map(|hist_new|{
             //
             let tokens_len=hist_new.tokens_start.len()-cur.tokens.len();
             let tokens=hist_new.tokens_start.get_amount(tokens_len).unwrap();
@@ -1104,7 +1108,7 @@ where
             }
         }).collect::<Vec<_>>();
 
-        //add hist begins
+        //add hist stows
         if cur.hist_stows_len!=0
             && cur.hist_stows_len==last.hist_stows_len //that the hist_stows[ind] still exists
         {
@@ -1112,7 +1116,7 @@ where
             //
             let drained_hist_new2=drained_hist_news.iter().find(|x|{
                 // let b=x.grammar.is_always() || x.grammar.is_prev() || x.grammar.is_primtive();
-                let b = x.grammar.is_and() || x.grammar.is_many() || x.grammar.is_non_term(); // || x.grammar.is_or()
+                let b = x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many() ; // || x.grammar.is_or()
                 // println!("---hm? {:?} {b} {}",x.grammar,x.is_first);
                 b &&
                 x.is_first
@@ -1131,7 +1135,7 @@ where
                     self.hist_stows_prevs.truncate(hist_begin.stow_prevs_start);
                 }
 
-                self.hist_stows_prevs.extend(added_hist_ends.iter().rev().cloned());
+                self.hist_stows_prevs.extend(added_hist_prevs.iter().rev().cloned());
 
                 //
                 self.hist_stows_groups.truncate(hist_begin.stow_groups_start);
@@ -1167,7 +1171,7 @@ where
         //
 
         self.hist_prevs.truncate(cur.hist_prevs_ind);
-        self.hist_prevs.extend(added_hist_ends.into_iter().rev());
+        self.hist_prevs.extend(added_hist_prevs.into_iter().rev());
 
         //
 
@@ -1184,13 +1188,14 @@ where
         // last.hist_begins_len=cur.hist_begins_len;
     }
 
-    fn hist_begins_push(&mut self,cur:&Work<'t,'g>) -> usize {
+    fn hist_stows_push(&mut self,cur:&Work<'t,'g>) -> usize {
         if cur.from_user //so not an added OR for rest,
             && ( !cur.first || //not part of current OR, eg: or(A, and(B,or(C,D))) A in dif OR stk than C,D
             // self.hist_begins_stk.is_empty()
             cur.hist_stows_len==0 //init first, for if all part of same OR stk, eg: or(A,or(B,C))
             //if not need to init first, then it just reuses existing one
         ) //add current/initial OR
+            // && (!self.hist_non_term_only ||)
         {
             // println!("------ hist_begins_push");
 
@@ -1211,7 +1216,10 @@ where
 
 
     fn hist_news_add(&mut self,cur:&Work<'t,'g>) -> usize {
-        if cur.from_user && (!self.hist_non_term_only || cur.grammar.is_non_term())
+        // return self.hist_news.len();
+
+        if cur.from_user
+            // && (!self.hist_non_term_only || cur.grammar.is_non_term())
             // // && (cur.grammar.is_primtive() || cur.grammar.is_non_term())
             // && cur.grammar.is_non_term() //should only do nonterms?
         { //ignore grammars added by walker
@@ -1345,6 +1353,7 @@ where
     //
 
     fn organise_expecteds(&mut self) {
+        // println!("dsfsd");
         let max_token = self.expecteds2.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
         let max_token_start_ind=max_token.inds().start;
 
@@ -1565,13 +1574,13 @@ where
                     grammar, success_len, fail_len, tokens,
                     group_ind, group_len,
                     // and_id,
-                    first: is_first,
+                    first,
                     hist_news_len,
                     // hist_begins_stk_len,hist_ends_stk_len,
                     // hist_begins_ind,
-                    hist_stows_len: hist_begins_len,
+                    hist_stows_len,
                     // hist_begins_stk_len,
-                    hist_prevs_ind: hist_ends_ind,hist_prevs_len: hist_ends_len,
+                    hist_prevs_ind,hist_prevs_len,
                     // expected_news_len,expecteds_len,
                     expected_ind2,expecteds_len2,
                     ..
@@ -1595,7 +1604,7 @@ where
                 // let hist_begins_len=if *hist_begins_stk_len==0{None}else{
                 //     self.hist_begins_stk.get(hist_begins_stk_len-1).map(|x|x.elements.len())
                 // };
-                println!("        first={is_first}, hist_news_len={hist_news_len}, hist_begins_len={hist_begins_len:?}, hist_ends_ind={hist_ends_ind}, hist_ends_len={hist_ends_len}",);
+                println!("        first={first}, hist_news_len={hist_news_len}, hist_begins_len={hist_stows_len:?}, hist_ends_ind={hist_prevs_ind}, hist_ends_len={hist_prevs_len}",);
                 // println!("        hist_begins_ind={hist_begins_ind}, hist_begins_len={hist_begins_len},",
                 //     self.stk.get(cur.)
                 // );
@@ -1654,9 +1663,9 @@ where
                     // }
 
                     //
-                    println!("        hist_begins",);
+                    println!("        hist_stows",);
 
-                    if *hist_begins_len!=0 {
+                    if *hist_stows_len!=0 {
                         let hist_begin=self.hist_stows.last().unwrap();
                         if let Some(hist_begin_val)=&hist_begin.val {
                             let hist_begin_groups=&self.hist_stows_groups[
@@ -1677,8 +1686,8 @@ where
 
                     }
 
-                    println!("        hist_ends_last");
-                    for i in *hist_ends_ind..*hist_ends_len {
+                    println!("        hist_prevs_last {:?}",*hist_prevs_ind..*hist_prevs_len);
+                    for i in *hist_prevs_ind..*hist_prevs_len {
                         let x=&self.hist_prevs[i];
                         println!("            {i}:[{:?}]: {:?}",x.tokens_start_ind,x.grammar)
                     }
