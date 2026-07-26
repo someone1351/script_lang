@@ -16,7 +16,7 @@ pub fn is_keyword(n:& str) -> bool {
         "print"|"println"|"format"|
         "var"|"fn"|"return"|
         "if"|"elif"|"else"
-        |"a"|"b"|"c"|"d"
+        // |"a"|"b"|"c"|"d"
         => true,
         _=>false,
     }
@@ -60,19 +60,16 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         // ].and(),
 
         // "start" => [[Keyword("a"),Keyword("b")].or().many0(), Keyword("b").prev()].and(),
-        // "start" => [
-        //     NonTerm("stmts"),
-        //     NonTerm("ending").many0(),
-        // ].and(),
+
         // "start" => NonTerm("expr"),
-        "start" => [
-            Int,
-            [
-                [NonTerm("a"),NonTerm("b"),NonTerm("c")].and().expected("ABc"),
-                NonTerm("c").expected("C"),
-                NonTerm("d").expected("D"),
-            ].or().expected("S")
-        ].or(),
+        // "start" => [
+        //     Int,
+        //     [
+        //         [NonTerm("a"),NonTerm("b"),NonTerm("c")].and().expected("ABc"),
+        //         NonTerm("c").expected("C"),
+        //         NonTerm("d").expected("D"),
+        //     ].or().expected("S")
+        // ].or(),
         //,
         // "start"=>[
         //     [
@@ -112,12 +109,18 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         //     Keyword("a"),
 
         // ].or(),
-        "a" => Keyword("a").group("A"),
-        "a0" => Keyword("a").group("A"),
-        "a1" => Keyword("a"),
-        "b" => Keyword("b").group("B"),
-        "c" => Keyword("c").group("C"),
-        "d" => Keyword("d").group("D"),
+        // "a" => Keyword("a").group("A"),
+        // "a0" => Keyword("a").group("A"),
+        // "a1" => Keyword("a"),
+        // "b" => Keyword("b").group("B"),
+        // "c" => Keyword("c").group("C"),
+        // "d" => Keyword("d").group("D"),
+
+        "start" => [
+            NonTerm("stmts"),
+            NonTerm("ending").many0(),
+        ].and(),
+
         // "start" => NonTerm("factor"),
         "factor" => [
             [
