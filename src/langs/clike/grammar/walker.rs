@@ -1368,7 +1368,12 @@ where
         let expecteds=self.expecteds2.iter().enumerate().rev().filter_map(|(i,x)|(
             x.tokens_start.inds().start == max_token_start_ind && !parents.contains(&i)
         ).then(||(x.expected_type.clone(),x.clone()))).collect::<BTreeMap<_,_>>();
-        println!("hmmm {:?}",expecteds);
+
+        // if self.debug {
+        //     println!("hmmm {:?}",expecteds);
+        // }
+
+
         self.expecteds2=expecteds.iter().map(|(_k,v)|v.clone()).collect();
         // self.expecteds2=self.expecteds2.iter().enumerate().rev().filter_map(|(i,x)|(
         //     x.tokens_start.inds().start == max_token_start_ind && !parents.contains(&i)
