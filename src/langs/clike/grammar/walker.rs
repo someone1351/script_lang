@@ -815,12 +815,12 @@ where
         } else {
             self.stk.truncate(cur.fail_len);
             self.update_tokens(&cur,false);
-            // self.revert_last_hist_news();
-            self.update_hist_on_fail(&cur);
-            // // let _expected_news_len=self.add_expected_new(&cur);
-            // // let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
+            // // self.revert_last_hist_news();
+            // self.update_hist_on_fail(&cur);
+            // // // let _expected_news_len=self.add_expected_new(&cur);
+            // // // let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
 
-            // self.submit_expected_news(&cur);
+            // // self.submit_expected_news(&cur);
             self.expected2_on_fail();
         }
     }
@@ -943,10 +943,10 @@ where
             Err(loc) => {
                 self.stk.truncate(cur.fail_len);
                 self.update_tokens(&cur,false);
-                // self.revert_last_hist_news();
-                self.update_hist_on_fail(&cur);
-                // let _expected_news_len=self.add_expected_new(&cur);
-                // self.submit_expected_news(&cur);
+                // // self.revert_last_hist_news();
+                // self.update_hist_on_fail(&cur);
+                // // let _expected_news_len=self.add_expected_new(&cur);
+                // // self.submit_expected_news(&cur);
                 self.expected2_on_fail();
                 let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
 
@@ -1107,6 +1107,7 @@ where
                 // tokens,
             }
         }).collect::<Vec<_>>();
+        // let added_hist_prevs = Vec::new();
 
         //add hist stows
         if cur.hist_stows_len!=0
@@ -1165,28 +1166,28 @@ where
 
         }
 
-        //
-        // self.hist_ends_stk[last.hist_ends_stk_len-1].elements.extend(added_hist_ends.into_iter());
+        // //
+        // // self.hist_ends_stk[last.hist_ends_stk_len-1].elements.extend(added_hist_ends.into_iter());
 
-        //
+        // //
 
         self.hist_prevs.truncate(cur.hist_prevs_ind);
         self.hist_prevs.extend(added_hist_prevs.into_iter().rev());
 
-        //
+        // //
 
-        // last.hist_begins_len=self.hist_begins_elements.len();
+        // // last.hist_begins_len=self.hist_begins_elements.len();
 
-        // last.hist_prevs_len=cur.hist_prevs_len;
+        // // last.hist_prevs_len=cur.hist_prevs_len;
         last.hist_prevs_len=self.hist_prevs.len();
     }
 
 
-    fn update_hist_on_fail(&mut self,cur:&Work<'t,'g>,) {
-        let Some(last)=self.stk.last_mut() else {panic!("");};
+    // fn update_hist_on_fail(&mut self,cur:&Work<'t,'g>,) {
+    //     let Some(last)=self.stk.last_mut() else {panic!("");};
 
-        // last.hist_begins_len=cur.hist_begins_len;
-    }
+    //     // last.hist_begins_len=cur.hist_begins_len;
+    // }
 
     fn hist_stows_push(&mut self,cur:&Work<'t,'g>) -> usize {
         if cur.from_user //so not an added OR for rest,
@@ -1222,6 +1223,8 @@ where
             // && (!self.hist_non_term_only || cur.grammar.is_non_term())
             // // && (cur.grammar.is_primtive() || cur.grammar.is_non_term())
             // && cur.grammar.is_non_term() //should only do nonterms?
+
+            // && cur.first
         { //ignore grammars added by walker
             self.hist_news.push(TempHistNew {
                 grammar: cur.grammar.clone(),
@@ -1411,15 +1414,17 @@ where
         });
 
         //
-        println!("groups2 {:?}",group_infos2.iter().enumerate().collect::<Vec<_>>());
+        if self.debug {
+            println!("groups2 {:?}",group_infos2.iter().enumerate().collect::<Vec<_>>());
 
-        //
-        for (i,&(g,p,)) in group_infos2.iter().enumerate() {
-            //
-            let group_infos=&self.groups;
+                //
+                for (i,&(g,p,)) in group_infos2.iter().enumerate() {
+                    //
+                    let group_infos=&self.groups;
 
-            //
-            println!("\t{i}: g{g}, p{p}, {:?}, {:?}, {:?}",group_infos[g].name,group_infos[g].tokens.inds(),group_infos[g].tokens);
+                    //
+                    println!("\t{i}: g{g}, p{p}, {:?}, {:?}, {:?}",group_infos[g].name,group_infos[g].tokens.inds(),group_infos[g].tokens);
+                }
         }
 
         //
@@ -1604,7 +1609,11 @@ where
                 // let hist_begins_len=if *hist_begins_stk_len==0{None}else{
                 //     self.hist_begins_stk.get(hist_begins_stk_len-1).map(|x|x.elements.len())
                 // };
-                println!("        first={first}, hist_news_len={hist_news_len}, hist_begins_len={hist_stows_len:?}, hist_ends_ind={hist_prevs_ind}, hist_ends_len={hist_prevs_len}",);
+                println!("        first={first}, hist_news_len={hist_news_len}, hist_stows_len={hist_stows_len:?}, hist_prevs_ind={hist_prevs_ind}, hist_prevs_len={hist_prevs_len}",);
+                println!("        actual: hist_news_len={}, hist_stows_len={:?}, hist_prevs_len={}",
+                    self.hist_news.len(),self.hist_stows.len(),self.hist_prevs.len(),
+                );
+
                 // println!("        hist_begins_ind={hist_begins_ind}, hist_begins_len={hist_begins_len},",
                 //     self.stk.get(cur.)
                 // );
