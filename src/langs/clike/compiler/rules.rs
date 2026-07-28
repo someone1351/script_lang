@@ -1,3 +1,4 @@
+use std::rc::Rc;
 /*
 TODO
 * don't allow field_ind (eg a.5) to be used for int/float/bool
@@ -22,7 +23,7 @@ pub fn is_keyword(n:& str) -> bool {
     }
 }
 
-pub fn get_non_term<'a>(n:& str) -> Option<Box<GrammarNode<'a>>> {
+pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
     /*
     this:
         if(cond) {1} else {2}
@@ -40,7 +41,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Box<GrammarNode<'a>>> {
     if traversing same terminal and pos is the same, fail
     */
     use GrammarNode::*;
-    Some(Box::new(match n {
+    Some(Rc::new(match n {
 
         "start" => [
             NonTerm("stmts"),

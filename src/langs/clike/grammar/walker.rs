@@ -6,6 +6,7 @@ use core::panic;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::rc::Rc;
 // use std::ops::Range;
 
 use crate::build::Loc;
@@ -22,7 +23,7 @@ use super::node::*;
 
 pub struct GrammarWalker<'t,'g,G>
 where
-    G: Fn(&str)->Option<Box<GrammarNode<'g>>>,
+    G: Fn(&str)->Option<Rc<GrammarNode<'g>>>,
 {
     hist_non_term_only:bool,
     // prev_non_term_only:bool,
@@ -70,7 +71,7 @@ where
 
 impl<'t,'g,G> GrammarWalker<'t,'g,G>
 where
-    G: Fn(&str)->Option<Box<GrammarNode<'g>>>,
+    G: Fn(&str)->Option<Rc<GrammarNode<'g>>>,
 {
 
     pub fn new(top_primitives:TokenIterContainer<'t>, grammar_func:G,) -> Self {
@@ -125,7 +126,7 @@ where
 
         //
         self.stk.push(Work{
-            grammar:Box::new(GrammarNode::Error(GrammarWalkError::FailedParse)),
+            grammar:Rc::new(GrammarNode::Error(GrammarWalkError::FailedParse)),
             success_len:0,fail_len:0,
             tokens:self.top_tokens,
             group_ind: 0, group_len: 1,
@@ -167,7 +168,7 @@ where
 
         //no needed, but allows takeables2 to finish, for debugging purposes
         self.stk.push(Work{
-            grammar : Box::new(GrammarNode::Always),
+            grammar : Rc::new(GrammarNode::Always),
             success_len:0,
             fail_len:0, //not used
             tokens:self.top_tokens,
@@ -214,7 +215,7 @@ where
             let grammar=if let Some(g)=(self.grammar_func)(start_non_term) {
                 g
             } else {
-                Box::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(start_non_term)))
+                Rc::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(start_non_term)))
             };
 
             self.stk.push(Work{
@@ -401,7 +402,7 @@ where
 
         //
         self.stk.push(Work {
-            grammar: Box::new(GrammarNode::Many(g.clone())),
+            grammar: Rc::new(GrammarNode::Many(g.clone())),
             success_len: cur.success_len,
             fail_len: cur.fail_len,
             tokens: cur.tokens,
@@ -442,7 +443,7 @@ where
 
         //
         self.stk.push(Work {
-            grammar: Box::new(GrammarNode::Always),
+            grammar: Rc::new(GrammarNode::Always),
             success_len: cur.success_len,
             fail_len: 0, //fail is not used
             tokens: cur.tokens,
@@ -531,7 +532,7 @@ where
         let grammar=if let Some(g)=(self.grammar_func)(t) {
             g
         } else {
-            Box::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(t)))
+            Rc::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(t)))
         };
 
         //
@@ -609,7 +610,7 @@ where
         //
         if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
             self.stk.push(Work {
-                grammar: Box::new(GrammarNode::And(rest.into())),
+                grammar: Rc::new(GrammarNode::And(rest.into())),
                 success_len: cur.success_len,
                 fail_len: cur.fail_len,
                 tokens: cur.tokens, //not really necessary? since gets updated by always/primtitives
@@ -710,7 +711,7 @@ where
         //
         if let Some(g_rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
             self.stk.push(Work {
-                grammar: Box::new(GrammarNode::Or(g_rest.into())),
+                grammar: Rc::new(GrammarNode::Or(g_rest.into())),
                 success_len: cur.success_len,
                 fail_len: cur.fail_len,
                 tokens: cur.tokens,
@@ -1342,7 +1343,7 @@ where
     fn handle_exit_last_many(&mut self,cur:&Work<'t,'g>) { //if not parsing anything, exit the many
         let Some(last)=self.stk.last_mut() else {return;};
         if !last.grammar.is_many() || last.tokens.len()!=cur.tokens.len() {return;}
-        last.grammar=Box::new(GrammarNode::Always);
+        last.grammar=Rc::new(GrammarNode::Always);
     }
 
     pub fn last_loc(&self) -> Loc {

@@ -1,5 +1,6 @@
 
 use std::{collections::{HashMap, HashSet}, fmt::Debug, ops::Range};
+use std::rc::Rc;
 
 // use crate::clike::tokenizer::ValueContainer;
 
@@ -52,7 +53,7 @@ pub struct TempExpected2<'t,'g> {
 
 #[derive(Clone, Debug)]
 pub struct TempHistNew<'t,'g> {
-    pub grammar:Box<GrammarNode<'g>>,
+    pub grammar:Rc<GrammarNode<'g>>,
     pub tokens_start:TokenIterContainer<'t>,
     pub is_first:bool,
     // pub group_ind:usize,
@@ -63,7 +64,7 @@ pub struct TempHistNew<'t,'g> {
 
 #[derive(Clone,Debug,)]
 pub struct TempHistStowVal<'t,'g> { //TempHistStow
-    pub grammar: Box<GrammarNode<'g>>,
+    pub grammar: Rc<GrammarNode<'g>>,
     pub tokens_after:TokenIterContainer<'t>,
     pub stow_groups_end:usize,
     pub stow_prevs_end:usize,
@@ -78,7 +79,7 @@ pub struct TempHistStow<'t,'g> { //TempHistStow
 
 #[derive(Clone, Debug)]
 pub struct TempHistPrev<'g> { //TempHistPrev
-    pub grammar: Box<GrammarNode<'g>>,
+    pub grammar: Rc<GrammarNode<'g>>,
     pub tokens_start_ind:usize,
 }
 
@@ -104,7 +105,7 @@ impl<'t,'g> Debug for  TempGroupInfo<'t,'g> {
 
 #[derive(Clone)]
 pub struct Work<'t,'g> {
-    pub grammar:Box<GrammarNode<'g>>,
+    pub grammar:Rc<GrammarNode<'g>>,
     pub success_len:usize,
     pub fail_len:usize,
     pub tokens:TokenIterContainer<'t>,

@@ -1,18 +1,20 @@
+use std::rc::Rc;
+
 use super::super::grammar::error::GrammarWalkError;
 
 
 
 #[derive(Clone,Debug,Hash,PartialEq,Eq)]
 pub enum GrammarNode<'g> {
-    Many(Box<GrammarNode<'g>>),
-    And(Vec<Box<GrammarNode<'g>>>), //should store reversed?
-    Or(Vec<Box<GrammarNode<'g>>>), //should store reversed?
+    Many(Rc<GrammarNode<'g>>),
+    And(Vec<Rc<GrammarNode<'g>>>), //should store reversed?
+    Or(Vec<Rc<GrammarNode<'g>>>), //should store reversed?
     NonTerm(&'g str),
 
-    Group(Box<GrammarNode<'g>>,&'g str,),
-    Expected(Box<GrammarNode<'g>>, &'g str,),
+    Group(Rc<GrammarNode<'g>>,&'g str,),
+    Expected(Rc<GrammarNode<'g>>, &'g str,),
 
-    Prev(Box<GrammarNode<'g>>),
+    Prev(Rc<GrammarNode<'g>>),
 
     String,
     Identifier,
@@ -26,9 +28,9 @@ pub enum GrammarNode<'g> {
     Error(GrammarWalkError<'g>),
 
 
-    // Stow(Box<GrammarNode<'g>>),
+    // Stow(Rc<GrammarNode<'g>>),
 
-    // Mark(Box<GrammarNode<'g>>),
+    // Mark(Rc<GrammarNode<'g>>),
 }
 
 impl<'g> GrammarNode<'g> {
