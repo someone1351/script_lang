@@ -5,8 +5,8 @@ use super::super::grammar::error::GrammarWalkError;
 #[derive(Clone,Debug,Hash,PartialEq,Eq)]
 pub enum GrammarNode<'g> {
     Many(Box<GrammarNode<'g>>),
-    And(Vec<GrammarNode<'g>>), //should store reversed?
-    Or(Vec<GrammarNode<'g>>), //should store reversed?
+    And(Vec<Box<GrammarNode<'g>>>), //should store reversed?
+    Or(Vec<Box<GrammarNode<'g>>>), //should store reversed?
     NonTerm(&'g str),
 
     Group(Box<GrammarNode<'g>>,&'g str,),
@@ -118,16 +118,18 @@ impl<'g> GrammarNode<'g> {
 
 //todo have array stored in rev for or/and
 pub trait GrammarArrayTrait<'g> {
-    fn and(&self) -> GrammarNode<'g>;
-    fn or(&self) -> GrammarNode<'g>;
+    fn and(self) -> GrammarNode<'g>;
+    fn or(self) -> GrammarNode<'g>;
 }
 
 impl<'a,const N: usize> GrammarArrayTrait <'a> for [GrammarNode<'a>; N] {
-    fn and(&self) -> GrammarNode<'a> {
-        GrammarNode::And(self.into())
+    fn and(self) -> GrammarNode<'a> {
+        // GrammarNode::And(self.into())
+        GrammarNode::And(self.into_iter().map(|x|x.into()).collect())
     }
-    fn or(&self) -> GrammarNode<'a> {
-        GrammarNode::Or(self.into())
+    fn or(self) -> GrammarNode<'a> {
+        // GrammarNode::Or(self.into())
+        GrammarNode::Or(self.into_iter().map(|x|x.into()).collect())
     }
 }
 

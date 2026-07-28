@@ -22,7 +22,7 @@ pub fn is_keyword(n:& str) -> bool {
     }
 }
 
-pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
+pub fn get_non_term<'a>(n:& str) -> Option<Box<GrammarNode<'a>>> {
     /*
     this:
         if(cond) {1} else {2}
@@ -40,7 +40,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
     if traversing same terminal and pos is the same, fail
     */
     use GrammarNode::*;
-    Some(match n {
+    Some(Box::new(match n {
 
         "start" => [
             NonTerm("stmts"),
@@ -450,6 +450,5 @@ pub fn get_non_term<'a>(n:& str) -> Option<GrammarNode<'a>> {
         "ne" => [Symbol("!"),Symbol("="),].and(),
         // _ => Error(GrammarWalkError::MissingNonTerm(n)),
         _ => {return None;}
-    })
-
+    }))
 }

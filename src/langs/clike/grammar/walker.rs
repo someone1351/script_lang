@@ -22,7 +22,7 @@ use super::node::*;
 
 pub struct GrammarWalker<'t,'g,G>
 where
-    G: Fn(&str)->Option<GrammarNode<'g>>,
+    G: Fn(&str)->Option<Box<GrammarNode<'g>>>,
 {
     hist_non_term_only:bool,
     // prev_non_term_only:bool,
@@ -70,7 +70,7 @@ where
 
 impl<'t,'g,G> GrammarWalker<'t,'g,G>
 where
-    G: Fn(&str)->Option<GrammarNode<'g>>,
+    G: Fn(&str)->Option<Box<GrammarNode<'g>>>,
 {
 
     pub fn new(top_primitives:TokenIterContainer<'t>, grammar_func:G,) -> Self {
@@ -125,7 +125,7 @@ where
 
         //
         self.stk.push(Work{
-            grammar:GrammarNode::Error(GrammarWalkError::FailedParse),
+            grammar:Box::new(GrammarNode::Error(GrammarWalkError::FailedParse)),
             success_len:0,fail_len:0,
             tokens:self.top_tokens,
             group_ind: 0, group_len: 1,
@@ -167,7 +167,7 @@ where
 
         //no needed, but allows takeables2 to finish, for debugging purposes
         self.stk.push(Work{
-            grammar : GrammarNode::Always,
+            grammar : Box::new(GrammarNode::Always),
             success_len:0,
             fail_len:0, //not used
             tokens:self.top_tokens,
@@ -214,7 +214,7 @@ where
             let grammar=if let Some(g)=(self.grammar_func)(start_non_term) {
                 g
             } else {
-                GrammarNode::Error(GrammarWalkError::MissingNonTerm(start_non_term))
+                Box::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(start_non_term)))
             };
 
             self.stk.push(Work{
@@ -293,7 +293,7 @@ where
     }
 
     fn grammar_expect(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::Expected(g,_, )=cur.grammar.clone() else{panic!("");};
+        let GrammarNode::Expected(g,_, )=cur.grammar.as_ref() else{panic!("");};
 
         //
         // let expected_news_len=self.add_expected_new(&cur);
@@ -302,7 +302,7 @@ where
 
         //TODO
         self.stk.push(Work {
-            grammar: *g,
+            grammar: g.clone(),
             success_len: cur.success_len,
             fail_len: cur.fail_len,
             tokens: cur.tokens,
@@ -346,7 +346,7 @@ where
     }
 
     fn grammar_group(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::Group(g,_, )=cur.grammar.clone() else{panic!("");};
+        let GrammarNode::Group(g,_, )=cur.grammar.as_ref() else{panic!("");};
 
         //
         let (group_ind,group_len)=self.new_group(&cur); //name, cur.group_ind, cur.tokens
@@ -354,7 +354,7 @@ where
 
         //
         self.stk.push(Work {
-            grammar: *g,
+            grammar: g.clone(),
             success_len: cur.success_len,
             fail_len: cur.fail_len,
             tokens: cur.tokens,
@@ -392,7 +392,7 @@ where
     }
 
     fn grammar_many(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::Many(g)=cur.grammar.clone() else{panic!("");};
+        let GrammarNode::Many(g)=cur.grammar.as_ref() else{panic!("");};
 
         //in always/prev they check if their success_ind is a many (which could be a problem if ands/ors were handled more efficiently),
         //  but could store maybe a many_id to check whether to exit? eg if id is eq, and/or tokens.inds.start is eq?
@@ -401,7 +401,7 @@ where
 
         //
         self.stk.push(Work {
-            grammar: GrammarNode::Many(g.clone()),
+            grammar: Box::new(GrammarNode::Many(g.clone())),
             success_len: cur.success_len,
             fail_len: cur.fail_len,
             tokens: cur.tokens,
@@ -442,7 +442,7 @@ where
 
         //
         self.stk.push(Work {
-            grammar: GrammarNode::Always,
+            grammar: Box::new(GrammarNode::Always),
             success_len: cur.success_len,
             fail_len: 0, //fail is not used
             tokens: cur.tokens,
@@ -483,7 +483,7 @@ where
 
         //
         self.stk.push(Work {
-            grammar: *g.clone(),
+            grammar: g.clone(),
             success_len: success_len2,
             fail_len,
             tokens: cur.tokens,
@@ -521,7 +521,7 @@ where
     }
 
     fn grammar_non_term(&mut self,cur :Work<'t,'g>,) -> Result<(),GrammarWalkError<'g>>{
-        let GrammarNode::NonTerm(t)=cur.grammar.clone() else{panic!("");};
+        let GrammarNode::NonTerm(t)=cur.grammar.as_ref() else{panic!("");};
 
         //
         let hist_news_len=self.hist_news_add(&cur);
@@ -531,7 +531,7 @@ where
         let grammar=if let Some(g)=(self.grammar_func)(t) {
             g
         } else {
-            GrammarNode::Error(GrammarWalkError::MissingNonTerm(t))
+            Box::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(t)))
         };
 
         //
@@ -577,7 +577,7 @@ where
     }
 
     fn grammar_error(&mut self,cur :Work<'t,'g>,) -> GrammarWalkError<'g> {
-        let GrammarNode::Error(e)=cur.grammar.clone() else{panic!("");};
+        let GrammarNode::Error(e)=cur.grammar.as_ref() else{panic!("");};
 
         // if self.debug {
         //     println!("====error {:?} ",self.expected_loc,); //self.expecteds,
@@ -595,11 +595,11 @@ where
         // self.expect_news_drain(&cur); //necessary here? no since it is finishing here?
 
         //
-        return e;
+        return e.clone();
     }
 
     fn grammar_and(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::And(gs)=&cur.grammar else{panic!("");};
+        let GrammarNode::And(gs)=cur.grammar.as_ref() else{panic!("");};
         //
         let Some(first)=gs.first().cloned() else { return ; };
 
@@ -609,7 +609,7 @@ where
         //
         if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
             self.stk.push(Work {
-                grammar: GrammarNode::And(rest.into()),
+                grammar: Box::new(GrammarNode::And(rest.into())),
                 success_len: cur.success_len,
                 fail_len: cur.fail_len,
                 tokens: cur.tokens, //not really necessary? since gets updated by always/primtitives
@@ -692,7 +692,7 @@ where
     }
 
     fn grammar_or(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::Or(gs)=&cur.grammar else{panic!("");};
+        let GrammarNode::Or(gs)=cur.grammar.as_ref() else{panic!("");};
 
         //
         let Some(g_first)=gs.first().cloned() else { return; };
@@ -710,7 +710,7 @@ where
         //
         if let Some(g_rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
             self.stk.push(Work {
-                grammar: GrammarNode::Or(g_rest.into()),
+                grammar: Box::new(GrammarNode::Or(g_rest.into())),
                 success_len: cur.success_len,
                 fail_len: cur.fail_len,
                 tokens: cur.tokens,
@@ -791,7 +791,7 @@ where
 
 
     fn grammar_prev(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::Prev(g)=&cur.grammar else {panic!("");};
+        let GrammarNode::Prev(g)=cur.grammar.as_ref() else {panic!("");};
         //
         let _hist_news_len=self.hist_news_add(&cur);
         // self.hist_begins_clear(&cur);
@@ -965,7 +965,7 @@ where
         }
 
         //
-        let expected_type=match cur.grammar {
+        let expected_type=match cur.grammar.as_ref() {
             GrammarNode::Expected(_, name) => TempExpectedType::Expected(name),
             // GrammarNode::Prev(_) => TempExpectedType::Prev,
             GrammarNode::String => TempExpectedType::String,
@@ -1321,7 +1321,7 @@ where
     // }
 
     fn new_group(&mut self,cur:&Work<'t,'g>) -> (usize,usize) {
-        let GrammarNode::Group(_,name)=cur.grammar else {panic!("");};
+        let GrammarNode::Group(_,name)=cur.grammar.as_ref() else {panic!("");};
         let parent=cur.group_ind;
         let tokens=cur.tokens;
 
@@ -1342,7 +1342,7 @@ where
     fn handle_exit_last_many(&mut self,cur:&Work<'t,'g>) { //if not parsing anything, exit the many
         let Some(last)=self.stk.last_mut() else {return;};
         if !last.grammar.is_many() || last.tokens.len()!=cur.tokens.len() {return;}
-        last.grammar=GrammarNode::Always;
+        last.grammar=Box::new(GrammarNode::Always);
     }
 
     pub fn last_loc(&self) -> Loc {
@@ -1753,7 +1753,7 @@ where
         if self.grammar_try_from_hist_begins(&cur) {return Ok(());}
 
         //
-        match cur.grammar.clone() {
+        match cur.grammar.as_ref() {
             GrammarNode::Expected(..) => {self.grammar_expect(cur);}
             // GrammarNode::Stow(..) => {self.grammar_stow(cur);}
             GrammarNode::Prev(..) => {self.grammar_prev(cur);}
@@ -1782,10 +1782,12 @@ where
                 if self.debug {println!("--- float {v:?}");}
             }
             GrammarNode::Symbol(s) => {
+                let s= *s;
                 let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_with_symbol(s),) else{return Ok(());};
                 if self.debug {println!("--- symbol {v:?}");}
             }
             GrammarNode::Keyword(s) => {
+                let s= *s;
                 let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_with_keyword(s),) else{return Ok(());};
                 if self.debug {println!("--- keyword {v:?}");}
             }
