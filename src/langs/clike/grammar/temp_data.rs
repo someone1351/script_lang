@@ -106,6 +106,7 @@ impl<'t,'g> Debug for  TempGroupInfo<'t,'g> {
 #[derive(Clone)]
 pub struct Work<'t,'g> {
     pub grammar:Rc<GrammarNode<'g>>,
+    // pub grammar_ind:usize, //used for and/or only
     pub success_len:usize,
     pub fail_len:usize,
     pub tokens:TokenIterContainer<'t>,

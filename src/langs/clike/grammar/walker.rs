@@ -127,6 +127,7 @@ where
         //
         self.stk.push(Work{
             grammar:Rc::new(GrammarNode::Error(GrammarWalkError::FailedParse)),
+            // grammar_ind:0,
             success_len:0,fail_len:0,
             tokens:self.top_tokens,
             group_ind: 0, group_len: 1,
@@ -169,6 +170,7 @@ where
         //no needed, but allows takeables2 to finish, for debugging purposes
         self.stk.push(Work{
             grammar : Rc::new(GrammarNode::Always),
+            // grammar_ind:0,
             success_len:0,
             fail_len:0, //not used
             tokens:self.top_tokens,
@@ -220,6 +222,7 @@ where
 
             self.stk.push(Work{
                 grammar, //:(self.grammar_func)(start_non_term),
+                // grammar_ind:0,
                 // success_len:0,
                 success_len,
                 fail_len, //1
@@ -304,6 +307,7 @@ where
         //TODO
         self.stk.push(Work {
             grammar: g.clone(),
+            // grammar_ind:0,
             success_len: cur.success_len,
             fail_len: cur.fail_len,
             tokens: cur.tokens,
@@ -356,6 +360,7 @@ where
         //
         self.stk.push(Work {
             grammar: g.clone(),
+            // grammar_ind:0,
             success_len: cur.success_len,
             fail_len: cur.fail_len,
             tokens: cur.tokens,
@@ -402,7 +407,9 @@ where
 
         //
         self.stk.push(Work {
-            grammar: Rc::new(GrammarNode::Many(g.clone())),
+            // grammar: Rc::new(GrammarNode::Many(g.clone())),
+            grammar:cur.grammar.clone(),
+            // grammar_ind:0,
             success_len: cur.success_len,
             fail_len: cur.fail_len,
             tokens: cur.tokens,
@@ -444,6 +451,7 @@ where
         //
         self.stk.push(Work {
             grammar: Rc::new(GrammarNode::Always),
+            // grammar_ind:0,
             success_len: cur.success_len,
             fail_len: 0, //fail is not used
             tokens: cur.tokens,
@@ -485,6 +493,7 @@ where
         //
         self.stk.push(Work {
             grammar: g.clone(),
+            // grammar_ind:0,
             success_len: success_len2,
             fail_len,
             tokens: cur.tokens,
@@ -538,6 +547,7 @@ where
         //
         self.stk.push(Work {
             grammar, //: (self.grammar_func)(t), //should return err on not found, instead of grammar never, should have error
+            // grammar_ind:0,
             success_len: cur.success_len,
             fail_len: cur.fail_len,
             tokens: cur.tokens,
@@ -600,17 +610,40 @@ where
     }
 
     fn grammar_and(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::And(gs)=cur.grammar.as_ref() else{panic!("");};
+        let GrammarNode::And(gs,grammar_ind)=cur.grammar.as_ref() else{panic!("");};
         //
-        let Some(first)=gs.first().cloned() else { return ; };
+
+        if gs.is_empty() {return;}
+
+        // let Some(head)=gs.first().cloned() else { return ; };
+        let head=gs.get(*grammar_ind).unwrap().clone();
 
         //
         let hist_news_len=self.hist_news_add(&cur);
 
         //
-        if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
+        // println!("{}, {:?}",cur.grammar_ind,cur.grammar.as_ref(),);
+
+        //
+        // if cur.grammar_ind+1!=gs.len()
+        // if gs.len()>1
+
+        // // let gg=GrammarNode::And(Rc::new([&G]));
+        // let mut gg:&[&i32]=&[&123];
+        // gg=&[&123,&43];
+
+        if *grammar_ind!=gs.len()
+        // if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r.clone()))
+        {
+            // let rest=gs[1..];
             self.stk.push(Work {
-                grammar: Rc::new(GrammarNode::And(rest.into())),
+                // grammar: Rc::new(GrammarNode::And(rest.into(),*grammar_ind+1)),
+                grammar:Rc::new(GrammarNode::And(gs.clone(),*grammar_ind+1)),
+                // grammar_ind:0,
+
+                // grammar:cur.grammar.clone(),
+                // grammar_ind:cur.grammar_ind+1,
+
                 success_len: cur.success_len,
                 fail_len: cur.fail_len,
                 tokens: cur.tokens, //not really necessary? since gets updated by always/primtitives
@@ -648,11 +681,14 @@ where
         }
 
         //
-        let success_len=if gs.len()>1 {self.stk.len()}else{cur.success_len};
+        // let not_end= gs.len() > 1;
+        let not_end= *grammar_ind+1 != gs.len();
+        let success_len=if not_end {self.stk.len()}else{cur.success_len};
 
         //
         self.stk.push(Work {
-            grammar: first,
+            grammar: head,
+            // grammar_ind:0,
             success_len,
             fail_len: cur.fail_len,
             tokens: cur.tokens,
@@ -693,10 +729,18 @@ where
     }
 
     fn grammar_or(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::Or(gs)=cur.grammar.as_ref() else{panic!("");};
+        let GrammarNode::Or(gs,grammar_ind)=cur.grammar.as_ref() else{panic!("");};
+
+        if gs.is_empty() {return;}
 
         //
-        let Some(g_first)=gs.first().cloned() else { return; };
+        // let Some(head)=gs.first().cloned() else { return; };
+        // let Some(head)=gs.get(*grammar_ind).cloned() else { return; };
+        let head=gs.get(*grammar_ind).unwrap().clone();
+        //
+        // if cur.grammar_ind==gs.len() {return;}
+        // let head=gs.get(cur.grammar_ind).unwrap().clone();
+
 
         //
         let hist_news_len=self.hist_news_add(&cur);
@@ -709,9 +753,15 @@ where
         // let hist_ends_ind=if cur.is_first{}else{};
 
         //
-        if let Some(g_rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r)) {
+        if grammar_ind+1!=gs.len()
+        // if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r))
+        {
             self.stk.push(Work {
-                grammar: Rc::new(GrammarNode::Or(g_rest.into())),
+                grammar: Rc::new(GrammarNode::Or(gs.clone(),*grammar_ind+1)),
+                // grammar_ind:0,
+                // grammar:cur.grammar.clone(),
+                // grammar_ind:cur.grammar_ind+1,
+
                 success_len: cur.success_len,
                 fail_len: cur.fail_len,
                 tokens: cur.tokens,
@@ -750,11 +800,16 @@ where
         }
 
         //
-        let fail_len=if gs.len()>1 {self.stk.len()}else{cur.fail_len};
+
+        // let not_end= gs.len() > 1;
+        let not_end= *grammar_ind+1 != gs.len();
+
+        let fail_len=if not_end {self.stk.len()}else{cur.fail_len};
 
         //
         self.stk.push(Work {
-            grammar: g_first,
+            grammar: head,
+            // grammar_ind:0,
             success_len: cur.success_len,
             fail_len,
             tokens: cur.tokens,
@@ -1385,7 +1440,6 @@ where
 
     //
     pub fn expecteds_string(&self) -> String {
-
         self.expecteds2.iter().rev().map(|x|match &x.expected_type {
             TempExpectedType::Expected(n) => n,
             TempExpectedType::Int => "int",
@@ -1511,8 +1565,12 @@ where
         }
 
         //
-        if !result.is_err() && !self.tokens_remaining.is_empty() {
+        if result.is_err() {
             self.organise_expecteds();
+        }
+
+        //
+        if !result.is_err() && !self.tokens_remaining.is_empty() {
             if self.debug {
                 // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
                 println!("error, failed to parse all tokens, at {}",self.last_loc());
@@ -1601,6 +1659,18 @@ where
                 let ps=tokens.inds();
                 let temp_groups=groups.iter().enumerate().map(|(i,x)|format!("g{i}:p{}:{}",x.parent,x.name)).collect::<Vec<_>>();
                 let groups_len2=groups.len();
+
+                // let grammar2= match grammar.as_ref() {
+                //     GrammarNode::And(gs) => {
+                //         format!("And({:?})",&gs[cur.grammar_ind..])
+                //     }
+                //     GrammarNode::Or(gs) => {
+                //         format!("Or({:?})",&gs[cur.grammar_ind..])
+                //     }
+                //     _ => {
+                //         format!("{grammar:?}")
+                //     }
+                // };
 
                 //
                 println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, ",);

@@ -1,14 +1,14 @@
-use std::rc::Rc;
+use std::{fmt::Debug, rc::Rc};
 
 use super::super::grammar::error::GrammarWalkError;
 
 
 
-#[derive(Clone,Debug,Hash,PartialEq,Eq)]
+#[derive(Clone,Hash,PartialEq,Eq)]
 pub enum GrammarNode<'g> {
     Many(Rc<GrammarNode<'g>>),
-    And(Vec<Rc<GrammarNode<'g>>>), //should store reversed?
-    Or(Vec<Rc<GrammarNode<'g>>>), //should store reversed?
+    And(Rc<[Rc<GrammarNode<'g>>]>,usize), //should store reversed?
+    Or( Rc<[Rc<GrammarNode<'g>>]>,usize), //should store reversed?
     NonTerm(&'g str),
 
     Group(Rc<GrammarNode<'g>>,&'g str,),
@@ -127,11 +127,11 @@ pub trait GrammarArrayTrait<'g> {
 impl<'a,const N: usize> GrammarArrayTrait <'a> for [GrammarNode<'a>; N] {
     fn and(self) -> GrammarNode<'a> {
         // GrammarNode::And(self.into())
-        GrammarNode::And(self.into_iter().map(|x|x.into()).collect())
+        GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),0)
     }
     fn or(self) -> GrammarNode<'a> {
         // GrammarNode::Or(self.into())
-        GrammarNode::Or(self.into_iter().map(|x|x.into()).collect())
+        GrammarNode::Or(self.into_iter().map(|x|x.into()).collect(),0)
     }
 }
 
@@ -159,3 +159,32 @@ impl<'a,const N: usize> GrammarArrayTrait <'a> for [GrammarNode<'a>; N] {
 //     }};
 // }
 
+
+impl<'g> Debug for GrammarNode<'g> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Many(arg0) => f.debug_tuple("Many").field(arg0).finish(),
+            Self::And(arg0, arg1) => {
+                let x=&arg0[*arg1..];
+                f.debug_tuple("And").field(&x).finish()
+            },
+            Self::Or(arg0, arg1) => {
+                let x=&arg0[*arg1..];
+                f.debug_tuple("Or").field(&x).finish()
+            },
+            Self::NonTerm(arg0) => f.debug_tuple("NonTerm").field(arg0).finish(),
+            Self::Group(arg0, arg1) => f.debug_tuple("Group").field(arg0).field(arg1).finish(),
+            Self::Expected(arg0, arg1) => f.debug_tuple("Expected").field(arg0).field(arg1).finish(),
+            Self::Prev(arg0) => f.debug_tuple("Prev").field(arg0).finish(),
+            Self::String => write!(f, "String"),
+            Self::Identifier => write!(f, "Identifier"),
+            Self::Int => write!(f, "Int"),
+            Self::Float => write!(f, "Float"),
+            Self::Symbol(arg0) => f.debug_tuple("Symbol").field(arg0).finish(),
+            Self::Keyword(arg0) => f.debug_tuple("Keyword").field(arg0).finish(),
+            Self::Eol => write!(f, "Eol"),
+            Self::Always => write!(f, "Always"),
+            Self::Error(arg0) => f.debug_tuple("Error").field(arg0).finish(),
+        }
+    }
+}

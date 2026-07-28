@@ -42,6 +42,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
     */
     use GrammarNode::*;
     Some(Rc::new(match n {
+        // "start" => [Int,Float,[Identifier,Eol.many0()].and()].and(),
 
         "start" => [
             NonTerm("stmts"),
