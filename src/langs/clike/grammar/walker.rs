@@ -50,7 +50,7 @@ where
     // non_term_visiteds_stk:Vec<HashSet<(&'g str,usize)>>,
     // recurse_num:u64,
 
-    groups:Vec<TempGroupInfo<'t,'g>>,
+    groups:Vec<TempGroup<'t,'g>>,
 
     hist_news:Vec<TempHistNew<'t,'g>>,
 
@@ -61,7 +61,7 @@ where
     // hist_begins_stk:Vec<TempHistBegins<'t,'g>>,
 
     hist_stows:Vec<TempHistStow<'t,'g>>,
-    hist_stows_groups:Vec<TempGroupInfo<'t,'g>>,
+    hist_stows_groups:Vec<TempGroup<'t,'g>>,
     hist_stows_prevs:Vec<TempHistPrev<'g>>,
 
     //
@@ -267,7 +267,7 @@ where
         }
 
         //
-        self.groups=vec![TempGroupInfo{
+        self.groups=vec![TempGroup{
             name: "",
             parent: 0,
             tokens:self.top_tokens,
@@ -939,7 +939,7 @@ where
         //add groups
         self.groups.extend(stow_groups.iter().enumerate().map(|(_i,g)|{
             // println!("===--- {i}:p{}:{} = {}",g.parent,g.name, cur.group_ind+g.parent + if g.parent==0{0}else{glen});
-            TempGroupInfo{
+            TempGroup{
                 parent:if g.parent==0{cur.group_ind}else{glen+g.parent-1},
                 ..g.clone()
             }
@@ -1067,73 +1067,6 @@ where
         last.expecteds_len2=self.expecteds2.len();
     }
 
-    // fn add_expected_new(&mut self, cur:&Work<'t,'g>,) -> usize {
-    //     let expected_type=match cur.grammar {
-    //         GrammarNode::Expected(_, name) => TempExpectedType::Expected(name),
-    //         // GrammarNode::Prev(_) => TempExpectedType::Prev,
-    //         GrammarNode::String => TempExpectedType::String,
-    //         GrammarNode::Identifier => TempExpectedType::Identifier,
-    //         GrammarNode::Int => TempExpectedType::Int,
-    //         GrammarNode::Float => TempExpectedType::Float,
-    //         GrammarNode::Symbol(s) => TempExpectedType::Symbol(s),
-    //         GrammarNode::Keyword(s) => TempExpectedType::Keyword(s),
-    //         GrammarNode::Eol => TempExpectedType::Eol,
-    //        _ => {panic!("");}
-    //     };
-
-    //     //so primtives/prevs are not added if there is already an expected in expected_news
-    //     //  if a primitive/prev is added to expected_news, nothing else will be in it
-    //     // if self.expected_news.is_empty() || !(cur.grammar.is_primtive() || cur.grammar.is_prev()) {
-    //     //     self.expected_news.push(TempExpectedNew { expected_type, });
-    //     // }
-
-    //     // //
-    //     // self.expected_news.len()
-    // }
-
-    // fn submit_expected_news(&mut self, cur:&Work<'t,'g>,) {
-    //     let Some(last)=self.stk.last_mut() else {panic!("");};
-
-    //     if self.expected_news.len()>last.expected_news_len {
-    //         let x=self.expected_news.pop().unwrap();
-    //         // println!("----- added expected {:?} : news={:?} exps={:?}",
-    //         //     x.expected_type,
-    //         //     self.expected_news.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
-    //         //     self.expecteds.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
-    //         // );
-    //         self.expecteds.push(TempExpected { expected_type: x.expected_type });
-
-    //         // self.expected_news.clear();
-    //         // last.expected_news_len=cur.expected_news_len;
-    //     } else {
-
-    //         // self.expected_news.truncate(last.expected_news_len);
-
-    //     }
-    //     self.expected_news.truncate(last.expected_news_len);
-
-    //     // if let Some(x)=self.expected_news[last.expected_news_len..].poplast() {
-    //     //     self.expecteds.push(TempExpected { expect_type: x.expected_type.cl });
-    //     // }
-
-    //     // let drained_expected_news=self.expected_news.drain(last.expected_news_len ..).collect::<Vec<_>>();
-
-    //     // //
-    //     // for drained_expected_new in drained_expected_news {
-    //     //     self.expecteds.push(TempExpected { expect_type: drained_expected_new.expected_type });
-    //     // }
-
-    //     //
-    //     // self.expecteds.truncate(last.expecteds_len);
-    //     last.expecteds_len=self.expecteds.len();
-    // }
-
-    // fn revert_last_expected_news(&mut self) {
-    //     let Some(last)=self.stk.last() else {return;};
-    //     self.expected_news.truncate(last.expected_news_len);
-    //     self.expecteds.truncate(last.expecteds_len);
-    // }
-
     fn submit_hist_news(&mut self,
         cur:&Work<'t,'g>,
         //what was this for again? something to do with not adding cur grammar to hist_begins?
@@ -1211,7 +1144,7 @@ where
                     //
                     let group_ind_offset=self.groups[drained_hist_new2.group_len].parent;
 
-                    self.hist_stows_groups.extend(self.groups[drained_hist_new2.group_len..cur.group_len].iter().map(|x|TempGroupInfo{
+                    self.hist_stows_groups.extend(self.groups[drained_hist_new2.group_len..cur.group_len].iter().map(|x|TempGroup{
                         parent: x.parent
                         -group_ind_offset
                         , ..x.clone()
@@ -1245,13 +1178,6 @@ where
         // // last.hist_prevs_len=cur.hist_prevs_len;
         last.hist_prevs_len=self.hist_prevs.len();
     }
-
-
-    // fn update_hist_on_fail(&mut self,cur:&Work<'t,'g>,) {
-    //     let Some(last)=self.stk.last_mut() else {panic!("");};
-
-    //     // last.hist_begins_len=cur.hist_begins_len;
-    // }
 
     fn hist_stows_push(&mut self,cur:&Work<'t,'g>) -> usize {
         if cur.from_user //so not an added OR for rest,
@@ -1394,7 +1320,7 @@ where
         let tokens=cur.tokens;
 
         let new_group_ind=self.groups.len();
-        self.groups.push(TempGroupInfo { name, parent, tokens, });
+        self.groups.push(TempGroup { name, parent, tokens, });
         (new_group_ind,self.groups.len())
     }
 
@@ -1893,13 +1819,6 @@ where
         self.hist_non_term_only=hist_non_term_only;
     }
 
-    // pub fn set_prev_non_term_only(&mut self,prev_non_term_only:bool) {
-    //     self.prev_non_term_only=prev_non_term_only;
-    // }
-
-    // pub fn set_stow_non_term_only(&mut self,stow_non_term_only:bool) {
-    //     self.stow_non_term_only=stow_non_term_only;
-    // }
 
     fn get_non_term(&mut self,n:&'g str) -> Rc<GrammarNode<'g>> {
         if let Some(g)=self.non_term_cache.get(n) {

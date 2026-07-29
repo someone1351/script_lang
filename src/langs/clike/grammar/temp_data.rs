@@ -10,17 +10,6 @@ use super::super::tokenizer::TokenIterContainer;
 use super::node::*;
 
 
-#[derive(Clone, Debug)]
-pub struct TempExpectedNew<'g> {
-    // pub name:&'g str,
-    // pub grammar:GrammarNode<'g>,
-    pub expected_type:TempExpectedType<'g>,
-}
-
-// #[derive(Clone, Debug)]
-// pub struct TempExpectNews<'g> {
-
-// }
 
 
 
@@ -39,11 +28,6 @@ pub enum TempExpectedType<'g> {
     // Prev, //remove?
 }
 
-#[derive(Clone, Debug)]
-pub struct TempExpected<'g> {
-    pub expected_type:TempExpectedType<'g>,
-}
-
 #[derive(Clone, Debug, )]
 pub struct TempExpected2<'t,'g> {
     pub expected_type:TempExpectedType<'g>,
@@ -59,8 +43,6 @@ pub struct TempHistNew<'t,'g> {
     // pub group_ind:usize,
     pub group_len:usize,
 }
-
-
 
 #[derive(Clone,Debug,)]
 pub struct TempHistStowVal<'t,'g> { //TempHistStow
@@ -85,13 +67,13 @@ pub struct TempHistPrev<'g> { //TempHistPrev
 
 
 #[derive(Clone)]
-pub struct TempGroupInfo<'t,'g> {
+pub struct TempGroup<'t,'g> {
     pub name:&'g str,
     pub parent:usize, //group
     pub tokens:TokenIterContainer<'t>,
 }
 
-impl<'t,'g> Debug for  TempGroupInfo<'t,'g> {
+impl<'t,'g> Debug for  TempGroup<'t,'g> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("TempGroupInfo")
         .field("name", &self.name)
@@ -102,44 +84,24 @@ impl<'t,'g> Debug for  TempGroupInfo<'t,'g> {
     }
 }
 
-
 #[derive(Clone)]
 pub struct Work<'t,'g> {
     pub grammar:Rc<GrammarNode<'g>>,
-    // pub grammar_ind:usize, //used for and/or only
     pub success_len:usize,
     pub fail_len:usize,
     pub tokens:TokenIterContainer<'t>,
     pub group_ind:usize,
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
-    // pub visiteds:HashSet<(&'g str,usize)>, //used for checking recursive nonterms
-    // pub non_term_visiteds_stk_len:usize,
-    // pub grammar_debug_len:usize,
-    // pub and_id:usize, //for take, to know when continuing on an And, or leaving
 
-    pub from_user:bool, //gramamr added by input grammar, not walker //used to know whether to push hist_begins stk or not
+    pub from_user:bool, //gramamr added by input grammar, not walker //used to know whether to push hist_begins stk or not //used with and/or/many
     pub first:bool, //used to know whether to store a HistStow
-    // pub and_first:bool, //same, but not that important, just makes sure it's in an And
-
-    // pub in_or:bool,
-    // pub can_hist_begin:bool,
-
 
     pub hist_news_len:usize,
 
-    // pub hist_begins_ind:usize,
     pub hist_stows_len:usize,
-    // pub hist_begins_stk_len:usize,
 
     pub hist_prevs_ind:usize,
     pub hist_prevs_len:usize,
-
-    // pub hist_begins_stk_len:usize,
-    // pub hist_ends_stk_len:usize,
-
-    // pub expected_news_len:usize,
-    // pub expecteds_len:usize,
-
 
     pub expected_ind2:Option<usize>,
     pub expecteds_len2:usize,

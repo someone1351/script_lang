@@ -2581,3 +2581,127 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         _ => {return None;}
     }))
 }
+
+===
+
+#[derive(Clone, Debug)]
+pub struct TempExpected<'g> {
+    pub expected_type:TempExpectedType<'g>,
+}
+
+#[derive(Clone, Debug)]
+pub struct TempExpectedNew<'g> {
+    // pub name:&'g str,
+    // pub grammar:GrammarNode<'g>,
+    pub expected_type:TempExpectedType<'g>,
+}
+
+// #[derive(Clone, Debug)]
+// pub struct TempExpectNews<'g> {
+
+// }
+
+
+    // pub hist_begins_stk_len:usize,
+    // pub hist_ends_stk_len:usize,
+
+    // pub expected_news_len:usize,
+    // pub expecteds_len:usize,
+
+
+    // pub hist_begins_ind:usize,
+    // pub hist_begins_stk_len:usize,
+	
+    // pub and_first:bool, //same, but not that important, just makes sure it's in an And
+
+    // pub in_or:bool,
+    // pub can_hist_begin:bool,
+    // pub visiteds:HashSet<(&'g str,usize)>, //used for checking recursive nonterms
+    // pub non_term_visiteds_stk_len:usize,
+    // pub grammar_debug_len:usize,
+    // pub and_id:usize, //for take, to know when continuing on an And, or leaving
+
+    // pub grammar_ind:usize, //used for and/or only
+	
+    // pub fn set_prev_non_term_only(&mut self,prev_non_term_only:bool) {
+    //     self.prev_non_term_only=prev_non_term_only;
+    // }
+
+    // pub fn set_stow_non_term_only(&mut self,stow_non_term_only:bool) {
+    //     self.stow_non_term_only=stow_non_term_only;
+    // }
+
+
+    // fn update_hist_on_fail(&mut self,cur:&Work<'t,'g>,) {
+    //     let Some(last)=self.stk.last_mut() else {panic!("");};
+
+    //     // last.hist_begins_len=cur.hist_begins_len;
+    // }
+	
+
+    // fn add_expected_new(&mut self, cur:&Work<'t,'g>,) -> usize {
+    //     let expected_type=match cur.grammar {
+    //         GrammarNode::Expected(_, name) => TempExpectedType::Expected(name),
+    //         // GrammarNode::Prev(_) => TempExpectedType::Prev,
+    //         GrammarNode::String => TempExpectedType::String,
+    //         GrammarNode::Identifier => TempExpectedType::Identifier,
+    //         GrammarNode::Int => TempExpectedType::Int,
+    //         GrammarNode::Float => TempExpectedType::Float,
+    //         GrammarNode::Symbol(s) => TempExpectedType::Symbol(s),
+    //         GrammarNode::Keyword(s) => TempExpectedType::Keyword(s),
+    //         GrammarNode::Eol => TempExpectedType::Eol,
+    //        _ => {panic!("");}
+    //     };
+
+    //     //so primtives/prevs are not added if there is already an expected in expected_news
+    //     //  if a primitive/prev is added to expected_news, nothing else will be in it
+    //     // if self.expected_news.is_empty() || !(cur.grammar.is_primtive() || cur.grammar.is_prev()) {
+    //     //     self.expected_news.push(TempExpectedNew { expected_type, });
+    //     // }
+
+    //     // //
+    //     // self.expected_news.len()
+    // }
+
+    // fn submit_expected_news(&mut self, cur:&Work<'t,'g>,) {
+    //     let Some(last)=self.stk.last_mut() else {panic!("");};
+
+    //     if self.expected_news.len()>last.expected_news_len {
+    //         let x=self.expected_news.pop().unwrap();
+    //         // println!("----- added expected {:?} : news={:?} exps={:?}",
+    //         //     x.expected_type,
+    //         //     self.expected_news.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
+    //         //     self.expecteds.iter().map(|x|&x.expected_type).collect::<Vec<_>>(),
+    //         // );
+    //         self.expecteds.push(TempExpected { expected_type: x.expected_type });
+
+    //         // self.expected_news.clear();
+    //         // last.expected_news_len=cur.expected_news_len;
+    //     } else {
+
+    //         // self.expected_news.truncate(last.expected_news_len);
+
+    //     }
+    //     self.expected_news.truncate(last.expected_news_len);
+
+    //     // if let Some(x)=self.expected_news[last.expected_news_len..].poplast() {
+    //     //     self.expecteds.push(TempExpected { expect_type: x.expected_type.cl });
+    //     // }
+
+    //     // let drained_expected_news=self.expected_news.drain(last.expected_news_len ..).collect::<Vec<_>>();
+
+    //     // //
+    //     // for drained_expected_new in drained_expected_news {
+    //     //     self.expecteds.push(TempExpected { expect_type: drained_expected_new.expected_type });
+    //     // }
+
+    //     //
+    //     // self.expecteds.truncate(last.expecteds_len);
+    //     last.expecteds_len=self.expecteds.len();
+    // }
+
+    // fn revert_last_expected_news(&mut self) {
+    //     let Some(last)=self.stk.last() else {return;};
+    //     self.expected_news.truncate(last.expected_news_len);
+    //     self.expecteds.truncate(last.expecteds_len);
+    // }
