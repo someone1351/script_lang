@@ -22,14 +22,19 @@ impl<'a> TokenIterContainer<'a> {
         self.last_loc
     }
     pub fn loc(&self) -> Loc {
-        self.first().map(|p|p.end_loc()).unwrap_or(self.last_loc)
+        // self.first().map(|p|p.end_loc()).unwrap_or(self.last_loc) //why was it last_loc?
+
+        self.first().map(|p|p.start_loc()).unwrap_or(self.last_loc)
     }
 
     pub fn pop_front(&mut self) -> Result<TokenContainer<'a>,Loc> {
         if self.start < self.end {
             let primitive_ind=self.start;
+            self.last_loc=self.parsed.primitives[self.start].end_loc;
+            // self.last_loc=Loc::zero();
             self.start+=1;
-            self.last_loc=self.loc();
+            // self.last_loc=self.loc();
+            // self.last_loc=self.first().map(|p|p.end_loc()).unwrap_or(self.last_loc);
             Ok(TokenContainer { parsed: self.parsed, token_ind: primitive_ind,}) //last_loc:self.last_loc,
         } else {
             Err(self.last_loc)
@@ -76,11 +81,13 @@ impl<'a> TokenIterContainer<'a> {
             self.end-=amount;
             let start2=self.end;
 
-            let last_loc=if self.start==self.end {
-                self.last_loc
-            } else {
-                self.parsed.primitives[self.end-1].start_loc
-            };
+            // let last_loc=if self.start==self.end {
+            //     self.last_loc
+            // } else {
+            //     self.parsed.primitives[self.end-1].start_loc
+            // };
+
+            let last_loc=self.last_loc;
 
             Some(TokenIterContainer{last_loc, start: start2, end: end2, parsed: self.parsed })
         }
@@ -212,25 +219,26 @@ impl<'a> TokenIterContainer<'a> {
     where
         F:FnOnce(TokenContainer<'a>)->Result<ValueContainer<'a,T>,Loc>,
     {
+        let mut tmp=self.clone();
         if skip_eols {
-            while let Ok(x)=self.first() {
+            while let Ok(x)=tmp.first() {
                 if !x.is_eol() {
                     break;
                 }
 
-                self.pop_front().unwrap();
+                tmp.pop_front().unwrap();
             }
         }
 
 
-        let v=self.first().and_then(func)?;
+        let v=tmp.first().and_then(func)?;
 
         // if v.is_ok() {
-        self.pop_front().unwrap();
+        tmp.pop_front().unwrap();
         // self.last_loc=v.as_ref().unwrap().primitive.end_loc();
         // self.last_loc=v.primitive.end_loc();
         // }
-
+        *self=tmp;
         Ok(v)
     }
 

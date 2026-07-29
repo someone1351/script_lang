@@ -44,11 +44,14 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
     Some(Rc::new(match n {
         // "start" => [Int,Float,[Identifier,Eol.many0()].and()].and(),
-
         "start" => [
-            NonTerm("stmts"),
-            NonTerm("ending").many0(),
+            [[Int,Int].and(),Float].or().expected("0"),
+            Eol.many0(),
         ].and(),
+        // "start" => [
+        //     NonTerm("stmts"),
+        //     NonTerm("ending").many0(),
+        // ].and(),
 
 
         "ending" => [NonTerm("semicolon"),Eol].or().many1(),

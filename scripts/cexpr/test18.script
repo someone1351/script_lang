@@ -1,6 +1,16 @@
+1
+/*
 1+5*6/9-3
 
 if i<5 { println("abc"); }
 
-while true {if true {3}}
+while true {
+    for i a in 0 .. 6 {
+        if true {
+            3
+        }
 
+    }
+}
+
+*/

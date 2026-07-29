@@ -1,5 +1,8 @@
 
+/*
 
+for err loc, should use end_loc of last token
+*/
 use super::error::*;
 use super::temp_data::*;
 use core::panic;
@@ -757,6 +760,8 @@ where
         // let hist_ends_stk_len=self.hist_ends_stk_push(&cur);
         // let hist_begins_ind=if !cur.is_first{cur.hist_begins_len}else{cur.hist_begins_ind};
 
+        let (hist_prevs_ind,hist_prevs_len)= if cur.from_user && !cur.first //cur.hist_prevs_ind is already 0 for the first, so only need for further ORs
+            {(self.hist_prevs.len(),self.hist_prevs.len())}else{(cur.hist_prevs_ind,cur.hist_prevs_len)};
 
         // let hist_ends_ind=if cur.is_first{}else{};
 
@@ -796,8 +801,10 @@ where
                 // hist_begins_stk_len,
                 hist_stows_len,
 
-                hist_prevs_ind: cur.hist_prevs_ind,
-                hist_prevs_len: cur.hist_prevs_len,
+                // hist_prevs_ind: cur.hist_prevs_ind,
+                // hist_prevs_len: cur.hist_prevs_len,
+                hist_prevs_ind,
+                hist_prevs_len,
 
                 // expected_news_len:cur.expected_news_len,
                 // expecteds_len:cur.expecteds_len,
@@ -841,8 +848,10 @@ where
 
             // hist_begins_ind,
             // hist_begins_len: cur.hist_begins_len,
-            hist_prevs_ind: cur.hist_prevs_ind,
-            hist_prevs_len: cur.hist_prevs_len,
+            // hist_prevs_ind: cur.hist_prevs_ind,
+            // hist_prevs_len: cur.hist_prevs_len,
+            hist_prevs_ind,
+            hist_prevs_len,
 
             // expected_news_len:cur.expected_news_len,
             // expecteds_len:cur.expecteds_len,
@@ -873,14 +882,14 @@ where
             // self.hist_news_truncate_to_last(); //why on success??
             self.update_tokens(&cur,true);
             self.update_groups(&cur);
-            self.submit_hist_news(&cur,false,);
+            self.hist_on_success(&cur,false,);
             // self.revert_last_expected_news();
             self.expected2_on_success();
         } else {
             self.stk.truncate(cur.fail_len);
             self.update_tokens(&cur,false);
             // // self.revert_last_hist_news();
-            // self.update_hist_on_fail(&cur);
+            self.hist_on_fail();
             // // // let _expected_news_len=self.add_expected_new(&cur);
             // // // let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
 
@@ -896,7 +905,7 @@ where
         self.handle_exit_last_many(&cur);
         self.update_tokens(&cur,true);
         self.update_groups(&cur); //here
-        self.submit_hist_news(&cur,false);
+        self.hist_on_success(&cur,false);
         // self.revert_last_expected_news();
         // // self.expected2_on_success(&cur);
     }
@@ -958,7 +967,7 @@ where
         //
         self.update_tokens(&cur,true);
         self.update_groups(&cur);
-        self.submit_hist_news(&cur,true); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+        self.hist_on_success(&cur,true); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
         // self.revert_last_expected_news();
         self.expected2_on_success();
 
@@ -987,7 +996,7 @@ where
                 self.stk.truncate(cur.success_len);
                 self.update_tokens(&cur,true);
                 self.update_groups(&cur);
-                self.submit_hist_news(&cur,false);
+                self.hist_on_success(&cur,false);
                 // self.revert_last_expected_news();
                 self.expected2_on_success();
 
@@ -1004,9 +1013,10 @@ where
                 //
                 Some(v)
             }
-            Err(loc) => {
+            Err(_loc) => {
                 self.stk.truncate(cur.fail_len);
                 self.update_tokens(&cur,false);
+                self.hist_on_fail();
                 // // self.revert_last_hist_news();
                 // self.update_hist_on_fail(&cur);
                 // // let _expected_news_len=self.add_expected_new(&cur);
@@ -1023,10 +1033,18 @@ where
     fn add_expected2(&mut self, cur:&Work<'t,'g>,) -> (Option<usize>,usize) {
         // return (cur.expected_ind2,cur.expecteds_len2);
 
+        //check if prim and parent pos is same as cur pos
         //
-        if cur.expected_ind2.is_some() && cur.grammar.is_primtive() { //(cur.grammar.is_prev() || )
+
+        let parent_start=cur.expected_ind2.map(|i|self.expecteds2[i].tokens_start.inds().start) ;
+
+        if parent_start==Some(cur.tokens.inds().start) {
             return (cur.expected_ind2,cur.expecteds_len2);
         }
+
+        // if cur.expected_ind2.is_some() && cur.grammar.is_primtive() { //(cur.grammar.is_prev() || )
+        //     return (cur.expected_ind2,cur.expecteds_len2);
+        // }
 
         //
         let expected_type=match cur.grammar.as_ref() {
@@ -1066,8 +1084,12 @@ where
         let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
         last.expecteds_len2=self.expecteds2.len();
     }
+    fn hist_on_fail(&mut self,){
+        let Some(last)=self.stk.last_mut() else {return;};
+        self.hist_prevs.truncate(last.hist_prevs_len);
 
-    fn submit_hist_news(&mut self,
+    }
+    fn hist_on_success(&mut self,
         cur:&Work<'t,'g>,
         //what was this for again? something to do with not adding cur grammar to hist_begins?
         //  it was for not adding cur grammar to hist_new?
@@ -1167,16 +1189,24 @@ where
         // // self.hist_ends_stk[last.hist_ends_stk_len-1].elements.extend(added_hist_ends.into_iter());
 
         // //
+        // last.hist_prevs_ind|cur.hist_prevs_ind|self.hist_prevs.len()
 
-        self.hist_prevs.truncate(cur.hist_prevs_ind);
-        self.hist_prevs.extend(added_hist_prevs.into_iter().rev());
+        if !added_hist_prevs.is_empty() {
+            self.hist_prevs.truncate(cur.hist_prevs_ind);
+            self.hist_prevs.extend(added_hist_prevs.into_iter().rev());
+            //remove last.hist_prevs_ind to cur.hist_prevs_ind, keeping prevs after cur.hist_prevs_ind
+        } else if cur.hist_prevs_ind != self.hist_prevs.len() { //some prevs previously
+            //remove last.hist_prevs_ind to cur.hist_prevs_ind, keeping prevs after cur.hist_prevs_ind
+        }
 
+        self.hist_prevs.drain(last.hist_prevs_ind .. cur.hist_prevs_ind);
+
+        last.hist_prevs_len=self.hist_prevs.len();
         // //
 
         // // last.hist_begins_len=self.hist_begins_elements.len();
 
         // // last.hist_prevs_len=cur.hist_prevs_len;
-        last.hist_prevs_len=self.hist_prevs.len();
     }
 
     fn hist_stows_push(&mut self,cur:&Work<'t,'g>) -> usize {
@@ -1210,7 +1240,7 @@ where
         // return self.hist_news.len();
 
         if cur.from_user
-            // && (!self.hist_non_term_only || cur.grammar.is_non_term())
+            && (!self.hist_non_term_only || cur.grammar.is_non_term())
             // // && (cur.grammar.is_primtive() || cur.grammar.is_non_term())
             // && cur.grammar.is_non_term() //should only do nonterms?
 
@@ -1244,7 +1274,7 @@ where
         // self.hist_begins_elements.truncate(cur.hist_begins_len);
 
         //
-        self.hist_prevs.truncate(cur.hist_prevs_len);
+        // self.hist_prevs.truncate(cur.hist_prevs_len);
 
         //
         self.hist_stows.truncate(cur.hist_stows_len);
@@ -1340,17 +1370,31 @@ where
     }
 
     pub fn last_loc(&self) -> Loc {
-        if self.expecteds2.is_empty() {
-            self.tokens_remaining.loc()
-        } else {
-            self.expected_tokens_remaining.loc()
+        println!("l1 {:?} {:?}",self.tokens_remaining.loc(),self.tokens_remaining.last_loc());
+        println!("l2 {:?} {:?}",self.expected_tokens_remaining.loc(),self.expected_tokens_remaining.last_loc());
+        println!("{:?}:{}:{}",self.top_tokens,self.top_tokens.loc(),self.top_tokens.last_loc());
+        println!("{:?}:{}:{}",self.tokens_remaining,self.tokens_remaining.loc(),self.tokens_remaining.last_loc());
+        println!("{:?}:{}:{}",self.expected_tokens_remaining,self.expected_tokens_remaining.loc(),self.expected_tokens_remaining.last_loc());
+
+        for t in self.top_tokens {
+            println!("t {t:?} :: {} to {}",t.start_loc(),t.end_loc());
         }
+        let out_loc=if self.expecteds2.is_empty() {
+            self.tokens_remaining.last_loc()
+        } else {
+            self.expected_tokens_remaining.last_loc()
+        };
+        println!("l3 {out_loc:?}");
+        out_loc
     }
 
     //
 
     fn organise_expecteds(&mut self) {
-        // println!("dsfsd");
+        println!("dsfsd");
+        for x in self.expecteds2.iter() {
+            println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start);
+        }
         let max_token = self.expecteds2.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
         let max_token_start_ind=max_token.inds().start;
 
@@ -1360,7 +1404,8 @@ where
         let parents= self.expecteds2.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
 
         let expecteds=self.expecteds2.iter().enumerate().rev().filter_map(|(i,x)|(
-            x.tokens_start.inds().start == max_token_start_ind && !parents.contains(&i)
+            x.tokens_start.inds().start == max_token_start_ind &&
+            !parents.contains(&i)
         ).then(||(x.expected_type.clone(),x.clone()))).collect::<BTreeMap<_,_>>();
 
         // if self.debug {
@@ -1373,7 +1418,9 @@ where
         //     x.tokens_start.inds().start == max_token_start_ind && !parents.contains(&i)
         // ).then(||x.clone())).collect();
 
-
+       for x in self.expecteds2.iter() {
+            println!("e2 {:?} {:?}",x.expected_type,x.tokens_start.inds().start);
+        }
     }
 
     //
@@ -1503,9 +1550,7 @@ where
         }
 
         //
-        if result.is_err() {
-            self.organise_expecteds();
-        }
+
 
         //
         if !result.is_err() && !self.tokens_remaining.is_empty() {
@@ -1529,7 +1574,9 @@ where
                 println!("parsed ok");
             }
         }
-
+        if result.is_err() {
+            self.organise_expecteds();
+        }
         //
         if self.debug {
             println!("===a {}",self.tokens_remaining.is_empty());
@@ -1587,7 +1634,8 @@ where
                     // hist_begins_ind,
                     hist_stows_len,
                     // hist_begins_stk_len,
-                    hist_prevs_ind,hist_prevs_len,
+                    hist_prevs_ind,
+                    hist_prevs_len,
                     // expected_news_len,expecteds_len,
                     expected_ind2,expecteds_len2,
                     ..
@@ -1623,7 +1671,8 @@ where
                 // let hist_begins_len=if *hist_begins_stk_len==0{None}else{
                 //     self.hist_begins_stk.get(hist_begins_stk_len-1).map(|x|x.elements.len())
                 // };
-                println!("        first={first}, hist_news_len={hist_news_len}, hist_stows_len={hist_stows_len:?}, hist_prevs_ind={hist_prevs_ind}, hist_prevs_len={hist_prevs_len}",);
+                // println!("        first={first}, hist_news_len={hist_news_len}, hist_stows_len={hist_stows_len:?}, hist_prevs_ind={hist_prevs_ind}, hist_prevs_len={hist_prevs_len}",);
+                println!("        first={first}, hist_news_len={hist_news_len}, hist_stows_len={hist_stows_len:?}, hist_prevs_ind={hist_prevs_ind},",);
                 println!("        actual: hist_news_len={}, hist_stows_len={:?}, hist_prevs_len={}",
                     self.hist_news.len(),self.hist_stows.len(),self.hist_prevs.len(),
                 );
@@ -1709,8 +1758,11 @@ where
 
                     }
 
-                    println!("        hist_prevs_last {:?}",*hist_prevs_ind..*hist_prevs_len);
-                    for i in *hist_prevs_ind..*hist_prevs_len {
+                    println!("        hist_prevs_last {hist_prevs_ind}..{hist_prevs_len} : {}",
+                        self.hist_prevs.len(),
+                    );
+                    for i in *hist_prevs_ind.. self.hist_prevs.len() //*hist_prevs_len
+                    {
                         let x=&self.hist_prevs[i];
                         println!("            {i}:[{:?}]: {:?}",x.tokens_start_ind,x.grammar)
                     }
