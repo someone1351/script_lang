@@ -25,6 +25,8 @@ pub struct GrammarWalker<'t,'g,G>
 where
     G: Fn(&str)->Option<Rc<GrammarNode<'g>>>,
 {
+    non_term_cache:HashMap<&'g str, Rc<GrammarNode<'g>>>,
+
     hist_non_term_only:bool,
     // prev_non_term_only:bool,
     // stow_non_term_only:bool,
@@ -76,6 +78,7 @@ where
 
     pub fn new(top_primitives:TokenIterContainer<'t>, grammar_func:G,) -> Self {
         Self {
+            non_term_cache:Default::default(),
             // prev_non_term_only:true,
             // stow_non_term_only:true,
             hist_non_term_only:true,
@@ -118,6 +121,8 @@ where
     // }
 
     fn init(&mut self,start_non_term:&'g str,) {
+        self.non_term_cache.clear(); //not necessary ...
+
         self.stk.clear();
 
         //
@@ -214,11 +219,12 @@ where
 
         //start
         {
-            let grammar=if let Some(g)=(self.grammar_func)(start_non_term) {
-                g
-            } else {
-                Rc::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(start_non_term)))
-            };
+            let grammar=self.get_non_term(start_non_term);
+            // let grammar=if let Some(g)=(self.grammar_func)(start_non_term) {
+            //     g
+            // } else {
+            //     Rc::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(start_non_term)))
+            // };
 
             self.stk.push(Work{
                 grammar, //:(self.grammar_func)(start_non_term),
@@ -538,11 +544,13 @@ where
         // let visiteds=self.do_non_term_visiteds(t,cur.tokens,cur.visiteds)?;
 
         //
-        let grammar=if let Some(g)=(self.grammar_func)(t) {
-            g
-        } else {
-            Rc::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(t)))
-        };
+        // let grammar=if let Some(g)=(self.grammar_func)(t) {
+        //     g
+        // } else {
+        //     Rc::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(t)))
+        // };
+
+        let grammar=self.get_non_term(t);
 
         //
         self.stk.push(Work {
@@ -1291,9 +1299,13 @@ where
                     // &&cur.and_first
                 ,
             });
+
+            return self.hist_news.len();
         }
 
-        self.hist_news.len()
+        cur.hist_news_len
+
+        // self.hist_news.len()
     }
 
     fn step_truncates(&mut self,cur :&Work<'t,'g>) {
@@ -1889,5 +1901,14 @@ where
     //     self.stow_non_term_only=stow_non_term_only;
     // }
 
-
+    fn get_non_term(&mut self,n:&'g str) -> Rc<GrammarNode<'g>> {
+        if let Some(g)=self.non_term_cache.get(n) {
+            g.clone()
+        } else if let Some(g)=(self.grammar_func)(n) {
+            self.non_term_cache.insert(n, g.clone());
+            g
+        } else {
+            Rc::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(n)))
+        }
+    }
 }

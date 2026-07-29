@@ -41,6 +41,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
     if traversing same terminal and pos is the same, fail
     */
     use GrammarNode::*;
+
     Some(Rc::new(match n {
         // "start" => [Int,Float,[Identifier,Eol.many0()].and()].and(),
 
