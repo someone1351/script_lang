@@ -1370,8 +1370,8 @@ where
     }
 
     pub fn last_loc(&self) -> Loc {
-        println!("l1 {:?} {:?}",self.tokens_remaining.loc(),self.tokens_remaining.last_loc());
-        println!("l2 {:?} {:?}",self.expected_tokens_remaining.loc(),self.expected_tokens_remaining.last_loc());
+        println!("l1 {:?} {:?} || {:?}",self.tokens_remaining.loc(),self.tokens_remaining.last_loc(),self.tokens_remaining);
+        println!("l2 {:?} {:?} || {:?}",self.expected_tokens_remaining.loc(),self.expected_tokens_remaining.last_loc(),self.expected_tokens_remaining);
         println!("{:?}:{}:{}",self.top_tokens,self.top_tokens.loc(),self.top_tokens.last_loc());
         println!("{:?}:{}:{}",self.tokens_remaining,self.tokens_remaining.loc(),self.tokens_remaining.last_loc());
         println!("{:?}:{}:{}",self.expected_tokens_remaining,self.expected_tokens_remaining.loc(),self.expected_tokens_remaining.last_loc());
@@ -1380,9 +1380,9 @@ where
             println!("t {t:?} :: {} to {}",t.start_loc(),t.end_loc());
         }
         let out_loc=if self.expecteds2.is_empty() {
-            self.tokens_remaining.last_loc()
+            self.tokens_remaining.loc()
         } else {
-            self.expected_tokens_remaining.last_loc()
+            self.expected_tokens_remaining.loc()
         };
         println!("l3 {out_loc:?}");
         out_loc
@@ -1393,7 +1393,7 @@ where
     fn organise_expecteds(&mut self) {
         println!("dsfsd");
         for x in self.expecteds2.iter() {
-            println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start);
+            println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
         }
         let max_token = self.expecteds2.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
         let max_token_start_ind=max_token.inds().start;

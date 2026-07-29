@@ -44,21 +44,25 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
     Some(Rc::new(match n {
         // "start" => [Int,Float,[Identifier,Eol.many0()].and()].and(),
-        "start" => [
-            [[Int,Int].and(),Float].or().expected("0"),
-            Eol.many0(),
-        ].and(),
         // "start" => [
-        //     NonTerm("stmts"),
-        //     NonTerm("ending").many0(),
+        //     [[Int,Int].and(),Float].or().expected("0"),
+        //     Eol.many0(),
         // ].and(),
+        "start" => [
+            NonTerm("ending").many0(),
+            NonTerm("stmts"),
+            NonTerm("ending").many0(),
+        ].and(),
 
 
-        "ending" => [NonTerm("semicolon"),Eol].or().many1(),
+        "ending" => [NonTerm("semicolon"),Eol].or(),
         "stmts" => [
             NonTerm("stmt"),
-            [NonTerm("ending"), NonTerm("stmt"),].and().many0(),
-            NonTerm("ending").many0(),
+            [
+                NonTerm("ending").many1(),
+                NonTerm("stmt")
+            ].and().many0(),
+
         ].and().opt(),
 
         "stmt" => [
@@ -126,8 +130,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "block" => [
             NonTerm("lcurly").expected("block") //0
             ,
-            NonTerm("stmts"), //.group("block"),
-            NonTerm("rcurly").expected("closing brace") //1
+            [
+                NonTerm("stmts"), //.group("block"),
+                NonTerm("rcurly"),
+            ].and().expected("closing brace") //1
             ,
         ].and() //.expected("block")
         ,
