@@ -46,7 +46,7 @@ impl<'g> GrammarNode<'g> {
     pub fn group(self,name: &'g str) -> GrammarNode<'g> {
         Self::Group(self.into(),name)
     }
-    pub fn expected(self,name: &'g str,) -> GrammarNode<'g> {
+    pub fn expect(self,name: &'g str,) -> GrammarNode<'g> {
         Self::Expected(self.into(),name)
     }
     pub fn prev(self) -> GrammarNode<'g> {

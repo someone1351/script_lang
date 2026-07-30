@@ -1392,8 +1392,16 @@ where
 
     fn organise_expecteds(&mut self) {
         println!("dsfsd");
-        for x in self.expecteds2.iter() {
-            println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
+        for (i,x) in self.expecteds2.iter().enumerate() {
+            // println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
+
+            println!("e{i}:p{}:t{} {:?} :: {:?}",
+                x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
+                x.tokens_start.inds().start,
+                x.expected_type,
+                x.tokens_start,
+            );
+
         }
         let max_token = self.expecteds2.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
         let max_token_start_ind=max_token.inds().start;
@@ -1418,7 +1426,8 @@ where
         //     x.tokens_start.inds().start == max_token_start_ind && !parents.contains(&i)
         // ).then(||x.clone())).collect();
 
-       for x in self.expecteds2.iter() {
+        println!("--");
+        for x in self.expecteds2.iter() {
             println!("e2 {:?} {:?}",x.expected_type,x.tokens_start.inds().start);
         }
     }
@@ -1709,7 +1718,7 @@ where
                 // }
 
                 //
-                if true {
+                if false {
                     println!("        hist_news");
                     for (i,h) in self.hist_news.iter().enumerate() {
                         println!("            {i}:[{:?}]: {:?}",h.tokens_start.inds(),h.grammar)
@@ -1743,9 +1752,9 @@ where
                             let hist_begin_groups=&self.hist_stows_groups[
                                 hist_begin.stow_groups_start..hist_begin_val.stow_groups_end
                             ];
-                            let hist_begin_prev=&self.hist_stows_prevs[
-                                hist_begin.stow_prevs_start..hist_begin_val.stow_prevs_end
-                            ];
+                            // let hist_begin_prev=&self.hist_stows_prevs[
+                            //     hist_begin.stow_prevs_start..hist_begin_val.stow_prevs_end
+                            // ];
 
                             println!("            grammar={:?}",hist_begin_val.grammar);
                             println!("            groups={:?}",hist_begin_groups.iter().enumerate().map(|(i,g)|format!("{i}:p{}:{}",
