@@ -57,6 +57,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "ending" => [NonTerm("semicolon"),Eol].or(),
         "stmts" => [
+            // NonTerm("val"),
             NonTerm("stmt"),
             // [
             //     NonTerm("ending").many1(),
@@ -64,6 +65,18 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             // ].and().many0(),
 
         ].and().opt(),
+
+        "stmts" => [
+            NonTerm("ending").many0(),
+            [
+                NonTerm("stmt"),
+                [
+                    NonTerm("ending").many1(),
+                    NonTerm("stmt")
+                ].and().many0(),
+            ].and().opt(),
+            NonTerm("ending").many0(),
+        ].and(),
 
         "stmt" => [
             NonTerm("var"),
