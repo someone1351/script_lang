@@ -2705,3 +2705,48 @@ pub struct TempExpectedNew<'g> {
     //     self.expected_news.truncate(last.expected_news_len);
     //     self.expecteds.truncate(last.expecteds_len);
     // }
+	
+===
+
+                    // println!("        hist_stows_last");
+                    // if let Some(h)=self.hist_stows_stk.last() {
+                    //     for (i,
+                    //         // (g,x)
+                    //         x
+                    //         ) in h.elements.iter().enumerate() {
+                    //         println!("            {i}:[{:?}]: {:?}",x.tokens_after.inds(),x.grammar)
+                    //     }
+                    // }
+                    // println!("        hist_ends_last");
+                    // if let Some(h)=self.hist_ends_stk.last() {
+                    //     for (i,
+                    //         // (g,x)
+                    //         x
+                    //     ) in h.elements.iter().enumerate() {
+                    //         println!("            {i}:[{:?}]: {:?}",x.tokens_start_ind,x.grammar)
+                    //     }
+                    // }
+
+                    // println!("        hist_news=[{}]",
+                    //     self.hist_news.iter()
+                    //         .map(|x|format!("{}:{}",x.tokens_start.inds().start,x.grammar.get_non_term_name().unwrap()))
+                    //         .collect::<Vec<_>>().join(", ")
+                    // );
+                    // println!("        hist_stows_last={}",
+                    //     self.hist_stows_stk.last().map(|q|format!("[{}]",q.elements.iter()
+                    //         .map(|x|format!("{}:{}", //: gs={:?}
+                    //             x.1.tokens_start_ind,
+                    //             x.0.get_non_term_name().unwrap(),
+                    //             // x.1.groups,
+                    //         ))
+                    //         .collect::<Vec<_>>().join(", ")
+                    //     )).unwrap_or_default(),
+                    // );
+                    // println!("        hist_ends_last={}",
+                    //     self.hist_ends_stk.last().map(|q|format!("[{}]",q.elements.iter()
+                    //         .map(|x|format!("{}:{}",x.1.tokens_start_ind,x.0.get_non_term_name().unwrap()))
+                    //         .collect::<Vec<_>>().join(", ")
+                    //     )).unwrap_or_default(),
+                    // );
+					
+					                            // println!("            prevs={:?}",hist_stow_prev.iter().map(|p|&p.grammar).collect::<Vec<_>>());

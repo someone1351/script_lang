@@ -354,8 +354,8 @@ impl Compiler {
 
         //
         let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
-        // walker.set_debug(true);
-        walker.set_hist_non_term_only(true);
+        walker.set_debug(true);
+        walker.set_hist_non_term_only(false);
 
         let start_time = std::time::Instant::now();
         let result=walker.run("start") ;

@@ -17,7 +17,7 @@ pub fn is_keyword(n:& str) -> bool {
         "print"|"println"|"format"|
         "var"|"fn"|"return"|
         "if"|"elif"|"else"
-        // |"a"|"b"|"c"|"d"
+        |"a"|"b"|"c"|"d"
         => true,
         _=>false,
     }
@@ -48,11 +48,22 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         //     [[Int,Int].and(),Float].or().expected("0"),
         //     Eol.many0(),
         // ].and(),
+        // "start" => [
+        //     // NonTerm("ending").many0(),
+        //     NonTerm("stmts"),
+        //     // NonTerm("ending").many0(),
+        // ].and(),
         "start" => [
-            NonTerm("ending").many0(),
-            NonTerm("stmts"),
-            NonTerm("ending").many0(),
-        ].and(),
+            [NonTerm("a"),NonTerm("b")].and(),
+            [NonTerm("a"),NonTerm("b")].and(),
+            NonTerm("a"),
+            NonTerm("c"),
+        ].or(),
+        "a" => Keyword("a"),
+        "b" => Keyword("b"),
+        "c" => Keyword("c"),
+
+        // "start" => NonTerm("stmts"),
 
 
         "ending" => [NonTerm("semicolon"),Eol].or(),
@@ -66,7 +77,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         ].and().opt(),
 
-        "stmts" => [
+        "stmts2" => [
             NonTerm("ending").many0(),
             [
                 NonTerm("stmt"),
@@ -377,7 +388,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
                     NonTerm("if"),
                     NonTerm("lambda"),
-                    NonTerm("block"), //allow code blocks for  exprs?
+                    NonTerm("block").group("block"), //allow code blocks for  exprs?
 
                     [
                         NonTerm("lparen"),

@@ -65,7 +65,7 @@ pub struct TempHistPrev<'g> { //TempHistPrev
     pub tokens_start_ind:usize,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,Default)]
 pub struct TempHistFail<'g> { //TempHistPrev
     pub grammers: HashSet<Rc<GrammarNode<'g>>>,
     // pub tokens_start_ind:usize,
@@ -107,6 +107,8 @@ pub struct Work<'t,'g> {
 
     pub hist_prevs_ind:usize,
     pub hist_prevs_len:usize,
+
+    pub hist_fails_len:usize,
 
     pub expected_ind2:Option<usize>,
     pub expecteds_len2:usize,
