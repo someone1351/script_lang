@@ -922,8 +922,9 @@ where
             self.stk.truncate(cur.fail_len);
             self.update_tokens(&cur,false);
             // // self.revert_last_hist_news();
-            self.hist_on_fail(&cur);
+            self.hist_on_fail();
             self.groups_on_fail();
+            //don't add expected, let user manually add one
             // // // let _expected_news_len=self.add_expected_new(&cur);
             // // // let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
 
@@ -959,7 +960,7 @@ where
         //
         self.stk.truncate(cur.fail_len);
         self.update_tokens(&cur,false);
-        self.hist_on_fail(&cur);
+        self.hist_on_fail();
         self.expected2_on_fail();
         self.groups_on_fail();
 
@@ -1079,7 +1080,7 @@ where
             Err(_loc) => {
                 self.stk.truncate(cur.fail_len);
                 self.update_tokens(&cur,false);
-                self.hist_on_fail(&cur);
+                self.hist_on_fail();
                 // // self.revert_last_hist_news();
                 // self.update_hist_on_fail(&cur);
                 // // let _expected_news_len=self.add_expected_new(&cur);
@@ -1154,12 +1155,12 @@ where
         last.expecteds_len2=self.expecteds2.len();
     }
     fn hist_on_fail(&mut self,
-        cur:&Work<'t,'g>,
+        // cur:&Work<'t,'g>,
     ){
         let Some(last)=self.stk.last_mut() else {return;};
         self.hist_prevs.truncate(last.hist_prevs_len);
 
-        if cur.hist_fails_len!=0 {
+        if last.hist_fails_len!=0 {
             //
             let drained_hist_news=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
 
@@ -1904,7 +1905,7 @@ where
                     }
 
                     //
-                    println!("        hist_fails {}",cur.hist_fails_len);
+                    println!("        hist_fails {} : ({})",cur.hist_fails_len,self.hist_fails.len());
 
                     if true {
 
