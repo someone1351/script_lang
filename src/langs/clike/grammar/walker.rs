@@ -1163,11 +1163,17 @@ where
             //
             let drained_hist_news=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
 
+            //
+            if self.debug && !drained_hist_news.is_empty() {
+                // println!("----- adding to hist fails");
+            }
+
+            //
             for x in drained_hist_news {
                 if !x.is_first {continue;}
                 if !(x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many()) {continue;}
 
-                self.hist_fails[cur.hist_fails_len-1].grammers.insert(x.grammar.clone());
+                self.hist_fails[last.hist_fails_len-1].grammers.insert(x.grammar.clone());
             }
         } else {
             self.hist_news.truncate(last.hist_news_len);
@@ -1805,6 +1811,7 @@ where
                 // };
 
                 //
+                println!("");
                 println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, ",);
                 // println!("        and_id={and_id}, groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
                 println!("        groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
@@ -1818,8 +1825,8 @@ where
                 //     self.hist_stows_stk.get(hist_stows_stk_len-1).map(|x|x.elements.len())
                 // };
                 // println!("        first={first}, hist_news_len={hist_news_len}, hist_stows_len={hist_stows_len:?}, hist_prevs_ind={hist_prevs_ind}, hist_prevs_len={hist_prevs_len}",);
-                println!("        first={first}, hist_news_len={hist_news_len}, hist_stows_len={hist_stows_len:?}, hist_prevs_ind={hist_prevs_ind},",);
-                println!("        actual: hist_news_len={}, hist_stows_len={:?}, hist_prevs_len={}",
+                println!("        first={first}, hist news_len={hist_news_len}, stows_len={hist_stows_len:?}, prevs_ind={hist_prevs_ind}, fails_len={hist_fails_len},",);
+                println!("        actual: hist news_len={}, stows_len={:?}, prevs_len={}",
                     self.hist_news.len(),self.hist_stows.len(),self.hist_prevs.len(),
                 );
 
