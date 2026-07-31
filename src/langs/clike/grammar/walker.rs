@@ -910,16 +910,18 @@ where
             //     // .contains_key(&g)
             self.hist_prevs[cur.hist_prevs_ind..].iter().find(|x|x.grammar.eq(g)).is_some()
         {
-            self.stk.truncate(cur.success_len);
+            // self.stk.truncate(cur.success_len);
+            self.work_on_success(&cur);
+
             self.handle_exit_last_many(&cur);
             // self.hist_news_truncate_to_last(); //why on success??
             self.update_tokens(&cur,true);
             self.groups_on_success(&cur);
             self.hist_on_success(&cur,false,);
-            // self.revert_last_expected_news();
             self.expected2_on_success();
         } else {
-            self.stk.truncate(cur.fail_len);
+            // self.stk.truncate(cur.fail_len);
+            self.work_on_fail(&cur);
             self.update_tokens(&cur,false);
             // // self.revert_last_hist_news();
             self.hist_on_fail();
@@ -934,15 +936,17 @@ where
     }
 
     fn grammar_always(&mut self,cur :Work<'t,'g>,) {
-        self.stk.truncate(cur.success_len);
+        // self.stk.truncate(cur.success_len);
+        self.work_on_success(&cur);
         let _hist_news_len=self.hist_news_add(&cur);
         // self.hist_stows_clear(&cur);
         self.handle_exit_last_many(&cur);
         self.update_tokens(&cur,true);
         self.groups_on_success(&cur); //here
         self.hist_on_success(&cur,false);
-        // self.revert_last_expected_news();
-        // // self.expected2_on_success(&cur);
+
+        //why was this previously commented out?
+        self.expected2_on_success();
     }
 
     fn grammar_try_from_hist_fails(&mut self,cur :&Work<'t,'g>) -> bool {
@@ -958,7 +962,8 @@ where
         }
 
         //
-        self.stk.truncate(cur.fail_len);
+        // self.stk.truncate(cur.fail_len);
+        self.work_on_fail(&cur);
         self.update_tokens(&cur,false);
         self.hist_on_fail();
         self.expected2_on_fail();
@@ -992,7 +997,7 @@ where
         }
 
         //
-        self.stk.truncate(cur.success_len);
+        // self.stk.truncate(cur.success_len);
 
         let temp_groups_end=hist_stow.val.as_ref().map(|x|x.stow_groups_end).unwrap_or(hist_stow.stow_groups_start);
         let temp_prevs_end=hist_stow.val.as_ref().map(|x|x.stow_prevs_end).unwrap_or(hist_stow.stow_prevs_start);
@@ -1029,10 +1034,12 @@ where
         };
 
         //
+
+        self.work_on_success(&cur);
         self.update_tokens(&cur,true);
         self.groups_on_success(&cur);
         self.hist_on_success(&cur,true); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
-        // self.revert_last_expected_news();
+
         self.expected2_on_success();
 
         //
@@ -1057,11 +1064,11 @@ where
         match prim_func(&mut cur.tokens) {
             Ok(v) => {
                 //
-                self.stk.truncate(cur.success_len);
+                // self.stk.truncate(cur.success_len);
+                self.work_on_success(&cur);
                 self.update_tokens(&cur,true);
                 self.groups_on_success(&cur);
                 self.hist_on_success(&cur,false);
-                // self.revert_last_expected_news();
                 self.expected2_on_success();
 
                 //
@@ -1078,7 +1085,8 @@ where
                 Some(v)
             }
             Err(_loc) => {
-                self.stk.truncate(cur.fail_len);
+                // self.stk.truncate(cur.fail_len);
+                self.work_on_fail(&cur);
                 self.update_tokens(&cur,false);
                 self.hist_on_fail();
                 // // self.revert_last_hist_news();
@@ -1094,6 +1102,14 @@ where
                 None
             }
         }
+    }
+
+    fn work_on_success(&mut self, cur:&Work<'t,'g>,) {
+        self.stk.truncate(cur.success_len);
+    }
+
+    fn work_on_fail(&mut self, cur:&Work<'t,'g>,) {
+        self.stk.truncate(cur.fail_len);
     }
 
     fn add_expected2(&mut self, cur:&Work<'t,'g>,) -> (Option<usize>,usize) {

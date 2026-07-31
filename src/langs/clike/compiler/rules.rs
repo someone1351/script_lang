@@ -134,10 +134,14 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "block" => [
             NonTerm("lcurly").expect("block"),
-            [
-                // NonTerm("stmts"),
-                NonTerm("rcurly"),
-            ].and().expect("closing brace"),
+            // [
+            //     NonTerm("stmts"),
+            //     NonTerm("rcurly"),
+            // ].and().expect("closing brace"),
+
+            NonTerm("stmts"),
+            NonTerm("rcurly").expect("closing brace"),
+
         ].and(),
 
         "if_cond_block" => [NonTerm("cond"), NonTerm("block")].and(),
@@ -394,11 +398,22 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "dict" => [
             NonTerm("lcurly"),
             // [
-            //     NonTerm("dict_key_val"),
-            //     [NonTerm("comma"),NonTerm("dict_key_val"),].and().many0(),
-            //     NonTerm("comma").opt(),
-            // ].and().opt(),
-            NonTerm("rcurly"),
+            //     [
+            //         NonTerm("dict_key_val"),
+            //         [NonTerm("comma"),NonTerm("dict_key_val"),].and().many0(),
+            //         NonTerm("comma").opt(),
+            //     ].and().opt(),
+            //     NonTerm("rcurly"),
+            // ].and().expect("closing brace"),
+
+
+            [
+                NonTerm("dict_key_val"),
+                [NonTerm("comma"),NonTerm("dict_key_val"),].and().many0(),
+                NonTerm("comma").opt(),
+            ].and().opt(),
+            NonTerm("rcurly").expect("closing brace"),
+
         ].and(),
 
         "array" => [
