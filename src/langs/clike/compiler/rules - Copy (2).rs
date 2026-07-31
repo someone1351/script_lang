@@ -43,7 +43,42 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
     use GrammarNode::*;
 
     Some(Rc::new(match n {
+        // "start" => [Int,Float,[Identifier,Eol.many0()].and()].and(),
+        // "start" => [
+        //     [[Int,Int].and(),Float].or().expected("0"),
+        //     Eol.many0(),
+        // ].and(),
+        // "start" => [
+        //     // NonTerm("ending").many0(),
+        //     NonTerm("stmts"),
+        //     // NonTerm("ending").many0(),
+        // ].and(),
+
+        // "start" => [
+        //     [NonTerm("a"),NonTerm("b")].and(),
+        //     [NonTerm("a"),NonTerm("b")].and(),
+        //     NonTerm("a"),
+        //     NonTerm("c"),
+        // ].or(),
+        // "a" => Keyword("a"),
+        // "b" => Keyword("b"),
+        // "c" => Keyword("c"),
+
+        // "start" => NonTerm("factor"),
+        // "factor" => [
+        //     [NonTerm("term"), [Symbol("+"),NonTerm("term"),].and().many1()].and().group("factor"),
+        //     NonTerm("term"),
+        // ].or(),
+        // "term" => [
+        //     [NonTerm("num"), [Symbol("*"),NonTerm("num"),].and().many1()].and().group("term"),
+        //     NonTerm("num"),
+        // ].or(),
+        // "num" => Int.group("num"),
+
+        // "start" => NonTerm("val"),
+
         "start" => NonTerm("stmts"),
+
 
         "ending" => [NonTerm("semicolon"),Eol].or(),
         "stmts" => [
@@ -69,18 +104,18 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and(),
 
         "stmt" => [
-            // NonTerm("var"),
-            // NonTerm("set"),
-            // NonTerm("func"),
-            // NonTerm("while"),
-            // NonTerm("for"),
-            // NonTerm("break"),
-            // NonTerm("continue"),
-            // NonTerm("return"),
-            // NonTerm("include"),
-            // NonTerm("format"),
-            // NonTerm("print"),
-            // NonTerm("println"),
+            NonTerm("var"),
+            NonTerm("set"),
+            NonTerm("func"),
+            NonTerm("while"),
+            NonTerm("for"),
+            NonTerm("break"),
+            NonTerm("continue"),
+            NonTerm("return"),
+            NonTerm("include"),
+            NonTerm("format"),
+            NonTerm("print"),
+            NonTerm("println"),
             NonTerm("expr"),
             // // NonTerm("block"), //after expr, so dict can use the empty {} //put as expr or stmt?
             // // NonTerm("if"),
@@ -157,6 +192,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
             [NonTerm("dot"),NonTerm("dot"),NonTerm("equals").opt(),].and(),
 
+
             NonTerm("expr"),
         ].and(),
         "for" => [
@@ -167,6 +203,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             ].or(),
             NonTerm("block"),
         ].and().group("for"),
+
 
         "include" => [Keyword("include"),String,].and(),
 
@@ -202,6 +239,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             // NonTerm("stmts"),
             // NonTerm("rcurly"),
         ].and().group("lambda"),
+
 
         "expr_or" => [
             [
@@ -300,6 +338,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             NonTerm("rparen"),
         ].and(),
 
+
         "val_field_index" => [
             NonTerm("val_index"),
             NonTerm("val_field"),
@@ -336,41 +375,43 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "nil" => Keyword("nil").group("nil"),
         "void" => Keyword("void").group("void"),
 
+
+
         "val" => [
-            NonTerm("prefixes").opt(),
+            // NonTerm("prefixes").opt(),
             [
-                // [
-                //     Identifier.group("idn"),
-                //     NonTerm("call_params"),
-                // ].and().group("call_idn"),
+                [
+                    Identifier.group("idn"),
+                    NonTerm("call_params"),
+                ].and().group("call_idn"),
                 [
                     // // [Identifier.group("name"),NonTerm("call_params")].and().group("mcall"),
-                    // [
-                    //     Int,
-                    //     Float,
-                    //     String,
-                    //     Identifier.group("idn"),
-                    // ].or().group("primitive"),
+                    [
+                        Int,
+                        Float,
+                        String,
+                        Identifier.group("idn"),
+                    ].or().group("primitive"),
 
-                    // NonTerm("bool"),
-                    // NonTerm("nil"),
-                    // NonTerm("void"),
+                    NonTerm("bool"),
+                    NonTerm("nil"),
+                    NonTerm("void"),
 
-                    // NonTerm("array"),
-                    // NonTerm("dict"), //empty dict supercedes empty block
+                    NonTerm("array"),
+                    NonTerm("dict"), //empty dict supercedes empty block
 
-                    // NonTerm("if"),
-                    // NonTerm("lambda"),
+                    NonTerm("if"),
+                    NonTerm("lambda"),
                     NonTerm("block").group("block"), //allow code blocks for  exprs?
 
-                    // [
-                    //     NonTerm("lparen"),
-                    //     NonTerm("expr"),
-                    //     NonTerm("rparen"),
-                    // ].and(),
+                    [
+                        NonTerm("lparen"),
+                        NonTerm("expr"),
+                        NonTerm("rparen"),
+                    ].and(),
                 ].or(),
             ].or().expect("val"), //0
-            // NonTerm("val_field_index_call").many0(),
+            NonTerm("val_field_index_call").many0(),
         ].and().group("val").expect("val"), //0
 
         "dict_key_val" => [
@@ -440,6 +481,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "sub" => Symbol("-"),
         "mul" => Symbol("*"),
         "div" => Symbol("/"),
+
 
         "xor" => Symbol("^"),
         "mod" => Symbol("%"),
