@@ -46,7 +46,7 @@ where
     // expected_news:Vec<TempExpectedNew<'g>>,
     // expecteds:Vec<TempExpected<'g>>,
 
-    expecteds2:Vec<TempExpected2<'t,'g>>,
+    expecteds:Vec<TempExpected2<'t,'g>>,
 
     debug:bool,
     // non_term_recursive_check:bool,
@@ -95,7 +95,7 @@ where
             // expected_loc:Loc::zero(),
             // expected_news:Default::default(),
             // expecteds:Default::default(),
-            expecteds2:Default::default(),
+            expecteds:Default::default(),
 
             grammar_func,
             tokens_remaining:top_primitives.clone(),
@@ -140,7 +140,7 @@ where
         self.stk.push(Work{
             grammar:Rc::new(GrammarNode::Error(GrammarWalkError::FailedParse)),
             // grammar_ind:0,
-            success_len:0,fail_len:0,
+            work_stk_success_len:0,work_stk_fail_len:0,
             tokens:self.top_tokens,
             group_ind: 0, group_len: 1,
             // visiteds:Default::default(),
@@ -175,8 +175,8 @@ where
             // expected_news_len:0,
             // expecteds_len:0,
 
-            expected_ind2:None,
-            expecteds_len2:0,
+            expected_ind:None,
+            expecteds_len:0,
         });
 
         //
@@ -186,8 +186,8 @@ where
         self.stk.push(Work{
             grammar : Rc::new(GrammarNode::Always),
             // grammar_ind:0,
-            success_len:0,
-            fail_len:0, //not used
+            work_stk_success_len:0,
+            work_stk_fail_len:0, //not used
             tokens:self.top_tokens,
             group_ind: 0, group_len: 1,
             // visiteds:Default::default(),
@@ -222,8 +222,8 @@ where
             // expecteds_len:0,
 
 
-            expected_ind2:None,
-            expecteds_len2:0,
+            expected_ind:None,
+            expecteds_len:0,
         });
 
         //
@@ -242,8 +242,8 @@ where
                 grammar, //:(self.grammar_func)(start_non_term),
                 // grammar_ind:0,
                 // success_len:0,
-                success_len,
-                fail_len, //1
+                work_stk_success_len: success_len,
+                work_stk_fail_len: fail_len, //1
                 tokens:self.top_tokens,
                 group_ind: 0, group_len: 1,
                 // visiteds:Default::default(),
@@ -275,8 +275,8 @@ where
                 // expected_news_len:0,
                 // expecteds_len:0,
 
-                expected_ind2:None,
-                expecteds_len2:0,
+                expected_ind:None,
+                expecteds_len:0,
             });
         }
 
@@ -313,7 +313,7 @@ where
         // self.expected_loc=Loc::zero();
         // self.expected_news.clear();
         // self.expecteds.clear();
-        self.expecteds2.clear();
+        self.expecteds.clear();
 
     }
 
@@ -322,15 +322,15 @@ where
 
         //
         // let expected_news_len=self.add_expected_new(&cur);
-        let (expected_ind2,expecteds_len2)=self.add_expected2(&cur);
+        let (expected_ind,expecteds_len)=self.add_expected2(&cur);
         let hist_news_len=self.hist_news_add(&cur);
 
         //TODO
         self.stk.push(Work {
             grammar: g.clone(),
             // grammar_ind:0,
-            success_len: cur.success_len,
-            fail_len: cur.fail_len,
+            work_stk_success_len: cur.work_stk_success_len,
+            work_stk_fail_len: cur.work_stk_fail_len,
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
@@ -364,12 +364,12 @@ where
             // // expected_news_len:cur.expected_news_len,
             // expecteds_len:cur.expecteds_len,
 
-            expected_ind2,
-            expecteds_len2,
+            expected_ind,
+            expecteds_len,
 
 
-            // expected_ind2:cur.expected_ind2,
-            // expecteds_len2:cur.expecteds_len2,
+            // expected_ind:cur.expected_ind,
+            // expecteds_len:cur.expecteds_len,
         });
     }
 
@@ -384,8 +384,8 @@ where
         self.stk.push(Work {
             grammar: g.clone(),
             // grammar_ind:0,
-            success_len: cur.success_len,
-            fail_len: cur.fail_len,
+            work_stk_success_len: cur.work_stk_success_len,
+            work_stk_fail_len: cur.work_stk_fail_len,
             tokens: cur.tokens,
             group_ind,
             group_len,
@@ -417,8 +417,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expecteds_len:cur.expecteds_len,
 
-            expected_ind2:cur.expected_ind2,
-            expecteds_len2:cur.expecteds_len2,
+            expected_ind:cur.expected_ind,
+            expecteds_len:cur.expecteds_len,
         });
     }
 
@@ -435,8 +435,8 @@ where
             // grammar: Rc::new(GrammarNode::Many(g.clone())),
             grammar:cur.grammar.clone(),
             // grammar_ind:0,
-            success_len: cur.success_len,
-            fail_len: cur.fail_len,
+            work_stk_success_len: cur.work_stk_success_len,
+            work_stk_fail_len: cur.work_stk_fail_len,
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
@@ -468,8 +468,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expecteds_len:cur.expecteds_len,
 
-            expected_ind2:cur.expected_ind2,
-            expecteds_len2:cur.expecteds_len2,
+            expected_ind:cur.expected_ind,
+            expecteds_len:cur.expecteds_len,
         });
 
         //
@@ -479,8 +479,8 @@ where
         self.stk.push(Work {
             grammar: Rc::new(GrammarNode::Always),
             // grammar_ind:0,
-            success_len: cur.success_len,
-            fail_len: 0, //fail is not used
+            work_stk_success_len: cur.work_stk_success_len,
+            work_stk_fail_len: 0, //fail is not used
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
@@ -512,8 +512,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expecteds_len:cur.expecteds_len,
 
-            expected_ind2:cur.expected_ind2,
-            expecteds_len2:cur.expecteds_len2,
+            expected_ind:cur.expected_ind,
+            expecteds_len:cur.expecteds_len,
         });
 
         //
@@ -523,8 +523,8 @@ where
         self.stk.push(Work {
             grammar: g.clone(),
             // grammar_ind:0,
-            success_len: success_len2,
-            fail_len,
+            work_stk_success_len: success_len2,
+            work_stk_fail_len: fail_len,
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
@@ -556,8 +556,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expecteds_len:cur.expecteds_len,
 
-            expected_ind2:cur.expected_ind2,
-            expecteds_len2:cur.expecteds_len2,
+            expected_ind:cur.expected_ind,
+            expecteds_len:cur.expecteds_len,
         });
     }
 
@@ -581,8 +581,8 @@ where
         self.stk.push(Work {
             grammar, //: (self.grammar_func)(t), //should return err on not found, instead of grammar never, should have error
             // grammar_ind:0,
-            success_len: cur.success_len,
-            fail_len: cur.fail_len,
+            work_stk_success_len: cur.work_stk_success_len,
+            work_stk_fail_len: cur.work_stk_fail_len,
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
@@ -615,8 +615,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expecteds_len:cur.expecteds_len,
 
-            expected_ind2:cur.expected_ind2,
-            expecteds_len2:cur.expecteds_len2,
+            expected_ind:cur.expected_ind,
+            expecteds_len:cur.expecteds_len,
         });
 
         Ok(())
@@ -679,8 +679,8 @@ where
                 // grammar:cur.grammar.clone(),
                 // grammar_ind:cur.grammar_ind+1,
 
-                success_len: cur.success_len,
-                fail_len: cur.fail_len,
+                work_stk_success_len: cur.work_stk_success_len,
+                work_stk_fail_len: cur.work_stk_fail_len,
                 tokens: cur.tokens, //not really necessary? since gets updated by always/primtitives
                 group_ind: cur.group_ind,
                 group_len: cur.group_len,
@@ -712,22 +712,22 @@ where
                 // expected_news_len:cur.expected_news_len,
                 // expecteds_len:cur.expecteds_len,
 
-                expected_ind2:cur.expected_ind2,
-                expecteds_len2:cur.expecteds_len2,
+                expected_ind:cur.expected_ind,
+                expecteds_len:cur.expecteds_len,
             });
         }
 
         //
         // let not_end= gs.len() > 1;
         let not_end= *grammar_ind+1 != gs.len();
-        let success_len=if not_end {self.stk.len()}else{cur.success_len};
+        let success_len=if not_end {self.stk.len()}else{cur.work_stk_success_len};
 
         //
         self.stk.push(Work {
             grammar: head,
             // grammar_ind:0,
-            success_len,
-            fail_len: cur.fail_len,
+            work_stk_success_len: success_len,
+            work_stk_fail_len: cur.work_stk_fail_len,
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
@@ -762,8 +762,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expecteds_len:cur.expecteds_len,
 
-            expected_ind2:cur.expected_ind2,
-            expecteds_len2:cur.expecteds_len2,
+            expected_ind:cur.expected_ind,
+            expecteds_len:cur.expecteds_len,
         });
     }
 
@@ -806,8 +806,8 @@ where
                 // grammar:cur.grammar.clone(),
                 // grammar_ind:cur.grammar_ind+1,
 
-                success_len: cur.success_len,
-                fail_len: cur.fail_len,
+                work_stk_success_len: cur.work_stk_success_len,
+                work_stk_fail_len: cur.work_stk_fail_len,
                 tokens: cur.tokens,
                 group_ind: cur.group_ind,
                 group_len: cur.group_len,
@@ -841,8 +841,8 @@ where
                 // expected_news_len:cur.expected_news_len,
                 // expecteds_len:cur.expecteds_len,
 
-                expected_ind2:cur.expected_ind2,
-                expecteds_len2:cur.expecteds_len2,
+                expected_ind:cur.expected_ind,
+                expecteds_len:cur.expecteds_len,
             });
         }
 
@@ -851,14 +851,14 @@ where
         // let not_end= gs.len() > 1;
         let not_end= *grammar_ind+1 != gs.len();
 
-        let fail_len=if not_end {self.stk.len()}else{cur.fail_len};
+        let fail_len=if not_end {self.stk.len()}else{cur.work_stk_fail_len};
 
         //
         self.stk.push(Work {
             grammar: head,
             // grammar_ind:0,
-            success_len: cur.success_len,
-            fail_len,
+            work_stk_success_len: cur.work_stk_success_len,
+            work_stk_fail_len: fail_len,
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
@@ -889,8 +889,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expecteds_len:cur.expecteds_len,
 
-            expected_ind2:cur.expected_ind2,
-            expecteds_len2:cur.expecteds_len2,
+            expected_ind:cur.expected_ind,
+            expecteds_len:cur.expecteds_len,
         });
     }
 
@@ -928,7 +928,7 @@ where
             self.groups_on_fail();
             //don't add expected, let user manually add one
             // // // let _expected_news_len=self.add_expected_new(&cur);
-            // // // let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
+            // // // let (_expected_ind,_expecteds_len)=self.add_expected2(&cur);
 
             // // self.submit_expected_news(&cur);
             self.expected2_on_fail();
@@ -1095,7 +1095,7 @@ where
                 // // self.submit_expected_news(&cur);
 
                 self.groups_on_fail();
-                let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
+                let (_expected_ind,_expecteds_len)=self.add_expected2(&cur);
                 self.expected2_on_fail();
 
                 //
@@ -1105,27 +1105,27 @@ where
     }
 
     fn work_on_success(&mut self, cur:&Work<'t,'g>,) {
-        self.stk.truncate(cur.success_len);
+        self.stk.truncate(cur.work_stk_success_len);
     }
 
     fn work_on_fail(&mut self, cur:&Work<'t,'g>,) {
-        self.stk.truncate(cur.fail_len);
+        self.stk.truncate(cur.work_stk_fail_len);
     }
 
     fn add_expected2(&mut self, cur:&Work<'t,'g>,) -> (Option<usize>,usize) {
-        // return (cur.expected_ind2,cur.expecteds_len2);
+        // return (cur.expected_ind,cur.expecteds_len);
 
         //check if prim and parent pos is same as cur pos
         //
 
-        let parent_start=cur.expected_ind2.map(|i|self.expecteds2[i].tokens_start.inds().start) ;
+        let parent_start=cur.expected_ind.map(|i|self.expecteds[i].tokens_start.inds().start) ;
 
         if parent_start==Some(cur.tokens.inds().start) {
-            return (cur.expected_ind2,cur.expecteds_len2);
+            return (cur.expected_ind,cur.expecteds_len);
         }
 
-        // if cur.expected_ind2.is_some() && cur.grammar.is_primtive() { //(cur.grammar.is_prev() || )
-        //     return (cur.expected_ind2,cur.expecteds_len2);
+        // if cur.expected_ind.is_some() && cur.grammar.is_primtive() { //(cur.grammar.is_prev() || )
+        //     return (cur.expected_ind,cur.expecteds_len);
         // }
 
         //
@@ -1148,28 +1148,28 @@ where
         }
 
         //
-        let expected_ind=self.expecteds2.len();
+        let expected_ind=self.expecteds.len();
 
         //
-        self.expecteds2.push(TempExpected2 {
+        self.expecteds.push(TempExpected2 {
             expected_type,
-            parent: cur.expected_ind2,
+            parent: cur.expected_ind,
             tokens_start: cur.tokens,
         });
 
         //
-        (Some(expected_ind),self.expecteds2.len())
+        (Some(expected_ind),self.expecteds.len())
     }
 
 
     fn expected2_on_success(&mut self, ) {
         let Some(last)=self.stk.last() else {panic!("");}; //the func, not run on always
-        self.expecteds2.truncate(last.expecteds_len2);
+        self.expecteds.truncate(last.expecteds_len);
     }
 
     fn expected2_on_fail(&mut self, ) {
         let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
-        last.expecteds_len2=self.expecteds2.len();
+        last.expecteds_len=self.expecteds.len();
     }
     fn hist_on_fail(&mut self,
         // cur:&Work<'t,'g>,
@@ -1539,7 +1539,7 @@ where
         for t in self.top_tokens {
             println!("t {t:?} :: {} to {}",t.start_loc(),t.end_loc());
         }
-        let out_loc=if self.expecteds2.is_empty() {
+        let out_loc=if self.expecteds.is_empty() {
             self.tokens_remaining.loc()
         } else {
             self.expected_tokens_remaining.loc()
@@ -1552,7 +1552,7 @@ where
 
     fn organise_expecteds(&mut self) {
         println!("dsfsd");
-        for (i,x) in self.expecteds2.iter().enumerate() {
+        for (i,x) in self.expecteds.iter().enumerate() {
             // println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
 
             println!("e{i}:p{}:t{} {:?} :: {:?}",
@@ -1563,15 +1563,15 @@ where
             );
 
         }
-        let max_token = self.expecteds2.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
+        let max_token = self.expecteds.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
         let max_token_start_ind=max_token.inds().start;
 
         self.expected_tokens_remaining=max_token;
         // self.expected_loc=max_token.loc();
 
-        let parents= self.expecteds2.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
+        let parents= self.expecteds.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
 
-        let expecteds=self.expecteds2.iter().enumerate().rev().filter_map(|(i,x)|(
+        let expecteds=self.expecteds.iter().enumerate().rev().filter_map(|(i,x)|(
             x.tokens_start.inds().start == max_token_start_ind &&
             !parents.contains(&i)
         ).then(||(x.expected_type.clone(),x.clone()))).collect::<BTreeMap<_,_>>();
@@ -1581,20 +1581,20 @@ where
         // }
 
 
-        self.expecteds2=expecteds.iter().map(|(_k,v)|v.clone()).collect();
-        // self.expecteds2=self.expecteds2.iter().enumerate().rev().filter_map(|(i,x)|(
+        self.expecteds=expecteds.iter().map(|(_k,v)|v.clone()).collect();
+        // self.expecteds=self.expecteds.iter().enumerate().rev().filter_map(|(i,x)|(
         //     x.tokens_start.inds().start == max_token_start_ind && !parents.contains(&i)
         // ).then(||x.clone())).collect();
 
         println!("--");
-        for x in self.expecteds2.iter() {
+        for x in self.expecteds.iter() {
             println!("e2 {:?} {:?}",x.expected_type,x.tokens_start.inds().start);
         }
     }
 
     //
     pub fn expecteds_string(&self) -> String {
-        self.expecteds2.iter().rev().map(|x|match &x.expected_type {
+        self.expecteds.iter().rev().map(|x|match &x.expected_type {
             TempExpectedType::Expected(n) => n,
             TempExpectedType::Int => "int",
             TempExpectedType::Float => "float",
@@ -1794,7 +1794,7 @@ where
 
                 //
                 let Work {
-                    grammar, success_len, fail_len, tokens,
+                    grammar, work_stk_success_len: success_len, work_stk_fail_len: fail_len, tokens,
                     group_ind, group_len,
                     // and_id,
                     first,
@@ -1807,7 +1807,7 @@ where
                     hist_prevs_ind,
                     hist_prevs_len,
                     // expected_news_len,expecteds_len,
-                    expected_ind2,expecteds_len2,
+                    expected_ind,expecteds_len,
                     ..
                 }=&cur;
 
@@ -1854,10 +1854,10 @@ where
 
                 //
                 if true {
-                    println!("        expected_ind2={expected_ind2:?}, expecteds_len={expecteds_len2}, expecteds.len={}",self.expecteds2.len());
+                    println!("        expected_ind={expected_ind:?}, expecteds_len={expecteds_len}, expecteds.len={}",self.expecteds.len());
 
-                     println!("        expecteds2=[{}]",
-                        self.expecteds2.iter().enumerate()
+                     println!("        expecteds=[{}]",
+                        self.expecteds.iter().enumerate()
                             .map(|(i,x)|format!("e{i}:p{}:t{}:{:?}",
                                 x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
                                 x.tokens_start.inds().start,
@@ -1947,7 +1947,7 @@ where
 
             //
             if false {
-                for (i,Work {grammar:g, success_len:s, fail_len:f, tokens,
+                for (i,Work {grammar:g, work_stk_success_len:s, work_stk_fail_len:f, tokens,
                     group_ind, group_len,..}) in self.stk.iter().enumerate()
                 {
                     // println!("    {i:3}: ps={:?}, success={s}, fail={f}, and_id={and_id}, group_ind={group_ind}, group_len={group_len}, {g:?},",tokens.inds());

@@ -92,8 +92,8 @@ impl<'t,'g> Debug for  TempGroup<'t,'g> {
 #[derive(Clone)]
 pub struct Work<'t,'g> {
     pub grammar:Rc<GrammarNode<'g>>,
-    pub success_len:usize,
-    pub fail_len:usize,
+    pub work_stk_success_len:usize,
+    pub work_stk_fail_len:usize,
     pub tokens:TokenIterContainer<'t>,
     pub group_ind:usize,
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
@@ -110,7 +110,7 @@ pub struct Work<'t,'g> {
 
     pub hist_fails_len:usize,
 
-    pub expected_ind2:Option<usize>,
-    pub expecteds_len2:usize,
+    pub expected_ind:Option<usize>,
+    pub expecteds_len:usize,
 }
 
