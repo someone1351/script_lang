@@ -946,7 +946,9 @@ where
         self.hist_on_success(&cur,false);
 
         //why was this previously commented out?
-        self.expected2_on_success();
+        //  because grammar could finish without parsing anything due to optionals
+        //  and then not report any errors
+        // self.expected2_on_success();
     }
 
     fn grammar_try_from_hist_fails(&mut self,cur :&Work<'t,'g>) -> bool {
@@ -1163,7 +1165,7 @@ where
 
 
     fn expected2_on_success(&mut self, ) {
-        let Some(last)=self.stk.last() else {panic!("");}; //the func, not run on always
+        let Some(last)=self.stk.last() else {return;}; //the func, not run on always... does now
         self.expecteds.truncate(last.expecteds_len);
     }
 
