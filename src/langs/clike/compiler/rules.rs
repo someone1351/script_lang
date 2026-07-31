@@ -364,7 +364,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
                     // NonTerm("array"),
                     NonTerm("dict"), //empty dict supercedes empty block
-                    Int,
+                    // Int,
                     // NonTerm("if"),
                     // NonTerm("lambda"),
                     NonTerm("block").group("block"), //allow code blocks for  exprs?
@@ -393,11 +393,11 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "dict" => [
             NonTerm("lcurly"),
-            [
-                NonTerm("dict_key_val"),
-                [NonTerm("comma"),NonTerm("dict_key_val"),].and().many0(),
-                NonTerm("comma").opt(),
-            ].and().opt(),
+            // [
+            //     NonTerm("dict_key_val"),
+            //     [NonTerm("comma"),NonTerm("dict_key_val"),].and().many0(),
+            //     NonTerm("comma").opt(),
+            // ].and().opt(),
             NonTerm("rcurly"),
         ].and(),
 

@@ -1085,9 +1085,10 @@ where
                 // self.update_hist_on_fail(&cur);
                 // // let _expected_news_len=self.add_expected_new(&cur);
                 // // self.submit_expected_news(&cur);
-                self.expected2_on_fail();
+
                 self.groups_on_fail();
                 let (_expected_ind2,_expecteds_len2)=self.add_expected2(&cur);
+                self.expected2_on_fail();
 
                 //
                 None
@@ -1827,8 +1828,8 @@ where
                 // };
                 // println!("        first={first}, hist_news_len={hist_news_len}, hist_stows_len={hist_stows_len:?}, hist_prevs_ind={hist_prevs_ind}, hist_prevs_len={hist_prevs_len}",);
                 println!("        first={first}, hist news_len={hist_news_len}, stows_len={hist_stows_len:?}, prevs_ind={hist_prevs_ind}, fails_len={hist_fails_len},",);
-                println!("        actual: hist news_len={}, stows_len={:?}, prevs_len={}",
-                    self.hist_news.len(),self.hist_stows.len(),self.hist_prevs.len(),
+                println!("        actual: hist news_len={}, stows_len={:?}, prevs_len={}, fails_len={}",
+                    self.hist_news.len(),self.hist_stows.len(),self.hist_prevs.len(),self.hist_fails.len(),
                 );
 
                 // println!("        hist_stows_ind={hist_stows_ind}, hist_stows_len={hist_stows_len},",
@@ -1837,7 +1838,7 @@ where
 
                 //
                 if true {
-                    println!("        expected_ind2={expected_ind2:?}, expecteds_len={expecteds_len2}");
+                    println!("        expected_ind2={expected_ind2:?}, expecteds_len={expecteds_len2}, expecteds.len={}",self.expecteds2.len());
 
                      println!("        expecteds2=[{}]",
                         self.expecteds2.iter().enumerate()
