@@ -87,7 +87,7 @@ where
             non_term_cache:Default::default(),
             // prev_non_term_only:true,
             // stow_non_term_only:true,
-            hist_non_term_only:true,
+            hist_non_term_only:false,
 
             stk:Default::default(),
             step_count:Default::default(),
@@ -1125,6 +1125,11 @@ where
         };
 
         //
+        if self.debug {
+            println!("----- added expected {expected_type:?}");
+        }
+
+        //
         let expected_ind=self.expecteds2.len();
 
         //
@@ -1823,7 +1828,7 @@ where
                 // );
 
                 //
-                if false {
+                if true {
                     println!("        expected_ind2={expected_ind2:?}, expecteds_len={expecteds_len2}");
 
                      println!("        expecteds2=[{}]",
@@ -1892,7 +1897,14 @@ where
                     }
 
                     //
-                    println!("        hist_fails",);
+                    println!("        hist_fails {}",cur.hist_fails_len);
+
+                    if true {
+
+                        for (i,x) in self.hist_fails.iter().enumerate().rev() {
+                            println!("            {i}: {:?}",x.grammers);
+                        }
+                    } else
                     if cur.hist_fails_len!=0 {
                         let his_fails_last=&self.hist_fails[cur.hist_fails_len-1].grammers;
 
