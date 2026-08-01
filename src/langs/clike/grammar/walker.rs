@@ -972,7 +972,7 @@ where
         self.groups_on_fail();
 
         //
-        // if self.debug
+        if self.debug
         {
             println!("---- grabbed fail from or {:?},",cur.grammar);
         }
@@ -1243,9 +1243,12 @@ where
         }).collect::<Vec<_>>();
         // let added_hist_prevs = Vec::new();
 
+        // println!("gooo {} !=0 && {}=={}",cur.hist_stows_len, cur.hist_stows_len,last.hist_stows_len);
+
         //add hist stows
-        if cur.hist_stows_len!=0
-            && cur.hist_stows_len==last.hist_stows_len //that the hist_stows[ind] still exists
+        if last.hist_stows_len!=0
+            //cur.hist_stows_len!=0
+            // && cur.hist_stows_len==last.hist_stows_len //that the hist_stows[ind] still exists
         {
 
             //
@@ -1259,11 +1262,18 @@ where
 
             // println!("-------found {:?} : {:?}",drained_hist_new2,drained_hist_news.iter().map(|x|&x.grammar).collect::<Vec<_>>());
             //
+
             if let Some(drained_hist_new2)=drained_hist_new2 {
+
+                //
+                if self.debug {
+                    println!("------ hist_stows_set {}: {:?}", self.hist_stows.len(), drained_hist_new2.grammar, );
+                }
                 // println!("------ stowed {:?}",drained_hist_new2.grammar.clone());
 
                 //
-                let hist_stow=self.hist_stows.last_mut().unwrap();
+                // let hist_stow=self.hist_stows.last_mut().unwrap();
+                let hist_stow=&mut self.hist_stows[last.hist_stows_len-1];
 
                 //
                 if !gotten {
@@ -1364,8 +1374,11 @@ where
         ) //add current/initial OR
             // && (!self.hist_non_term_only ||)
         {
-            // println!("------ hist_stows_push");
+            if self.debug {
+                println!("------ hist_stows_push ind={}", self.hist_stows.len());
+            }
 
+            //
             self.hist_stows.push(TempHistStow {
                 val: None,
                 stow_groups_start: self.hist_stows_groups.len(),
@@ -1413,6 +1426,13 @@ where
     fn hist_stows_truncate(&mut self,hist_stows_len:usize) {
 
         //
+        if self.debug {
+            if self.hist_stows.len() != hist_stows_len {
+                println!("------ hist_stows_truncate {}=>{}", self.hist_stows.len(), hist_stows_len);
+            }
+        }
+
+        //
         self.hist_stows.truncate(hist_stows_len);
 
         //
@@ -1428,21 +1448,21 @@ where
         }
     }
 
-    fn step_truncates(&mut self,cur :&Work<'t,'g>) {
-        //should move all these to run on success/fails of prims/prev/always/take
+    // fn step_truncates(&mut self,cur :&Work<'t,'g>) {
+    //     //should move all these to run on success/fails of prims/prev/always/take
 
-        // self.groups.truncate(cur.group_len);
-        // self.hist_news.truncate(cur.hist_news_len);
+    //     // self.groups.truncate(cur.group_len);
+    //     // self.hist_news.truncate(cur.hist_news_len);
 
-        // self.hist_stows_stk.truncate(cur.hist_stows_stk_len);
-        // self.hist_ends_stk.truncate(cur.hist_ends_stk_len);
+    //     // self.hist_stows_stk.truncate(cur.hist_stows_stk_len);
+    //     // self.hist_ends_stk.truncate(cur.hist_ends_stk_len);
 
-        // self.hist_stows_elements.truncate(cur.hist_stows_len);
+    //     // self.hist_stows_elements.truncate(cur.hist_stows_len);
 
-        //
-        // self.hist_prevs.truncate(cur.hist_prevs_len);
+    //     //
+    //     // self.hist_prevs.truncate(cur.hist_prevs_len);
 
-    }
+    // }
 
 
     fn groups_on_fail(&mut self,) {
@@ -1781,11 +1801,13 @@ where
         // }
 
         //
-        self.step_truncates(&cur);
+        // self.step_truncates(&cur);
+
+        //
+        self.step_count+=1;
 
         //
         if self.debug {
-            self.step_count+=1;
 
             {
                 //
@@ -1891,8 +1913,14 @@ where
                     }
 
                     //
-                    println!("        hist_stows",);
+                    println!("        hist_stows {hist_stows_len} ({})",self.hist_stows.len());
 
+                    if true {
+                        for (i,x) in self.hist_stows.iter().enumerate().rev() {
+                            println!("            {i}:{}",x.val.as_ref().map(|y|format!("{:?}",&y.grammar)).unwrap_or("_".to_string()));
+                        }
+
+                    } else
                     if *hist_stows_len!=0 {
                         let hist_stow=self.hist_stows.last().unwrap();
                         if let Some(hist_stow_val)=&hist_stow.val {
@@ -2037,5 +2065,8 @@ where
         } else {
             Rc::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(n)))
         }
+    }
+    pub fn step_count(&self) -> usize {
+        self.step_count
     }
 }

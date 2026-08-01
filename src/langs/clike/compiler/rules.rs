@@ -17,7 +17,7 @@ pub fn is_keyword(n:& str) -> bool {
         "print"|"println"|"format"|
         "var"|"fn"|"return"|
         "if"|"elif"|"else"
-        |"a"|"b"|"c"|"d"
+        // |"a"|"b"|"c"|"d"
         => true,
         _=>false,
     }
@@ -60,6 +60,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].or(),
 
         "expr" => NonTerm("or").group("expr").expect("expr"),
+        // "expr" => NonTerm("factor").group("expr").expect("expr"),
 
         "or" => [
             [
@@ -86,11 +87,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].or(),
 
         "compare" => [
-            [
-                NonTerm("factor"),
-                NonTerm("compare_op"),
-                NonTerm("factor"),
-            ].and().group("compare"),
+            [ NonTerm("factor"), NonTerm("compare_op"), NonTerm("factor"), ].and().group("compare"),
             NonTerm("factor"),
         ].or(),
 
@@ -110,16 +107,31 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             NonTerm("val"),
         ].or(),
 
-
         "val" => [
             NonTerm("prefix_op").many0().group("prefixes"),
             [
+                [ Identifier.group("idn"), NonTerm("call"), ].and().group("call_idn"),
                 NonTerm("primitive"),
                 NonTerm("bool"),
                 NonTerm("nil"),
                 NonTerm("void"),
             ].or(),
         ].and().group("val"),
+
+        "block" => [
+            NonTerm("lcurly").expect("block"),
+            [ NonTerm("stmts"), NonTerm("rcurly"), ].and().expect("closing brace"),
+        ].and(),
+
+        "call" => [
+            NonTerm("lparen"),
+            [
+                NonTerm("expr"),
+                [ NonTerm("comma"), NonTerm("expr"), ].and().many0(),
+                NonTerm("comma").opt(),
+            ].and().opt().group("params"),
+            NonTerm("rparen"),
+        ].and(),
 
         "primitive" => [
             Int,
