@@ -43,6 +43,8 @@ pub struct TempHistNew<'t,'g> {
     // pub group_ind:usize,
     pub group_len:usize,
     pub hist_stows_len:usize,
+
+    pub hist_fails_len:usize,
 }
 
 #[derive(Clone,Debug,)]

@@ -446,7 +446,7 @@ where
             // and_id:cur.and_id,
 
             from_user:false,
-            first:false,
+            first:false, //grmmar in many, after the frist one is parsed are no longer firsts
             // and_first:false,
             // can_hist_stow:false,
 
@@ -1191,6 +1191,7 @@ where
             //
             for x in drained_hist_news {
                 if !x.is_first {continue;}
+                if x.hist_fails_len!=last.hist_fails_len {continue;}
                 if !(x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many()) {continue;}
 
                 self.hist_fails[last.hist_fails_len-1].grammers.insert(x.grammar.clone());
@@ -1417,6 +1418,7 @@ where
                     // &&cur.and_first
                 ,
                 hist_stows_len:cur.hist_stows_len,
+                hist_fails_len:cur.hist_fails_len,
             });
 
             return self.hist_news.len();

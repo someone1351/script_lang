@@ -56,8 +56,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and(),
 
         "stmt" => [
-            Keyword("var"),
-            Keyword("set"),
+            NonTerm("var"),
+            NonTerm("set"),
             NonTerm("expr"),
         ].or(),
 
@@ -152,6 +152,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 NonTerm("nil"),
                 NonTerm("void"),
             ].or(),
+            NonTerm("field_index_call").many0(),
             // [NonTerm("field"), NonTerm("index"), NonTerm("call")].or().many0(),
         ].and().group("val"),
 
@@ -189,7 +190,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 NonTerm("expr").group("index").expect("index"),
                 NonTerm("rsquare").expect("closing square bracket"),
             ].and().expect("index")
-        ].or(),
+        ].and(),
 
         "primitive" => [
             Int,
