@@ -124,14 +124,32 @@ pub trait GrammarArrayTrait<'g> {
     fn or(self) -> GrammarNode<'g>;
 }
 
-impl<'a,const N: usize> GrammarArrayTrait <'a> for [GrammarNode<'a>; N] {
-    fn and(self) -> GrammarNode<'a> {
+impl<'g,const N: usize> GrammarArrayTrait <'g> for [GrammarNode<'g>; N] {
+    fn and(self) -> GrammarNode<'g> {
         // GrammarNode::And(self.into())
         GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),0)
     }
-    fn or(self) -> GrammarNode<'a> {
+    fn or(self) -> GrammarNode<'g> {
         // GrammarNode::Or(self.into())
         GrammarNode::Or(self.into_iter().map(|x|x.into()).collect(),0)
+    }
+}
+
+pub trait GrammarStrTrait<'g> {
+    fn non_term(self) -> GrammarNode<'g>;
+    fn symbol(self) -> GrammarNode<'g>;
+    fn keyword(self) -> GrammarNode<'g>;
+}
+
+impl<'g> GrammarStrTrait <'g> for &'g str {
+    fn non_term(self) -> GrammarNode<'g> {
+        GrammarNode::NonTerm(self)
+    }
+    fn symbol(self) -> GrammarNode<'g> {
+        GrammarNode::Symbol(self)
+    }
+    fn keyword(self) -> GrammarNode<'g> {
+        GrammarNode::Keyword(self)
     }
 }
 
