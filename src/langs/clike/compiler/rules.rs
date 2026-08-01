@@ -56,8 +56,44 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and(),
 
         "stmt" => [
-            NonTerm("expr")
+            Keyword("var"),
+            Keyword("set"),
+            NonTerm("expr"),
         ].or(),
+
+        "var" => [
+            Keyword("var"),
+            NonTerm("var_entry"),
+            [ NonTerm("comma"), NonTerm("var_entry"), ].and().many0(),
+            NonTerm("comma").opt(),
+        ].and(),
+
+        "var_entry" => [
+            Identifier,
+            [NonTerm("var_set_op"), NonTerm("expr")].and().opt(),
+        ].and(),
+
+        "set" => [ NonTerm("set_val"), NonTerm("set_field"), NonTerm("set_index"), ].or(),
+
+        "set_val" => [
+            Identifier,
+            NonTerm("set_op"),
+            NonTerm("expr"),
+        ].and().group("set_val"),
+
+        "set_field" => [
+            NonTerm("val"),
+            NonTerm("field").prev(),
+            NonTerm("set_op"),
+            NonTerm("expr"),
+        ].and().group("set_field"),
+
+        "set_index" => [
+            NonTerm("val"),
+            NonTerm("index").prev(),
+            NonTerm("set_op"),
+            NonTerm("expr"),
+        ].and().group("set_field"),
 
         "expr" => NonTerm("or").group("expr").expect("expr"),
         // "expr" => NonTerm("factor").group("expr").expect("expr"),
@@ -116,12 +152,21 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 NonTerm("nil"),
                 NonTerm("void"),
             ].or(),
+            // [NonTerm("field"), NonTerm("index"), NonTerm("call")].or().many0(),
         ].and().group("val"),
 
         "block" => [
             NonTerm("lcurly").expect("block"),
             [ NonTerm("stmts"), NonTerm("rcurly"), ].and().expect("closing brace"),
         ].and(),
+
+        "field_index_call" => [
+            [NonTerm("index"),NonTerm("call"),].and().group("call_field_index"),
+            [NonTerm("field"),NonTerm("call"),].and().group("call_field_name"),
+            NonTerm("index"),
+            NonTerm("field"),
+            NonTerm("call").group("call_val"),
+        ].or(),
 
         "call" => [
             NonTerm("lparen"),
@@ -132,6 +177,19 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             ].and().opt().group("params"),
             NonTerm("rparen"),
         ].and(),
+
+        "field" => [
+            Symbol("."),
+            [Int.group("field_index"),Identifier.group("field_name")].or().expect("field"),
+        ].and(),
+
+        "index" => [
+            NonTerm("lsquare"),
+            [
+                NonTerm("expr").group("index").expect("index"),
+                NonTerm("rsquare").expect("closing square bracket"),
+            ].and().expect("index")
+        ].or(),
 
         "primitive" => [
             Int,
@@ -149,6 +207,25 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "void" => Keyword("void").group("void"),
 
         "end" => [Symbol(";").expect("semicolon"),Eol].or(),
+
+        "var_set_op" => Symbol("="),
+
+        "set_op" => [
+            Symbol("=").group("eq"),
+            [ NonTerm("set_sub_op"), Symbol("="), ].and(),
+        ].or(),
+
+        "set_sub_op" => [
+            Symbol("+").group("add_eq"),
+            Symbol("-").group("sub_eq"),
+            Symbol("*").group("mul_eq"),
+            Symbol("/").group("div_eq"),
+            Symbol("!").group("not_eq"),
+            Symbol("&&").group("and_eq"),
+            Symbol("||").group("or_eq"),
+            Symbol("^").group("xor_eq"),
+        ].or(),
+
 
         "prefix_op" => [
             Symbol("+"),

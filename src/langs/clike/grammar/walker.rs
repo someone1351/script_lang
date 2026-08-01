@@ -1253,11 +1253,14 @@ where
 
             //
             let drained_hist_new2=drained_hist_news.iter().find(|x|{
-                // let b=x.grammar.is_always() || x.grammar.is_prev() || x.grammar.is_primtive();
-                let b = x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many() ; // || x.grammar.is_or()
-                // println!("---hm? {:?} {b} {}",x.grammar,x.is_first);
-                b &&
+                // // let b=x.grammar.is_always() || x.grammar.is_prev() || x.grammar.is_primtive();
+                // let b = x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many() ; // || x.grammar.is_or()
+                // // println!("---hm? {:?} {b} {}",x.grammar,x.is_first);
+                // b &&
                 x.is_first
+                && x.hist_stows_len==last.hist_stows_len
+                && (x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many())
+
             });
 
             // println!("-------found {:?} : {:?}",drained_hist_new2,drained_hist_news.iter().map(|x|&x.grammar).collect::<Vec<_>>());
@@ -1413,6 +1416,7 @@ where
                 is_first:cur.first
                     // &&cur.and_first
                 ,
+                hist_stows_len:cur.hist_stows_len,
             });
 
             return self.hist_news.len();

@@ -28,39 +28,6 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "break" => Keyword("break"),
         "return" => [Keyword("return"), NonTerm("expr").opt(),].and(),
 
-        "var_set" => [Identifier, NonTerm("equals"),NonTerm("expr")].and(),
-        "var" => [
-            Keyword("var"), NonTerm("var_set"),
-            [NonTerm("comma"),NonTerm("var_set"),].and().many0(),
-        ].and(),
-
-        "set_eq" => [
-            [
-                [
-                    NonTerm("add").group("add_eq"),
-                    NonTerm("sub").group("sub_eq"),
-                    NonTerm("mul").group("mul_eq"),
-                    NonTerm("div").group("div_eq"),
-                    NonTerm("not").group("not_eq"),
-                    NonTerm("and").group("and_eq"),
-                    NonTerm("or").group("or_eq"),
-                    NonTerm("xor").group("xor_eq"),
-                ].or(),
-                NonTerm("equals"),
-            ].and(),
-            NonTerm("equals").group("eq"),
-        ].or(),
-
-        "set" => [
-            [
-                // [Identifier,NonTerm("val_field_index").cede().many0(), NonTerm("val_field_index").take(),].and(),
-                // [NonTerm("val").ends_in(NonTerm("val_field_index"))].and(),
-                [NonTerm("val"),NonTerm("val_field_index").prev()].and(),
-                Identifier,
-            ].or(),
-            NonTerm("set_eq"),
-            NonTerm("expr"),
-        ].and().group("set"),
 
         "cond" => [
             // NonTerm("lparen"),
@@ -177,7 +144,6 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
 
         "val" => [
-            NonTerm("prefixes").opt(),
             [
 
                 [
