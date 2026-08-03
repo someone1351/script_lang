@@ -1177,7 +1177,11 @@ where
         // cur:&Work<'t,'g>,
     ){
         let Some(last)=self.stk.last_mut() else {return;};
-        self.hist_prevs.truncate(last.hist_prevs_len);
+        // self.hist_prevs.truncate(last.hist_prevs_len);
+
+        println!("---- hist on fail {:?}",
+            self.hist_prevs.drain(last.hist_prevs_len..).map(|x|x.grammar.clone()).collect::<Vec<_>>(),
+        );
 
         if last.hist_fails_len!=0 {
             //
