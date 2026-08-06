@@ -17,7 +17,7 @@ pub fn is_keyword(n:& str) -> bool {
         "print"|"println"|"format"|
         "var"|"fn"|"return"|
         "if"|"elif"|"else"
-        // |"a"|"b"|"c"|"d"
+        |"a"|"b"|"c"|"d"
         => true,
         _=>false,
     }
@@ -44,7 +44,17 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
     Some(Rc::new(match n {
 
-        "start" => NonTerm("stmts"),
+        "start" => [
+            "a".keyword(),
+            [
+                "b".keyword().was("B"),
+                "c".keyword().was("C"),
+                "d".keyword().was("D"),
+            ].or().was("BCD"),
+            "a".keyword(),
+            Eol.many0(),
+        ].and(),
+        "start1" => NonTerm("stmts"),
 
         "stmts" => [
             NonTerm("end").many0(),
@@ -82,15 +92,15 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and().group("set_val"),
 
         "set_field" => [
-            NonTerm("val"),
-            NonTerm("field").prev(),
+            NonTerm("val").had("field"),
+            // Had("field"), //.prev()
             NonTerm("set_op"),
             NonTerm("expr"),
         ].and().group("set_field"),
 
         "set_index" => [
-            NonTerm("val"),
-            NonTerm("index").prev(),
+            NonTerm("val").had("index"),
+            // Had("index"), //.prev()
             NonTerm("set_op"),
             NonTerm("expr"),
         ].and().group("set_field"),
@@ -162,11 +172,11 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and(),
 
         "field_index_call" => [
-            [NonTerm("index"),NonTerm("call"),].and().group("call_field_index"),
-            [NonTerm("field"),NonTerm("call"),].and().group("call_field_name"),
-            NonTerm("index"),
+            // [NonTerm("index"),NonTerm("call"),].and().group("call_field_index"),
+            // [NonTerm("field"),NonTerm("call"),].and().group("call_field_name"),
+            // NonTerm("index"),
             NonTerm("field"),
-            NonTerm("call").group("call_val"),
+            // NonTerm("call").group("call_val"),
         ].or(),
 
         "call" => [
@@ -181,7 +191,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "field" => [
             Symbol("."),
-            [Int.group("field_index"),Identifier.group("field_name")].or().expect("field"),
+            [
+                Int.group("field_index"),
+                Identifier.group("field_name"),
+            ].or().expect("field").was("field"),
         ].and(),
 
         "index" => [
@@ -189,7 +202,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             [
                 NonTerm("expr").group("index").expect("index"),
                 NonTerm("rsquare").expect("closing square bracket"),
-            ].and().expect("index")
+            ].and().expect("index").was("index")
         ].and(),
 
         "primitive" => [

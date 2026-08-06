@@ -14,7 +14,11 @@ pub enum GrammarNode<'g> {
     Group(Rc<GrammarNode<'g>>,&'g str,),
     Expected(Rc<GrammarNode<'g>>, &'g str,),
 
-    Prev(Rc<GrammarNode<'g>>),
+    Was(Rc<GrammarNode<'g>>, &'g str),
+    // Had(Rc<GrammarNode<'g>>, &'g str),
+    Had(&'g str),
+
+    // Prev(Rc<GrammarNode<'g>>),
 
     String,
     Identifier,
@@ -49,8 +53,15 @@ impl<'g> GrammarNode<'g> {
     pub fn expect(self,name: &'g str,) -> GrammarNode<'g> {
         Self::Expected(self.into(),name)
     }
-    pub fn prev(self) -> GrammarNode<'g> {
-        Self::Prev(self.into())
+    // pub fn prev(self) -> GrammarNode<'g> {
+    //     Self::Prev(self.into())
+    // }
+    pub fn was(self,name: &'g str,) -> GrammarNode<'g> {
+        Self::Was(self.into(),name)
+    }
+    pub fn had(self,name: &'g str,) -> GrammarNode<'g> {
+        // Self::Had(self.into(),name)
+        [self.into(),Self::Had(name)].and()
     }
     // pub fn stow(self) -> GrammarNode<'g> {
     //     Self::Stow(self.into())
@@ -88,8 +99,23 @@ impl<'g> GrammarNode<'g> {
             false
         }
     }
-    pub fn is_prev(&self) -> bool {
-        if let GrammarNode::Prev(_)=self {
+    // pub fn is_prev(&self) -> bool {
+    //     if let GrammarNode::Prev(_)=self {
+    //         true
+    //     }else{
+    //         false
+    //     }
+    // }
+
+    pub fn is_was(&self) -> bool {
+        if let GrammarNode::Was(..)=self {
+            true
+        }else{
+            false
+        }
+    }
+    pub fn is_had(&self) -> bool {
+        if let GrammarNode::Had(..)=self {
             true
         }else{
             false
@@ -139,6 +165,7 @@ pub trait GrammarStrTrait<'g> {
     fn non_term(self) -> GrammarNode<'g>;
     fn symbol(self) -> GrammarNode<'g>;
     fn keyword(self) -> GrammarNode<'g>;
+    // fn had(self) -> GrammarNode<'g>;
 }
 
 impl<'g> GrammarStrTrait <'g> for &'g str {
@@ -151,6 +178,9 @@ impl<'g> GrammarStrTrait <'g> for &'g str {
     fn keyword(self) -> GrammarNode<'g> {
         GrammarNode::Keyword(self)
     }
+    // fn had(self) -> GrammarNode<'g> {
+    //     GrammarNode::Had(self)
+    // }
 }
 
 // impl<'a, const N: usize> From<[GrammarItem<'a>; N]> for  GrammarItem<'a> {
@@ -193,7 +223,13 @@ impl<'g> Debug for GrammarNode<'g> {
             Self::NonTerm(arg0) => f.debug_tuple("NonTerm").field(arg0).finish(),
             Self::Group(arg0, arg1) => f.debug_tuple("Group").field(arg0).field(arg1).finish(),
             Self::Expected(arg0, arg1) => f.debug_tuple("Expected").field(arg0).field(arg1).finish(),
-            Self::Prev(arg0) => f.debug_tuple("Prev").field(arg0).finish(),
+
+            // Self::Prev(arg0) => f.debug_tuple("Prev").field(arg0).finish(),
+            Self::Was(arg0, arg1) => f.debug_tuple("Was").field(arg0).field(arg1).finish(),
+            // Self::Had(arg0, arg1) => f.debug_tuple("Had").field(arg0).field(arg1).finish(),
+            Self::Had(arg0) => f.debug_tuple("Had").field(arg0).finish(),
+
+
             Self::String => write!(f, "String"),
             Self::Identifier => write!(f, "Identifier"),
             Self::Int => write!(f, "Int"),

@@ -29,7 +29,7 @@ pub enum TempExpectedType<'g> {
 }
 
 #[derive(Clone, Debug, )]
-pub struct TempExpected2<'t,'g> {
+pub struct TempExpected<'t,'g> {
     pub expected_type:TempExpectedType<'g>,
     pub parent:Option<usize>,
     pub tokens_start:TokenIterContainer<'t>,
@@ -52,21 +52,32 @@ pub struct TempHistStowVal<'t,'g> { //TempHistStow
     pub grammar: Rc<GrammarNode<'g>>,
     pub tokens_after:TokenIterContainer<'t>,
     pub stow_groups_end:usize,
-    pub stow_prevs_end:usize,
+    // pub stow_prevs_end:usize,
 }
 
 #[derive(Clone,Debug,)]
 pub struct TempHistStow<'t,'g> { //TempHistStow
     pub val : Option<TempHistStowVal<'t,'g>>,
     pub stow_groups_start:usize,
-    pub stow_prevs_start:usize,
+    // pub stow_prevs_start:usize,
+}
+
+// #[derive(Clone, Debug)]
+// pub struct TempHistPrev<'g> {
+//     pub grammar: Rc<GrammarNode<'g>>,
+//     pub tokens_start_ind:usize,
+// }
+
+#[derive(Clone, Debug)]
+pub struct TempWas<'g> {
+    pub name:&'g str,
 }
 
 #[derive(Clone, Debug)]
-pub struct TempHistPrev<'g> { //TempHistPrev
-    pub grammar: Rc<GrammarNode<'g>>,
-    pub tokens_start_ind:usize,
+pub struct TempHad<'g> {
+    pub name:&'g str,
 }
+
 
 #[derive(Clone, Debug,Default)]
 pub struct TempHistFail<'g> { //TempHistPrev
@@ -108,12 +119,20 @@ pub struct Work<'t,'g> {
 
     pub hist_stows_len:usize,
 
-    pub hist_prevs_ind:usize,
-    pub hist_prevs_len:usize,
+    // pub hist_prevs_ind:usize,
+    // pub hist_prevs_len:usize,
 
     pub hist_fails_len:usize,
 
     pub expected_ind:Option<usize>,
     pub expecteds_len:usize,
+
+    pub was_start_ind:usize,
+    pub was_ind:usize,
+    pub was_len:usize,
+
+    // pub had_ind:usize,
+    // pub had_len:usize,
+
 }
 
