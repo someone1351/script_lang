@@ -191,11 +191,16 @@ where
             expected_ind:None,
             expecteds_len:0,
 
-            was_start_ind:0,
-            was_ind:0,
-            was_len:0,
+            // was_start_ind:0,
+            // was_ind:0,
+            // was_len:0,
+
             // had_ind:0,
             // had_len:0,
+
+            was_new_len2:0,
+            was_ind2:0,
+
         });
 
         //
@@ -245,11 +250,14 @@ where
             expecteds_len:0,
 
 
-            was_start_ind:0,
-            was_ind:0,
-            was_len:0,
+            // was_start_ind:0,
+            // was_ind:0,
+            // was_len:0,
             // had_ind:0,
             // had_len:0,
+
+            was_new_len2:0,
+            was_ind2:0,
         });
 
         //
@@ -305,11 +313,14 @@ where
                 expecteds_len:0,
 
 
-                was_start_ind:0,
-                was_ind:0,
-                was_len:0,
+                // was_start_ind:0,
+                // was_ind:0,
+                // was_len:0,
                 // had_ind:0,
                 // had_len:0,
+
+                was_new_len2:0,
+                was_ind2:0,
             });
         }
 
@@ -365,9 +376,14 @@ where
         //
         // let was_ind=self.wases.len();
         // let was_ind=cur.was_ind+1;
-        let was_ind=cur.was_len;
-        self.wases.push(TempWas{name});
-        let was_len=cur.was_len+1; //self.wases.len();
+        // let was_ind=cur.was_len;
+        // self.wases.push(TempWas{name});
+        // let was_len=cur.was_len+1; //self.wases.len();
+
+
+        self.was_news.push(TempWas{name});
+        // let was_new_len2=cur.was_new_len2+1;//self.was_news.len();
+        let was_new_len2=self.was_news.len();
 
         //
         self.stk.push(Work {
@@ -394,12 +410,15 @@ where
             expected_ind:cur.expected_ind,
             expecteds_len:cur.expecteds_len,
 
-            was_start_ind:cur.was_start_ind,
-            // was_ind:cur.was_ind,
-            was_ind,
-            was_len,
+            // was_start_ind:cur.was_start_ind,
+            // // was_ind:cur.was_ind,
+            // was_ind,
+            // was_len,
             // had_ind:cur.had_ind,
             // had_len:cur.had_len,
+
+            was_new_len2,
+            was_ind2:cur.was_ind2,
         });
     }
 
@@ -415,7 +434,8 @@ where
         if
             // self.had.as_ref().map(|x|x.name) == Some(*name)
             // self.wases[cur.was_ind..].iter().find(|x|x.name==*name).map(|x|x.name)==Some(*name)
-            self.wases.get(cur.was_ind).map(|x|x.name)==Some(*name)
+            // self.wases.get(cur.was_ind).map(|x|x.name)==Some(*name)
+            self.wases.last().map(|x|x.name)==Some(*name)
             // self.hist_ends_stk.last().unwrap().elements
             //     .iter().find(|x|x.grammar.eq(g)).is_some()
             //     // .contains_key(&g)
@@ -506,11 +526,14 @@ where
             // expecteds_len:cur.expecteds_len,
 
 
-            was_start_ind:cur.was_start_ind,
-            was_ind:cur.was_ind,
-            was_len:cur.was_len,
+            // was_start_ind:cur.was_start_ind,
+            // was_ind:cur.was_ind,
+            // was_len:cur.was_len,
             // had_ind:cur.had_ind,
             // had_len:cur.had_len,
+
+            was_new_len2:cur.was_new_len2,
+            was_ind2:cur.was_ind2,
         });
     }
 
@@ -562,11 +585,15 @@ where
             expecteds_len:cur.expecteds_len,
 
 
-            was_start_ind:cur.was_start_ind,
-            was_ind:cur.was_ind,
-            was_len:cur.was_len,
+            // was_start_ind:cur.was_start_ind,
+            // was_ind:cur.was_ind,
+            // was_len:cur.was_len,
+
             // had_ind:cur.had_ind,
             // had_len:cur.had_len,
+
+            was_new_len2:cur.was_new_len2,
+            was_ind2:cur.was_ind2,
         });
     }
 
@@ -619,11 +646,16 @@ where
             expected_ind:cur.expected_ind,
             expecteds_len:cur.expecteds_len,
 
-            was_start_ind:cur.was_start_ind,
-            was_ind:cur.was_ind,
-            was_len:cur.was_len,
+            // was_start_ind:cur.was_start_ind,
+            // was_ind:cur.was_ind,
+            // was_len:cur.was_len,
+
             // had_ind:cur.had_ind,
             // had_len:cur.had_len,
+
+
+            was_new_len2:cur.was_new_len2,
+            was_ind2:cur.was_ind2,
         });
 
         //
@@ -669,11 +701,16 @@ where
             expected_ind:cur.expected_ind,
             expecteds_len:cur.expecteds_len,
 
-            was_start_ind:cur.was_start_ind,
-            was_ind:cur.was_ind,
-            was_len:cur.was_len,
+            // was_start_ind:cur.was_start_ind,
+            // was_ind:cur.was_ind,
+            // was_len:cur.was_len,
+
             // had_ind:cur.had_ind,
             // had_len:cur.had_len,
+
+
+            was_new_len2:cur.was_new_len2,
+            was_ind2:cur.was_ind2,
         });
 
         //
@@ -719,11 +756,16 @@ where
             expected_ind:cur.expected_ind,
             expecteds_len:cur.expecteds_len,
 
-            was_start_ind:cur.was_start_ind,
-            was_ind:cur.was_ind,
-            was_len:cur.was_len,
+            // was_start_ind:cur.was_start_ind,
+            // was_ind:cur.was_ind,
+            // was_len:cur.was_len,
+
             // had_ind:cur.had_ind,
             // had_len:cur.had_len,
+
+
+            was_new_len2:cur.was_new_len2,
+            was_ind2:cur.was_ind2,
         });
     }
 
@@ -784,11 +826,16 @@ where
             expected_ind:cur.expected_ind,
             expecteds_len:cur.expecteds_len,
 
-            was_start_ind:cur.was_start_ind,
-            was_ind:cur.was_ind,
-            was_len:cur.was_len,
+            // was_start_ind:cur.was_start_ind,
+            // was_ind:cur.was_ind,
+            // was_len:cur.was_len,
+
             // had_ind:cur.had_ind,
             // had_len:cur.had_len,
+
+
+            was_new_len2:cur.was_new_len2,
+            was_ind2:cur.was_ind2,
         });
 
         Ok(())
@@ -887,11 +934,16 @@ where
                 expected_ind:cur.expected_ind,
                 expecteds_len:cur.expecteds_len,
 
-                was_start_ind:cur.was_start_ind,
-                was_ind:cur.was_ind,
-                was_len:cur.was_len,
+                // was_start_ind:cur.was_start_ind,
+                // was_ind:cur.was_ind,
+                // was_len:cur.was_len,
+
                 // had_ind:cur.had_ind,
                 // had_len:cur.had_len,
+
+
+                was_new_len2:cur.was_new_len2,
+                was_ind2:cur.was_ind2,
             });
         }
 
@@ -943,11 +995,15 @@ where
             expected_ind:cur.expected_ind,
             expecteds_len:cur.expecteds_len,
 
-            was_start_ind:cur.was_start_ind,
-            was_ind:cur.was_ind,
-            was_len:cur.was_len,
+            // was_start_ind:cur.was_start_ind,
+            // was_ind:cur.was_ind,
+            // was_len:cur.was_len,
+
             // had_ind:cur.had_ind,
             // had_len:cur.had_len,
+
+            was_new_len2:cur.was_new_len2,
+            was_ind2:cur.was_ind2,
         });
     }
 
@@ -976,8 +1032,12 @@ where
         // let hist_stows_ind=if !cur.is_first{cur.hist_stows_len}else{cur.hist_stows_ind};
 
         //
-        // let was_ind = if cur.from_user && !cur.first {cur.was_len} else {cur.was_ind}; //self.wases.len()
-        let was_start_ind = if cur.from_user && !cur.first {cur.was_len} else {cur.was_start_ind}; //self.wases.len()
+        // // let was_ind = if cur.from_user && !cur.first {cur.was_len} else {cur.was_ind}; //self.wases.len()
+        // let was_start_ind = if cur.from_user && !cur.first {cur.was_len} else {cur.was_start_ind}; //self.wases.len()
+
+        let was_ind2 = if cur.from_user && !cur.first {self.wases.len()} else {cur.was_ind2}; //self.wases.len()
+
+
         // //on a new OR first, this sets a new hist_prevs_ind
         // let (hist_prevs_ind,hist_prevs_len) =
         //     if cur.from_user && !cur.first //cur.hist_prevs_ind is already 0 for the first, so only need for further ORs
@@ -1039,13 +1099,17 @@ where
                 expected_ind:cur.expected_ind,
                 expecteds_len:cur.expecteds_len,
 
-                // was_start_ind:cur.was_start_ind,
-                was_start_ind,
-                // was_ind,
-                was_ind:cur.was_ind,
-                was_len:cur.was_len,
+                // // was_start_ind:cur.was_start_ind,
+                // was_start_ind,
+                // // was_ind,
+                // was_ind:cur.was_ind,
+                // was_len:cur.was_len,
                 // had_ind:cur.had_ind,
                 // had_len:cur.had_len,
+
+                was_new_len2:cur.was_new_len2,
+                // was_ind2:cur.was_ind2,
+                was_ind2,
             });
         }
 
@@ -1095,13 +1159,18 @@ where
             expected_ind:cur.expected_ind,
             expecteds_len:cur.expecteds_len,
 
-            // was_start_ind:cur.was_start_ind,
-            was_start_ind,
-            // was_ind,
-            was_ind:cur.was_ind,
-            was_len:cur.was_len,
+            // // was_start_ind:cur.was_start_ind,
+            // was_start_ind,
+            // // was_ind,
+            // was_ind:cur.was_ind,
+            // was_len:cur.was_len,
             // had_ind:cur.had_ind,
             // had_len:cur.had_len,
+
+
+            was_new_len2:cur.was_new_len2,
+            // was_ind2:cur.was_ind2,
+            was_ind2,
         });
     }
 
@@ -1332,44 +1401,6 @@ where
         self.stk.truncate(cur.work_stk_fail_len);
     }
 
-    fn was_on_success(&mut self, cur:&Work<'t,'g>,) {
-        let Some(last)=self.stk.last_mut() else {return;};
-
-        // if cur.grammar.is_primtive()
-        //     || (
-        //         (cur.grammar.is_had()||cur.grammar.is_always())
-        //         // && cur.was_ind!=cur.was_len
-        //         && cur.was_ind!=last.was_ind
-        //     )
-        // {
-
-        //     // self.wases.drain(last.was_ind..cur.was_ind);
-        //     self.wases.drain(last.was_ind..cur.was_ind);
-        //     // last.was_len=cur.was_len;
-        //     last.was_len=self.wases.len();
-        // }
-
-            // self.wases.drain(last.was_ind..cur.was_ind);
-            self.wases.truncate(cur.was_start_ind+1);
-            self.wases.drain(last.was_ind..cur.was_start_ind);
-
-            last.was_len=self.wases.len();
-        // if last.was_len!=cur.was_len {
-        //     self.had=None;
-        // }
-
-
-        // self.wases.truncate(cur.was_len);
-        // last.was_len=cur.was_len;
-
-    }
-
-    fn was_on_fail(&mut self,) {
-        let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
-
-        self.wases.truncate(last.was_len);
-        // self.wases.truncate(last.was_ind+1);
-    }
 
 
     fn add_expected2(&mut self, cur:&Work<'t,'g>,) -> (Option<usize>,usize) {
@@ -1431,6 +1462,64 @@ where
         let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
         last.expecteds_len=self.expecteds.len();
     }
+
+
+    fn was_on_success(&mut self, cur:&Work<'t,'g>,) {
+        let Some(last)=self.stk.last_mut() else {return;};
+
+        // if cur.grammar.is_primtive()
+        //     || (
+        //         (cur.grammar.is_had()||cur.grammar.is_always())
+        //         // && cur.was_ind!=cur.was_len
+        //         && cur.was_ind!=last.was_ind
+        //     )
+        // {
+
+        //     // self.wases.drain(last.was_ind..cur.was_ind);
+        //     self.wases.drain(last.was_ind..cur.was_ind);
+        //     // last.was_len=cur.was_len;
+        //     last.was_len=self.wases.len();
+        // }
+
+            // // self.wases.drain(last.was_ind..cur.was_ind);
+            // self.wases.truncate(cur.was_start_ind+1);
+            // self.wases.drain(last.was_ind..cur.was_start_ind);
+
+            // last.was_len=self.wases.len();
+        // if last.was_len!=cur.was_len {
+        //     self.had=None;
+        // }
+
+
+        // self.wases.truncate(cur.was_len);
+        // last.was_len=cur.was_len;
+
+                //
+        let drained_was_new=self.was_news.drain(last.was_new_len2 ..).next();
+
+        if let Some(drained_was_new)=drained_was_new {
+
+            // last.was_ind2=self.wases.len();
+            self.wases.truncate(last.was_ind2);
+            self.wases.push(drained_was_new);
+            // last.was_len2=self.wases.len();
+        } else if cur.grammar.is_primtive() {
+            // let b=cur.grammar.is_primtive() || (cur.grammar.is_had()||cur.grammar.is_always());
+            self.wases.truncate(last.was_ind2);
+        }
+
+    }
+
+    fn was_on_fail(&mut self,) {
+        let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
+
+        self.was_news.truncate(last.was_new_len2);
+        self.wases.truncate(last.was_ind2);
+
+        // self.wases.truncate(last.was_len);
+        // // self.wases.truncate(last.was_ind+1);
+    }
+
     fn hist_on_fail(&mut self,
         // cur:&Work<'t,'g>,
     ){
@@ -1474,6 +1563,8 @@ where
         gotten:bool,
         // _hist_ends_remove_previous:bool,
     ) {
+
+        //TODO: dont convert drained drained_hist_news to vec, copy straight to
 
         //should always be some (due to init), use panic instead of ret? no, it will end on an always if successful
         let Some(last)=self.stk.last_mut() else {return;};
@@ -2105,7 +2196,8 @@ where
                     // hist_prevs_len,
                     // expected_news_len,expecteds_len,
                     expected_ind,expecteds_len,
-                    was_start_ind,was_ind,was_len,
+                    // was_start_ind,was_ind,was_len,
+                    was_new_len2,was_ind2,
                     ..
                 }=&cur;
 
@@ -2170,12 +2262,29 @@ where
 
                 //
                 if true {
-                     println!("        wases: start_ind={was_start_ind}, ind={was_ind}, len={was_len} ({})",self.wases.len());
+                    //
 
-                    for (i,w) in self.wases.iter().enumerate() {
+                     println!("        was_news: len={was_new_len2} ({})",self.was_news.len());
+
+                    for (i,w) in self.was_news.iter().enumerate().rev() {
+                        println!("            {i}: {:?}",w.name);
+                    }
+
+                    //
+                     println!("        wases: ind={was_ind2}, len= ({})",self.wases.len());
+
+                    for (i,w) in self.wases.iter().enumerate().rev() {
                         println!("            {i}: {:?}",w.name);
                     }
                 }
+                // //
+                // if true {
+                //      println!("        wases: start_ind={was_start_ind}, ind={was_ind}, len={was_len} ({})",self.wases.len());
+
+                //     for (i,w) in self.wases.iter().enumerate() {
+                //         println!("            {i}: {:?}",w.name);
+                //     }
+                // }
 
                 //
                 // if false {

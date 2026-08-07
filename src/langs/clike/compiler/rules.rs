@@ -45,12 +45,19 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
     Some(Rc::new(match n {
 
         "start" => [
-            "a".keyword(),
+            "a".keyword().was("A"),
             [
-                "b".keyword().was("B"),
-                "c".keyword().was("C"),
-                "d".keyword().was("D"),
-            ].or().was("BCD"),
+                [
+                    [
+                        "b".keyword().was("B"),
+                        "c".keyword().was("C"),
+                        "d".keyword().was("D"),
+                    ].or().had("C"),
+                    "x".keyword(),
+                ].and(),
+                "c".keyword().was("CC"),
+            ].or(),
+                // .was("BCD")                ,
             "a".keyword(),
             Eol.many0(),
         ].and(),

@@ -127,12 +127,16 @@ pub struct Work<'t,'g> {
     pub expected_ind:Option<usize>,
     pub expecteds_len:usize,
 
-    pub was_start_ind:usize,
-    pub was_ind:usize,
-    pub was_len:usize,
+    // pub was_start_ind:usize,
+    // pub was_ind:usize,
+    // pub was_len:usize,
 
     // pub had_ind:usize,
     // pub had_len:usize,
+
+
+    pub was_new_len2:usize,
+    pub was_ind2:usize,
 
 }
 
