@@ -43,8 +43,17 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
     use GrammarNode::*;
 
     Some(Rc::new(match n {
+        "start" => ["a".keyword().was("A").many0(), Eol].and(),
+        "start1" => [
+            "a".keyword().was("A"),
+            [
+                ["b".keyword().was("B"),Always,].and(),
+            ].or(),
+            Eol,
+            Always,
+        ].and(),
 
-        "start" => [
+        "start2" => [
             "a".keyword().was("A"),
             [
                 [
@@ -61,7 +70,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             "a".keyword(),
             Eol.many0(),
         ].and(),
-        "start1" => NonTerm("stmts"),
+
+        //
+        "start3" => NonTerm("stmts"),
 
         "stmts" => [
             NonTerm("end").many0(),

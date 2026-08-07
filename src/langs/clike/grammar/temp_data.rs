@@ -53,6 +53,7 @@ pub struct TempHistStowVal<'t,'g> { //TempHistStow
     pub tokens_after:TokenIterContainer<'t>,
     pub stow_groups_end:usize,
     // pub stow_prevs_end:usize,
+    pub was:Option<TempWas<'g>>,
 }
 
 #[derive(Clone,Debug,)]
@@ -73,10 +74,10 @@ pub struct TempWas<'g> {
     pub name:&'g str,
 }
 
-#[derive(Clone, Debug)]
-pub struct TempHad<'g> {
-    pub name:&'g str,
-}
+// #[derive(Clone, Debug)]
+// pub struct TempHad<'g> {
+//     pub name:&'g str,
+// }
 
 
 #[derive(Clone, Debug,Default)]

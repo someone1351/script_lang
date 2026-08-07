@@ -451,8 +451,8 @@ where
             // self.hist_news_truncate_to_last(); //why on success??
             self.update_tokens(&cur,true);
             self.groups_on_success(&cur);
+            self.was_on_success(&cur); //before hist
             self.hist_on_success(&cur,false,);
-            self.was_on_success(&cur);
             self.expected_on_success();
         } else {
             // self.stk.truncate(cur.fail_len);
@@ -1226,8 +1226,8 @@ where
         self.handle_exit_last_many(&cur);
         self.update_tokens(&cur,true);
         self.groups_on_success(&cur); //here
+        self.was_on_success(&cur); //before hist
         self.hist_on_success(&cur,false);
-        self.was_on_success(&cur);
 
         //why was this previously commented out?
         //  because grammar could finish without parsing anything due to optionals
@@ -1313,6 +1313,10 @@ where
         // self.hist_prevs.extend_from_slice(stow_prevs);
 
         //
+        if let Some(x) = &hist_stow_val.was {
+            //what if ends in always vs prim with no was
+        }
+        //
         let cur=Work {
             group_len:self.groups.len(),
             tokens:hist_stow_val.tokens_after,
@@ -1325,8 +1329,8 @@ where
         self.work_on_success(&cur);
         self.update_tokens(&cur,true);
         self.groups_on_success(&cur);
+        self.was_on_success(&cur); //before hist
         self.hist_on_success(&cur,true); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
-        self.was_on_success(&cur);
         self.expected_on_success();
 
         //
@@ -1355,8 +1359,8 @@ where
                 self.work_on_success(&cur);
                 self.update_tokens(&cur,true);
                 self.groups_on_success(&cur);
+                self.was_on_success(&cur); //before hist
                 self.hist_on_success(&cur,false);
-                self.was_on_success(&cur);
                 self.expected_on_success();
 
                 //
@@ -1500,12 +1504,15 @@ where
         if let Some(drained_was_new)=drained_was_new {
 
             // last.was_ind2=self.wases.len();
-            self.wases.truncate(last.was_ind2);
+            self.wases.truncate(last.was_ind2); //remove prev WAS
             self.wases.push(drained_was_new);
             // last.was_len2=self.wases.len();
         } else if cur.grammar.is_primtive() {
             // let b=cur.grammar.is_primtive() || (cur.grammar.is_had()||cur.grammar.is_always());
-            self.wases.truncate(last.was_ind2);
+            self.wases.truncate(last.was_ind2+1); //keep previous WAS, if there was one
+        } else {
+            // println!("=======---===");
+            self.wases.drain(last.was_ind2..cur.was_ind2);
         }
 
     }
@@ -1661,6 +1668,7 @@ where
                     tokens_after: cur.tokens,
                     stow_groups_end: self.hist_stows_groups.len(),
                     // stow_prevs_end: self.hist_stows_prevs.len(),
+                    was:self.wases.get(cur.was_ind2).cloned(),
                 })
             }
 
@@ -1760,7 +1768,7 @@ where
             // // && (cur.grammar.is_primtive() || cur.grammar.is_non_term())
             // && cur.grammar.is_non_term() //should only do nonterms?
 
-            // && cur.first
+            && cur.first //no longer using prevs, only stows/fails
         { //ignore grammars added by walker
             self.hist_news.push(TempHistNew {
                 grammar: cur.grammar.clone(),
@@ -2386,10 +2394,10 @@ where
             panic!("invalid group_ind={}, groups_len={}",cur.group_ind,self.groups.len());
         }
 
-        // //try take from hist fails
+        // // //try take from hist fails
         // if self.grammar_try_from_hist_fails(&cur) {return Ok(());}
 
-        // //try take from hist begins
+        // // //try take from hist begins
         // if self.grammar_try_from_hist_stows(&cur) {return Ok(());}
 
         //
