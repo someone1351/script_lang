@@ -43,7 +43,23 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
     use GrammarNode::*;
 
     Some(Rc::new(match n {
-        "start" => ["a".keyword().was("A").many0(), Eol].and(),
+        "start66" => [
+            "a".keyword().was("A"),
+            Eol.was("E"),
+            [Always.was("Q"),].or(),
+        ].and(),
+        "start5" => [
+            "a".keyword().was("A"),
+            Eol, //.was("E")
+            // Always,
+        ].and(),
+        "start0" => [
+            "a".keyword().was("A").many0(),
+            Eol
+                // .was("E")
+                ,
+        ].and(),
+
         "start1" => [
             "a".keyword().was("A"),
             [
@@ -71,20 +87,28 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             Eol.many0(),
         ].and(),
 
+        "start" => [
+            // ["a".keyword().was("A"),"b".keyword().was("B")].or().many0(),
+            "a".keyword().was("A"),
+            // ["b".keyword().was("B"),Always,].or(),
+            "b".keyword().was("B").many0(),
+            Always,
+            Eol,
+        ].and(),
         //
-        "start3" => NonTerm("stmts"),
+        "start3232" => NonTerm("stmts"),
 
         "stmts" => [
             NonTerm("end").many0(),
             [
                 NonTerm("stmt"),
-                [ NonTerm("end").many1(), NonTerm("stmt"), ].and().many0(),
+                // [ NonTerm("end").many1(), NonTerm("stmt"), ].and().many0(),
             ].and().opt(),
             NonTerm("end").many0(),
         ].and(),
 
         "stmt" => [
-            NonTerm("var"),
+            // NonTerm("var"),
             NonTerm("set"),
             NonTerm("expr"),
         ].or(),
@@ -101,7 +125,11 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             [NonTerm("var_set_op"), NonTerm("expr")].and().opt(),
         ].and(),
 
-        "set" => [ NonTerm("set_val"), NonTerm("set_field"), NonTerm("set_index"), ].or(),
+        "set" => [
+            // NonTerm("set_val"),
+            NonTerm("set_field"),
+            // NonTerm("set_index"),
+        ].or(),
 
         "set_val" => [
             Identifier,
@@ -113,7 +141,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             NonTerm("val").had("field"),
             // Had("field"), //.prev()
             NonTerm("set_op"),
-            NonTerm("expr"),
+            // NonTerm("expr"),
         ].and().group("set_field"),
 
         "set_index" => [
@@ -123,8 +151,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             NonTerm("expr"),
         ].and().group("set_field"),
 
-        "expr" => NonTerm("or").group("expr").expect("expr"),
-        // "expr" => NonTerm("factor").group("expr").expect("expr"),
+        "expr" => NonTerm("val"),
+        // "expr" => NonTerm("or").group("expr").expect("expr"),
+        // // "expr" => NonTerm("factor").group("expr").expect("expr"),
 
         "or" => [
             [
@@ -172,13 +201,13 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].or(),
 
         "val" => [
-            NonTerm("prefix_op").many0().group("prefixes"),
+            // NonTerm("prefix_op").many0().group("prefixes"),
             [
-                [ Identifier.group("idn"), NonTerm("call"), ].and().group("call_idn"),
+                // [ Identifier.group("idn"), NonTerm("call"), ].and().group("call_idn"),
                 NonTerm("primitive"),
-                NonTerm("bool"),
-                NonTerm("nil"),
-                NonTerm("void"),
+                // NonTerm("bool"),
+                // NonTerm("nil"),
+                // NonTerm("void"),
             ].or(),
             NonTerm("field_index_call").many0(),
             // [NonTerm("field"), NonTerm("index"), NonTerm("call")].or().many0(),
@@ -210,7 +239,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "field" => [
             Symbol("."),
             [
-                Int.group("field_index"),
+                // Int.group("field_index"),
                 Identifier.group("field_name"),
             ].or().expect("field").was("field"),
         ].and(),
@@ -224,9 +253,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and(),
 
         "primitive" => [
-            Int,
-            Float,
-            String,
+            // Int,
+            // Float,
+            // String,
             Identifier.group("idn"),
         ].or().group("prim"),
 

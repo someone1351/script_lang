@@ -115,6 +115,7 @@ pub struct Work<'t,'g> {
 
     pub from_user:bool, //gramamr added by input grammar, not walker //used to know whether to push hist_begins stk or not //used with and/or/many
     pub first:bool, //used to know whether to store a HistStow
+    pub or_id:usize,
 
     pub hist_news_len:usize,
 
@@ -137,7 +138,7 @@ pub struct Work<'t,'g> {
 
 
     pub was_new_len2:usize,
-    pub was_ind2:usize,
+    pub was_ind2:usize, //to have more than one WAS at a time (ie nested ones), need a was_len
 
 }
 

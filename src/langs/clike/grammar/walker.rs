@@ -2,6 +2,9 @@
 /*
 
 for err loc, should use end_loc of last token
+
+TODO
+* record only last fail, instead of all of them?
 */
 use super::error::*;
 use super::temp_data::*;
@@ -163,6 +166,7 @@ where
 
             from_user:false,
             first:false,
+            or_id:0,
             // and_first:false,
 
             hist_news_len:0,
@@ -221,6 +225,7 @@ where
 
             from_user:true,
             first:false,
+            or_id:0,
             // and_first:false,
 
             // in_or:false,
@@ -287,6 +292,7 @@ where
 
                 from_user:true,
                 first:false,
+                or_id:0,
                 // and_first:false,
 
                 // in_or:false,
@@ -397,6 +403,7 @@ where
 
             from_user:true,
             first:cur.first,
+            or_id:cur.or_id,
 
             hist_news_len,
 
@@ -460,7 +467,7 @@ where
             self.update_tokens(&cur,false);
             // // self.revert_last_hist_news();
             self.hist_on_fail();
-            self.was_on_fail();
+            self.was_on_fail(&cur);
             self.groups_on_fail();
             //don't add expected, let user manually add one
             // // // let _expected_news_len=self.add_expected_new(&cur);
@@ -495,6 +502,7 @@ where
 
             from_user:true,
             first:cur.first,
+            or_id:cur.or_id,
             // and_first:cur.and_first,
 
             // in_or:cur.in_or,
@@ -560,6 +568,7 @@ where
 
             from_user:true,
             first:cur.first,
+            or_id:cur.or_id,
             // and_first:cur.and_first,
 
             // can_hist_stow:false,
@@ -605,6 +614,9 @@ where
         //
         let hist_news_len=self.hist_news_add(&cur);
 
+
+        let was_ind2=self.wases.len();
+
         //
         self.stk.push(Work {
             // grammar: Rc::new(GrammarNode::Many(g.clone())),
@@ -622,6 +634,7 @@ where
 
             from_user:false,
             first:false, //grmmar in many, after the frist one is parsed are no longer firsts
+            or_id:cur.or_id,
             // and_first:false,
             // can_hist_stow:false,
 
@@ -677,6 +690,7 @@ where
 
             from_user:false,
             first:false,
+            or_id:cur.or_id,
             // and_first:false,
             // can_hist_stow:false,
 
@@ -732,6 +746,7 @@ where
 
             from_user:true,
             first:cur.first,
+            or_id:cur.or_id,
             // and_first:cur.and_first,
             // can_hist_stow:false,
 
@@ -765,7 +780,8 @@ where
 
 
             was_new_len2:cur.was_new_len2,
-            was_ind2:cur.was_ind2,
+            // was_ind2:cur.was_ind2,
+            was_ind2,
         });
     }
 
@@ -801,6 +817,7 @@ where
 
             from_user:true,
             first:cur.first,
+            or_id:cur.or_id,
             // and_first:cur.and_first,
 
             // can_hist_stow:false,
@@ -910,6 +927,7 @@ where
 
                 from_user:false,
                 first:false,
+                or_id:cur.or_id,
                 // and_first:false,
                 // can_hist_stow:false,
 
@@ -970,6 +988,7 @@ where
 
             from_user:true,
             first:cur.first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
+            or_id:cur.or_id,
             // and_first:true,
 
             // can_hist_stow:cur.or_first,
@@ -1073,6 +1092,7 @@ where
 
                 from_user:false,
                 first:cur.first,
+                or_id:cur.or_id,
                 // and_first:cur.and_first,
                 // can_hist_stow:false,
 
@@ -1136,6 +1156,7 @@ where
 
             from_user:true,
             first:true,
+            or_id:cur.or_id,
             // and_first:cur.and_first,
             // can_hist_stow:false,
 
@@ -1252,7 +1273,7 @@ where
         self.work_on_fail(&cur);
         self.update_tokens(&cur,false);
         self.hist_on_fail();
-        self.was_on_fail();
+        self.was_on_fail(&cur);
         self.expected_on_fail();
         self.groups_on_fail();
 
@@ -1381,7 +1402,7 @@ where
                 self.work_on_fail(&cur);
                 self.update_tokens(&cur,false);
                 self.hist_on_fail();
-                self.was_on_fail();
+                self.was_on_fail(&cur);
                 // // self.revert_last_hist_news();
                 // self.update_hist_on_fail(&cur);
                 // // let _expected_news_len=self.add_expected_new(&cur);
@@ -1469,6 +1490,8 @@ where
 
 
     fn was_on_success(&mut self, cur:&Work<'t,'g>,) {
+        //run before hist_on_success
+
         let Some(last)=self.stk.last_mut() else {return;};
 
         // if cur.grammar.is_primtive()
@@ -1507,21 +1530,33 @@ where
             self.wases.truncate(last.was_ind2); //remove prev WAS
             self.wases.push(drained_was_new);
             // last.was_len2=self.wases.len();
-        } else if cur.grammar.is_primtive() {
+            println!("----- was 0");
+        } else if cur.grammar.is_primtive() { //should be not?
             // let b=cur.grammar.is_primtive() || (cur.grammar.is_had()||cur.grammar.is_always());
-            self.wases.truncate(last.was_ind2+1); //keep previous WAS, if there was one
-        } else {
+            // self.wases.truncate(last.was_ind2+1); //keep previous WAS, if there was one
+            self.wases.truncate(last.was_ind2);
+            println!("----- was 1");
+        } else if last.was_ind2!=self.wases.len() {
             // println!("=======---===");
-            self.wases.drain(last.was_ind2..cur.was_ind2);
+            let d=self.wases.drain(last.was_ind2..self.wases.len()-1).map(|x|x.name).collect::<Vec<_>>();
+            println!("----- was 2: {d:?}");
+        } else {
+            println!("----- was 3");
         }
 
     }
 
-    fn was_on_fail(&mut self,) {
+    fn was_on_fail(&mut self, cur:&Work<'t,'g>,) {
         let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
 
+            println!("----- was 4 faill");
         self.was_news.truncate(last.was_new_len2);
-        self.wases.truncate(last.was_ind2);
+
+        // if cur.was_ind2==last.was_ind2 {
+        //     self.wases.truncate(last.was_ind2+1); //kee prev
+        // } else {
+            self.wases.truncate(last.was_ind2);
+        // }
 
         // self.wases.truncate(last.was_len);
         // // self.wases.truncate(last.was_ind+1);
@@ -2229,29 +2264,33 @@ where
                 //
                 println!("");
                 println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, ",);
-                // println!("        and_id={and_id}, groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
-                println!("        groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
+
+                if false {
+                    // println!("        and_id={and_id}, groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
+                    println!("        groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
 
 
-                // println!("        first={is_first}, hist_news_len={hist_news_len}, hist_stows_stk_len={hist_stows_stk_len}:{}, hist_ends_stk_len={hist_ends_stk_len}:{}, ",
-                //     self.hist_stows_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
-                //     self.hist_ends_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
-                // );
-                // let hist_stows_len=if *hist_stows_stk_len==0{None}else{
-                //     self.hist_stows_stk.get(hist_stows_stk_len-1).map(|x|x.elements.len())
-                // };
-                // println!("        first={first}, hist_news_len={hist_news_len}, hist_stows_len={hist_stows_len:?}, hist_prevs_ind={hist_prevs_ind}, hist_prevs_len={hist_prevs_len}",);
-                // println!("        first={first}, hist news_len={hist_news_len}, stows_len={hist_stows_len:?}, prevs_ind={hist_prevs_ind}, fails_len={hist_fails_len},",);
-                // println!("        actual: hist news_len={}, stows_len={:?}, prevs_len={}, fails_len={}",
-                //     self.hist_news.len(),self.hist_stows.len(),self.hist_prevs.len(),self.hist_fails.len(),
-                // );
-                println!("        first={first}, hist news_len={hist_news_len}, stows_len={hist_stows_len:?}, fails_len={hist_fails_len},",);
-                println!("        actual: hist news_len={}, stows_len={:?}, fails_len={}",
-                    self.hist_news.len(),self.hist_stows.len(),self.hist_fails.len(),
-                );
-                // println!("        hist_stows_ind={hist_stows_ind}, hist_stows_len={hist_stows_len},",
-                //     self.stk.get(cur.)
-                // );
+                    // println!("        first={is_first}, hist_news_len={hist_news_len}, hist_stows_stk_len={hist_stows_stk_len}:{}, hist_ends_stk_len={hist_ends_stk_len}:{}, ",
+                    //     self.hist_stows_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
+                    //     self.hist_ends_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
+                    // );
+                    // let hist_stows_len=if *hist_stows_stk_len==0{None}else{
+                    //     self.hist_stows_stk.get(hist_stows_stk_len-1).map(|x|x.elements.len())
+                    // };
+                    // println!("        first={first}, hist_news_len={hist_news_len}, hist_stows_len={hist_stows_len:?}, hist_prevs_ind={hist_prevs_ind}, hist_prevs_len={hist_prevs_len}",);
+                    // println!("        first={first}, hist news_len={hist_news_len}, stows_len={hist_stows_len:?}, prevs_ind={hist_prevs_ind}, fails_len={hist_fails_len},",);
+                    // println!("        actual: hist news_len={}, stows_len={:?}, prevs_len={}, fails_len={}",
+                    //     self.hist_news.len(),self.hist_stows.len(),self.hist_prevs.len(),self.hist_fails.len(),
+                    // );
+                    println!("        first={first}, hist news_len={hist_news_len}, stows_len={hist_stows_len:?}, fails_len={hist_fails_len},",);
+                    println!("        actual: hist news_len={}, stows_len={:?}, fails_len={}",
+                        self.hist_news.len(),self.hist_stows.len(),self.hist_fails.len(),
+                    );
+                    // println!("        hist_stows_ind={hist_stows_ind}, hist_stows_len={hist_stows_len},",
+                    //     self.stk.get(cur.)
+                    // );
+
+                }
 
                 //
                 if false {
@@ -2357,7 +2396,7 @@ where
                     //
                     println!("        hist_fails {} : ({})",cur.hist_fails_len,self.hist_fails.len());
 
-                    if true {
+                    if false {
 
                         for (i,x) in self.hist_fails.iter().enumerate().rev() {
                             println!("            {i}: {:?}",x.grammers);
