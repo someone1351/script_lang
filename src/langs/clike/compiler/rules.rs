@@ -91,7 +91,11 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             // ["a".keyword().was("A"),"b".keyword().was("B")].or().many0(),
             "a".keyword().was("A"),
             // ["b".keyword().was("B"),Always,].or(),
-            "b".keyword().was("B").many0(),
+            // "b".keyword().was("B").many0(),
+            [
+                "b".keyword().was("B"),
+                "c".keyword().was("C"),
+            ].or().many0(),
             Always,
             Eol,
         ].and(),

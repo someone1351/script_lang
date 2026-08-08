@@ -724,7 +724,8 @@ where
 
 
             was_new_len2:cur.was_new_len2,
-            was_ind2:cur.was_ind2,
+            // was_ind2:cur.was_ind2,
+            was_ind2,
         });
 
         //
