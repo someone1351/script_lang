@@ -59,18 +59,27 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "stmt" => [
             NonTerm("var"),
             NonTerm("set"),
+
+            NonTerm("for"),
+            NonTerm("while"),
+            NonTerm("func"),
+            NonTerm("break"),
+            NonTerm("continue"),
+            NonTerm("return"),
+            NonTerm("include"),
+
             NonTerm("expr"),
         ].or(),
 
         "var" => [
             Keyword("var"),
             NonTerm("var_entry"),
-            [ NonTerm("comma"), NonTerm("var_entry"), ].and().many0(),
-            NonTerm("comma").opt(),
+            [ Symbol(","), NonTerm("var_entry"), ].and().many0(),
+            Symbol(",").opt(),
         ].and(),
 
         "var_entry" => [
-            Identifier,
+            Identifier.group("name"),
             [NonTerm("var_set_op"), NonTerm("expr")].and().opt(),
         ].and(),
 
@@ -81,24 +90,76 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].or(),
 
         "set_val" => [
-            Identifier,
+            Identifier.group("name"),
             NonTerm("set_op"),
             NonTerm("expr"),
         ].and().group("set_val"),
 
         "set_field" => [
             NonTerm("val").stow().had("field"),
-            // Had("field"), //.prev()
             NonTerm("set_op"),
             NonTerm("expr"),
         ].and().group("set_field"),
 
         "set_index" => [
             NonTerm("val").stow().had("index"),
-            // Had("index"), //.prev()
             NonTerm("set_op"),
             NonTerm("expr"),
         ].and().group("set_field"),
+
+        "func" => [
+            Keyword("fn"),
+            Identifier.group("name"),
+            NonTerm("func_params"),
+            NonTerm("block"),
+        ].and().group("func"),
+
+        "lambda" => [
+            Keyword("fn"),
+            NonTerm("func_params"),
+            NonTerm("block"),
+        ].and().group("lambda"),
+
+        "func_params" => [
+            NonTerm("lparen"),
+            Identifier.group("param"),
+            [ Symbol(","), Identifier.group("param"), ].and().many0(),
+            [
+                [Symbol("."),Symbol("."),Symbol("."),].and().group("ellipsis"),
+                Symbol(","),
+            ].or().opt(),
+            NonTerm("rparen"),
+        ].and().opt().group("params"),
+
+        "if" => [
+            [Keyword("if"), NonTerm("expr"), NonTerm("block"), ].and().group("cond"),
+            [Keyword("elif"),NonTerm("expr"), NonTerm("block"), ].and().group("cond").many0(),
+            [Keyword("else"),NonTerm("block"),].and().group("else").opt(),
+        ].and().group("if"),
+
+        "while" => [
+            Keyword("while"),
+            NonTerm("expr"),
+            NonTerm("block"),
+        ].and().group("while"),
+
+        "for" => [
+            Keyword("for"),
+            Identifier.group("name"),
+            Keyword("in"),
+            NonTerm("expr"),
+            NonTerm("for_op"),
+            NonTerm("expr"),
+            NonTerm("block"),
+        ].and().group("for"),
+
+        "continue" => Keyword("continue").group("continue"),
+        "break" => Keyword("break").group("break"),
+        "return" => [Keyword("return"), NonTerm("expr").opt(),].and().group("return"),
+
+
+        "include" => [Keyword("include"),String.group("include"),].and(),
+
 
         "expr" => NonTerm("or").group("expr").expect("expr"),
 
@@ -178,8 +239,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             NonTerm("lparen"),
             [
                 NonTerm("expr"),
-                [ NonTerm("comma"), NonTerm("expr"), ].and().many0(),
-                NonTerm("comma").opt(),
+                [ Symbol(","), NonTerm("expr"), ].and().many0(),
+                Symbol(",").opt(),
             ].and().opt().group("params"),
             NonTerm("rparen"),
         ].and(),
@@ -216,6 +277,13 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "void" => Keyword("void").group("void"),
 
         "end" => [Symbol(";").expect("semicolon"),Eol].or(),
+
+        "for_op" => [
+            [NonTerm("for_to_op"),Symbol("=").opt(),].and().group("to_eq"),
+            NonTerm("for_to_op").group("to"),
+        ].or(),
+
+        "for_to_op" => [Symbol("."),Symbol("."),].and(),
 
         "var_set_op" => Symbol("="),
 
@@ -273,10 +341,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "lparen" => Symbol("("),
         "rparen" => Symbol(")"),
 
-        "colon" => Symbol(":"),
-        "dot" => Symbol("."),
-        "ellipsis" => [NonTerm("dot"),NonTerm("dot"),NonTerm("dot"),].and(),
-        "comma" => Symbol(","),
+
 
 
 
