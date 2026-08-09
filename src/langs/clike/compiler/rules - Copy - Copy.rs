@@ -62,15 +62,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                     NonTerm("array"),
                     NonTerm("dict"), //empty dict supercedes empty block
 
-                    NonTerm("if"),
-                    NonTerm("lambda"),
-                    NonTerm("block").group("block"), //allow code blocks for  exprs?
+                    //.group("block"), //allow code blocks for  exprs?
 
-                    [
-                        NonTerm("lparen"),
-                        NonTerm("expr"),
-                        NonTerm("rparen"),
-                    ].and(),
+
                 ].or(),
             ].or(),
             // NonTerm("val_field_index_call").many0(),

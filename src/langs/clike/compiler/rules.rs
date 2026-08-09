@@ -211,11 +211,17 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "val" => [
             NonTerm("prefix_op").many0().group("prefixes"),
             [
-                [ Identifier.group("idn"), NonTerm("call"), ].and().group("call_idn"),
+                [ Identifier.group("idn"), NonTerm("call"), ].and().group("call_func"),
+
                 NonTerm("primitive"),
                 NonTerm("bool"),
                 NonTerm("nil"),
                 NonTerm("void"),
+
+                NonTerm("if"),
+                NonTerm("lambda"),
+                NonTerm("block"),
+                [ NonTerm("lparen"), NonTerm("expr"), NonTerm("rparen"), ].and(),
             ].or(),
             NonTerm("field_index_call").many0(),
         ].and().group("val"),
@@ -223,7 +229,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "block" => [
             NonTerm("lcurly").expect("block"),
             [ NonTerm("stmts"), NonTerm("rcurly"), ].and().expect("closing brace"),
-        ].and(),
+        ].and().group("block"),
 
         "field_index_call" => [
             [NonTerm("index").stow(),NonTerm("call"),].and().group("call_field_index"),
@@ -279,7 +285,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "end" => [Symbol(";").expect("semicolon"),Eol].or(),
 
         "for_op" => [
-            [NonTerm("for_to_op"),Symbol("=").opt(),].and().group("to_eq"),
+            [NonTerm("for_to_op").stow(),Symbol("=").opt(),].and().group("to_eq"),
             NonTerm("for_to_op").group("to"),
         ].or(),
 
@@ -298,8 +304,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             Symbol("*").group("mul_eq"),
             Symbol("/").group("div_eq"),
             Symbol("!").group("not_eq"),
-            Symbol("&&").group("and_eq"),
-            Symbol("||").group("or_eq"),
+
+            [Symbol("&"),Symbol("&"),].and().group("and_eq"),
+            [Symbol("|"),Symbol("|"),].and().group("or_eq"),
+
             Symbol("^").group("xor_eq"),
         ].or(),
 
