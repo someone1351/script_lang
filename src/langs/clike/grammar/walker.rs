@@ -85,6 +85,8 @@ where
     // wases:Vec<Option<TempWas<'g>>>,
     // hads:Vec<TempHad<'g>>,
     // had:Option<TempHad<'g>>,
+
+    // always: Rc<GrammarNode<'g>>,
 }
 
 impl<'t,'g,G> GrammarWalker<'t,'g,G>
@@ -94,6 +96,7 @@ where
 
     pub fn new(top_primitives:TokenIterContainer<'t>, grammar_func:G,) -> Self {
         Self {
+            // always:Rc::new(GrammarNode::Always),
             non_term_cache:Default::default(),
             // prev_non_term_only:true,
             // stow_non_term_only:true,
@@ -212,7 +215,7 @@ where
 
         //no needed, but allows takeables2 to finish, for debugging purposes
         self.stk.push(Work{
-            grammar : Rc::new(GrammarNode::Always),
+            grammar : Rc::new(GrammarNode::Always), //self.always.clone(),
             // grammar_ind:0,
             work_stk_success_len:0,
             work_stk_fail_len:0, //not used
@@ -676,7 +679,7 @@ where
 
         //
         self.stk.push(Work {
-            grammar: Rc::new(GrammarNode::Always),
+            grammar: Rc::new(GrammarNode::Always), //self.always.clone(),
             // grammar_ind:0,
             work_stk_success_len: cur.work_stk_success_len,
             work_stk_fail_len: 0, //fail is not used
@@ -1911,7 +1914,8 @@ where
     fn handle_exit_last_many(&mut self,cur:&Work<'t,'g>) { //if not parsing anything, exit the many
         let Some(last)=self.stk.last_mut() else {return;};
         if !last.grammar.is_many() || last.tokens.len()!=cur.tokens.len() {return;}
-        last.grammar=Rc::new(GrammarNode::Always);
+
+        last.grammar=Rc::new(GrammarNode::Always); //self.always.clone();
     }
 
     pub fn last_loc(&self) -> Loc {
