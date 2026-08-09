@@ -44,7 +44,7 @@ pub struct TempHistNew<'t,'g> {
     pub group_len:usize,
     pub hist_stows_len:usize,
 
-    pub hist_fails_len:usize,
+    // pub hist_fails_len:usize,
 }
 
 #[derive(Clone, Debug)]
@@ -144,7 +144,7 @@ pub struct Work<'t,'g> {
     // pub hist_prevs_ind:usize,
     // pub hist_prevs_len:usize,
 
-    pub hist_fails_len:usize,
+    // pub hist_fails_len:usize,
 
     pub expected_ind:Option<usize>,
     pub expecteds_len:usize,
