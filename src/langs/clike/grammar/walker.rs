@@ -69,16 +69,16 @@ where
     //should rename hist to stow, so stow_success/stow_fails
     hist_stows:Vec<TempHistStow<'t,'g>>,
     hist_stows_groups:Vec<TempGroup<'t,'g>>,
-    // hist_stows_prevs:Vec<TempHistPrev<'g>>,
+    // // hist_stows_prevs:Vec<TempHistPrev<'g>>,
 
-    //
-    // hist_prevs:Vec<TempHistPrev<'g>>,
+    // //
+    // // hist_prevs:Vec<TempHistPrev<'g>>,
 
 
-    hist_fails:Vec<TempHistFail<'g>>,
+    // hist_fails:Vec<TempHistFail<'g>>,
 
-    // hist_stows_stk:Vec<TempHistBegins<'t,'g>>,
-    // hist_ends_stk:Vec<TempHistEnds<'g>>,
+    // // hist_stows_stk:Vec<TempHistBegins<'t,'g>>,
+    // // hist_ends_stk:Vec<TempHistEnds<'g>>,
 
     was_news:Vec<TempWas<'g>>,
     wases:Vec<TempWas<'g>>,
@@ -126,13 +126,13 @@ where
             // hist_stows_stk:Default::default(),
             hist_stows:Default::default(),
             hist_stows_groups:Default::default(),
-            // hist_stows_prevs:Default::default(),
-            // hist_stows_elements: Default::default(),
-            // hist_prevs: Default::default(),
-            hist_fails:Default::default(),
+            // // hist_stows_prevs:Default::default(),
+            // // hist_stows_elements: Default::default(),
+            // // hist_prevs: Default::default(),
+            // hist_fails:Default::default(),
 
-            // hist_stows_stk: Default::default(),
-            // hist_ends_stk: Default::default(),
+            // // hist_stows_stk: Default::default(),
+            // // hist_ends_stk: Default::default(),
 
             was_news:Default::default(),
             wases:Default::default(),
@@ -349,11 +349,11 @@ where
         // self.hist_stows_stk.clear();
         self.hist_stows.clear();
         self.hist_stows_groups.clear();
-        // self.hist_stows_prevs.clear();
+        // // self.hist_stows_prevs.clear();
 
-        // self.hist_stows_elements.clear();
-        // self.hist_prevs.clear();
-        self.hist_fails.clear();
+        // // self.hist_stows_elements.clear();
+        // // self.hist_prevs.clear();
+        // self.hist_fails.clear();
 
 
         self.was_news.clear();
@@ -1050,9 +1050,9 @@ where
         let hist_stows_len=self.hist_stows_push(&cur);
 
 
-        let hist_fails_len=self.hist_fails_push(&cur);
-        // let hist_ends_stk_len=self.hist_ends_stk_push(&cur);
-        // let hist_stows_ind=if !cur.is_first{cur.hist_stows_len}else{cur.hist_stows_ind};
+        // let hist_fails_len=self.hist_fails_push(&cur);
+        // // let hist_ends_stk_len=self.hist_ends_stk_push(&cur);
+        // // let hist_stows_ind=if !cur.is_first{cur.hist_stows_len}else{cur.hist_stows_ind};
 
         //
         // // let was_ind = if cur.from_user && !cur.first {cur.was_len} else {cur.was_ind}; //self.wases.len()
@@ -1101,7 +1101,7 @@ where
                 // can_hist_stow:false,
 
                 hist_news_len,
-                hist_fails_len,
+                hist_fails_len:hist_stows_len,
 
                 // hist_stows_stk_len,
                 // hist_ends_stk_len,
@@ -1168,7 +1168,7 @@ where
 
             // hist_stows_stk_len,
             hist_stows_len,
-            hist_fails_len,
+            hist_fails_len:hist_stows_len,
             // hist_ends_stk_len,
 
             // hist_stows_ind,
@@ -1266,10 +1266,17 @@ where
         if cur.hist_fails_len==0 {return false;}
 
         //
-        let hist_fail=&self.hist_fails[cur.hist_fails_len-1];
+        // let hist_fail=&self.hist_fails[cur.hist_fails_len-1];
 
-        if !hist_fail.grammers.contains(&cur.grammar) {
+        let hist_stow=&self.hist_stows[cur.hist_stows_len-1];
+        if !hist_stow.fail_vals.grammers.contains(&cur.grammar) {
             return false;
+        }
+
+        let Some(hist_fail)=&hist_stow.fail_val else {return false;};
+        if hist_fail.grammar!=cur.grammar {
+            // return false;
+            println!("--- checkkk")
         }
 
         //
@@ -1584,12 +1591,26 @@ where
             }
 
             //
-            for x in drained_hist_news {
+            let hist_stow=&mut self.hist_stows[last.hist_stows_len-1];
+            //
+            for x in drained_hist_news.iter() {
                 if !x.is_first {continue;}
                 if x.hist_fails_len!=last.hist_fails_len {continue;}
                 if !(x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many()) {continue;}
 
-                self.hist_fails[last.hist_fails_len-1].grammers.insert(x.grammar.clone());
+                // self.hist_fails[last.hist_fails_len-1].grammers.insert(x.grammar.clone());
+                hist_stow.fail_vals.grammers.insert(x.grammar.clone());
+            }
+
+
+            // //
+            if let Some(drained_hist_new)=drained_hist_news.iter().find(|x|{
+                // x.is_first &&
+                x.hist_fails_len==last.hist_fails_len
+                && (x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many())
+            }) {
+                // self.hist_fails[last.hist_fails_len-1].grammar=drained_hist_new.grammar.clone();
+                hist_stow.fail_val=Some(TempHistFail{grammar:drained_hist_new.grammar.clone()});
             }
         } else {
             self.hist_news.truncate(last.hist_news_len);
@@ -1621,9 +1642,10 @@ where
         if last.hist_stows_len!=0 { //cur.hist_stows_len!=0 // && cur.hist_stows_len==last.hist_stows_len //that the hist_stows[ind] still exists
             //
             let drained_hist_new2=drained_hist_news.iter().find(|x|{
-                x.is_first
-                && x.hist_stows_len==last.hist_stows_len
-                && (x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many())
+
+                // x.is_first
+                 x.hist_stows_len==last.hist_stows_len &&
+                (x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many())
 
             });
 
@@ -1700,30 +1722,30 @@ where
 
     }
 
-    fn hist_fails_push(&mut self,cur:&Work<'t,'g>) -> usize {
-        if cur.from_user
-            && ( !cur.first || cur.hist_fails_len==0
-        ) {
-            //
-            if self.hist_fails.len() < cur.hist_fails_len+1 {
-                if self.hist_fails.len() != cur.hist_fails_len {panic!("");}
+    // fn hist_fails_push(&mut self,cur:&Work<'t,'g>) -> usize {
+    //     if cur.from_user
+    //         && ( !cur.first || cur.hist_fails_len==0
+    //     ) {
+    //         //
+    //         if self.hist_fails.len() < cur.hist_fails_len+1 {
+    //             if self.hist_fails.len() != cur.hist_fails_len {panic!("");}
 
-                //
-                self.hist_fails.push(Default::default());
-            }
+    //             //
+    //             self.hist_fails.push(Default::default());
+    //         }
 
-            //
-            self.hist_fails[cur.hist_fails_len].grammers.clear();
+    //         //
+    //         self.hist_fails[cur.hist_fails_len].grammers.clear();
 
-            //
-            cur.hist_fails_len+1
-        } else {
-            cur.hist_fails_len
-        }
+    //         //
+    //         cur.hist_fails_len+1
+    //     } else {
+    //         cur.hist_fails_len
+    //     }
 
-        //
+    //     //
 
-    }
+    // }
     fn hist_stows_push(&mut self,cur:&Work<'t,'g>) -> usize {
         if cur.from_user //so not an added OR for rest,
             && ( !cur.first || //not part of current OR, eg: or(A, and(B,or(C,D))) A in dif OR stk than C,D
@@ -1742,6 +1764,8 @@ where
                 val: None,
                 stow_groups_start: self.hist_stows_groups.len(),
                 // stow_prevs_start: self.hist_stows_prevs.len(),
+                fail_val:None,
+                fail_vals:Default::default(),
             });
 
             if self.hist_stows.len()!=cur.hist_stows_len+1 {
@@ -2243,8 +2267,8 @@ where
                     //     self.hist_news.len(),self.hist_stows.len(),self.hist_prevs.len(),self.hist_fails.len(),
                     // );
                     println!("        first={first}, hist news_len={hist_news_len}, stows_len={hist_stows_len:?}, fails_len={hist_fails_len},",);
-                    println!("        actual: hist news_len={}, stows_len={:?}, fails_len={}",
-                        self.hist_news.len(),self.hist_stows.len(),self.hist_fails.len(),
+                    println!("        actual: hist news_len={}, stows_len={:?}, ",
+                        self.hist_news.len(),self.hist_stows.len(),
                     );
                     // println!("        hist_stows_ind={hist_stows_ind}, hist_stows_len={hist_stows_len},",
                     //     self.stk.get(cur.)
@@ -2306,7 +2330,7 @@ where
                 // }
 
                 //
-                if false {
+                if true {
                     //
                     println!("        hist_news");
 
@@ -2319,12 +2343,15 @@ where
 
                     if true {
                         for (i,x) in self.hist_stows.iter().enumerate().rev() {
-                            println!("            {i}:{}",x.val.as_ref().map(|y|format!("{:?}",&y.grammar)).unwrap_or("_".to_string()));
+                            println!("            s:{i}:{}",x.val.as_ref().map(|y|format!("{:?}",&y.grammar)).unwrap_or("_".to_string()));
+                            println!("            f:{i}:{}",x.fail_val.as_ref().map(|y|format!("{:?}",&y.grammar)).unwrap_or("_".to_string()));
+                            println!("            fs:{i}:{}",x.fail_vals.grammers.iter().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", "));
                         }
 
                     } else
                     if *hist_stows_len!=0 {
                         let hist_stow=self.hist_stows.last().unwrap();
+
                         if let Some(hist_stow_val)=&hist_stow.val {
                             let hist_stow_groups=&self.hist_stows_groups[
                                 hist_stow.stow_groups_start..hist_stow_val.stow_groups_end
@@ -2332,44 +2359,49 @@ where
                             // let hist_stow_prev=&self.hist_stows_prevs[
                             //     hist_stow.stow_prevs_start..hist_stow_val.stow_prevs_end
                             // ];
-
+                            println!("            s");
                             println!("            grammar={:?}",hist_stow_val.grammar);
                             println!("            groups={:?}",hist_stow_groups.iter().enumerate().map(|(i,g)|format!("{i}:p{}:{}",
                                 g.parent,
                                 g.name,
                             )).collect::<Vec<_>>());
                         }
+                        if let Some(hist_stow_fail_val)=&hist_stow.fail_val {
+                            println!("            f");
+                            println!("            grammar={:?}",hist_stow_fail_val.grammar);
+
+                        }
                     }
+
+                    // // //
+                    // // println!("        hist_prevs_last {hist_prevs_ind}..{hist_prevs_len} : {}",
+                    // //     self.hist_prevs.len(),
+                    // // );
+
+                    // // // for i in *hist_prevs_ind.. self.hist_prevs.len() //*hist_prevs_len
+                    // // for (i,x) in self.hist_prevs[*hist_prevs_ind..].iter().enumerate()
+                    // // {
+                    // //     // let x=&self.hist_prevs[i];
+                    // //     println!("            {i}:[{:?}]: {:?}",x.tokens_start_ind,x.grammar)
+                    // // }
 
                     // //
-                    // println!("        hist_prevs_last {hist_prevs_ind}..{hist_prevs_len} : {}",
-                    //     self.hist_prevs.len(),
-                    // );
+                    // println!("        hist_fails {} : ({})",cur.hist_fails_len,self.hist_fails.len());
 
-                    // // for i in *hist_prevs_ind.. self.hist_prevs.len() //*hist_prevs_len
-                    // for (i,x) in self.hist_prevs[*hist_prevs_ind..].iter().enumerate()
-                    // {
-                    //     // let x=&self.hist_prevs[i];
-                    //     println!("            {i}:[{:?}]: {:?}",x.tokens_start_ind,x.grammar)
+                    // if false {
+
+                    //     for (i,x) in self.hist_fails.iter().enumerate().rev() {
+                    //         println!("            {i}: {:?}",x.grammers);
+                    //     }
+                    // } else
+                    // if cur.hist_fails_len!=0 {
+                    //     let his_fails_last=&self.hist_fails[cur.hist_fails_len-1].grammers;
+
+                    //     for (i,x) in his_fails_last.iter().enumerate() {
+                    //         println!("            {i}: {x:?}",);
+                    //     }
+
                     // }
-
-                    //
-                    println!("        hist_fails {} : ({})",cur.hist_fails_len,self.hist_fails.len());
-
-                    if false {
-
-                        for (i,x) in self.hist_fails.iter().enumerate().rev() {
-                            println!("            {i}: {:?}",x.grammers);
-                        }
-                    } else
-                    if cur.hist_fails_len!=0 {
-                        let his_fails_last=&self.hist_fails[cur.hist_fails_len-1].grammers;
-
-                        for (i,x) in his_fails_last.iter().enumerate() {
-                            println!("            {i}: {x:?}",);
-                        }
-
-                    }
 
                 }
 

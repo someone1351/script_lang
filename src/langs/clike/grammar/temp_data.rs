@@ -47,6 +47,30 @@ pub struct TempHistNew<'t,'g> {
     pub hist_fails_len:usize,
 }
 
+#[derive(Clone, Debug)]
+pub struct TempWas<'g> {
+    pub name:&'g str,
+}
+
+// #[derive(Clone, Debug)]
+// pub struct TempHad<'g> {
+//     pub name:&'g str,
+// }
+
+#[derive(Clone, Debug,Default)] //
+pub struct TempHistFail2<'g> { //TempHistPrev
+    pub grammers: HashSet<Rc<GrammarNode<'g>>>,
+    // // pub tokens_start_ind:usize,
+
+}
+
+#[derive(Clone, Debug,)] //Default
+pub struct TempHistFail<'g> { //TempHistPrev
+    // pub grammers: HashSet<Rc<GrammarNode<'g>>>,
+    // // pub tokens_start_ind:usize,
+
+    pub grammar:Rc<GrammarNode<'g>>,
+}
 
 #[derive(Clone,Debug,)]
 pub enum TempHistStowWas<'g> {
@@ -70,6 +94,9 @@ pub struct TempHistStow<'t,'g> { //TempHistStow
     pub val : Option<TempHistStowVal<'t,'g>>,
     pub stow_groups_start:usize,
     // pub stow_prevs_start:usize,
+    pub fail_val:Option<TempHistFail<'g>>,
+
+    pub fail_vals:TempHistFail2<'g>,
 }
 
 // #[derive(Clone, Debug)]
@@ -78,22 +105,6 @@ pub struct TempHistStow<'t,'g> { //TempHistStow
 //     pub tokens_start_ind:usize,
 // }
 
-#[derive(Clone, Debug)]
-pub struct TempWas<'g> {
-    pub name:&'g str,
-}
-
-// #[derive(Clone, Debug)]
-// pub struct TempHad<'g> {
-//     pub name:&'g str,
-// }
-
-
-#[derive(Clone, Debug,Default)]
-pub struct TempHistFail<'g> { //TempHistPrev
-    pub grammers: HashSet<Rc<GrammarNode<'g>>>,
-    // pub tokens_start_ind:usize,
-}
 
 #[derive(Clone)]
 pub struct TempGroup<'t,'g> {
