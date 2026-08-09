@@ -458,7 +458,7 @@ where
             // self.hist_news_truncate_to_last(); //why on success??
             self.update_tokens(&cur,true);
             self.groups_on_success(&cur);
-            self.was_on_success(&cur); //before hist
+            self.was_on_success(false); //before hist
             self.hist_on_success(&cur,false,);
             self.expected_on_success();
         } else {
@@ -1248,7 +1248,7 @@ where
         self.handle_exit_last_many(&cur);
         self.update_tokens(&cur,true);
         self.groups_on_success(&cur); //here
-        self.was_on_success(&cur); //before hist
+        self.was_on_success(false); //before hist
         self.hist_on_success(&cur,false);
 
         //why was this previously commented out?
@@ -1335,13 +1335,18 @@ where
         // self.hist_prevs.extend_from_slice(stow_prevs);
 
         //
-        if let Some(x) = &hist_stow_val.was {
-            //what if ends in always vs prim with no was
+        if let TempHistStowWas::Was(temp_was)=&hist_stow_val.was {
+            self.was_news.push(temp_was.clone());
         }
+
+        //
+        let was_prim= if let TempHistStowWas::Primitive=&hist_stow_val.was {true}else{false};
+
         //
         let cur=Work {
             group_len:self.groups.len(),
             tokens:hist_stow_val.tokens_after,
+            // was_new_len2,
             // hist_ends_stk_len:todo!(),
             ..cur.clone()
         };
@@ -1350,9 +1355,9 @@ where
 
         self.work_on_success(&cur);
         self.update_tokens(&cur,true);
-        self.groups_on_success(&cur);
-        self.was_on_success(&cur); //before hist
-        self.hist_on_success(&cur,true); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+        self.groups_on_success(&cur,);
+        self.was_on_success(was_prim); //before hist
+        self.hist_on_success(&cur,true,); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
         self.expected_on_success();
 
         //
@@ -1381,7 +1386,7 @@ where
                 self.work_on_success(&cur);
                 self.update_tokens(&cur,true);
                 self.groups_on_success(&cur);
-                self.was_on_success(&cur); //before hist
+                self.was_on_success(true); //before hist
                 self.hist_on_success(&cur,false);
                 self.expected_on_success();
 
@@ -1490,37 +1495,15 @@ where
     }
 
 
-    fn was_on_success(&mut self, cur:&Work<'t,'g>,) {
+
+    fn was_on_success(&mut self, //cur:&Work<'t,'g>,
+        is_prim:bool,
+
+    ) {
         //run before hist_on_success
 
         let Some(last)=self.stk.last_mut() else {return;};
 
-        // if cur.grammar.is_primtive()
-        //     || (
-        //         (cur.grammar.is_had()||cur.grammar.is_always())
-        //         // && cur.was_ind!=cur.was_len
-        //         && cur.was_ind!=last.was_ind
-        //     )
-        // {
-
-        //     // self.wases.drain(last.was_ind..cur.was_ind);
-        //     self.wases.drain(last.was_ind..cur.was_ind);
-        //     // last.was_len=cur.was_len;
-        //     last.was_len=self.wases.len();
-        // }
-
-            // // self.wases.drain(last.was_ind..cur.was_ind);
-            // self.wases.truncate(cur.was_start_ind+1);
-            // self.wases.drain(last.was_ind..cur.was_start_ind);
-
-            // last.was_len=self.wases.len();
-        // if last.was_len!=cur.was_len {
-        //     self.had=None;
-        // }
-
-
-        // self.wases.truncate(cur.was_len);
-        // last.was_len=cur.was_len;
 
                 //
         let drained_was_new=self.was_news.drain(last.was_new_len2 ..).next();
@@ -1532,15 +1515,18 @@ where
             self.wases.push(drained_was_new);
             // last.was_len2=self.wases.len();
             println!("----- was 0");
-        } else if cur.grammar.is_primtive() { //should be not?
+        } else if is_prim { //cur.grammar.is_primtive() //should be not? no
             // let b=cur.grammar.is_primtive() || (cur.grammar.is_had()||cur.grammar.is_always());
             // self.wases.truncate(last.was_ind2+1); //keep previous WAS, if there was one
             self.wases.truncate(last.was_ind2);
             println!("----- was 1");
-        } else if last.was_ind2!=self.wases.len() {
+        } else if last.was_ind2!=self.wases.len() { //for had/always
             // println!("=======---===");
-            let d=self.wases.drain(last.was_ind2..self.wases.len()-1).map(|x|x.name).collect::<Vec<_>>();
-            println!("----- was 2: {d:?}");
+            self.wases.drain(last.was_ind2..self.wases.len()-1);
+            println!("----- was 2");
+
+            // let d=self.wases.drain(last.was_ind2..self.wases.len()-1).map(|x|x.name).collect::<Vec<_>>();
+            // println!("----- was 2: {d:?}");
         } else {
             println!("----- was 3");
         }
@@ -1599,6 +1585,7 @@ where
         self.hist_stows_truncate(hist_stows_len);
 
     }
+
     fn hist_on_success(&mut self,
         cur:&Work<'t,'g>,
         //what was this for again? something to do with not adding cur grammar to hist_stows?
@@ -1615,45 +1602,10 @@ where
         //
         let drained_hist_news=self.hist_news.drain(last.hist_news_len ..).collect::<Vec<_>>();
 
-        //
-        // let added_hist_prevs=drained_hist_news.iter().map(|hist_new|{
-        //     //
-        //     let tokens_len=hist_new.tokens_start.len()-cur.tokens.len();
-        //     let tokens=hist_new.tokens_start.get_amount(tokens_len).unwrap();
-
-        //     //
-        //     // if self.debug {
-        //     //     println!("--- inserting hist_end {:?} {tokens:?}",hist_new.grammar);
-        //     // }
-
-        //     // // //
-        //     // // (  hist_new.grammar.clone(), TempHistEnd {
-        //     // //     tokens_start_ind:tokens.start,
-        //     // //     // tokens,
-        //     // // } )
-
-        //     TempHistPrev {
-        //         grammar:hist_new.grammar.clone(),
-        //         tokens_start_ind:tokens.start,
-        //         // tokens,
-        //     }
-        // }).collect::<Vec<_>>();
-        // let added_hist_prevs = Vec::new();
-
-        // println!("gooo {} !=0 && {}=={}",cur.hist_stows_len, cur.hist_stows_len,last.hist_stows_len);
-
         //add hist stows
-        if last.hist_stows_len!=0
-            //cur.hist_stows_len!=0
-            // && cur.hist_stows_len==last.hist_stows_len //that the hist_stows[ind] still exists
-        {
-
+        if last.hist_stows_len!=0 { //cur.hist_stows_len!=0 // && cur.hist_stows_len==last.hist_stows_len //that the hist_stows[ind] still exists
             //
             let drained_hist_new2=drained_hist_news.iter().find(|x|{
-                // // let b=x.grammar.is_always() || x.grammar.is_prev() || x.grammar.is_primtive();
-                // let b = x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many() ; // || x.grammar.is_or()
-                // // println!("---hm? {:?} {b} {}",x.grammar,x.is_first);
-                // b &&
                 x.is_first
                 && x.hist_stows_len==last.hist_stows_len
                 && (x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many())
@@ -1704,30 +1656,22 @@ where
                     tokens_after: cur.tokens,
                     stow_groups_end: self.hist_stows_groups.len(),
                     // stow_prevs_end: self.hist_stows_prevs.len(),
-                    was:self.wases.get(cur.was_ind2).cloned(),
+                    // was:self.wases.get(cur.was_ind2).cloned(),
+                    was: //self.wases[last.was_ind2..].last().m
+                    if last.was_ind2!=self.wases.len() {
+                        TempHistStowWas::Was(self.wases.last().cloned().unwrap())
+                    } else if cur.grammar.is_primtive() {
+                        TempHistStowWas::Primitive
+                    } else {
+                        TempHistStowWas::None
+                    },
                 })
             }
 
 
         }
 
-        // //
-        // // self.hist_ends_stk[last.hist_ends_stk_len-1].elements.extend(added_hist_ends.into_iter());
 
-        // // //
-        // // last.hist_prevs_ind|cur.hist_prevs_ind|self.hist_prevs.len()
-
-        // if !added_hist_prevs.is_empty() {
-        //     self.hist_prevs.truncate(cur.hist_prevs_ind);
-        //     self.hist_prevs.extend(added_hist_prevs.into_iter().rev());
-        //     //remove last.hist_prevs_ind to cur.hist_prevs_ind, keeping prevs after cur.hist_prevs_ind
-        // } else if cur.hist_prevs_ind != self.hist_prevs.len() { //some prevs previously
-        //     //remove last.hist_prevs_ind to cur.hist_prevs_ind, keeping prevs after cur.hist_prevs_ind
-        // }
-
-        // self.hist_prevs.drain(last.hist_prevs_ind .. cur.hist_prevs_ind);
-
-        // last.hist_prevs_len=self.hist_prevs.len();
 
         //
         self.hist_news.truncate(last.hist_news_len);
@@ -1739,7 +1683,6 @@ where
 
         // // last.hist_stows_len=self.hist_stows_elements.len();
 
-        // // last.hist_prevs_len=cur.hist_prevs_len;
     }
 
     fn hist_fails_push(&mut self,cur:&Work<'t,'g>) -> usize {
@@ -2434,11 +2377,11 @@ where
             panic!("invalid group_ind={}, groups_len={}",cur.group_ind,self.groups.len());
         }
 
-        // // //try take from hist fails
-        // if self.grammar_try_from_hist_fails(&cur) {return Ok(());}
+        // //try take from hist fails
+        if self.grammar_try_from_hist_fails(&cur) {return Ok(());}
 
-        // // //try take from hist begins
-        // if self.grammar_try_from_hist_stows(&cur) {return Ok(());}
+        // //try take from hist begins
+        if self.grammar_try_from_hist_stows(&cur) {return Ok(());}
 
         //
         match cur.grammar.as_ref() {

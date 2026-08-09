@@ -2750,3 +2750,122 @@ pub struct TempExpectedNew<'g> {
                     // );
 					
 					                            // println!("            prevs={:?}",hist_stow_prev.iter().map(|p|&p.grammar).collect::<Vec<_>>());
+===
+
+                // // let b=x.grammar.is_always() || x.grammar.is_prev() || x.grammar.is_primtive();
+                // let b = x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many() ; // || x.grammar.is_or()
+                // // println!("---hm? {:?} {b} {}",x.grammar,x.is_first);
+                // b &&
+===
+prevs
+
+
+        
+        let added_hist_prevs=drained_hist_news.iter().map(|hist_new|{
+            //
+            let tokens_len=hist_new.tokens_start.len()-cur.tokens.len();
+            let tokens=hist_new.tokens_start.get_amount(tokens_len).unwrap();
+
+            //
+            // if self.debug {
+            //     println!("--- inserting hist_end {:?} {tokens:?}",hist_new.grammar);
+            // }
+
+            // // //
+            // // (  hist_new.grammar.clone(), TempHistEnd {
+            // //     tokens_start_ind:tokens.start,
+            // //     // tokens,
+            // // } )
+
+            TempHistPrev {
+                grammar:hist_new.grammar.clone(),
+                tokens_start_ind:tokens.start,
+                // tokens,
+            }
+        }).collect::<Vec<_>>();
+        let added_hist_prevs = Vec::new();
+
+        println!("gooo {} !=0 && {}=={}",cur.hist_stows_len, cur.hist_stows_len,last.hist_stows_len);
+
+
+ //
+        // self.hist_ends_stk[last.hist_ends_stk_len-1].elements.extend(added_hist_ends.into_iter());
+
+        // //
+        // last.hist_prevs_ind|cur.hist_prevs_ind|self.hist_prevs.len()
+
+        if !added_hist_prevs.is_empty() {
+            self.hist_prevs.truncate(cur.hist_prevs_ind);
+            self.hist_prevs.extend(added_hist_prevs.into_iter().rev());
+            //remove last.hist_prevs_ind to cur.hist_prevs_ind, keeping prevs after cur.hist_prevs_ind
+        } else if cur.hist_prevs_ind != self.hist_prevs.len() { //some prevs previously
+            //remove last.hist_prevs_ind to cur.hist_prevs_ind, keeping prevs after cur.hist_prevs_ind
+        }
+
+        self.hist_prevs.drain(last.hist_prevs_ind .. cur.hist_prevs_ind);
+
+        last.hist_prevs_len=self.hist_prevs.len();
+		
+
+        // // last.hist_prevs_len=cur.hist_prevs_len;
+		
+==
+
+        // if cur.grammar.is_primtive()
+        //     || (
+        //         (cur.grammar.is_had()||cur.grammar.is_always())
+        //         // && cur.was_ind!=cur.was_len
+        //         && cur.was_ind!=last.was_ind
+        //     )
+        // {
+
+        //     // self.wases.drain(last.was_ind..cur.was_ind);
+        //     self.wases.drain(last.was_ind..cur.was_ind);
+        //     // last.was_len=cur.was_len;
+        //     last.was_len=self.wases.len();
+        // }
+
+            // // self.wases.drain(last.was_ind..cur.was_ind);
+            // self.wases.truncate(cur.was_start_ind+1);
+            // self.wases.drain(last.was_ind..cur.was_start_ind);
+
+            // last.was_len=self.wases.len();
+        // if last.was_len!=cur.was_len {
+        //     self.had=None;
+        // }
+
+
+        // self.wases.truncate(cur.was_len);
+        // last.was_len=cur.was_len;
+		
+		
+    fn was_on_try(&mut self, cur:&Work<'t,'g>,
+        stow_was:&TempHistStowWas<'g>,
+    ) {
+        let Some(last)=self.stk.last_mut() else {return;};
+
+        match stow_was {
+            TempHistStowWas::Was(temp_was) => {
+
+            }
+            TempHistStowWas::Primitive => {
+
+            }
+            TempHistStowWas::None => {
+
+            }
+        }
+    }
+	        let (was_new_len2,was_prim)=match &hist_stow_val.was {
+            TempHistStowWas::Was(temp_was) => {
+                self.was_news.push(temp_was.clone());
+                // (self.was_news.len(),false)
+                (cur.was_new_len2+1,false)
+            }
+            TempHistStowWas::Primitive => {
+                (cur.was_new_len2,true)
+            }
+            TempHistStowWas::None => {
+                (cur.was_new_len2,false)
+            }
+        };

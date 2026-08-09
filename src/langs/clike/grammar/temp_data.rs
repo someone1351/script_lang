@@ -47,13 +47,22 @@ pub struct TempHistNew<'t,'g> {
     pub hist_fails_len:usize,
 }
 
+
+#[derive(Clone,Debug,)]
+pub enum TempHistStowWas<'g> {
+    Was(TempWas<'g>),
+    Primitive,
+    None,
+}
+
+
 #[derive(Clone,Debug,)]
 pub struct TempHistStowVal<'t,'g> { //TempHistStow
     pub grammar: Rc<GrammarNode<'g>>,
     pub tokens_after:TokenIterContainer<'t>,
     pub stow_groups_end:usize,
     // pub stow_prevs_end:usize,
-    pub was:Option<TempWas<'g>>,
+    pub was:TempHistStowWas<'g>,
 }
 
 #[derive(Clone,Debug,)]
