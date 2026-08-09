@@ -467,7 +467,7 @@ where
             self.update_tokens(&cur,false);
             // // self.revert_last_hist_news();
             self.hist_on_fail();
-            self.was_on_fail(&cur);
+            self.was_on_fail();
             self.groups_on_fail();
             //don't add expected, let user manually add one
             // // // let _expected_news_len=self.add_expected_new(&cur);
@@ -1274,7 +1274,7 @@ where
         self.work_on_fail(&cur);
         self.update_tokens(&cur,false);
         self.hist_on_fail();
-        self.was_on_fail(&cur);
+        self.was_on_fail();
         self.expected_on_fail();
         self.groups_on_fail();
 
@@ -1408,7 +1408,7 @@ where
                 self.work_on_fail(&cur);
                 self.update_tokens(&cur,false);
                 self.hist_on_fail();
-                self.was_on_fail(&cur);
+                self.was_on_fail();
                 // // self.revert_last_hist_news();
                 // self.update_hist_on_fail(&cur);
                 // // let _expected_news_len=self.add_expected_new(&cur);
@@ -1514,29 +1514,41 @@ where
             self.wases.truncate(last.was_ind2); //remove prev WAS
             self.wases.push(drained_was_new);
             // last.was_len2=self.wases.len();
-            println!("----- was 0");
+
+            if self.debug {
+                println!("----- was 0");
+            }
         } else if is_prim { //cur.grammar.is_primtive() //should be not? no
             // let b=cur.grammar.is_primtive() || (cur.grammar.is_had()||cur.grammar.is_always());
             // self.wases.truncate(last.was_ind2+1); //keep previous WAS, if there was one
             self.wases.truncate(last.was_ind2);
-            println!("----- was 1");
+
+            if self.debug {
+                println!("----- was 1");
+            }
         } else if last.was_ind2!=self.wases.len() { //for had/always
             // println!("=======---===");
             self.wases.drain(last.was_ind2..self.wases.len()-1);
-            println!("----- was 2");
-
+            if self.debug {
+                println!("----- was 2");
+            }
             // let d=self.wases.drain(last.was_ind2..self.wases.len()-1).map(|x|x.name).collect::<Vec<_>>();
             // println!("----- was 2: {d:?}");
         } else {
-            println!("----- was 3");
+            if self.debug {
+                println!("----- was 3");
+            }
         }
 
     }
 
-    fn was_on_fail(&mut self, cur:&Work<'t,'g>,) {
+    fn was_on_fail(&mut self, ) {
         let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
 
+        if self.debug {
             println!("----- was 4 faill");
+        }
+
         self.was_news.truncate(last.was_new_len2);
 
         // if cur.was_ind2==last.was_ind2 {

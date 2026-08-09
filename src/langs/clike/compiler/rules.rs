@@ -43,62 +43,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
     use GrammarNode::*;
 
     Some(Rc::new(match n {
-        "start66" => [
-            "a".keyword().was("A"),
-            Eol.was("E"),
-            [Always.was("Q"),].or(),
-        ].and(),
-        "start5" => [
-            "a".keyword().was("A"),
-            Eol, //.was("E")
-            // Always,
-        ].and(),
-        "start0" => [
-            "a".keyword().was("A").many0(),
-            Eol
-                // .was("E")
-                ,
-        ].and(),
 
-        "start1" => [
-            "a".keyword().was("A"),
-            [
-                ["b".keyword().was("B"),Always,].and(),
-            ].or(),
-            Eol,
-            Always,
-        ].and(),
-
-        "start2" => [
-            "a".keyword().was("A"),
-            [
-                [
-                    [
-                        "b".keyword().was("B"),
-                        "c".keyword().was("C"),
-                        "d".keyword().was("D"),
-                    ].or().had("C"),
-                    "x".keyword(),
-                ].and(),
-                "c".keyword().was("CC"),
-            ].or(),
-                // .was("BCD")                ,
-            "a".keyword(),
-            Eol.many0(),
-        ].and(),
-
-        "start34232" => [
-            // ["a".keyword().was("A"),"b".keyword().was("B")].or().many0(),
-            "a".keyword().was("A"),
-            // ["b".keyword().was("B"),Always,].or(),
-            // "b".keyword().was("B").many0(),
-            [
-                "b".keyword().was("B"),
-                "c".keyword().was("C"),
-            ].or().many0(),
-            Always,
-            Eol,
-        ].and(),
         //
         "start" => NonTerm("stmts"),
 
@@ -155,9 +100,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             NonTerm("expr"),
         ].and().group("set_field"),
 
-        // "expr" => NonTerm("val"),
         "expr" => NonTerm("or").group("expr").expect("expr"),
-        // // "expr" => NonTerm("factor").group("expr").expect("expr"),
 
         "or" => [
             [
