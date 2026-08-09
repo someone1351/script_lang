@@ -77,22 +77,37 @@ pub enum TempHistStowWas<'g> {
 
 
 #[derive(Clone,Debug,)]
-pub struct TempHistStowVal<'t,'g> { //TempHistStow
-    pub grammar: Rc<GrammarNode<'g>>,
-    pub tokens_after:TokenIterContainer<'t>,
-    pub stow_groups_end:usize,
-    // pub stow_prevs_end:usize,
-    pub was:TempHistStowWas<'g>,
+pub enum TempHistStowVal2<'t,'g> {
+    Success {
+        grammar: Rc<GrammarNode<'g>>,
+        tokens_after:TokenIterContainer<'t>,
+        stow_groups_end:usize,
+        was:TempHistStowWas<'g>,
+    },
+    Fail {
+        grammar:Rc<GrammarNode<'g>>,
+    },
+    None,
 }
+
+// #[derive(Clone,Debug,)]
+// pub struct TempHistStowVal<'t,'g> { //TempHistStow
+//     pub grammar: Rc<GrammarNode<'g>>,
+//     pub tokens_after:TokenIterContainer<'t>,
+//     pub stow_groups_end:usize,
+//     // pub stow_prevs_end:usize,
+//     pub was:TempHistStowWas<'g>,
+// }
 
 #[derive(Clone,Debug,)]
 pub struct TempHistStow<'t,'g> { //TempHistStow
-    pub success_val : Option<TempHistStowVal<'t,'g>>,
+    // pub success_val : Option<TempHistStowVal<'t,'g>>,
     pub stow_groups_start:usize,
-    // pub stow_prevs_start:usize,
-    pub fail_val:Option<TempHistFail<'g>>,
+    // // pub stow_prevs_start:usize,
+    // pub fail_val:Option<TempHistFail<'g>>,
 
     // pub fail_vals:TempHistFail2<'g>,
+    pub val : TempHistStowVal2<'t,'g>,
 }
 
 // #[derive(Clone, Debug)]

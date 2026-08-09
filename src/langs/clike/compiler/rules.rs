@@ -187,7 +187,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "field" => [
             Symbol("."),
             [
-                // Int.group("field_index"),
+                Int.group("field_index"),
                 Identifier.group("field_name"),
             ].or().expect("field").was("field"),
         ].and(),

@@ -1316,11 +1316,14 @@ where
         //     return false;
         // }
 
-        let Some(hist_fail)=&hist_stow.fail_val else {return false;};
-        if hist_fail.grammar!=cur.grammar {
-            return false;
-            // println!("--- checkkk")
-        }
+        // let Some(hist_fail)=&hist_stow.fail_val else {return false;};
+        let TempHistStowVal2::Fail { grammar: hist_fail_grammar }=&hist_stow.val else {return false;};
+        // if hist_fail.grammar!=cur.grammar {
+        //     return false;
+        //     // println!("--- checkkk")
+        // }
+
+        if hist_fail_grammar.ne(&cur.grammar) { return false; }
 
         //
         // self.stk.truncate(cur.fail_len);
@@ -1351,18 +1354,29 @@ where
 
 
         let hist_stow=&self.hist_stows[cur.hist_stow_len-1];
-        let Some(hist_stow_val)=&hist_stow.success_val else {return false;};
+        // let Some(hist_stow_val)=&hist_stow.success_val else {return false;};
+
+        let TempHistStowVal2::Success {
+            grammar:hist_success_gramar,
+            tokens_after:tokens_after,
+            stow_groups_end,
+            was:hist_was,
+        }=&hist_stow.val else {return false;};
+
+        // //
+        // if hist_stow_val.grammar!=cur.grammar {
+        //     return false;
+        // }
 
         //
-        if hist_stow_val.grammar!=cur.grammar {
-            return false;
-        }
-
+        if hist_success_gramar.ne(&cur.grammar) { return false; }
         //
         // self.stk.truncate(cur.success_len);
 
-        let temp_groups_end=hist_stow.success_val.as_ref().map(|x|x.stow_groups_end).unwrap_or(hist_stow.stow_groups_start);
-        // let temp_prevs_end=hist_stow.val.as_ref().map(|x|x.stow_prevs_end).unwrap_or(hist_stow.stow_prevs_start);
+        // let temp_groups_end=hist_stow.success_val.as_ref().map(|x|x.stow_groups_end).unwrap_or(hist_stow.stow_groups_start);
+        // // let temp_prevs_end=hist_stow.val.as_ref().map(|x|x.stow_prevs_end).unwrap_or(hist_stow.stow_prevs_start);
+        // let temp_groups_end=hist_stow.success_val.as_ref().map(|x|x.stow_groups_end).unwrap_or(hist_stow.stow_groups_start);
+        let temp_groups_end=*stow_groups_end;
 
         let stow_groups=&self.hist_stows_groups[hist_stow.stow_groups_start .. temp_groups_end];
         // // let stow_prevs=&self.hist_stows_prevs[hist_stow.stow_prevs_start..temp_prevs_end];
@@ -1388,17 +1402,20 @@ where
         // self.hist_prevs.extend_from_slice(stow_prevs);
 
         //
-        if let TempHistStowWas::Was(temp_was)=&hist_stow_val.was {
+        if let TempHistStowWas::Was(temp_was)=hist_was //&hist_stow_val.was
+        {
             self.was_news.push(temp_was.clone());
         }
 
         //
-        let was_prim= if let TempHistStowWas::Primitive=&hist_stow_val.was {true}else{false};
+        let was_prim= if let TempHistStowWas::Primitive=hist_was //&hist_stow_val.was
+            {true}else{false};
 
         //
         let cur=Work {
             group_len:self.groups.len(),
-            tokens:hist_stow_val.tokens_after,
+            // tokens:hist_stow_val.tokens_after,
+            tokens:*tokens_after,
             // was_new_len,
             // hist_ends_stk_len:todo!(),
             ..cur.clone()
@@ -1652,8 +1669,9 @@ where
                 x.hist_stow_len==last.hist_stow_len
                 && (x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many())
             }) {
-                // self.hist_fails[last.hist_fails_len-1].grammar=drained_hist_new.grammar.clone();
-                hist_stow.fail_val=Some(TempHistFail{grammar:drained_hist_new.grammar.clone()});
+                // // self.hist_fails[last.hist_fails_len-1].grammar=drained_hist_new.grammar.clone();
+                // hist_stow.fail_val=Some(TempHistFail{grammar:drained_hist_new.grammar.clone()});
+                hist_stow.val=TempHistStowVal2::Fail { grammar: drained_hist_new.grammar.clone() };
             }
         } else {
             self.hist_news.truncate(last.hist_new_len);
@@ -1731,7 +1749,23 @@ where
                 }
 
                 //
-                hist_stow.success_val=Some(TempHistStowVal {
+                // hist_stow.success_val=Some(TempHistStowVal {
+                //     grammar: drained_hist_new2.grammar.clone(),
+                //     tokens_after: cur.tokens,
+                //     stow_groups_end: self.hist_stows_groups.len(),
+                //     // stow_prevs_end: self.hist_stows_prevs.len(),
+                //     // was:self.wases.get(cur.was_ind).cloned(),
+                //     was: //self.wases[last.was_ind..].last().m
+                //     if last.was_ind!=self.wases.len() {
+                //         TempHistStowWas::Was(self.wases.last().cloned().unwrap())
+                //     } else if cur.grammar.is_primtive() {
+                //         TempHistStowWas::Primitive
+                //     } else {
+                //         TempHistStowWas::None
+                //     },
+                // });
+
+                hist_stow.val=TempHistStowVal2::Success {
                     grammar: drained_hist_new2.grammar.clone(),
                     tokens_after: cur.tokens,
                     stow_groups_end: self.hist_stows_groups.len(),
@@ -1745,7 +1779,7 @@ where
                     } else {
                         TempHistStowWas::None
                     },
-                })
+                };
             }
 
 
@@ -1804,11 +1838,14 @@ where
 
             //
             self.hist_stows.push(TempHistStow {
-                success_val: None,
                 stow_groups_start: self.hist_stows_groups.len(),
-                // stow_prevs_start: self.hist_stows_prevs.len(),
-                fail_val:None,
-                // fail_vals:Default::default(),
+                // success_val: None,
+                // // stow_prevs_start: self.hist_stows_prevs.len(),
+                // fail_val:None,
+                // // fail_vals:Default::default(),
+
+
+                val:TempHistStowVal2::None,
             });
 
             if self.hist_stows.len()!=cur.hist_stow_len+1 {
@@ -1873,11 +1910,16 @@ where
             // } else {
             //     (hist_stow.stow_groups_start,hist_stow.stow_prevs_start)
             // };
-            let groups_len=if let Some(hist_stow_val)= &hist_stow.success_val {
-                hist_stow_val.stow_groups_end
+            let groups_len=if let TempHistStowVal2::Success {stow_groups_end, .. }=&hist_stow.val {
+                *stow_groups_end
             } else {
                 hist_stow.stow_groups_start
             };
+            // let groups_len=if let Some(hist_stow_val)= &hist_stow.success_val {
+            //     hist_stow_val.stow_groups_end
+            // } else {
+            //     hist_stow.stow_groups_start
+            // };
 
             self.hist_stows_groups.truncate(groups_len);
             // self.hist_stows_prevs.truncate(prevs_len);
@@ -2387,37 +2429,56 @@ where
                     //
                     println!("        hist_stows {hist_stow_len} ({})",self.hist_stows.len());
 
-                    if true {
-                        for (i,x) in self.hist_stows.iter().enumerate().rev() {
-                            println!("            s:{i}:{}",x.success_val.as_ref().map(|y|format!("{:?}",&y.grammar)).unwrap_or("_".to_string()));
-                            println!("            f:{i}:{}",x.fail_val.as_ref().map(|y|format!("{:?}",&y.grammar)).unwrap_or("_".to_string()));
-                            // println!("            fs:{i}:{}",x.fail_vals.grammers.iter().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", "));
-                        }
+                    for (i,x) in self.hist_stows.iter().enumerate().rev() {
+                        match &x.val {
+                            TempHistStowVal2::Success { grammar, .. } => {
+                                 println!("            {i}:s:{grammar:?}",);
+                            }
+                            TempHistStowVal2::Fail { grammar } => {
+                                println!("            {i}:f:{grammar:?}",);
+                            }
+                            TempHistStowVal2::None => {
 
-                    } else
-                    if *hist_stow_len!=0 {
-                        let hist_stow=self.hist_stows.last().unwrap();
-
-                        if let Some(hist_stow_val)=&hist_stow.success_val {
-                            let hist_stow_groups=&self.hist_stows_groups[
-                                hist_stow.stow_groups_start..hist_stow_val.stow_groups_end
-                            ];
-                            // let hist_stow_prev=&self.hist_stows_prevs[
-                            //     hist_stow.stow_prevs_start..hist_stow_val.stow_prevs_end
-                            // ];
-                            println!("            s");
-                            println!("            grammar={:?}",hist_stow_val.grammar);
-                            println!("            groups={:?}",hist_stow_groups.iter().enumerate().map(|(i,g)|format!("{i}:p{}:{}",
-                                g.parent,
-                                g.name,
-                            )).collect::<Vec<_>>());
-                        }
-                        if let Some(hist_stow_fail_val)=&hist_stow.fail_val {
-                            println!("            f");
-                            println!("            grammar={:?}",hist_stow_fail_val.grammar);
-
+                            }
                         }
                     }
+
+
+                    // if true {
+                    //     for (i,x) in self.hist_stows.iter().enumerate().rev() {
+                    //         if let Some(v)=&x.success_val {
+                    //             println!("            s:{i}:{}",x.success_val.as_ref().map(|y|format!("{:?}",&y.grammar)).unwrap_or("_".to_string()));
+                    //         }
+                    //         if let Some(v)=&x.fail_val {
+                    //             println!("            f:{i}:{}",x.fail_val.as_ref().map(|y|format!("{:?}",&y.grammar)).unwrap_or("_".to_string()));
+                    //         }
+                    //         // println!("            fs:{i}:{}",x.fail_vals.grammers.iter().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", "));
+                    //     }
+
+                    // } else
+                    // if *hist_stow_len!=0 {
+                    //     let hist_stow=self.hist_stows.last().unwrap();
+
+                    //     if let Some(hist_stow_val)=&hist_stow.success_val {
+                    //         let hist_stow_groups=&self.hist_stows_groups[
+                    //             hist_stow.stow_groups_start..hist_stow_val.stow_groups_end
+                    //         ];
+                    //         // let hist_stow_prev=&self.hist_stows_prevs[
+                    //         //     hist_stow.stow_prevs_start..hist_stow_val.stow_prevs_end
+                    //         // ];
+                    //         println!("            s");
+                    //         println!("            grammar={:?}",hist_stow_val.grammar);
+                    //         println!("            groups={:?}",hist_stow_groups.iter().enumerate().map(|(i,g)|format!("{i}:p{}:{}",
+                    //             g.parent,
+                    //             g.name,
+                    //         )).collect::<Vec<_>>());
+                    //     }
+                    //     if let Some(hist_stow_fail_val)=&hist_stow.fail_val {
+                    //         println!("            f");
+                    //         println!("            grammar={:?}",hist_stow_fail_val.grammar);
+
+                    //     }
+                    // }
 
                     // // //
                     // // println!("        hist_prevs_last {hist_prevs_ind}..{hist_prevs_len} : {}",
