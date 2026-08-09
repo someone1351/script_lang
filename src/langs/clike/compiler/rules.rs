@@ -398,3 +398,22 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         _ => {return None;}
     }))
 }
+
+            // NonTerm("format"),
+            // NonTerm("print"),
+            // NonTerm("println"),
+
+        // "format_params" => [
+        //     NonTerm("lparen"),
+        //     String,
+        //     [
+        //         [String,NonTerm("expr"),].or(),
+        //         [NonTerm("comma"),NonTerm("expr"),].and().many0(),
+        //         NonTerm("comma").opt(),
+        //     ].and().opt(),
+        //     NonTerm("rparen"),
+        // ].and(),
+
+        // "format" => [Keyword("format"),NonTerm("format_params"),].and(),
+        // "print" => [Keyword("print"),NonTerm("format_params"),].and(),
+        // "println" => [Keyword("println"),NonTerm("format_params"),].and(),
