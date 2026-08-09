@@ -87,14 +87,14 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and().group("set_val"),
 
         "set_field" => [
-            NonTerm("val").had("field"),
+            NonTerm("val").stow().had("field"),
             // Had("field"), //.prev()
             NonTerm("set_op"),
             NonTerm("expr"),
         ].and().group("set_field"),
 
         "set_index" => [
-            NonTerm("val").had("index"),
+            NonTerm("val").stow().had("index"),
             // Had("index"), //.prev()
             NonTerm("set_op"),
             NonTerm("expr"),
@@ -104,7 +104,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "or" => [
             [
-                NonTerm("xor"),
+                NonTerm("xor").stow(),
                 [ NonTerm("or_op"), NonTerm("xor"), ].and().many1(),
             ].and().group("or"),
             NonTerm("xor"),
@@ -112,7 +112,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "xor" => [
             [
-                NonTerm("and"),
+                NonTerm("and").stow(),
                 [ NonTerm("xor_op"), NonTerm("and"), ].and().many1(),
             ].and().group("xor"),
             NonTerm("and"),
@@ -120,20 +120,20 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "and" => [
             [
-                NonTerm("compare"),
+                NonTerm("compare").stow(),
                 [ NonTerm("and_op"), NonTerm("compare"), ].and().many1(),
             ].and().group("and"),
             NonTerm("compare"),
         ].or(),
 
         "compare" => [
-            [ NonTerm("factor"), NonTerm("compare_op"), NonTerm("factor"), ].and().group("compare"),
+            [ NonTerm("factor").stow(), NonTerm("compare_op"), NonTerm("factor"), ].and().group("compare"),
             NonTerm("factor"),
         ].or(),
 
         "factor" => [
             [
-                NonTerm("term"),
+                NonTerm("term").stow(),
                 [ NonTerm("factor_op"), NonTerm("term"), ].and().many1(),
             ].and().group("factor"),
             NonTerm("term"),
@@ -141,7 +141,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "term" => [
             [
-                NonTerm("val"),
+                NonTerm("val").stow(),
                 [NonTerm("term_op"),NonTerm("val"),].and().many1(),
             ].and().group("term"),
             NonTerm("val"),
@@ -165,10 +165,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and(),
 
         "field_index_call" => [
-            [NonTerm("index"),NonTerm("call"),].and().group("call_field_index"),
+            [NonTerm("index").stow(),NonTerm("call"),].and().group("call_field_index"),
             NonTerm("index"),
 
-            [NonTerm("field"),NonTerm("call"),].and().group("call_field_name"),
+            [NonTerm("field").stow(),NonTerm("call"),].and().group("call_field_name"),
             NonTerm("field"),
 
             NonTerm("call").group("call_val"),

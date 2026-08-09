@@ -13,6 +13,7 @@ pub enum GrammarNode<'g> {
 
     Group(Rc<GrammarNode<'g>>,&'g str,),
     Expected(Rc<GrammarNode<'g>>, &'g str,),
+    Stow(Rc<GrammarNode<'g>>),
 
     Was(Rc<GrammarNode<'g>>, &'g str),
     // Had(Rc<GrammarNode<'g>>, &'g str),
@@ -52,6 +53,9 @@ impl<'g> GrammarNode<'g> {
     }
     pub fn expect(self,name: &'g str,) -> GrammarNode<'g> {
         Self::Expected(self.into(),name)
+    }
+    pub fn stow(self) -> GrammarNode<'g> {
+        Self::Stow(self.into())
     }
     // pub fn prev(self) -> GrammarNode<'g> {
     //     Self::Prev(self.into())
@@ -223,6 +227,7 @@ impl<'g> Debug for GrammarNode<'g> {
             Self::NonTerm(arg0) => f.debug_tuple("NonTerm").field(arg0).finish(),
             Self::Group(arg0, arg1) => f.debug_tuple("Group").field(arg0).field(arg1).finish(),
             Self::Expected(arg0, arg1) => f.debug_tuple("Expected").field(arg0).field(arg1).finish(),
+            Self::Stow(arg0) => f.debug_tuple("Stow").field(arg0).finish(),
 
             // Self::Prev(arg0) => f.debug_tuple("Prev").field(arg0).finish(),
             Self::Was(arg0, arg1) => f.debug_tuple("Was").field(arg0).field(arg1).finish(),

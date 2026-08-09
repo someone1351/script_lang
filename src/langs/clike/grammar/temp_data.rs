@@ -39,10 +39,10 @@ pub struct TempExpected<'t,'g> {
 pub struct TempHistNew<'t,'g> {
     pub grammar:Rc<GrammarNode<'g>>,
     pub tokens_start:TokenIterContainer<'t>,
-    pub is_first:bool,
+    // pub is_first:bool,
     // pub group_ind:usize,
     pub group_len:usize,
-    pub hist_stows_len:usize,
+    pub hist_stow_len:usize,
 
     // pub hist_fails_len:usize,
 }
@@ -96,7 +96,7 @@ pub struct TempHistStow<'t,'g> { //TempHistStow
     // pub stow_prevs_start:usize,
     pub fail_val:Option<TempHistFail<'g>>,
 
-    pub fail_vals:TempHistFail2<'g>,
+    // pub fail_vals:TempHistFail2<'g>,
 }
 
 // #[derive(Clone, Debug)]
@@ -127,8 +127,8 @@ impl<'t,'g> Debug for  TempGroup<'t,'g> {
 #[derive(Clone)]
 pub struct Work<'t,'g> {
     pub grammar:Rc<GrammarNode<'g>>,
-    pub work_stk_success_len:usize,
-    pub work_stk_fail_len:usize,
+    pub work_success_len:usize,
+    pub work_fail_len:usize,
     pub tokens:TokenIterContainer<'t>,
     pub group_ind:usize,
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
@@ -137,28 +137,14 @@ pub struct Work<'t,'g> {
     pub first:bool, //used to know whether to store a HistStow
     pub or_id:usize,
 
-    pub hist_news_len:usize,
-
-    pub hist_stows_len:usize,
-
-    // pub hist_prevs_ind:usize,
-    // pub hist_prevs_len:usize,
-
-    // pub hist_fails_len:usize,
+    pub hist_new_len:usize,
+    pub hist_stow_len:usize,
 
     pub expected_ind:Option<usize>,
-    pub expecteds_len:usize,
+    pub expected_len:usize,
 
-    // pub was_start_ind:usize,
-    // pub was_ind:usize,
-    // pub was_len:usize,
-
-    // pub had_ind:usize,
-    // pub had_len:usize,
-
-
-    pub was_new_len2:usize,
-    pub was_ind2:usize, //to have more than one WAS at a time (ie nested ones), need a was_len
+    pub was_new_len:usize,
+    pub was_ind:usize, //to have more than one WAS at a time (ie nested ones), need a was_len
 
 }
 
