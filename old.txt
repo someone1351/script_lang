@@ -2930,6 +2930,10 @@ prevs
 		
 ===
 
+// #[derive(Clone, Debug)]
+// pub struct TempHad<'g> {
+//     pub name:&'g str,
+// }
     // pub hist_prevs_ind:usize,
     // pub hist_prevs_len:usize,
 

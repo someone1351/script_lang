@@ -1351,7 +1351,7 @@ where
 
 
         let hist_stow=&self.hist_stows[cur.hist_stow_len-1];
-        let Some(hist_stow_val)=&hist_stow.val else {return false;};
+        let Some(hist_stow_val)=&hist_stow.success_val else {return false;};
 
         //
         if hist_stow_val.grammar!=cur.grammar {
@@ -1361,7 +1361,7 @@ where
         //
         // self.stk.truncate(cur.success_len);
 
-        let temp_groups_end=hist_stow.val.as_ref().map(|x|x.stow_groups_end).unwrap_or(hist_stow.stow_groups_start);
+        let temp_groups_end=hist_stow.success_val.as_ref().map(|x|x.stow_groups_end).unwrap_or(hist_stow.stow_groups_start);
         // let temp_prevs_end=hist_stow.val.as_ref().map(|x|x.stow_prevs_end).unwrap_or(hist_stow.stow_prevs_start);
 
         let stow_groups=&self.hist_stows_groups[hist_stow.stow_groups_start .. temp_groups_end];
@@ -1731,7 +1731,7 @@ where
                 }
 
                 //
-                hist_stow.val=Some(TempHistStowVal {
+                hist_stow.success_val=Some(TempHistStowVal {
                     grammar: drained_hist_new2.grammar.clone(),
                     tokens_after: cur.tokens,
                     stow_groups_end: self.hist_stows_groups.len(),
@@ -1804,7 +1804,7 @@ where
 
             //
             self.hist_stows.push(TempHistStow {
-                val: None,
+                success_val: None,
                 stow_groups_start: self.hist_stows_groups.len(),
                 // stow_prevs_start: self.hist_stows_prevs.len(),
                 fail_val:None,
@@ -1873,7 +1873,7 @@ where
             // } else {
             //     (hist_stow.stow_groups_start,hist_stow.stow_prevs_start)
             // };
-            let groups_len=if let Some(hist_stow_val)= &hist_stow.val {
+            let groups_len=if let Some(hist_stow_val)= &hist_stow.success_val {
                 hist_stow_val.stow_groups_end
             } else {
                 hist_stow.stow_groups_start
@@ -2389,7 +2389,7 @@ where
 
                     if true {
                         for (i,x) in self.hist_stows.iter().enumerate().rev() {
-                            println!("            s:{i}:{}",x.val.as_ref().map(|y|format!("{:?}",&y.grammar)).unwrap_or("_".to_string()));
+                            println!("            s:{i}:{}",x.success_val.as_ref().map(|y|format!("{:?}",&y.grammar)).unwrap_or("_".to_string()));
                             println!("            f:{i}:{}",x.fail_val.as_ref().map(|y|format!("{:?}",&y.grammar)).unwrap_or("_".to_string()));
                             // println!("            fs:{i}:{}",x.fail_vals.grammers.iter().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", "));
                         }
@@ -2398,7 +2398,7 @@ where
                     if *hist_stow_len!=0 {
                         let hist_stow=self.hist_stows.last().unwrap();
 
-                        if let Some(hist_stow_val)=&hist_stow.val {
+                        if let Some(hist_stow_val)=&hist_stow.success_val {
                             let hist_stow_groups=&self.hist_stows_groups[
                                 hist_stow.stow_groups_start..hist_stow_val.stow_groups_end
                             ];
