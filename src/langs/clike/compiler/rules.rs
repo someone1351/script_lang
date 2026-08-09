@@ -209,7 +209,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].or(),
 
         "val" => [
-            NonTerm("prefix_op").many0().group("prefixes"),
+            NonTerm("prefix_op").many1().group("prefixes").opt(),
             [
                 [ Identifier.group("idn"), NonTerm("call"), ].and().group("call_func"),
 
@@ -218,13 +218,54 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 NonTerm("nil"),
                 NonTerm("void"),
 
+                NonTerm("array"),
+                NonTerm("dict"),
+
                 NonTerm("if"),
                 NonTerm("lambda"),
-                NonTerm("block"),
+                // NonTerm("block"),
                 [ NonTerm("lparen"), NonTerm("expr"), NonTerm("rparen"), ].and(),
             ].or(),
             NonTerm("field_index_call").many0(),
         ].and().group("val"),
+
+        "array" => [
+            NonTerm("lsquare"),
+            [
+                [
+                    NonTerm("expr"),
+                    [Symbol(","),NonTerm("expr"),].and().many0(),
+                    Symbol(",").opt(),
+                ].and().opt(),
+                NonTerm("rsquare"),
+            ].and().expect("closing square bracket"),
+        ].and().group("array"),
+
+        "dict" => [
+            NonTerm("lcurly"),
+            [
+                [
+                    NonTerm("dict_val"),
+                    [Symbol(","),NonTerm("dict_val"),].and().many0(),
+                    Symbol(",").opt(),
+                ].and().opt(),
+                NonTerm("rcurly"),
+            ].and().expect("closing brace"),
+        ].and().group("dict"),
+
+        "dict_val" => [
+            [
+                Identifier,
+                [
+                    Int,
+                    String,
+                    NonTerm("bool"),
+                    NonTerm("nil"),
+                ].or().group("primitive").group("val"),
+            ].or().expect("key"),
+            Symbol(":").expect("colon"),
+            NonTerm("expr"),
+        ].and(),
 
         "block" => [
             NonTerm("lcurly").expect("block"),
@@ -272,7 +313,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             Float,
             String,
             Identifier.group("idn"),
-        ].or().group("prim"),
+        ].or().group("primitive"),
 
         "bool" => [
             Keyword("true").group("true"),

@@ -71,17 +71,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             NonTerm("field_name" ),
         ].and().group("val").expect("val"), //0
 
-        "dict_key_val" => [
-            [
-                Identifier,
-                [NonTerm("sub").opt(),Int,].and(),
-                String,
-                NonTerm("bool"),
-                Keyword("nil"),
-            ].or(),
-            NonTerm("colon"),
-            NonTerm("expr"),
-        ].and(),
+
 
         "dict" => [
             NonTerm("lcurly"),
@@ -95,23 +85,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             // ].and().expect("closing brace"),
 
 
-            [
-                NonTerm("dict_key_val"),
-                [NonTerm("comma"),NonTerm("dict_key_val"),].and().many0(),
-                NonTerm("comma").opt(),
-            ].and().opt(),
+
             NonTerm("rcurly").expect("closing brace"),
 
-        ].and(),
-
-        "array" => [
-            NonTerm("lsquare"),
-            [
-                NonTerm("expr"),
-                [NonTerm("comma"),NonTerm("expr"),].and().many0(),
-                NonTerm("comma").opt(),
-            ].and().opt(),
-            NonTerm("rsquare"),
         ].and(),
 
         "format_params" => [
