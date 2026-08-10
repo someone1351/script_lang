@@ -43,17 +43,21 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
     use GrammarNode::*;
 
     Some(Rc::new(match n {
+        // "start" => [
+        //     NonTerm("val").many0(),
+        //     NonTerm("end"),
+        // ].and(),
 
         //
         "start" => NonTerm("stmts"),
 
         "stmts" => [
-            NonTerm("end").many0(),
+            // NonTerm("end").opt(),
             [
                 NonTerm("stmt"),
-                [ NonTerm("end").many1(), NonTerm("stmt"), ].and().many0(),
+                [ NonTerm("end"), NonTerm("stmt"), ].and().many0(),
             ].and().opt(),
-            NonTerm("end").many0(),
+            // NonTerm("end").opt(),
         ].and(),
 
         "stmt" => [
@@ -71,7 +75,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             // NonTerm("expr"),
 
 
-            NonTerm("term"),
+            NonTerm("val"),
         ].or(),
 
         "var" => [
@@ -160,9 +164,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "break" => Keyword("break").group("break"),
         "return" => [Keyword("return"), NonTerm("expr").opt(),].and().group("return"),
 
-
         "include" => [Keyword("include"),String.group("include"),].and(),
-
 
         "expr" => NonTerm("or").group("expr").expect("expr"),
 
@@ -222,14 +224,14 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 // NonTerm("void"),
 
                 // NonTerm("array"),
-                // NonTerm("dict"),
+                NonTerm("dict"),
 
                 // NonTerm("if"),
                 // NonTerm("lambda"),
-                // // NonTerm("block"),
+                // NonTerm("block"),
                 // [ NonTerm("lparen"), NonTerm("expr"), NonTerm("rparen"), ].and(),
             ].or(),
-            NonTerm("field_index_call").many0(),
+            // NonTerm("field_index_call").many0(),
         ].and().group("val"),
 
         "array" => [
@@ -260,13 +262,16 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             [
                 Identifier.group("name"),
                 [
-                    [ Int, String, ].and().group("primitive"),
+                    [ Int, String, ].or().group("primitive"),
                     NonTerm("bool"),
                     NonTerm("nil"),
                 ].or().group("val"),
             ].or().expect("key"),
             Symbol(":").expect("colon"),
+            // [NonTerm("expr"),Error,].or(), //not needed unlike in val's field_index_calls, because that was optional, this is not
             NonTerm("expr"),
+            // [Int,Error,].or(),
+            // Int,
         ].and(),
 
         "block" => [
@@ -275,10 +280,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and().group("block"),
 
         "field_index_call" => [
-            [NonTerm("index").stow(),NonTerm("call"),].and().group("call_field_index"),
+            [NonTerm("index").stow(),NonTerm("call"),].and().group("call_index"),
             NonTerm("index"),
 
-            [NonTerm("field").stow(),NonTerm("call"),].and().group("call_field_name"),
+            [NonTerm("field").stow(),NonTerm("call"),].and().group("call_field"),
             NonTerm("field"),
 
             NonTerm("call").group("call_val"),
@@ -299,6 +304,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             [
                 Int.group("field_index"),
                 Identifier.group("field_name"),
+                // Error,
             ].or().expect("field").was("field"),
         ].and(),
 
@@ -311,10 +317,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and(),
 
         "primitive" => [
-            // Int,
+            Int,
             // Float,
             // String,
-            Identifier.group("idn"),
+            // Identifier.group("idn"),
         ].or().group("primitive"),
 
         "bool" => [
@@ -391,11 +397,6 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "lparen" => Symbol("("),
         "rparen" => Symbol(")"),
 
-
-
-
-
-        // _ => Error(GrammarWalkError::MissingNonTerm(n)),
         _ => {return None;}
     }))
 }

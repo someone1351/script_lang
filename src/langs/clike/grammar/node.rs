@@ -30,7 +30,8 @@ pub enum GrammarNode<'g> {
     Eol,
 
     Always, //always succeeds
-    Error(GrammarWalkError<'g>),
+    // Error(GrammarWalkError<'g>),
+    Error,
 
 
     // Stow(Rc<GrammarNode<'g>>),
@@ -243,7 +244,8 @@ impl<'g> Debug for GrammarNode<'g> {
             Self::Keyword(arg0) => f.debug_tuple("Keyword").field(arg0).finish(),
             Self::Eol => write!(f, "Eol"),
             Self::Always => write!(f, "Always"),
-            Self::Error(arg0) => f.debug_tuple("Error").field(arg0).finish(),
+            // Self::Error(arg0) => f.debug_tuple("Error").field(arg0).finish(),
+            Self::Error => f.debug_tuple("Error").finish(),
         }
     }
 }

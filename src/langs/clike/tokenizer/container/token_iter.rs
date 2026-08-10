@@ -194,6 +194,10 @@ impl<'a> TokenIterContainer<'a> {
 
     pub fn is_empty(&self) -> bool {
         self.start==self.end
+
+        || (self.start+1==self.end && self.last().unwrap().is_eol())
+
+
     }
 
     pub fn first(&self) -> Result<TokenContainer<'a>,Loc> {

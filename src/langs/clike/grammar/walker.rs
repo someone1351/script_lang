@@ -5,6 +5,25 @@ for err loc, should use end_loc of last token
 
 TODO
 * record only last fail, instead of all of them?
+
+NOTE
+* problem with expects, if have or(and(A,B), Eol)
+    if A succeeds, but B fails, so have B in expects
+    but for input there is an Eol before A, then the
+    Eol in the OR will succeed, clearing the B from expects
+
+    currently the solution is to do  or(and(A,or(B, Error)), Eol)
+    so that it will stop if A succeeds, but B fails
+
+    slight issues if or(and(A,B), and(A,C), Eol)
+        and if you wanted it to report B or C expected
+        could do
+            X => and(A, or(B,C,Error))
+        then
+            or(
+                groupB(and(X hadB)),
+                groupC(and(X hadC)),
+            )
 */
 use super::error::*;
 use super::temp_data::*;
@@ -146,7 +165,7 @@ where
     //     self.non_term_recursive_check=non_term_recursive_check;
     // }
 
-    fn init(&mut self,start_non_term:&'g str,) {
+    fn init(&mut self,start_non_term:&'g str,) -> Result<(),GrammarWalkError<'g>> {
         self.non_term_cache.clear(); //not necessary ...
 
         self.stk.clear();
@@ -157,7 +176,8 @@ where
 
         //
         self.stk.push(Work{
-            grammar:Rc::new(GrammarNode::Error(GrammarWalkError::FailedParse)),
+            // grammar:Rc::new(GrammarNode::Error(GrammarWalkError::FailedParse)),
+            grammar:Rc::new(GrammarNode::Error),
             // grammar_ind:0,
             work_success_len:0,work_fail_len:0,
             tokens:self.top_tokens,
@@ -273,7 +293,7 @@ where
 
         //start
         {
-            let grammar=self.get_non_term(start_non_term);
+            let grammar=self.get_non_term(start_non_term)?;
             // let grammar=if let Some(g)=(self.grammar_func)(start_non_term) {
             //     g
             // } else {
@@ -373,6 +393,8 @@ where
         // self.expected_news.clear();
         // self.expecteds.clear();
         self.expecteds.clear();
+
+        Ok(())
 
     }
 
@@ -841,7 +863,7 @@ where
         //     Rc::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(t)))
         // };
 
-        let grammar=self.get_non_term(t);
+        let grammar=self.get_non_term(t)?;
 
         //
         self.stk.push(Work {
@@ -902,7 +924,7 @@ where
     }
 
     fn grammar_error(&mut self,cur :Work<'t,'g>,) -> GrammarWalkError<'g> {
-        let GrammarNode::Error(e)=cur.grammar.as_ref() else{panic!("");};
+        let GrammarNode::Error=cur.grammar.as_ref() else{panic!("");};
 
         // if self.debug {
         //     println!("====error {:?} ",self.expected_loc,); //self.expecteds,
@@ -920,7 +942,8 @@ where
         // self.expect_news_drain(&cur); //necessary here? no since it is finishing here?
 
         //
-        return e.clone();
+        // return e.clone();
+        GrammarWalkError::FailedParse
     }
 
     fn grammar_and(&mut self,cur :Work<'t,'g>,) {
@@ -1846,6 +1869,7 @@ where
 
 
                 val:TempHistStowVal2::None,
+                tokens_start_ind:cur.tokens.inds().start,
             });
 
             if self.hist_stows.len()!=cur.hist_stow_len+1 {
@@ -2031,38 +2055,44 @@ where
     }
 
     pub fn last_loc(&self) -> Loc {
-        println!("l1 {:?} {:?} || {:?}",self.tokens_remaining.loc(),self.tokens_remaining.last_loc(),self.tokens_remaining);
-        println!("l2 {:?} {:?} || {:?}",self.expected_tokens_remaining.loc(),self.expected_tokens_remaining.last_loc(),self.expected_tokens_remaining);
-        println!("{:?}:{}:{}",self.top_tokens,self.top_tokens.loc(),self.top_tokens.last_loc());
-        println!("{:?}:{}:{}",self.tokens_remaining,self.tokens_remaining.loc(),self.tokens_remaining.last_loc());
-        println!("{:?}:{}:{}",self.expected_tokens_remaining,self.expected_tokens_remaining.loc(),self.expected_tokens_remaining.last_loc());
+        // println!("l1 {:?} {:?} || {:?}",self.tokens_remaining.loc(),self.tokens_remaining.last_loc(),self.tokens_remaining);
+        // println!("l2 {:?} {:?} || {:?}",self.expected_tokens_remaining.loc(),self.expected_tokens_remaining.last_loc(),self.expected_tokens_remaining);
+        // println!("{:?}:{}:{}",self.top_tokens,self.top_tokens.loc(),self.top_tokens.last_loc());
+        // println!("{:?}:{}:{}",self.tokens_remaining,self.tokens_remaining.loc(),self.tokens_remaining.last_loc());
+        // println!("{:?}:{}:{}",self.expected_tokens_remaining,self.expected_tokens_remaining.loc(),self.expected_tokens_remaining.last_loc());
 
-        for t in self.top_tokens {
-            println!("t {t:?} :: {} to {}",t.start_loc(),t.end_loc());
-        }
+        // for t in self.top_tokens {
+        //     println!("t {t:?} :: {} to {}",t.start_loc(),t.end_loc());
+        // }
+
         let out_loc=if self.expecteds.is_empty() {
             self.tokens_remaining.loc()
         } else {
             self.expected_tokens_remaining.loc()
         };
-        println!("l3 {out_loc:?}");
+
+        // println!("l3 {out_loc:?}");
+
         out_loc
     }
 
     //
 
     fn organise_expecteds(&mut self) {
-        println!("dsfsd");
-        for (i,x) in self.expecteds.iter().enumerate() {
-            // println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
+        // println!("dsfsd");
+        if self.debug {
+            println!("expects:");
+            for (i,x) in self.expecteds.iter().enumerate() {
+                // println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
 
-            println!("e{i}:p{}:t{} {:?} :: {:?}",
-                x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
-                x.tokens_start.inds().start,
-                x.expected_type,
-                x.tokens_start,
-            );
+                println!("    e{i}:p{}:t{} {:?} :: {:?}",
+                    x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
+                    x.tokens_start.inds().start,
+                    x.expected_type,
+                    x.tokens_start,
+                );
 
+            }
         }
         let max_token = self.expecteds.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
         let max_token_start_ind=max_token.inds().start;
@@ -2087,10 +2117,10 @@ where
         //     x.tokens_start.inds().start == max_token_start_ind && !parents.contains(&i)
         // ).then(||x.clone())).collect();
 
-        println!("--");
-        for x in self.expecteds.iter() {
-            println!("e2 {:?} {:?}",x.expected_type,x.tokens_start.inds().start);
-        }
+        // println!("--");
+        // for x in self.expecteds.iter() {
+        //     println!("e2 {:?} {:?}",x.expected_type,x.tokens_start.inds().start);
+        // }
     }
 
     //
@@ -2335,7 +2365,7 @@ where
 
                 //
                 println!("");
-                println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, ",);
+                println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, first={first}",);
 
                 if false {
                     // println!("        and_id={and_id}, groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
@@ -2354,9 +2384,9 @@ where
                     // println!("        actual: hist news_len={}, stows_len={:?}, prevs_len={}, fails_len={}",
                     //     self.hist_news.len(),self.hist_stows.len(),self.hist_prevs.len(),self.hist_fails.len(),
                     // );
-                    println!("        first={first}, hist news_len={hist_new_len}, stows_len={hist_stow_len:?},  ",);
-                    println!("        actual: hist news_len={}, stows_len={:?}, ",
-                        self.hist_news.len(),self.hist_stows.len(),
+                    println!("        first={first}, hist news_len={hist_new_len} ({}), stows_len={hist_stow_len:?} ({})",
+                        self.hist_news.len(),
+                        self.hist_stows.len(),
                     );
                     // println!("        hist_stows_ind={hist_stows_ind}, hist_stow_len={hist_stow_len},",
                     //     self.stk.get(cur.)
@@ -2431,10 +2461,10 @@ where
                 //
                 if true {
                     //
-                    println!("        hist_news");
+                    println!("        hist_news: len={hist_new_len} ({})",self.hist_news.len(),);
 
                     for (i,h) in self.hist_news.iter().enumerate() {
-                        println!("            {i}:[{:?}]: {:?}",h.tokens_start.inds(),h.grammar)
+                        println!("            {i}:t{}: {:?}",h.tokens_start.inds().start,h.grammar)
                     }
 
                     //
@@ -2443,10 +2473,10 @@ where
                     for (i,x) in self.hist_stows.iter().enumerate().rev() {
                         match &x.val {
                             TempHistStowVal2::Success { grammar, .. } => {
-                                 println!("            {i}:s:{grammar:?}",);
+                                 println!("            {i}:s:t{}:{grammar:?}",x.tokens_start_ind);
                             }
                             TempHistStowVal2::Fail { grammar } => {
-                                println!("            {i}:f:{grammar:?}",);
+                                println!("            {i}:f:t{}:{grammar:?}",x.tokens_start_ind);
                             }
                             TempHistStowVal2::None => {
 
@@ -2562,7 +2592,7 @@ where
             GrammarNode::Or(..) => {self.grammar_or(cur);}
             GrammarNode::Many(..) => {self.grammar_many(cur);}
             GrammarNode::NonTerm(..) => {self.grammar_non_term(cur)?;}
-            GrammarNode::Error(..) => {return Err(self.grammar_error(cur));}
+            GrammarNode::Error => {return Err(self.grammar_error(cur));}
             GrammarNode::Always => {self.grammar_always(cur);}
 
             GrammarNode::String => {
@@ -2611,14 +2641,14 @@ where
     // }
 
 
-    fn get_non_term(&mut self,n:&'g str) -> Rc<GrammarNode<'g>> {
+    fn get_non_term(&mut self,n:&'g str) -> Result<Rc<GrammarNode<'g>>,GrammarWalkError<'g>> {
         if let Some(g)=self.non_term_cache.get(n) {
-            g.clone()
+            Ok(g.clone())
         } else if let Some(g)=(self.grammar_func)(n) {
             self.non_term_cache.insert(n, g.clone());
-            g
+            Ok(g)
         } else {
-            Rc::new(GrammarNode::Error(GrammarWalkError::MissingNonTerm(n)))
+            Err(GrammarWalkError::MissingNonTerm(n))
         }
     }
     pub fn step_count(&self) -> usize {

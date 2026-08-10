@@ -2946,3 +2946,5 @@ prevs
     // pub had_ind:usize,
     // pub had_len:usize,
 
+
+        // _ => Error(GrammarWalkError::MissingNonTerm(n)),

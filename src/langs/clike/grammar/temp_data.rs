@@ -60,13 +60,13 @@ pub struct TempWas<'g> {
 
 // }
 
-#[derive(Clone, Debug,)] //Default
-pub struct TempHistFail<'g> { //TempHistPrev
-    // pub grammers: HashSet<Rc<GrammarNode<'g>>>,
-    // // pub tokens_start_ind:usize,
+// #[derive(Clone, Debug,)] //Default
+// pub struct TempHistFail<'g> { //TempHistPrev
+//     // pub grammers: HashSet<Rc<GrammarNode<'g>>>,
+//     // // pub tokens_start_ind:usize,
 
-    pub grammar:Rc<GrammarNode<'g>>,
-}
+//     pub grammar:Rc<GrammarNode<'g>>,
+// }
 
 #[derive(Clone,Debug,)]
 pub enum TempHistStowWas<'g> {
@@ -108,6 +108,7 @@ pub struct TempHistStow<'t,'g> { //TempHistStow
 
     // pub fail_vals:TempHistFail2<'g>,
     pub val : TempHistStowVal2<'t,'g>,
+    pub tokens_start_ind:usize,
 }
 
 // #[derive(Clone, Debug)]

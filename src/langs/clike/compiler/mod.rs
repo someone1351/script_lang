@@ -359,6 +359,7 @@ impl Compiler {
 
         let start_time = std::time::Instant::now();
         let result=walker.run("start") ;
+
         let time_elapsed=start_time.elapsed().as_secs_f64();
         //
         if let Err(e)=result {
@@ -368,7 +369,6 @@ impl Compiler {
 
             match e {
                 GrammarWalkError::FailedParse => {
-
                     return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expecteds_string())});
                 }
                 // GrammarWalkError::Unfinished => todo!(),
