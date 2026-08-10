@@ -2377,6 +2377,17 @@ where
                             ))
                             .collect::<Vec<_>>().join(", "),
                     );
+                } else if true {
+                    println!("        expecteds: ind={expected_ind:?}, len={expected_len} ({})",self.expecteds.len());
+
+                    for (i,x) in self.expecteds.iter().enumerate() {
+                        println!("            e{i}:p{}:t{}: {:?}",
+                            x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
+                            x.tokens_start.inds().start,
+                            x.expected_type,
+                        );
+                    }
+
                 }
 
                 //

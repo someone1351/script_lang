@@ -57,18 +57,21 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and(),
 
         "stmt" => [
-            NonTerm("var"),
-            NonTerm("set"),
+            // NonTerm("var"),
+            // NonTerm("set"),
 
-            NonTerm("for"),
-            NonTerm("while"),
-            NonTerm("func"),
-            NonTerm("break"),
-            NonTerm("continue"),
-            NonTerm("return"),
-            NonTerm("include"),
+            // NonTerm("for"),
+            // NonTerm("while"),
+            // NonTerm("func"),
+            // NonTerm("break"),
+            // NonTerm("continue"),
+            // NonTerm("return"),
+            // NonTerm("include"),
 
-            NonTerm("expr"),
+            // NonTerm("expr"),
+
+
+            NonTerm("term"),
         ].or(),
 
         "var" => [
@@ -209,22 +212,22 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].or(),
 
         "val" => [
-            NonTerm("prefix_op").many1().group("prefixes").opt(),
+            // NonTerm("prefix_op").many1().group("prefixes").opt(),
             [
-                [ Identifier.group("idn"), NonTerm("call"), ].and().group("call_func"),
+                // [ Identifier.group("idn"), NonTerm("call"), ].and().group("call_func"),
 
                 NonTerm("primitive"),
-                NonTerm("bool"),
-                NonTerm("nil"),
-                NonTerm("void"),
+                // NonTerm("bool"),
+                // NonTerm("nil"),
+                // NonTerm("void"),
 
-                NonTerm("array"),
-                NonTerm("dict"),
+                // NonTerm("array"),
+                // NonTerm("dict"),
 
-                NonTerm("if"),
-                NonTerm("lambda"),
-                // NonTerm("block"),
-                [ NonTerm("lparen"), NonTerm("expr"), NonTerm("rparen"), ].and(),
+                // NonTerm("if"),
+                // NonTerm("lambda"),
+                // // NonTerm("block"),
+                // [ NonTerm("lparen"), NonTerm("expr"), NonTerm("rparen"), ].and(),
             ].or(),
             NonTerm("field_index_call").many0(),
         ].and().group("val"),
@@ -255,13 +258,12 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "dict_val" => [
             [
-                Identifier,
+                Identifier.group("name"),
                 [
-                    Int,
-                    String,
+                    [ Int, String, ].and().group("primitive"),
                     NonTerm("bool"),
                     NonTerm("nil"),
-                ].or().group("primitive").group("val"),
+                ].or().group("val"),
             ].or().expect("key"),
             Symbol(":").expect("colon"),
             NonTerm("expr"),
@@ -309,9 +311,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and(),
 
         "primitive" => [
-            Int,
-            Float,
-            String,
+            // Int,
+            // Float,
+            // String,
             Identifier.group("idn"),
         ].or().group("primitive"),
 
@@ -323,7 +325,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "nil" => Keyword("nil").group("nil"),
         "void" => Keyword("void").group("void"),
 
-        "end" => [Symbol(";").expect("semicolon"),Eol].or(),
+        "end" => [Symbol(";"),Eol].or().expect("semicolon"),
 
         "for_op" => [
             [NonTerm("for_to_op").stow(),Symbol("=").opt(),].and().group("to_eq"),
@@ -351,7 +353,6 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
             Symbol("^").group("xor_eq"),
         ].or(),
-
 
         "prefix_op" => [
             Symbol("+"),
