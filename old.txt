@@ -2996,3 +2996,16 @@ prevs
     // pub group_ind:usize,
 
     // pub hist_fails_len:usize,
+	
+	
+        // if self.debug {
+        //     println!("hmmm {:?}",expecteds);
+        // }
+        // self.expecteds=self.expecteds.iter().enumerate().rev().filter_map(|(i,x)|(
+        //     x.tokens_start.inds().start == max_token_start_ind && !parents.contains(&i)
+        // ).then(||x.clone())).collect();
+
+        // println!("--");
+        // for x in self.expecteds.iter() {
+        //     println!("e2 {:?} {:?}",x.expected_type,x.tokens_start.inds().start);
+        // }

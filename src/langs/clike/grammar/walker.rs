@@ -2077,29 +2077,12 @@ where
         out_loc
     }
 
+
     //
+    pub fn expecteds_string(&self) -> String {
 
-    fn organise_expecteds(&mut self) {
-        // println!("dsfsd");
-        if self.debug {
-            println!("expects:");
-            for (i,x) in self.expecteds.iter().enumerate() {
-                // println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
-
-                println!("    e{i}:p{}:t{} {:?} :: {:?}",
-                    x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
-                    x.tokens_start.inds().start,
-                    x.expected_type,
-                    x.tokens_start,
-                );
-
-            }
-        }
-        let max_token = self.expecteds.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
-        let max_token_start_ind=max_token.inds().start;
-
-        self.expected_tokens_remaining=max_token;
-        // self.expected_loc=max_token.loc();
+        //
+        let max_token_start_ind=self.expected_tokens_remaining.inds().start;
 
         let parents= self.expecteds.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
 
@@ -2108,25 +2091,10 @@ where
             !parents.contains(&i)
         ).then(||(x.expected_type.clone(),x.clone()))).collect::<BTreeMap<_,_>>();
 
-        // if self.debug {
-        //     println!("hmmm {:?}",expecteds);
-        // }
+        let expecteds=expecteds.iter().map(|(_k,v)|v.clone()).collect::<Vec<_>>();
 
-
-        self.expecteds=expecteds.iter().map(|(_k,v)|v.clone()).collect();
-        // self.expecteds=self.expecteds.iter().enumerate().rev().filter_map(|(i,x)|(
-        //     x.tokens_start.inds().start == max_token_start_ind && !parents.contains(&i)
-        // ).then(||x.clone())).collect();
-
-        // println!("--");
-        // for x in self.expecteds.iter() {
-        //     println!("e2 {:?} {:?}",x.expected_type,x.tokens_start.inds().start);
-        // }
-    }
-
-    //
-    pub fn expecteds_string(&self) -> String {
-        self.expecteds.iter().rev().map(|x|match &x.expected_type {
+        //
+        expecteds.iter().rev().map(|x|match &x.expected_type {
             TempExpectType::Expected(n) => n,
             TempExpectType::Int => "int",
             TempExpectType::Float => "float",
@@ -2209,7 +2177,7 @@ where
     //
     pub fn run(&mut self,start_non_term:&'g str,) -> Result<(),GrammarWalkError<'g>> {
         //
-        self.init(start_non_term);
+        self.init(start_non_term)?;
 
         //
         let mut result: Result<(), GrammarWalkError<'g>>=Ok(());
@@ -2275,9 +2243,29 @@ where
                 println!("parsed ok");
             }
         }
+
+        //
         if result.is_err() {
-            self.organise_expecteds();
+            if self.debug {
+                println!("expects:");
+                for (i,x) in self.expecteds.iter().enumerate() {
+                    // println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
+
+                    println!("    e{i}:p{}:t{} {:?} :: {:?}",
+                        x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
+                        x.tokens_start.inds().start,
+                        x.expected_type,
+                        x.tokens_start,
+                    );
+
+                }
+            }
+            let max_token = self.expecteds.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
+
+
+            self.expected_tokens_remaining=max_token;
         }
+
         //
         if self.debug {
             println!("===a {}",self.tokens_remaining.is_empty());
