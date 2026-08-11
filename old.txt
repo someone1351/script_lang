@@ -117,7 +117,7 @@
 
     fn grammar_opt(&mut self,cur :Work<'t,'g>,g:Box<GrammarNode<'g>>,) {
         //
-        let hist_new_len=self.hist_news_add(&cur);
+        let stow_new_len=self.hist_news_add(&cur);
 
         //
         self.stk.push(Work {
@@ -134,7 +134,7 @@
             from_user:false,
             is_first:cur.is_first,
 
-            hist_new_len,
+            stow_new_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
         });
@@ -157,7 +157,7 @@
             from_user:true,
             is_first:cur.is_first,
 
-            hist_new_len,
+            stow_new_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
         });
@@ -1119,7 +1119,7 @@ pub struct TempGroupsElement<'t,'g> {
                 let groups_stk_len2=self.groups_stk.len();
 
 
-                // println!("        hist_news: len={hist_new_len:?} :: {},",
+                // println!("        hist_news: len={stow_new_len:?} :: {},",
                 //     self.hist_news.iter().map(|t|format!("{:?}:{}",t.grammar,t.tokens_start.inds().start)).collect::<Vec<_>>().join(","),
                 // );
 
@@ -1701,7 +1701,7 @@ pub struct WorkExpected<'g> {
         };
 
         //
-        let hist_new_len=self.hist_news_add(&cur);
+        let stow_new_len=self.hist_news_add(&cur);
 
         //TODO
         self.stk.push(Work {
@@ -1719,7 +1719,7 @@ pub struct WorkExpected<'g> {
             from_user:true,
             is_first:cur.is_first,
 
-            hist_new_len,
+            stow_new_len,
             hist_begins_stk_len:cur.hist_begins_stk_len,
             hist_ends_stk_len:cur.hist_ends_stk_len,
         });
@@ -2606,7 +2606,7 @@ pub struct TempExpectedNew<'g> {
     // pub hist_ends_stk_len:usize,
 
     // pub expected_news_len:usize,
-    // pub expected_len:usize,
+    // pub expect_len:usize,
 
 
     // pub hist_begins_ind:usize,
@@ -2696,14 +2696,14 @@ pub struct TempExpectedNew<'g> {
     //     // }
 
     //     //
-    //     // self.expecteds.truncate(last.expected_len);
-    //     last.expected_len=self.expecteds.len();
+    //     // self.expecteds.truncate(last.expect_len);
+    //     last.expect_len=self.expecteds.len();
     // }
 
     // fn revert_last_expected_news(&mut self) {
     //     let Some(last)=self.stk.last() else {return;};
     //     self.expected_news.truncate(last.expected_news_len);
-    //     self.expecteds.truncate(last.expected_len);
+    //     self.expecteds.truncate(last.expect_len);
     // }
 
 ===
@@ -2785,7 +2785,7 @@ prevs
         }).collect::<Vec<_>>();
         let added_hist_prevs = Vec::new();
 
-        println!("gooo {} !=0 && {}=={}",cur.hist_stow_len, cur.hist_stow_len,last.hist_stow_len);
+        println!("gooo {} !=0 && {}=={}",cur.stow_len, cur.stow_len,last.stow_len);
 
 
  //
@@ -2927,7 +2927,7 @@ prevs
             Always,
             Eol,
         ].and(),
-		
+
 ===
 
 // #[derive(Clone, Debug)]
@@ -2938,7 +2938,7 @@ prevs
     // pub hist_prevs_len:usize,
 
     // pub hist_fails_len:usize,
-	
+
     // pub was_start_ind:usize,
     // pub was_ind:usize,
     // pub was_len:usize,
@@ -2948,3 +2948,51 @@ prevs
 
 
         // _ => Error(GrammarWalkError::MissingNonTerm(n)),
+		
+===
+
+// #[derive(Clone, Debug)]
+// pub struct TempHistPrev<'g> {
+//     pub grammar: Rc<GrammarNode<'g>>,
+//     pub tokens_start_ind:usize,
+// }
+
+
+    // // pub stow_prevs_start:usize,
+    // pub fail_val:Option<TempHistFail<'g>>,
+
+    // pub fail_vals:TempHistFail2<'g>,
+	//TempHistStow
+    // pub success_val : Option<TempHistStowVal<'t,'g>>,
+	
+	
+// #[derive(Clone,Debug,)]
+// pub struct TempHistStowVal<'t,'g> { //TempHistStow
+//     pub grammar: Rc<GrammarNode<'g>>,
+//     pub tokens_after:TokenIterContainer<'t>,
+//     pub stow_groups_end:usize,
+//     // pub stow_prevs_end:usize,
+//     pub was:TempHistStowWas<'g>,
+// }
+
+
+
+// #[derive(Clone, Debug,Default)] //
+// pub struct TempHistFail2<'g> { //TempHistPrev
+//     pub grammers: HashSet<Rc<GrammarNode<'g>>>,
+//     // // pub tokens_start_ind:usize,
+
+// }
+
+// #[derive(Clone, Debug,)] //Default
+// pub struct TempHistFail<'g> { //TempHistPrev
+//     // pub grammers: HashSet<Rc<GrammarNode<'g>>>,
+//     // // pub tokens_start_ind:usize,
+
+//     pub grammar:Rc<GrammarNode<'g>>,
+// }
+
+    // pub is_first:bool,
+    // pub group_ind:usize,
+
+    // pub hist_fails_len:usize,

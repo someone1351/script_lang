@@ -11,6 +11,7 @@ pub struct TokenIterContainer<'a> {
     pub end : usize, //if last_ind then last_ind has been traversed
     pub last_loc:Loc,
     pub parsed :&'a Tokenized,
+    //todo add filtered:bool, // and .filtered() method for filtering out eols during iteration
 
 }
 
