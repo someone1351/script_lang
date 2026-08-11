@@ -33,7 +33,7 @@ pub struct TempExpect<'t,'g> {
     pub expected_type:TempExpectType<'g>,
     pub parent:Option<usize>,
     pub tokens_start:TokenIterContainer<'t>,
-    pub last:bool,
+    // pub last:bool,
 }
 
 #[derive(Clone, Debug)]
