@@ -58,25 +58,40 @@ pub enum TempStowWas<'g> {
 
 
 #[derive(Clone,Debug,)]
-pub enum TempStowVal<'t,'g> {
-    Success {
-        grammar: Rc<GrammarNode<'g>>,
-        tokens_after:TokenIterContainer<'t>,
-        stow_groups_end:usize,
-        was:TempStowWas<'g>,
-    },
-    Fail {
-        grammar:Rc<GrammarNode<'g>>,
-    },
-    None,
+pub struct TempStowSuccess<'t,'g> {
+    pub grammar: Rc<GrammarNode<'g>>,
+    pub tokens_after:TokenIterContainer<'t>,
+    pub stow_groups_end:usize,
+    pub was:TempStowWas<'g>,
+}
+#[derive(Clone,Debug,)]
+pub struct TempStowFail<'g> {
+    pub grammar:Rc<GrammarNode<'g>>,
 }
 
+// #[derive(Clone,Debug,)]
+// pub enum TempStowVal<'t,'g> {
+//     Success {
+//         grammar: Rc<GrammarNode<'g>>,
+//         tokens_after:TokenIterContainer<'t>,
+//         stow_groups_end:usize,
+//         was:TempStowWas<'g>,
+//     },
+//     Fail {
+//         grammar:Rc<GrammarNode<'g>>,
+//     },
+//     None,
+// }
 
-#[derive(Clone,Debug,)]
+
+#[derive(Clone,Debug,Default,)]
 pub struct TempStow<'t,'g> {
     pub stow_groups_start:usize,
-    pub val : TempStowVal<'t,'g>,
+    // pub val : TempStowVal<'t,'g>,
     pub tokens_start_ind:usize,
+
+    pub success : Option<TempStowSuccess<'t,'g>>,
+    pub fail : Option<TempStowFail<'g>>,
 }
 
 #[derive(Clone)]

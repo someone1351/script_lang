@@ -3009,3 +3009,45 @@ prevs
         // for x in self.expecteds.iter() {
         //     println!("e2 {:?} {:?}",x.expected_type,x.tokens_start.inds().start);
         // }
+		
+===
+
+                // visiteds:cur.visiteds.clone(),
+                // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
+                // grammar_debug_len: cur.grammar_debug_len,
+                // and_id:cur.and_id+1,
+
+                // or_id:cur.or_id,
+                // and_first:false,
+                // can_hist_stow:false,
+
+                // stow_new_len,
+
+                
+                // hist_stows_stk_len:cur.hist_stows_stk_len,
+                // hist_ends_stk_len:cur.hist_ends_stk_len,
+
+                // hist_stows_ind: cur.hist_stows_ind,
+                
+                // hist_fails_len:cur.hist_fails_len,
+
+                // hist_stows_stk_len:cur.hist_stows_stk_len,
+
+                // hist_prevs_ind: cur.hist_prevs_ind,
+                // hist_prevs_len: cur.hist_prevs_len,
+
+                // expected_news_len:cur.expected_news_len,
+                // expect_len:cur.expect_len,
+
+                // was_start_ind:cur.was_start_ind,
+                // was_ind:cur.was_ind,
+                // was_len:cur.was_len,
+
+                // had_ind:cur.had_ind,
+                // had_len:cur.had_len,
+
+                // grammar: Rc::new(GrammarNode::And(rest.into(),*grammar_ind+1)),
+                // grammar_ind:0,
+
+                // grammar:cur.grammar.clone(),
+                // grammar_ind:cur.grammar_ind+1,

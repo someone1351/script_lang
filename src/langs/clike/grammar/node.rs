@@ -7,7 +7,7 @@ use super::super::grammar::error::GrammarWalkError;
 #[derive(Clone,Hash,PartialEq,Eq)]
 pub enum GrammarNode<'g> {
     Many(Rc<GrammarNode<'g>>),
-    And(Rc<[Rc<GrammarNode<'g>>]>,usize), //should store reversed?
+    And(Rc<[Rc<GrammarNode<'g>>]>,usize,bool), //ind,stow
     Or( Rc<[Rc<GrammarNode<'g>>]>,usize), //should store reversed?
     NonTerm(&'g str),
 
@@ -152,13 +152,18 @@ impl<'g> GrammarNode<'g> {
 //todo have array stored in rev for or/and
 pub trait GrammarArrayTrait<'g> {
     fn and(self) -> GrammarNode<'g>;
+    fn and_stow(self) -> GrammarNode<'g>;
     fn or(self) -> GrammarNode<'g>;
 }
 
 impl<'g,const N: usize> GrammarArrayTrait <'g> for [GrammarNode<'g>; N] {
     fn and(self) -> GrammarNode<'g> {
         // GrammarNode::And(self.into())
-        GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),0)
+        GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),0,false)
+    }
+    fn and_stow(self) -> GrammarNode<'g> {
+        // GrammarNode::And(self.into())
+        GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),0,true)
     }
     fn or(self) -> GrammarNode<'g> {
         // GrammarNode::Or(self.into())
@@ -217,9 +222,9 @@ impl<'g> Debug for GrammarNode<'g> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Many(arg0) => f.debug_tuple("Many").field(arg0).finish(),
-            Self::And(arg0, arg1) => {
+            Self::And(arg0, arg1, arg2) => {
                 let x=&arg0[*arg1..];
-                f.debug_tuple("And").field(&x).finish()
+                f.debug_tuple("And").field(&x).field(arg1).field(arg2).finish()
             },
             Self::Or(arg0, arg1) => {
                 let x=&arg0[*arg1..];
