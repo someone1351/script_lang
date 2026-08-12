@@ -84,7 +84,7 @@ pub struct TempStowFail<'g> {
 // }
 
 
-#[derive(Clone,Debug,Default,)]
+#[derive(Clone,Debug,)]
 pub struct TempStow<'t,'g> {
     pub stow_groups_start:usize,
     // pub val : TempStowVal<'t,'g>,

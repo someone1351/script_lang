@@ -43,6 +43,13 @@ TODO
 */
 
 /*
+
+NOTE
+* in work, has user to designate whether from input grammar or walker added grammar
+* for AND and OR grammars, have index representing which element itis up to
+* in work, could add grammar_imd, to replace work.user, and.ind, or.ind ?
+** and use for MANY aswell eg increment for each loop
+
 NOTE
     if the grammar is
         S => V* Eol*
