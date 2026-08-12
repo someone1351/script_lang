@@ -7,8 +7,8 @@ use super::super::grammar::error::GrammarWalkError;
 #[derive(Clone,Hash,PartialEq,Eq)]
 pub enum GrammarNode<'g> {
     Many(Rc<GrammarNode<'g>>),
-    And(Rc<[Rc<GrammarNode<'g>>]>,usize,bool), //ind,stow
-    Or( Rc<[Rc<GrammarNode<'g>>]>,usize), //should store reversed?
+    And(Box<[Rc<GrammarNode<'g>>]>,bool), //ind,stow
+    Or( Box<[Rc<GrammarNode<'g>>]>,), //should store reversed?
     NonTerm(&'g str),
 
     Group(Rc<GrammarNode<'g>>,&'g str,),
@@ -159,15 +159,15 @@ pub trait GrammarArrayTrait<'g> {
 impl<'g,const N: usize> GrammarArrayTrait <'g> for [GrammarNode<'g>; N] {
     fn and(self) -> GrammarNode<'g> {
         // GrammarNode::And(self.into())
-        GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),0,false)
+        GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),false)
     }
     fn and_stow(self) -> GrammarNode<'g> {
         // GrammarNode::And(self.into())
-        GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),0,true)
+        GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),true)
     }
     fn or(self) -> GrammarNode<'g> {
         // GrammarNode::Or(self.into())
-        GrammarNode::Or(self.into_iter().map(|x|x.into()).collect(),0)
+        GrammarNode::Or(self.into_iter().map(|x|x.into()).collect(),)
     }
 }
 
@@ -222,13 +222,20 @@ impl<'g> Debug for GrammarNode<'g> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Many(arg0) => f.debug_tuple("Many").field(arg0).finish(),
-            Self::And(arg0, arg1, arg2) => {
-                let x=&arg0[*arg1..];
-                f.debug_tuple("And").field(&x).field(arg1).field(arg2).finish()
+            // Self::And(arg0, arg1, arg2) => {
+            //     let x=&arg0[*arg1..];
+            //     f.debug_tuple("And").field(&x).field(arg1).field(arg2).finish()
+            // },
+            // Self::Or(arg0, arg1) => {
+            //     let x=&arg0[*arg1..];
+            //     f.debug_tuple("Or").field(&x).finish()
+            // },
+            Self::And(arg0, arg1, ) => {
+
+                f.debug_tuple("And").field(arg0).field(arg1).finish()
             },
-            Self::Or(arg0, arg1) => {
-                let x=&arg0[*arg1..];
-                f.debug_tuple("Or").field(&x).finish()
+            Self::Or(arg0, ) => {
+                f.debug_tuple("Or").field(arg0).finish()
             },
             Self::NonTerm(arg0) => f.debug_tuple("NonTerm").field(arg0).finish(),
             Self::Group(arg0, arg1) => f.debug_tuple("Group").field(arg0).field(arg1).finish(),

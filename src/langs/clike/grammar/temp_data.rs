@@ -117,6 +117,7 @@ pub struct Work<'t,'g> {
     pub grammar:Rc<GrammarNode<'g>>,
     pub tokens:TokenIterContainer<'t>,
 
+    pub grammar_ind:usize,
     pub user:bool, //gramamr added by input grammar, not walker //used to know whether to push hist_begins stk or not //used with and/or/many
     pub first:bool, //used to know whether to store a HistStow
 

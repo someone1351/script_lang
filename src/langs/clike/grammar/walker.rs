@@ -35,6 +35,7 @@ use std::rc::Rc;
 // use std::ops::Range;
 
 use crate::build::Loc;
+use crate::clike::grammar;
 // use crate::clike::tokenizer::TokenContainer;
 use super::super::grammar::data::{Walk,WalkGroup};
 use super::super::tokenizer::{TokenIterContainer, ValueContainer};
@@ -187,6 +188,7 @@ where
             // grammar_debug_len: 0,
             // and_id: 0,
 
+            grammar_ind:0,
             user:false,
             first:false,
             // or_id:0,
@@ -246,6 +248,7 @@ where
             // grammar_debug_len: 1,
             // and_id: 0,
 
+            grammar_ind:0,
             user:true,
             first:false,
             // or_id:0,
@@ -313,6 +316,7 @@ where
                 // grammar_debug_len: 1,
                 // and_id: 0,
 
+                grammar_ind:0,
                 user:true,
                 first:false,
                 // or_id:0,
@@ -414,6 +418,7 @@ where
             group_ind: cur.group_ind,
             group_len: cur.group_len,
 
+            grammar_ind:0,
             user:true,
             first:cur.first,
             // or_id:cur.or_id,
@@ -458,6 +463,7 @@ where
             group_ind: cur.group_ind,
             group_len: cur.group_len,
 
+            grammar_ind:0,
             user:true,
             first:cur.first,
             // or_id:cur.or_id,
@@ -558,6 +564,7 @@ where
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
+            grammar_ind:0,
             user:true,
             first:cur.first,
             // or_id:cur.or_id,
@@ -625,6 +632,7 @@ where
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
+            grammar_ind:0,
             user:true,
             first:cur.first,
             // or_id:cur.or_id,
@@ -692,6 +700,7 @@ where
             // grammar_debug_len: cur.grammar_debug_len,
             // and_id:cur.and_id,
 
+            grammar_ind:cur.grammar_ind+1,
             user:false,
             first:false, //grmmar in many, after the frist one is parsed are no longer firsts
             // or_id:cur.or_id,
@@ -749,6 +758,7 @@ where
             // grammar_debug_len: cur.grammar_debug_len,
             // and_id:cur.and_id,
 
+            grammar_ind:0,
             user:false,
             first:false,
             // or_id:cur.or_id,
@@ -807,6 +817,7 @@ where
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
+            grammar_ind:0,
             user:true,
             first:cur.first,
             // or_id:cur.or_id,
@@ -879,6 +890,7 @@ where
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
+            grammar_ind:0,
             user:true,
             first:cur.first,
             // or_id:cur.or_id,
@@ -947,13 +959,13 @@ where
     }
 
     fn grammar_and(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::And(gs,grammar_ind, stow)=cur.grammar.as_ref() else{panic!("");};
+        let GrammarNode::And(gs, stow)=cur.grammar.as_ref() else{panic!("");};
         //
 
         if gs.is_empty() {return;}
 
         // let Some(head)=gs.first().cloned() else { return ; };
-        let head=gs.get(*grammar_ind).unwrap().clone();
+        let head=gs.get(cur.grammar_ind).unwrap().clone();
 
         //
         // let stow_new_len=self.hist_news_add(&cur);
@@ -1010,7 +1022,7 @@ where
 
         //
 
-        if *grammar_ind!=gs.len()
+        if cur.grammar_ind!=gs.len()
         // if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r.clone()))
         {
 
@@ -1018,7 +1030,8 @@ where
             // let rest=gs[1..];
             self.stk.push(Work {
 
-                grammar:Rc::new(GrammarNode::And(gs.clone(),*grammar_ind+1,*stow)),
+                // grammar:Rc::new(GrammarNode::And(gs.clone(),*grammar_ind+1,*stow)),
+                grammar:cur.grammar.clone(),
 
                 work_success_len: cur.work_success_len,
                 // work_fail_len, //: cur.work_fail_len,
@@ -1030,6 +1043,7 @@ where
                 group_ind: cur.group_ind,
                 group_len: cur.group_len,
 
+                grammar_ind:cur.grammar_ind+1,
                 user:false,
                 first:false,
 
@@ -1046,7 +1060,7 @@ where
 
         //
         // let not_end= gs.len() > 1;
-        let not_end= *grammar_ind+1 != gs.len();
+        let not_end= cur.grammar_ind+1 != gs.len();
         let success_len=if not_end {self.stk.len()}else{cur.work_success_len};
 
         //
@@ -1065,6 +1079,7 @@ where
             // // and_id:cur.and_id+1,
             // and_id:if gs.len()==1{cur.and_id}else{cur.and_id+1}, //don't need if single element in And?
 
+            grammar_ind:0,
             user:true,
             first:cur.first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
             // or_id:cur.or_id,
@@ -1107,14 +1122,14 @@ where
     }
 
     fn grammar_or(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::Or(gs,grammar_ind)=cur.grammar.as_ref() else{panic!("");};
+        let GrammarNode::Or(gs,)=cur.grammar.as_ref() else{panic!("");};
 
         if gs.is_empty() {return;}
 
         //
         // let Some(head)=gs.first().cloned() else { return; };
         // let Some(head)=gs.get(*grammar_ind).cloned() else { return; };
-        let head=gs.get(*grammar_ind).unwrap().clone();
+        let head=gs.get(cur.grammar_ind).unwrap().clone();
         //
         // if cur.grammar_ind==gs.len() {return;}
         // let head=gs.get(cur.grammar_ind).unwrap().clone();
@@ -1151,11 +1166,12 @@ where
         // let hist_ends_ind=if cur.is_first{}else{};
 
         //
-        if grammar_ind+1!=gs.len()
+        if cur.grammar_ind+1!=gs.len()
         // if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r))
         {
             self.stk.push(Work {
-                grammar: Rc::new(GrammarNode::Or(gs.clone(),*grammar_ind+1)),
+                // grammar: Rc::new(GrammarNode::Or(gs.clone(),*grammar_ind+1)),
+                grammar:cur.grammar.clone(),
                 // grammar_ind:0,
                 // grammar:cur.grammar.clone(),
                 // grammar_ind:cur.grammar_ind+1,
@@ -1170,6 +1186,7 @@ where
                 // grammar_debug_len: cur.grammar_debug_len,
                 // and_id:cur.and_id,
 
+                grammar_ind:cur.grammar_ind+1,
                 user:false,
                 first:cur.first,
                 // or_id:cur.or_id,
@@ -1217,7 +1234,7 @@ where
         //
 
         // let not_end= gs.len() > 1;
-        let not_end= *grammar_ind+1 != gs.len();
+        let not_end= cur.grammar_ind+1 != gs.len();
 
         let fail_len=if not_end {self.stk.len()}else{cur.work_fail_len};
 
@@ -1235,6 +1252,7 @@ where
             // grammar_debug_len: cur.grammar_debug_len+1,
             // and_id:cur.and_id,
 
+            grammar_ind:0,
             user:true,
             first:true,
             // or_id:cur.or_id,
@@ -2337,6 +2355,7 @@ where
                     grammar, work_success_len: success_len, work_fail_len: fail_len, tokens,
                     group_ind, group_len,
                     // and_id,
+                    grammar_ind,
                     first,
                     stow_new_len,
                     // hist_stows_stk_len,hist_ends_stk_len,
@@ -2369,6 +2388,17 @@ where
                 //         format!("{grammar:?}")
                 //     }
                 // };
+
+                //
+                let grammar=match grammar.as_ref() {
+                    GrammarNode::And(gs,stow ) => {
+                        Rc::new(GrammarNode::And(Box::from(&gs[*grammar_ind..]),*stow))
+                    }
+                    GrammarNode::Or(gs, ) => {
+                        Rc::new(GrammarNode::Or(Box::from(&gs[*grammar_ind..]),))
+                    }
+                    _ => grammar.clone(),
+                };
 
                 //
                 println!("");
