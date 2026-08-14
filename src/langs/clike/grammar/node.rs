@@ -1,18 +1,18 @@
 use std::{fmt::Debug, rc::Rc};
 
-use super::super::grammar::error::GrammarWalkError;
+// use super::super::grammar::error::GrammarWalkError;
 
 
 
 #[derive(Clone,Hash,PartialEq,Eq)]
 pub enum GrammarNode<'g> {
     Many(Rc<GrammarNode<'g>>),
-    And(Box<[Rc<GrammarNode<'g>>]>,bool), //ind,stow
+    And(Box<[Rc<GrammarNode<'g>>]>,bool,usize), //stow_first, error_ind
     Or( Box<[Rc<GrammarNode<'g>>]>,), //should store reversed?
     NonTerm(&'g str),
 
     Group(Rc<GrammarNode<'g>>,&'g str,),
-    Expected(Rc<GrammarNode<'g>>, &'g str,),
+    Expect(Rc<GrammarNode<'g>>, &'g str,),
     Stow(Rc<GrammarNode<'g>>),
 
     Was(Rc<GrammarNode<'g>>, &'g str),
@@ -53,7 +53,7 @@ impl<'g> GrammarNode<'g> {
         Self::Group(self.into(),name)
     }
     pub fn expect(self,name: &'g str,) -> GrammarNode<'g> {
-        Self::Expected(self.into(),name)
+        Self::Expect(self.into(),name)
     }
     pub fn stow(self) -> GrammarNode<'g> {
         Self::Stow(self.into())
@@ -94,6 +94,20 @@ impl<'g> GrammarNode<'g> {
         if let Self::NonTerm(..)=self {
             true
         } else {
+            false
+        }
+    }
+    pub fn is_stow(&self) -> bool {
+        if let Self::Stow(..)=self {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_expect(&self) -> bool {
+        if let GrammarNode::Expect(..)=self {
+            true
+        }else{
             false
         }
     }
@@ -159,11 +173,11 @@ pub trait GrammarArrayTrait<'g> {
 impl<'g,const N: usize> GrammarArrayTrait <'g> for [GrammarNode<'g>; N] {
     fn and(self) -> GrammarNode<'g> {
         // GrammarNode::And(self.into())
-        GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),false)
+        GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),false,0)
     }
     fn and_stow(self) -> GrammarNode<'g> {
         // GrammarNode::And(self.into())
-        GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),true)
+        GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),true,2)
     }
     fn or(self) -> GrammarNode<'g> {
         // GrammarNode::Or(self.into())
@@ -230,16 +244,16 @@ impl<'g> Debug for GrammarNode<'g> {
             //     let x=&arg0[*arg1..];
             //     f.debug_tuple("Or").field(&x).finish()
             // },
-            Self::And(arg0, arg1, ) => {
+            Self::And(arg0, arg1, arg2, ) => {
 
-                f.debug_tuple("And").field(arg0).field(arg1).finish()
+                f.debug_tuple("And").field(arg0).field(arg1).field(arg2).finish()
             },
             Self::Or(arg0, ) => {
                 f.debug_tuple("Or").field(arg0).finish()
             },
             Self::NonTerm(arg0) => f.debug_tuple("NonTerm").field(arg0).finish(),
             Self::Group(arg0, arg1) => f.debug_tuple("Group").field(arg0).field(arg1).finish(),
-            Self::Expected(arg0, arg1) => f.debug_tuple("Expected").field(arg0).field(arg1).finish(),
+            Self::Expect(arg0, arg1) => f.debug_tuple("Expected").field(arg0).field(arg1).finish(),
             Self::Stow(arg0) => f.debug_tuple("Stow").field(arg0).finish(),
 
             // Self::Prev(arg0) => f.debug_tuple("Prev").field(arg0).finish(),

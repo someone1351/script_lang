@@ -331,7 +331,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             [
                 Int.group("field_index"),
                 Identifier.group("field_name"),
-                Error,
+                // Error,
             ].or().expect("field").was("field"),
         ].and(),
 

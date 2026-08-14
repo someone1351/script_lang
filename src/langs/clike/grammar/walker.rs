@@ -69,7 +69,10 @@ where
     // expected_news:Vec<TempExpectedNew<'g>>,
     // expecteds:Vec<TempExpected<'g>>,
 
-    expecteds:Vec<TempExpect<'t,'g>>,
+    expects:Vec<TempExpect<'t,'g>>,
+
+    expect_news2:Vec<TempExpectNew2<'t,'g>>,
+    expects2:Vec<TempExpect2<'t,'g>>,
 
     debug:bool,
     // non_term_recursive_check:bool,
@@ -126,9 +129,10 @@ where
             step_count:Default::default(),
 
             // expected_loc:Loc::zero(),
-            // expected_news:Default::default(),
-            // expecteds:Default::default(),
-            expecteds:Default::default(),
+            expects:Default::default(),
+
+            expect_news2:Default::default(),
+            expects2:Default::default(),
 
             grammar_func,
             tokens_remaining:top_primitives.clone(),
@@ -191,6 +195,7 @@ where
             grammar_ind:0,
             user:false,
             first:false,
+            stow:false,
             // or_id:0,
             // and_first:false,
 
@@ -214,11 +219,12 @@ where
             // hist_prevs_len: 0,
 
 
-            // expected_news_len:0,
-            // expect_len:0,
 
             expect_ind:None,
             expect_len:0,
+
+            expect_new_len2:0,
+            expect_len2:0,
 
             // was_start_ind:0,
             // was_ind:0,
@@ -251,6 +257,7 @@ where
             grammar_ind:0,
             user:true,
             first:false,
+            stow:false,
             // or_id:0,
             // and_first:false,
 
@@ -273,13 +280,11 @@ where
             // hist_prevs_ind: 0,
             // hist_prevs_len: 0,
 
-            // expected_news_len:0,
-            // expect_len:0,
-
-
             expect_ind:None,
             expect_len:0,
 
+            expect_new_len2:0,
+            expect_len2:0,
 
             // was_start_ind:0,
             // was_ind:0,
@@ -319,6 +324,7 @@ where
                 grammar_ind:0,
                 user:true,
                 first:false,
+                stow:false,
                 // or_id:0,
                 // and_first:false,
 
@@ -339,12 +345,11 @@ where
                 // hist_prevs_ind: 0,
                 // hist_prevs_len: 0,
 
-                // expected_news_len:0,
-                // expect_len:0,
-
                 expect_ind:None,
                 expect_len:0,
 
+                expect_new_len2:0,
+                expect_len2:0,
 
                 // was_start_ind:0,
                 // was_ind:0,
@@ -393,10 +398,10 @@ where
         self.step_count=0;
 
         //
-        // self.expected_loc=Loc::zero();
-        // self.expected_news.clear();
-        // self.expecteds.clear();
-        self.expecteds.clear();
+        self.expects.clear();
+
+        self.expect_news2.clear();
+        self.expects2.clear();
 
         Ok(())
 
@@ -421,6 +426,7 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first,
+            stow:cur.stow,
             // or_id:cur.or_id,
 
             stow_new_len,
@@ -429,6 +435,9 @@ where
 
             expect_ind:cur.expect_ind,
             expect_len:cur.expect_len,
+
+            expect_new_len2:cur.expect_new_len2,
+            expect_len2:cur.expect_len2,
 
             was_new_len:cur.was_new_len,
             was_ind:cur.was_ind,
@@ -466,6 +475,7 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first,
+            stow:cur.stow,
             // or_id:cur.or_id,
 
             // stow_new_len,
@@ -480,6 +490,9 @@ where
 
             expect_ind:cur.expect_ind,
             expect_len:cur.expect_len,
+
+            expect_new_len2:cur.expect_new_len2,
+            expect_len2:cur.expect_len2,
 
             // was_start_ind:cur.was_start_ind,
             // // was_ind:cur.was_ind,
@@ -524,7 +537,8 @@ where
             self.groups_on_success(&cur);
             self.was_on_success(false); //before hist
             self.hist_on_success(&cur,false,);
-            self.expected_on_success();
+            self.expect_on_success2(&cur);
+            self.expect_on_success();
         } else {
             // self.stk.truncate(cur.fail_len);
             self.work_on_fail(&cur);
@@ -538,17 +552,20 @@ where
             // // // let (_expected_ind,_expecteds_len)=self.add_expected2(&cur);
 
             // // self.submit_expected_news(&cur);
-            self.expected_on_fail();
+            self.expect_on_fail2(&cur);
+            self.expect_on_fail();
         }
     }
 
     fn grammar_expect(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::Expected(g,_, )=cur.grammar.as_ref() else{panic!("");};
+        let GrammarNode::Expect(g,_, )=cur.grammar.as_ref() else{panic!("");};
 
         //
         // let expected_news_len=self.add_expected_new(&cur);
-        let (expect_ind,expect_len)=self.add_expected(&cur);
+        let (expect_ind,expect_len)=self.add_expect(&cur);
         // let stow_new_len=self.hist_news_add(&cur);
+
+        let expect_new_len2=self.add_expect_new2(&cur);
 
         //
         self.stk.push(Work {
@@ -567,6 +584,8 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first,
+            stow:cur.stow,
+
             // or_id:cur.or_id,
             // and_first:cur.and_first,
 
@@ -595,6 +614,10 @@ where
             expect_ind,
             expect_len,
 
+
+
+            expect_new_len2,
+            expect_len2:cur.expect_len2,
 
             // expect_ind:cur.expect_ind,
             // expect_len:cur.expect_len,
@@ -635,6 +658,8 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first,
+            stow:cur.stow,
+
             // or_id:cur.or_id,
             // and_first:cur.and_first,
 
@@ -661,6 +686,8 @@ where
             expect_ind:cur.expect_ind,
             expect_len:cur.expect_len,
 
+            expect_new_len2:cur.expect_new_len2,
+            expect_len2:cur.expect_len2,
 
             // was_start_ind:cur.was_start_ind,
             // was_ind:cur.was_ind,
@@ -703,6 +730,8 @@ where
             grammar_ind:cur.grammar_ind+1,
             user:false,
             first:false, //grmmar in many, after the frist one is parsed are no longer firsts
+            stow:cur.stow,
+
             // or_id:cur.or_id,
             // and_first:false,
             // can_hist_stow:false,
@@ -728,6 +757,9 @@ where
 
             expect_ind:cur.expect_ind,
             expect_len:cur.expect_len,
+
+            expect_new_len2:cur.expect_new_len2,
+            expect_len2:cur.expect_len2,
 
             // was_start_ind:cur.was_start_ind,
             // was_ind:cur.was_ind,
@@ -761,6 +793,8 @@ where
             grammar_ind:0,
             user:false,
             first:false,
+            stow:cur.stow,
+
             // or_id:cur.or_id,
             // and_first:false,
             // can_hist_stow:false,
@@ -786,6 +820,9 @@ where
 
             expect_ind:cur.expect_ind,
             expect_len:cur.expect_len,
+
+            expect_new_len2:cur.expect_new_len2,
+            expect_len2:cur.expect_len2,
 
             // was_start_ind:cur.was_start_ind,
             // was_ind:cur.was_ind,
@@ -820,6 +857,8 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first,
+            stow:cur.stow,
+
             // or_id:cur.or_id,
             // and_first:cur.and_first,
             // can_hist_stow:false,
@@ -846,6 +885,9 @@ where
             expect_ind:cur.expect_ind,
             expect_len:cur.expect_len,
 
+            expect_new_len2:cur.expect_new_len2,
+            expect_len2:cur.expect_len2,
+
             // was_start_ind:cur.was_start_ind,
             // was_ind:cur.was_ind,
             // was_len:cur.was_len,
@@ -864,7 +906,7 @@ where
         let GrammarNode::NonTerm(t)=cur.grammar.as_ref() else{panic!("");};
 
         //
-        // let stow_new_len=self.hist_news_add(&cur);
+        let stow_new_len=self.hist_news_add(&cur);
         // let visiteds=self.do_non_term_visiteds(t,cur.tokens,cur.visiteds)?;
 
         //
@@ -893,13 +935,15 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first,
+            stow:cur.stow,
+
             // or_id:cur.or_id,
             // and_first:cur.and_first,
 
             // can_hist_stow:false,
 
-            // stow_new_len,
-            stow_new_len:cur.stow_new_len,
+            stow_new_len,
+            // stow_new_len:cur.stow_new_len,
 
             // hist_stows_stk_len:cur.hist_stows_stk_len,
             // hist_ends_stk_len:cur.hist_ends_stk_len,
@@ -919,6 +963,9 @@ where
 
             expect_ind:cur.expect_ind,
             expect_len:cur.expect_len,
+
+            expect_new_len2:cur.expect_new_len2,
+            expect_len2:cur.expect_len2,
 
             // was_start_ind:cur.was_start_ind,
             // was_ind:cur.was_ind,
@@ -959,7 +1006,7 @@ where
     }
 
     fn grammar_and(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::And(gs, stow)=cur.grammar.as_ref() else{panic!("");};
+        let GrammarNode::And(gs, stow_first, error_ind)=cur.grammar.as_ref() else{panic!("");};
         //
 
         if gs.is_empty() {return;}
@@ -1046,12 +1093,16 @@ where
                 grammar_ind:cur.grammar_ind+1,
                 user:false,
                 first:false,
+                stow:false,
 
                 stow_new_len:cur.stow_new_len,
                 stow_len: cur.stow_len,
 
                 expect_ind:cur.expect_ind,
                 expect_len:cur.expect_len,
+
+                expect_new_len2:cur.expect_new_len2,
+                expect_len2:cur.expect_len2,
 
                 was_new_len:cur.was_new_len,
                 was_ind:cur.was_ind,
@@ -1082,6 +1133,7 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
+            stow:if *stow_first {true} else {cur.stow},
             // or_id:cur.or_id,
             // and_first:true,
 
@@ -1108,6 +1160,9 @@ where
 
             expect_ind:cur.expect_ind,
             expect_len:cur.expect_len,
+
+            expect_new_len2:cur.expect_new_len2,
+            expect_len2:cur.expect_len2,
 
             // was_start_ind:cur.was_start_ind,
             // was_ind:cur.was_ind,
@@ -1189,6 +1244,8 @@ where
                 grammar_ind:cur.grammar_ind+1,
                 user:false,
                 first:cur.first,
+                stow:cur.stow,
+
                 // or_id:cur.or_id,
                 // and_first:cur.and_first,
                 // can_hist_stow:false,
@@ -1216,6 +1273,9 @@ where
 
                 expect_ind:cur.expect_ind,
                 expect_len:cur.expect_len,
+
+                expect_new_len2:cur.expect_new_len2,
+                expect_len2:cur.expect_len2,
 
                 // // was_start_ind:cur.was_start_ind,
                 // was_start_ind,
@@ -1255,6 +1315,8 @@ where
             grammar_ind:0,
             user:true,
             first:true,
+            stow:cur.stow,
+
             // or_id:cur.or_id,
             // and_first:cur.and_first,
             // can_hist_stow:false,
@@ -1279,6 +1341,9 @@ where
 
             expect_ind:cur.expect_ind,
             expect_len:cur.expect_len,
+
+            expect_new_len2:cur.expect_new_len2,
+            expect_len2:cur.expect_len2,
 
             // // was_start_ind:cur.was_start_ind,
             // was_start_ind,
@@ -1386,7 +1451,8 @@ where
         self.update_tokens(&cur,false);
         self.hist_on_fail();
         self.was_on_fail();
-        self.expected_on_fail();
+        self.expect_on_fail2(&cur);
+        self.expect_on_fail();
         self.groups_on_fail();
 
         //
@@ -1486,7 +1552,8 @@ where
         self.groups_on_success(&cur,);
         self.was_on_success(was_prim); //before hist
         self.hist_on_success(&cur,true,); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
-        self.expected_on_success();
+        self.expect_on_success2(&cur);
+        self.expect_on_success();
 
         //
         if self.debug {
@@ -1516,7 +1583,9 @@ where
                 self.groups_on_success(&cur);
                 self.was_on_success(true); //before hist
                 self.hist_on_success(&cur,false);
-                self.expected_on_success();
+
+                self.expect_on_success2(&cur);
+                self.expect_on_success();
 
                 //
                 // if self.debug {
@@ -1543,8 +1612,11 @@ where
                 // // self.submit_expected_news(&cur);
 
                 self.groups_on_fail();
-                let (_expected_ind,_expecteds_len)=self.add_expected(&cur);
-                self.expected_on_fail();
+                let (_expected_ind,_expecteds_len)=self.add_expect(&cur);
+                let _expect_new_len2=self.add_expect_new2(&cur);
+
+                self.expect_on_fail2(&cur);
+                self.expect_on_fail();
 
                 //
                 None
@@ -1560,15 +1632,47 @@ where
         self.stk.truncate(cur.work_fail_len);
     }
 
+    fn add_expect_new2(&mut self, cur:&Work<'t,'g>,) -> usize {
+        if cur.grammar.is_expect() && self.expect_news2.last().map(|x|x.expect_type.is_expect()).unwrap_or_default() {
+
+        }
+
+        //
+        let expect_type=match cur.grammar.as_ref() {
+            GrammarNode::Expect(_, name) => TempExpectType::Expect(name),
+            // GrammarNode::Prev(_) => TempExpectedType::Prev,
+            GrammarNode::String => TempExpectType::String,
+            GrammarNode::Identifier => TempExpectType::Identifier,
+            GrammarNode::Int => TempExpectType::Int,
+            GrammarNode::Float => TempExpectType::Float,
+            GrammarNode::Symbol(s) => TempExpectType::Symbol(s),
+            GrammarNode::Keyword(s) => TempExpectType::Keyword(s),
+            GrammarNode::Eol => TempExpectType::Eol,
+           _ => {panic!("");}
+        };
+
+        self.expect_news2.push(TempExpectNew2 { expect_type, tokens_start: cur.tokens, expect_len: cur.expect_len2, });
+        self.expect_news2.len()
+    }
+
+    fn expect_on_success2(&mut self, cur:&Work<'t,'g>,) {
+        let Some(last)=self.stk.last() else {return;}; //the func, not run on always... does now
+
+    }
+
+    fn expect_on_fail2(&mut self, cur:&Work<'t,'g>,) {
+        let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
+
+    }
 
 
-    fn add_expected(&mut self, cur:&Work<'t,'g>,) -> (Option<usize>,usize) {
+    fn add_expect(&mut self, cur:&Work<'t,'g>,) -> (Option<usize>,usize) {
         // return (cur.expect_ind,cur.expect_len);
 
         //check if prim and parent pos is same as cur pos
         //
 
-        let parent_start=cur.expect_ind.map(|i|self.expecteds[i].tokens_start.inds().start) ;
+        let parent_start=cur.expect_ind.map(|i|self.expects[i].tokens_start.inds().start) ;
 
         if parent_start==Some(cur.tokens.inds().start) {
             return (cur.expect_ind,cur.expect_len);
@@ -1580,7 +1684,7 @@ where
 
         //
         let expected_type=match cur.grammar.as_ref() {
-            GrammarNode::Expected(_, name) => TempExpectType::Expected(name),
+            GrammarNode::Expect(_, name) => TempExpectType::Expect(name),
             // GrammarNode::Prev(_) => TempExpectedType::Prev,
             GrammarNode::String => TempExpectType::String,
             GrammarNode::Identifier => TempExpectType::Identifier,
@@ -1598,29 +1702,29 @@ where
         }
 
         //
-        let expect_ind=self.expecteds.len();
+        let expect_ind=self.expects.len();
 
         //
-        self.expecteds.push(TempExpect {
-            expected_type,
+        self.expects.push(TempExpect {
+            expect_type: expected_type,
             parent: cur.expect_ind,
             tokens_start: cur.tokens,
             // last:false,
         });
 
         //
-        (Some(expect_ind),self.expecteds.len())
+        (Some(expect_ind),self.expects.len())
     }
 
 
-    fn expected_on_success(&mut self, ) {
+    fn expect_on_success(&mut self, ) {
         let Some(last)=self.stk.last() else {return;}; //the func, not run on always... does now
-        self.expecteds.truncate(last.expect_len);
+        self.expects.truncate(last.expect_len);
     }
 
-    fn expected_on_fail(&mut self, ) {
+    fn expect_on_fail(&mut self, ) {
         let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
-        last.expect_len=self.expecteds.len();
+        last.expect_len=self.expects.len();
     }
 
 
@@ -1921,8 +2025,10 @@ where
 
     fn hist_news_add(&mut self,cur:&Work<'t,'g>) -> usize {
         // return self.hist_news.len();
+        //
+        // let GrammarNode::Stow(g, )=cur.grammar.as_ref() else{panic!("");};
 
-        let GrammarNode::Stow(g, )=cur.grammar.as_ref() else{panic!("");};
+        //
         if
             // cur.from_user
             // && (!self.hist_non_term_only || cur.grammar.is_non_term())
@@ -1930,10 +2036,13 @@ where
             // // && cur.grammar.is_non_term() //should only do nonterms?
 
             // &&
+            cur.grammar.is_non_term() &&
+            // cur.grammar.is_stow() &&
             cur.first //no longer using prevs, only stows/fails
         { //ignore grammars added by walker
+            let grammar=if  let GrammarNode::Stow(g, )=cur.grammar.as_ref() {g.clone()}else{cur.grammar.clone()};
             self.hist_news.push(TempStowNew {
-                grammar: g.clone(),
+                grammar,
                 tokens_start: cur.tokens.clone(),
                 // group_ind: cur.group_ind,
                 group_len:cur.group_len,
@@ -2102,7 +2211,7 @@ where
         //     println!("t {t:?} :: {} to {}",t.start_loc(),t.end_loc());
         // }
 
-        let out_loc=if self.expecteds.is_empty() {
+        let out_loc=if self.expects.is_empty() {
             self.tokens_remaining.loc()
         } else {
             self.expected_tokens_remaining.loc()
@@ -2120,18 +2229,18 @@ where
         //
         let max_token_start_ind=self.expected_tokens_remaining.inds().start;
 
-        let parents= self.expecteds.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
+        let parents= self.expects.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
 
-        let expecteds=self.expecteds.iter().enumerate().rev().filter_map(|(i,x)|(
+        let expecteds=self.expects.iter().enumerate().rev().filter_map(|(i,x)|(
             x.tokens_start.inds().start == max_token_start_ind &&
             !parents.contains(&i)
-        ).then(||(x.expected_type.clone(),x.clone()))).collect::<BTreeMap<_,_>>();
+        ).then(||(x.expect_type.clone(),x.clone()))).collect::<BTreeMap<_,_>>();
 
         let expecteds=expecteds.iter().map(|(_k,v)|v.clone()).collect::<Vec<_>>();
 
         //
-        expecteds.iter().rev().map(|x|match &x.expected_type {
-            TempExpectType::Expected(n) => n,
+        expecteds.iter().rev().map(|x|match &x.expect_type {
+            TempExpectType::Expect(n) => n,
             TempExpectType::Int => "int",
             TempExpectType::Float => "float",
             TempExpectType::String => "string",
@@ -2284,19 +2393,19 @@ where
         if result.is_err() {
             if self.debug {
                 println!("expects:");
-                for (i,x) in self.expecteds.iter().enumerate() {
+                for (i,x) in self.expects.iter().enumerate() {
                     // println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
 
                     println!("    e{i}:p{}:t{} {:?} :: {:?}",
                         x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
                         x.tokens_start.inds().start,
-                        x.expected_type,
+                        x.expect_type,
                         x.tokens_start,
                     );
 
                 }
             }
-            let max_token = self.expecteds.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
+            let max_token = self.expects.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
 
 
             self.expected_tokens_remaining=max_token;
@@ -2367,6 +2476,7 @@ where
                     // hist_prevs_len,
                     // expected_news_len,expect_len,
                     expect_ind,expect_len,
+                    expect_new_len2,expect_len2,
                     // was_start_ind,was_ind,was_len,
                     was_new_len,was_ind,
                     ..
@@ -2391,8 +2501,8 @@ where
 
                 //
                 let grammar=match grammar.as_ref() {
-                    GrammarNode::And(gs,stow ) => {
-                        Rc::new(GrammarNode::And(Box::from(&gs[*grammar_ind..]),*stow))
+                    GrammarNode::And(gs,stow_first, error_after ) => {
+                        Rc::new(GrammarNode::And(Box::from(&gs[*grammar_ind..]),*stow_first,*error_after))
                     }
                     GrammarNode::Or(gs, ) => {
                         Rc::new(GrammarNode::Or(Box::from(&gs[*grammar_ind..]),))
@@ -2432,26 +2542,48 @@ where
                 }
 
                 //
+                if true {
+                    println!("        expect2_new_len={expect_new_len2:?} ({}), expect_len2={expect_len2} ({})",self.expect_news2.len(),self.expects2.len(),);
+
+                     println!("        expect_news2=[{}]",
+                        self.expect_news2.iter().enumerate()
+                            .map(|(i,x)|format!("e{i}:t{}:{:?}",
+                                x.tokens_start.inds().start,
+                                x.expect_type,
+                            ))
+                            .collect::<Vec<_>>().join(", "),
+                    );
+                     println!("        expects2=[{}]",
+                        self.expects2.iter().enumerate()
+                            .map(|(i,x)|format!("e{i}:t{}:{:?}",
+                                x.tokens_start.inds().start,
+                                x.expect_type,
+                            ))
+                            .collect::<Vec<_>>().join(", "),
+                    );
+                }
+
+                //
                 if false {
-                    println!("        expect_ind={expect_ind:?}, expect_len={expect_len}, expecteds.len={}",self.expecteds.len());
+                    println!("        expect_ind={expect_ind:?}, expect_len={expect_len}, expecteds.len={}",self.expects.len());
 
                      println!("        expecteds=[{}]",
-                        self.expecteds.iter().enumerate()
+                        self.expects.iter().enumerate()
                             .map(|(i,x)|format!("e{i}:p{}:t{}:{:?}",
                                 x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
                                 x.tokens_start.inds().start,
-                                x.expected_type,
+                                x.expect_type,
                             ))
                             .collect::<Vec<_>>().join(", "),
                     );
                 } else if true {
-                    println!("        expecteds: ind={expect_ind:?}, len={expect_len} ({})",self.expecteds.len());
+                    println!("        expecteds: ind={expect_ind:?}, len={expect_len} ({})",self.expects.len());
 
-                    for (i,x) in self.expecteds.iter().enumerate() {
+                    for (i,x) in self.expects.iter().enumerate() {
                         println!("            e{i}:p{}:t{}: {:?}",
                             x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
                             x.tokens_start.inds().start,
-                            x.expected_type,
+                            x.expect_type,
                         );
                     }
 
@@ -2612,7 +2744,7 @@ where
 
         //
         match cur.grammar.as_ref() {
-            GrammarNode::Expected(..) => {self.grammar_expect(cur);}
+            GrammarNode::Expect(..) => {self.grammar_expect(cur);}
             GrammarNode::Stow(..) => {self.grammar_stow(cur);}
             GrammarNode::Was(..) => {self.grammar_was(cur);}
             GrammarNode::Had(..) => {self.grammar_had(cur);}

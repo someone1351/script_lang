@@ -83,6 +83,8 @@ NOTE
         or just manually use Error nodes eg
             V => A (P (B|Error))?
 
-
+NOTE
+* for stowing, could have get_non_term return (grammar,bool), with bool denoting stow
+** then inside the func have two sets of matches one for stowed and the other for not
 
 */

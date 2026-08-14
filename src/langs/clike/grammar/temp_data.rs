@@ -15,22 +15,42 @@ use super::node::*;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TempExpectType<'g> {
-    Expected(&'g str),
-
+    Expect(&'g str),
     Int,
     Float,
     String,
     Identifier,
     Symbol(&'g str),
     Keyword(&'g str),
-
     Eol,
-    // Prev, //remove?
+}
+
+impl<'g> TempExpectType<'g> {
+    pub fn is_expect(&self) -> bool {
+        if let Self::Expect(..)=self {
+            true
+        } else {
+            false
+        }
+    }
+}
+
+#[derive(Clone, Debug, )]
+pub struct TempExpectNew2<'t,'g> {
+    pub expect_type:TempExpectType<'g>,
+    pub tokens_start:TokenIterContainer<'t>,
+    pub expect_len:usize,
+}
+
+#[derive(Clone, Debug, )]
+pub struct TempExpect2<'t,'g> {
+    pub expect_type:TempExpectType<'g>,
+    pub tokens_start:TokenIterContainer<'t>,
 }
 
 #[derive(Clone, Debug, )]
 pub struct TempExpect<'t,'g> {
-    pub expected_type:TempExpectType<'g>,
+    pub expect_type:TempExpectType<'g>,
     pub parent:Option<usize>,
     pub tokens_start:TokenIterContainer<'t>,
     // pub last:bool,
@@ -120,6 +140,7 @@ pub struct Work<'t,'g> {
     pub grammar_ind:usize,
     pub user:bool, //gramamr added by input grammar, not walker //used to know whether to push hist_begins stk or not //used with and/or/many
     pub first:bool, //used to know whether to store a HistStow
+    pub stow:bool,
 
     pub work_success_len:usize,
     pub work_fail_len:usize,
@@ -135,5 +156,9 @@ pub struct Work<'t,'g> {
 
     pub expect_ind:Option<usize>,
     pub expect_len:usize,
+
+    pub expect_new_len2:usize,
+    pub expect_len2:usize,
+
 }
 
