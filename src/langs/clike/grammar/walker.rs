@@ -1633,9 +1633,9 @@ where
     }
 
     fn add_expect_new2(&mut self, cur:&Work<'t,'g>,) -> usize {
-        if cur.grammar.is_expect() && self.expect_news2.last().map(|x|x.expect_type.is_expect()).unwrap_or_default() {
+        // if cur.grammar.is_expect() && self.expect_news2.last().map(|x|x.expect_type.is_expect()).unwrap_or_default() {
 
-        }
+        // }
 
         //
         let expect_type=match cur.grammar.as_ref() {
@@ -1651,17 +1651,28 @@ where
            _ => {panic!("");}
         };
 
-        self.expect_news2.push(TempExpectNew2 { expect_type, tokens_start: cur.tokens, expect_len: cur.expect_len2, });
+        // self.expect_news2.push(TempExpectNew2 { expect_type, tokens_start: cur.tokens, expect_len: cur.expect_len2, });
         self.expect_news2.len()
     }
 
     fn expect_on_success2(&mut self, cur:&Work<'t,'g>,) {
         let Some(last)=self.stk.last() else {return;}; //the func, not run on always... does now
 
+        // if cur.grammar.is_expect() && self.expect_news2.last().map(|x|x.expect_type.is_expect()).unwrap_or_default() {
+        // }
+
+        let drained=self.expect_news2.drain(last.expect_new_len2 ..).collect::<Vec<_>>();
+
+
+
     }
 
     fn expect_on_fail2(&mut self, cur:&Work<'t,'g>,) {
         let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
+
+        let drained=self.expect_news2.drain(last.expect_new_len2 ..).collect::<Vec<_>>();
+
+
 
     }
 
@@ -1806,12 +1817,14 @@ where
 
         if last.stow_len!=0 {
             //
-            let drained_hist_news=self.hist_news.drain(last.stow_new_len ..).collect::<Vec<_>>();
+            let mut drained_hist_news=self.hist_news.drain(last.stow_new_len ..)
+                // .collect::<Vec<_>>()
+                ;
 
             //
-            if self.debug && !drained_hist_news.is_empty() {
-                // println!("----- adding to hist fails");
-            }
+            // if self.debug && !drained_hist_news.is_empty() {
+            //     // println!("----- adding to hist fails");
+            // }
 
             //
             let hist_stow=&mut self.hist_stows[last.stow_len-1];
@@ -1827,7 +1840,9 @@ where
 
 
             // //
-            if let Some(drained_hist_new)=drained_hist_news.iter().find(|x|{
+            if let Some(drained_hist_new)=drained_hist_news
+                // .iter()
+                .find(|x|{
                 // x.is_first &&
                 x.stow_len==last.stow_len
                 && (x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many())
@@ -1859,13 +1874,18 @@ where
         //should always be some (due to init), use panic instead of ret? no, it will end on an always if successful
         let Some(last)=self.stk.last_mut() else {return;};
 
-        //
-        let drained_hist_news=self.hist_news.drain(last.stow_new_len ..).collect::<Vec<_>>();
+
 
         //add hist stows
         if last.stow_len!=0 { //cur.stow_len!=0 // && cur.stow_len==last.stow_len //that the hist_stows[ind] still exists
             //
-            let drained_hist_new2=drained_hist_news.iter().find(|x|{
+            let mut drained_hist_news=self.hist_news.drain(last.stow_new_len ..)
+                // .collect::<Vec<_>>()
+                ;
+            //
+            let drained_hist_new2=drained_hist_news
+                // .iter()
+                .find(|x|{
 
                 // x.is_first
                  x.stow_len==last.stow_len &&
@@ -1946,12 +1966,13 @@ where
             }
 
 
+        } else {
+            self.hist_news.truncate(last.stow_new_len);
         }
 
 
 
         //
-        self.hist_news.truncate(last.stow_new_len);
 
         let stow_len=last.stow_len;
         self.hist_stows_truncate(stow_len);

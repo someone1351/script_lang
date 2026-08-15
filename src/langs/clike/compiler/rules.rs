@@ -81,7 +81,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
 
             // NonTerm("val"),
-        ].or().expect("stmt"),
+        ].or() //.expect("stmt")
+        ,
 
         "var" => [
             Keyword("var"),
