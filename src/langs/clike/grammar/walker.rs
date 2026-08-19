@@ -1654,6 +1654,11 @@ where
            _ => {panic!("");}
         };
 
+        //
+        if self.debug {
+            println!("----- expect added2  {expect_type:?}");
+        }
+
         self.expect_news2.push(TempExpectNew2 { expect_type, tokens_start: cur.tokens, expect_len: cur.expect_len2, });
         self.expect_news2.len()
     }
@@ -1708,6 +1713,8 @@ where
             } else {
                 self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
             }
+
+            last.expect_len2=self.expects2.len();
 
 
 
@@ -1774,7 +1781,7 @@ where
 
         //
         if self.debug {
-            println!("----- added expected {expected_type:?}");
+            println!("----- expect added  {expected_type:?}");
         }
 
         //
@@ -2672,7 +2679,7 @@ where
                 }
 
                 //
-                if false {
+                if true {
                     println!("        expect_ind={expect_ind:?}, expect_len={expect_len}, expecteds.len={}",self.expects.len());
 
                      println!("        expecteds=[{}]",
@@ -2684,7 +2691,7 @@ where
                             ))
                             .collect::<Vec<_>>().join(", "),
                     );
-                } else if true {
+                } else if false {
                     println!("        expecteds: ind={expect_ind:?}, len={expect_len} ({})",self.expects.len());
 
                     for (i,x) in self.expects.iter().enumerate() {
