@@ -83,6 +83,22 @@ NOTE
         or just manually use Error nodes eg
             V => A (P (B|Error))?
 
+NOTE (same problem as above)
+    if have input: A, Eol, B
+    with grammar: (A (B C)? Eol)*
+
+    it will parse A, B, fail on C, succeed on Eol
+        with B left in input
+        expecting A from start of MANY
+
+    but want it to be expecting C instead
+
+    can't just store expects with token_ind greater than cur parsed
+        as expecting C, the expect token_ind would be from B's
+        and Eol's token_ind would be same  as B's +1
+
+    could keep all expects at current parse
+
 NOTE
 * for stowing, could have get_non_term return (grammar,bool), with bool denoting stow
 ** then inside the func have two sets of matches one for stowed and the other for not

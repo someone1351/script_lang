@@ -354,7 +354,7 @@ impl Compiler {
 
         //
         let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
-        // walker.set_debug(true);
+        walker.set_debug(true);
 
         let start_time = std::time::Instant::now();
         let result=walker.run("start") ;
@@ -384,7 +384,7 @@ impl Compiler {
         println!("-----------------");
         let walk=walker.get_walk();
 
-        println!("{}",walk.root());
+        // println!("{}",walk.root());
 
         println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
 

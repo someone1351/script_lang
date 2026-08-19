@@ -71,6 +71,7 @@ where
 
     expects:Vec<TempExpect<'t,'g>>,
 
+    expect_token_start2: TokenIterContainer<'t>,
     expect_news2:Vec<TempExpectNew2<'t,'g>>,
     expects2:Vec<TempExpect2<'t,'g>>,
 
@@ -131,6 +132,7 @@ where
             // expected_loc:Loc::zero(),
             expects:Default::default(),
 
+            expect_token_start2:top_primitives,
             expect_news2:Default::default(),
             expects2:Default::default(),
 
@@ -400,6 +402,7 @@ where
         //
         self.expects.clear();
 
+        self.expect_token_start2=self.top_tokens;
         self.expect_news2.clear();
         self.expects2.clear();
 
@@ -1651,28 +1654,90 @@ where
            _ => {panic!("");}
         };
 
-        // self.expect_news2.push(TempExpectNew2 { expect_type, tokens_start: cur.tokens, expect_len: cur.expect_len2, });
+        self.expect_news2.push(TempExpectNew2 { expect_type, tokens_start: cur.tokens, expect_len: cur.expect_len2, });
         self.expect_news2.len()
     }
 
     fn expect_on_success2(&mut self, cur:&Work<'t,'g>,) {
         let Some(last)=self.stk.last() else {return;}; //the func, not run on always... does now
 
-        // if cur.grammar.is_expect() && self.expect_news2.last().map(|x|x.expect_type.is_expect()).unwrap_or_default() {
-        // }
 
-        let drained=self.expect_news2.drain(last.expect_new_len2 ..).collect::<Vec<_>>();
+        // let drained=self.expect_news2.drain(last.expect_new_len2 ..).collect::<Vec<_>>();
 
-
-
+        self.expect_news2.truncate(last.expect_new_len2);
+        self.expects2.truncate(last.expect_len2);
     }
 
     fn expect_on_fail2(&mut self, cur:&Work<'t,'g>,) {
         let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
 
-        let drained=self.expect_news2.drain(last.expect_new_len2 ..).collect::<Vec<_>>();
+        // let draineds=self.expect_news2.drain(last.expect_new_len2 ..).collect::<Vec<_>>();
 
 
+        // // if cur.grammar.is_expect() && self.expect_news2.last().map(|x|x.expect_type.is_expect()).unwrap_or_default() {
+        // // }
+
+        // let token_start_ind_max=draineds.iter().map(|x|x.tokens_start.inds().start).max().unwrap_or(self.expect_token_start2.inds().start);
+
+        // let draineds=draineds.into_iter().filter(|x|x.tokens_start.inds().start==token_start_ind_max).collect::<Vec<_>>();
+
+        // if self.expect_token_start2.inds().start< token_start_ind_max {
+        //     self.expects2.clear();
+        // }
+
+        // self.expects2.extend(drained.map(|x|TempExpect2 { expect_type: x.expect_type, tokens_start: x.tokens_start }));
+
+        //
+        let draineds=self.expect_news2.drain(last.expect_new_len2 ..);
+
+        //first element with max token_ind
+        let drained=draineds.rev().max_by(|x,y|x.tokens_start.inds().start.cmp(&y.tokens_start.inds().start));
+
+        //
+        if let Some(drained)=drained {
+
+            if let TempExpectType::Expect(..)=&drained.expect_type {
+                if let Some(last_token_ind)= self.expects2.get(drained.expect_len).map(|x|x.tokens_start.inds().start) {
+                    if drained.tokens_start.inds().start== last_token_ind {
+                        self.expects2.truncate(drained.expect_len);
+                        self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
+                    }
+                } else {
+                    self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
+                }
+            } else {
+                self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
+            }
+
+
+
+            // let last_token_ind= self.expects2.get(last.expect_len2).map(|x|x.tokens_start.inds().start);
+
+            // if let Some(last_token_ind)=last_token_ind {
+            //     if drained.tokens_start.inds().start >= last_token_ind {
+            //         self.expects2.truncate(last.expect_len2);
+            //         self.expects2.push(TempExpect2 {
+            //             expect_type: drained.expect_type,
+            //             tokens_start: drained.tokens_start,
+            //         });
+            //     }
+            // }
+        }
+
+        // if last.expect_len2!=cur.expect_len2 &&
+        //     self.expects2.get(last.expect_len2).map(|x|x.tokens_start.inds().start)
+        //     != self.expects2.get(cur.expect_len2).map(|x|x.tokens_start.inds().start)
+
+        // {
+        //     self.expects2.drain(last.expect_len2 .. cur.expect_len2);
+        //     last.expect_len2=self.expects2.len();
+        // }
+
+
+
+        // // self.expects2.extend(drained.map(|x|TempExpect2 { expect_type: x.expect_type, tokens_start: x.tokens_start }));
+        // // self.expects2.truncate(last.expect_len2);
+        // last.expect_len2=self.expects2.len();
 
     }
 
@@ -1749,10 +1814,15 @@ where
         let Some(last)=self.stk.last_mut() else {return;};
 
 
-                //
-        let drained_was_new=self.was_news.drain(last.was_new_len ..).next();
+        //
+        // // let drained_was_new=self.was_news.drain(last.was_new_len ..).next();
+        // self.was_news.truncate(last.was_new_len+1);
+        // let drained_was_new=if self.was_news.len()==last.was_new_len {self.was_news.pop()} else {None};
 
-        if let Some(drained_was_new)=drained_was_new {
+        let drained_was_new=self.was_news.get(last.was_new_len).cloned();
+        self.was_news.truncate(last.was_new_len);
+
+        if let Some(drained_was_new)= drained_was_new {
 
             // last.was_ind=self.wases.len();
             self.wases.truncate(last.was_ind); //remove prev WAS
@@ -1772,7 +1842,14 @@ where
             }
         } else if last.was_ind!=self.wases.len() { //for had/always
             // println!("=======---===");
-            self.wases.drain(last.was_ind..self.wases.len()-1);
+
+            //
+            // self.wases.drain(last.was_ind..self.wases.len()-1);
+            let x=self.wases.pop().unwrap();
+            self.wases.truncate(last.was_ind);
+            self.wases.push(x);
+
+            //
             if self.debug {
                 println!("----- was 2");
             }
@@ -1783,6 +1860,7 @@ where
                 println!("----- was 3");
             }
         }
+        // self.was_news.truncate(last.was_new_len);
 
     }
 
@@ -1817,9 +1895,10 @@ where
 
         if last.stow_len!=0 {
             //
-            let mut drained_hist_news=self.hist_news.drain(last.stow_new_len ..)
-                // .collect::<Vec<_>>()
-                ;
+            // let mut drained_hist_news=self.hist_news.drain(last.stow_new_len ..);
+            let mut drained_hist_news=self.hist_news[last.stow_new_len ..].iter();
+
+
 
             //
             // if self.debug && !drained_hist_news.is_empty() {
@@ -1851,11 +1930,16 @@ where
                 // hist_stow.fail_val=Some(TempHistFail{grammar:drained_hist_new.grammar.clone()});
                 hist_stow.fail=Some(TempStowFail { grammar: drained_hist_new.grammar.clone() });
             }
+
+            // self.hist_news.truncate(last.stow_new_len);
         } else {
-            self.hist_news.truncate(last.stow_new_len);
+            // self.hist_news.truncate(last.stow_new_len);
         }
 
+        //
+        self.hist_news.truncate(last.stow_new_len);
 
+        //
         let stow_len=last.stow_len;
         self.hist_stows_truncate(stow_len);
 
@@ -1879,9 +1963,8 @@ where
         //add hist stows
         if last.stow_len!=0 { //cur.stow_len!=0 // && cur.stow_len==last.stow_len //that the hist_stows[ind] still exists
             //
-            let mut drained_hist_news=self.hist_news.drain(last.stow_new_len ..)
-                // .collect::<Vec<_>>()
-                ;
+            // let mut drained_hist_news=self.hist_news.drain(last.stow_new_len ..);
+            let mut drained_hist_news=self.hist_news[last.stow_new_len ..].iter();
             //
             let drained_hist_new2=drained_hist_news
                 // .iter()
@@ -1966,9 +2049,13 @@ where
             }
 
 
+            // self.hist_news.truncate(last.stow_new_len);
         } else {
-            self.hist_news.truncate(last.stow_new_len);
+            // self.hist_news.truncate(last.stow_new_len);
         }
+
+        //
+        self.hist_news.truncate(last.stow_new_len);
 
 
 
@@ -2828,7 +2915,8 @@ where
     fn get_non_term(&mut self,n:&'g str) -> Result<Rc<GrammarNode<'g>>,GrammarWalkError<'g>> {
         if let Some(g)=self.non_term_cache.get(n) {
             Ok(g.clone())
-        } else if let Some(g)=(self.grammar_func)(n) {
+        } else
+        if let Some(g)=(self.grammar_func)(n) {
             self.non_term_cache.insert(n, g.clone());
             Ok(g)
         } else {
