@@ -69,7 +69,7 @@ where
     // expected_news:Vec<TempExpectedNew<'g>>,
     // expecteds:Vec<TempExpected<'g>>,
 
-    expects:Vec<TempExpect<'t,'g>>,
+    expects1:Vec<TempExpect1<'t,'g>>,
 
     expect_token_start2: TokenIterContainer<'t>,
     expect_news2:Vec<TempExpectNew2<'t,'g>>,
@@ -130,7 +130,7 @@ where
             step_count:Default::default(),
 
             // expected_loc:Loc::zero(),
-            expects:Default::default(),
+            expects1:Default::default(),
 
             expect_token_start2:top_primitives,
             expect_news2:Default::default(),
@@ -222,8 +222,8 @@ where
 
 
 
-            expect_ind:None,
-            expect_len:0,
+            expect_ind1:None,
+            expect_len1:0,
 
             expect_new_len2:0,
             expect_len2:0,
@@ -282,8 +282,8 @@ where
             // hist_prevs_ind: 0,
             // hist_prevs_len: 0,
 
-            expect_ind:None,
-            expect_len:0,
+            expect_ind1:None,
+            expect_len1:0,
 
             expect_new_len2:0,
             expect_len2:0,
@@ -347,8 +347,8 @@ where
                 // hist_prevs_ind: 0,
                 // hist_prevs_len: 0,
 
-                expect_ind:None,
-                expect_len:0,
+                expect_ind1:None,
+                expect_len1:0,
 
                 expect_new_len2:0,
                 expect_len2:0,
@@ -400,7 +400,7 @@ where
         self.step_count=0;
 
         //
-        self.expects.clear();
+        self.expects1.clear();
 
         self.expect_token_start2=self.top_tokens;
         self.expect_news2.clear();
@@ -436,8 +436,8 @@ where
 
             stow_len: cur.stow_len,
 
-            expect_ind:cur.expect_ind,
-            expect_len:cur.expect_len,
+            expect_ind1:cur.expect_ind1,
+            expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -491,8 +491,8 @@ where
             // hist_prevs_ind: cur.hist_prevs_ind,
             // hist_prevs_len: cur.hist_prevs_len,
 
-            expect_ind:cur.expect_ind,
-            expect_len:cur.expect_len,
+            expect_ind1:cur.expect_ind1,
+            expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -541,7 +541,7 @@ where
             self.was_on_success(false); //before hist
             self.hist_on_success(&cur,false,);
             self.expect_on_success2(&cur);
-            self.expect_on_success();
+            self.expect_on_success1();
         } else {
             // self.stk.truncate(cur.fail_len);
             self.work_on_fail(&cur);
@@ -556,7 +556,7 @@ where
 
             // // self.submit_expected_news(&cur);
             self.expect_on_fail2(&cur);
-            self.expect_on_fail();
+            self.expect_on_fail1();
         }
     }
 
@@ -565,7 +565,7 @@ where
 
         //
         // let expected_news_len=self.add_expected_new(&cur);
-        let (expect_ind,expect_len)=self.add_expect(&cur);
+        let (expect_ind1,expect_len1)=self.add_expect1(&cur);
         // let stow_new_len=self.hist_news_add(&cur);
 
         let expect_new_len2=self.add_expect_new2(&cur);
@@ -614,8 +614,8 @@ where
             // // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            expect_ind,
-            expect_len,
+            expect_ind1,
+            expect_len1,
 
 
 
@@ -686,8 +686,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            expect_ind:cur.expect_ind,
-            expect_len:cur.expect_len,
+            expect_ind1:cur.expect_ind1,
+            expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -758,8 +758,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            expect_ind:cur.expect_ind,
-            expect_len:cur.expect_len,
+            expect_ind1:cur.expect_ind1,
+            expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -821,8 +821,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            expect_ind:cur.expect_ind,
-            expect_len:cur.expect_len,
+            expect_ind1:cur.expect_ind1,
+            expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -885,8 +885,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            expect_ind:cur.expect_ind,
-            expect_len:cur.expect_len,
+            expect_ind1:cur.expect_ind1,
+            expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -964,8 +964,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            expect_ind:cur.expect_ind,
-            expect_len:cur.expect_len,
+            expect_ind1:cur.expect_ind1,
+            expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -1101,8 +1101,8 @@ where
                 stow_new_len:cur.stow_new_len,
                 stow_len: cur.stow_len,
 
-                expect_ind:cur.expect_ind,
-                expect_len:cur.expect_len,
+                expect_ind1:cur.expect_ind1,
+                expect_len1:cur.expect_len1,
 
                 expect_new_len2:cur.expect_new_len2,
                 expect_len2:cur.expect_len2,
@@ -1161,8 +1161,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            expect_ind:cur.expect_ind,
-            expect_len:cur.expect_len,
+            expect_ind1:cur.expect_ind1,
+            expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -1274,8 +1274,8 @@ where
                 // expected_news_len:cur.expected_news_len,
                 // expect_len:cur.expect_len,
 
-                expect_ind:cur.expect_ind,
-                expect_len:cur.expect_len,
+                expect_ind1:cur.expect_ind1,
+                expect_len1:cur.expect_len1,
 
                 expect_new_len2:cur.expect_new_len2,
                 expect_len2:cur.expect_len2,
@@ -1342,8 +1342,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            expect_ind:cur.expect_ind,
-            expect_len:cur.expect_len,
+            expect_ind1:cur.expect_ind1,
+            expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -1455,7 +1455,7 @@ where
         self.hist_on_fail();
         self.was_on_fail();
         self.expect_on_fail2(&cur);
-        self.expect_on_fail();
+        self.expect_on_fail1();
         self.groups_on_fail();
 
         //
@@ -1556,7 +1556,7 @@ where
         self.was_on_success(was_prim); //before hist
         self.hist_on_success(&cur,true,); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
         self.expect_on_success2(&cur);
-        self.expect_on_success();
+        self.expect_on_success1();
 
         //
         if self.debug {
@@ -1588,7 +1588,7 @@ where
                 self.hist_on_success(&cur,false);
 
                 self.expect_on_success2(&cur);
-                self.expect_on_success();
+                self.expect_on_success1();
 
                 //
                 // if self.debug {
@@ -1615,11 +1615,11 @@ where
                 // // self.submit_expected_news(&cur);
 
                 self.groups_on_fail();
-                let (_expected_ind,_expecteds_len)=self.add_expect(&cur);
+                let (_expected_ind,_expecteds_len)=self.add_expect1(&cur);
                 let _expect_new_len2=self.add_expect_new2(&cur);
 
                 self.expect_on_fail2(&cur);
-                self.expect_on_fail();
+                self.expect_on_fail1();
 
                 //
                 None
@@ -1742,16 +1742,16 @@ where
     }
 
 
-    fn add_expect(&mut self, cur:&Work<'t,'g>,) -> (Option<usize>,usize) {
+    fn add_expect1(&mut self, cur:&Work<'t,'g>,) -> (Option<usize>,usize) {
         // return (cur.expect_ind,cur.expect_len);
 
         //check if prim and parent pos is same as cur pos
         //
 
-        let parent_start=cur.expect_ind.map(|i|self.expects[i].tokens_start.inds().start) ;
+        let parent_start=cur.expect_ind1.map(|i|self.expects1[i].tokens_start.inds().start) ;
 
         if parent_start==Some(cur.tokens.inds().start) {
-            return (cur.expect_ind,cur.expect_len);
+            return (cur.expect_ind1,cur.expect_len1);
         }
 
         // if cur.expect_ind.is_some() && cur.grammar.is_primtive() { //(cur.grammar.is_prev() || )
@@ -1778,29 +1778,29 @@ where
         }
 
         //
-        let expect_ind=self.expects.len();
+        let expect_ind=self.expects1.len();
 
         //
-        self.expects.push(TempExpect {
+        self.expects1.push(TempExpect1 {
             expect_type: expected_type,
-            parent: cur.expect_ind,
+            parent: cur.expect_ind1,
             tokens_start: cur.tokens,
             // last:false,
         });
 
         //
-        (Some(expect_ind),self.expects.len())
+        (Some(expect_ind),self.expects1.len())
     }
 
 
-    fn expect_on_success(&mut self, ) {
+    fn expect_on_success1(&mut self, ) {
         let Some(last)=self.stk.last() else {return;}; //the func, not run on always... does now
-        self.expects.truncate(last.expect_len);
+        self.expects1.truncate(last.expect_len1);
     }
 
-    fn expect_on_fail(&mut self, ) {
+    fn expect_on_fail1(&mut self, ) {
         let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
-        last.expect_len=self.expects.len();
+        last.expect_len1=self.expects1.len();
     }
 
 
@@ -2319,7 +2319,7 @@ where
         //     println!("t {t:?} :: {} to {}",t.start_loc(),t.end_loc());
         // }
 
-        let out_loc=if self.expects.is_empty() {
+        let out_loc=if self.expects1.is_empty() {
             self.tokens_remaining.loc()
         } else {
             self.expected_tokens_remaining.loc()
@@ -2337,9 +2337,9 @@ where
         //
         let max_token_start_ind=self.expected_tokens_remaining.inds().start;
 
-        let parents= self.expects.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
+        let parents= self.expects1.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
 
-        let expecteds=self.expects.iter().enumerate().rev().filter_map(|(i,x)|(
+        let expecteds=self.expects1.iter().enumerate().rev().filter_map(|(i,x)|(
             x.tokens_start.inds().start == max_token_start_ind &&
             !parents.contains(&i)
         ).then(||(x.expect_type.clone(),x.clone()))).collect::<BTreeMap<_,_>>();
@@ -2501,7 +2501,7 @@ where
         if result.is_err() {
             if self.debug {
                 println!("expects:");
-                for (i,x) in self.expects.iter().enumerate() {
+                for (i,x) in self.expects1.iter().enumerate() {
                     // println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
 
                     println!("    e{i}:p{}:t{} {:?} :: {:?}",
@@ -2513,7 +2513,7 @@ where
 
                 }
             }
-            let max_token = self.expects.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
+            let max_token = self.expects1.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
 
 
             self.expected_tokens_remaining=max_token;
@@ -2583,7 +2583,7 @@ where
                     // hist_prevs_ind,
                     // hist_prevs_len,
                     // expected_news_len,expect_len,
-                    expect_ind,expect_len,
+                    expect_ind1,expect_len1,
                     expect_new_len2,expect_len2,
                     // was_start_ind,was_ind,was_len,
                     was_new_len,was_ind,
@@ -2673,10 +2673,10 @@ where
 
                 //
                 if true {
-                    println!("        expect_ind={expect_ind:?}, expect_len={expect_len}, expecteds.len={}",self.expects.len());
+                    println!("        expect_ind1={expect_ind1:?}, expect_len1={expect_len1}, expecteds1.len={}",self.expects1.len());
 
-                     println!("        expecteds=[{}]",
-                        self.expects.iter().enumerate()
+                     println!("        expecteds1=[{}]",
+                        self.expects1.iter().enumerate()
                             .map(|(i,x)|format!("e{i}:p{}:t{}:{:?}",
                                 x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
                                 x.tokens_start.inds().start,
@@ -2685,9 +2685,9 @@ where
                             .collect::<Vec<_>>().join(", "),
                     );
                 } else if false {
-                    println!("        expecteds: ind={expect_ind:?}, len={expect_len} ({})",self.expects.len());
+                    println!("        expecteds1: ind={expect_ind1:?}, len={expect_len1} ({})",self.expects1.len());
 
-                    for (i,x) in self.expects.iter().enumerate() {
+                    for (i,x) in self.expects1.iter().enumerate() {
                         println!("            e{i}:p{}:t{}: {:?}",
                             x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
                             x.tokens_start.inds().start,

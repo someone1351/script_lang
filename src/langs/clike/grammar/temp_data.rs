@@ -49,7 +49,7 @@ pub struct TempExpect2<'t,'g> {
 }
 
 #[derive(Clone, Debug, )]
-pub struct TempExpect<'t,'g> {
+pub struct TempExpect1<'t,'g> {
     pub expect_type:TempExpectType<'g>,
     pub parent:Option<usize>,
     pub tokens_start:TokenIterContainer<'t>,
@@ -154,8 +154,8 @@ pub struct Work<'t,'g> {
     pub stow_new_len:usize,
     pub stow_len:usize,
 
-    pub expect_ind:Option<usize>,
-    pub expect_len:usize,
+    pub expect_ind1:Option<usize>,
+    pub expect_len1:usize,
 
     pub expect_new_len2:usize,
     pub expect_len2:usize,
