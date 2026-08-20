@@ -1718,14 +1718,17 @@ where
                 if let Some(last_token_ind)= self.expects2.get(drained.expect_len).map(|x|x.tokens_start.inds().start) {
                     if drained.tokens_start.inds().start== last_token_ind { //replace
                         self.expects2.truncate(drained.expect_len);
-                        self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
+
+                        if drained.tokens_start.inds().start >= self.expect_token_start2.inds().start {
+                            self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
+                        }
                     }
-                } else {
+                } else if drained.tokens_start.inds().start >= self.expect_token_start2.inds().start {
                     self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
                 }
-            } else {
-                self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
-            }
+            } else if drained.tokens_start.inds().start >= self.expect_token_start2.inds().start {
+                    self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
+                }
 
             if drained.tokens_start.inds().start > self.expect_token_start2.inds().start {
                 self.expect_token_start2=drained.tokens_start;
