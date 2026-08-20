@@ -1664,13 +1664,27 @@ where
     }
 
     fn expect_on_success2(&mut self, cur:&Work<'t,'g>,) {
-        let Some(last)=self.stk.last() else {return;}; //the func, not run on always... does now
+        let Some(last)=self.stk.last_mut() else {return;}; //the func, not run on always... does now
 
 
         // let drained=self.expect_news2.drain(last.expect_new_len2 ..).collect::<Vec<_>>();
 
         self.expect_news2.truncate(last.expect_new_len2);
-        self.expects2.truncate(last.expect_len2);
+        // self.expects2.truncate(last.expect_len2);
+
+        //
+        let drained_expects=self.expects2.drain(last.expect_len2 ..)
+            // .filter(|x|x.tokens_start.inds().start>=cur.tokens.inds().start)
+            .filter(|x|x.tokens_start.inds().start==self.expect_token_start2.inds().start)
+            .collect::<Vec<_>>();
+
+        println!("----- drained expects2 [{}]",drained_expects.iter().map(|x|format!("t{}:{:?}",x.tokens_start.inds().start,x.expect_type,)).collect::<Vec<_>>().join(", "));
+        println!("----- expects2 [{}]",self.expects2.iter().map(|x|format!("t{}:{:?}",x.tokens_start.inds().start,x.expect_type,)).collect::<Vec<_>>().join(", "));
+        // drained_expects.retain(|x|x.tokens_start.inds().start>=cur.tokens.inds().start); //use >= or just == ?
+
+        self.expects2.extend(drained_expects);
+        last.expect_len2=self.expects2.len();
+
     }
 
     fn expect_on_fail2(&mut self, cur:&Work<'t,'g>,) {
@@ -1702,7 +1716,7 @@ where
         if let Some(drained)=drained {
             if let TempExpectType::Expect(..)=&drained.expect_type {
                 if let Some(last_token_ind)= self.expects2.get(drained.expect_len).map(|x|x.tokens_start.inds().start) {
-                    if drained.tokens_start.inds().start== last_token_ind {
+                    if drained.tokens_start.inds().start== last_token_ind { //replace
                         self.expects2.truncate(drained.expect_len);
                         self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
                     }
@@ -1711,6 +1725,11 @@ where
                 }
             } else {
                 self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
+            }
+
+            if drained.tokens_start.inds().start > self.expect_token_start2.inds().start {
+                self.expect_token_start2=drained.tokens_start;
+
             }
         }
 
