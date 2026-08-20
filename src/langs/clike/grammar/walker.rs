@@ -59,7 +59,7 @@ where
 
     top_tokens:TokenIterContainer<'t>,
     tokens_remaining: TokenIterContainer<'t>,
-    expected_tokens_remaining: TokenIterContainer<'t>,
+    expected_tokens_remaining1: TokenIterContainer<'t>,
     grammar_func:G,
     stk: Vec<Work<'t,'g>>,
     step_count:usize,
@@ -68,6 +68,9 @@ where
 
     // expected_news:Vec<TempExpectedNew<'g>>,
     // expecteds:Vec<TempExpected<'g>>,
+
+    use_expect1:bool,
+    use_expect2:bool,
 
     expects1:Vec<TempExpect1<'t,'g>>,
 
@@ -129,7 +132,11 @@ where
             stk:Default::default(),
             step_count:Default::default(),
 
+            use_expect1:true,
+            use_expect2:true,
+
             // expected_loc:Loc::zero(),
+            expected_tokens_remaining1:top_primitives.clone(),
             expects1:Default::default(),
 
             expect_token_start2:top_primitives,
@@ -138,7 +145,6 @@ where
 
             grammar_func,
             tokens_remaining:top_primitives.clone(),
-            expected_tokens_remaining:top_primitives.clone(),
             top_tokens: top_primitives,
             debug:false,
             // non_term_recursive_check:true,
@@ -179,7 +185,7 @@ where
 
         //
         self.tokens_remaining=self.top_tokens;
-        self.expected_tokens_remaining=self.top_tokens;
+        self.expected_tokens_remaining1=self.top_tokens;
 
         //
         self.stk.push(Work{
@@ -1636,6 +1642,8 @@ where
     }
 
     fn add_expect_new2(&mut self, cur:&Work<'t,'g>,) -> usize {
+        if !self.use_expect2 {return cur.expect_new_len2;}
+
         // if cur.grammar.is_expect() && self.expect_news2.last().map(|x|x.expect_type.is_expect()).unwrap_or_default() {
 
         // }
@@ -1664,6 +1672,8 @@ where
     }
 
     fn expect_on_success2(&mut self, cur:&Work<'t,'g>,) {
+        if !self.use_expect2 {return;}
+
         let Some(last)=self.stk.last_mut() else {return;}; //the func, not run on always... does now
 
 
@@ -1688,6 +1698,8 @@ where
     }
 
     fn expect_on_fail2(&mut self, cur:&Work<'t,'g>,) {
+        if !self.use_expect2 {return;}
+
         let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
 
         // let draineds=self.expect_news2.drain(last.expect_new_len2 ..).collect::<Vec<_>>();
@@ -1743,6 +1755,8 @@ where
 
 
     fn add_expect1(&mut self, cur:&Work<'t,'g>,) -> (Option<usize>,usize) {
+        if !self.use_expect1 {return (cur.expect_ind1,cur.expect_len1);}
+
         // return (cur.expect_ind,cur.expect_len);
 
         //check if prim and parent pos is same as cur pos
@@ -1794,11 +1808,15 @@ where
 
 
     fn expect_on_success1(&mut self, ) {
+        if !self.use_expect1 {return;}
+
         let Some(last)=self.stk.last() else {return;}; //the func, not run on always... does now
         self.expects1.truncate(last.expect_len1);
     }
 
     fn expect_on_fail1(&mut self, ) {
+        if !self.use_expect1 {return;}
+
         let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
         last.expect_len1=self.expects1.len();
     }
@@ -2322,7 +2340,7 @@ where
         let out_loc=if self.expects1.is_empty() {
             self.tokens_remaining.loc()
         } else {
-            self.expected_tokens_remaining.loc()
+            self.expected_tokens_remaining1.loc()
         };
 
         // println!("l3 {out_loc:?}");
@@ -2333,6 +2351,7 @@ where
 
     //
     pub fn expecteds_string(&self) -> String {
+        if !self.use_expect1 {return String::new();}
 
         //
         let max_token_start_ind=self.expected_tokens_remaining.inds().start;
