@@ -1700,7 +1700,6 @@ where
 
         //
         if let Some(drained)=drained {
-
             if let TempExpectType::Expect(..)=&drained.expect_type {
                 if let Some(last_token_ind)= self.expects2.get(drained.expect_len).map(|x|x.tokens_start.inds().start) {
                     if drained.tokens_start.inds().start== last_token_ind {
@@ -1713,38 +1712,10 @@ where
             } else {
                 self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
             }
-
-            last.expect_len2=self.expects2.len();
-
-
-
-            // let last_token_ind= self.expects2.get(last.expect_len2).map(|x|x.tokens_start.inds().start);
-
-            // if let Some(last_token_ind)=last_token_ind {
-            //     if drained.tokens_start.inds().start >= last_token_ind {
-            //         self.expects2.truncate(last.expect_len2);
-            //         self.expects2.push(TempExpect2 {
-            //             expect_type: drained.expect_type,
-            //             tokens_start: drained.tokens_start,
-            //         });
-            //     }
-            // }
         }
 
-        // if last.expect_len2!=cur.expect_len2 &&
-        //     self.expects2.get(last.expect_len2).map(|x|x.tokens_start.inds().start)
-        //     != self.expects2.get(cur.expect_len2).map(|x|x.tokens_start.inds().start)
-
-        // {
-        //     self.expects2.drain(last.expect_len2 .. cur.expect_len2);
-        //     last.expect_len2=self.expects2.len();
-        // }
-
-
-
-        // // self.expects2.extend(drained.map(|x|TempExpect2 { expect_type: x.expect_type, tokens_start: x.tokens_start }));
-        // // self.expects2.truncate(last.expect_len2);
-        // last.expect_len2=self.expects2.len();
+        //
+        last.expect_len2=self.expects2.len();
 
     }
 
