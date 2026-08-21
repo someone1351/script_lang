@@ -368,7 +368,7 @@ impl Compiler {
 
             match e {
                 GrammarWalkError::FailedParse => {
-                    return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expecteds_string())});
+                    return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expects_string())});
                 }
                 // GrammarWalkError::Unfinished => todo!(),
                 // GrammarWalkError::RecursiveNonTerm(_) => todo!(),

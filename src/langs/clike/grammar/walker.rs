@@ -57,8 +57,10 @@ where
     // // prev_non_term_only:bool,
     // // stow_non_term_only:bool,
 
+    work_error_len:usize,
     top_tokens:TokenIterContainer<'t>,
     tokens_remaining: TokenIterContainer<'t>,
+    tokens_furthest: TokenIterContainer<'t>,
     expected_tokens_remaining1: TokenIterContainer<'t>,
     grammar_func:G,
     stk: Vec<Work<'t,'g>>,
@@ -77,6 +79,7 @@ where
     expect_token_start2: TokenIterContainer<'t>,
     expect_news2:Vec<TempExpectNew2<'t,'g>>,
     expects2:Vec<TempExpect2<'t,'g>>,
+    expects_temp2:Vec<TempExpect2<'t,'g>>,
 
     debug:bool,
     // non_term_recursive_check:bool,
@@ -123,6 +126,7 @@ where
 
     pub fn new(top_primitives:TokenIterContainer<'t>, grammar_func:G,) -> Self {
         Self {
+            work_error_len:0,
             // always:Rc::new(GrammarNode::Always),
             non_term_cache:Default::default(),
             // // prev_non_term_only:true,
@@ -142,9 +146,12 @@ where
             expect_token_start2:top_primitives,
             expect_news2:Default::default(),
             expects2:Default::default(),
+            expects_temp2:Default::default(),
 
             grammar_func,
             tokens_remaining:top_primitives.clone(),
+
+            tokens_furthest:top_primitives.clone(),
             top_tokens: top_primitives,
             debug:false,
             // non_term_recursive_check:true,
@@ -185,6 +192,7 @@ where
 
         //
         self.tokens_remaining=self.top_tokens;
+        self.tokens_furthest=self.top_tokens;
         self.expected_tokens_remaining1=self.top_tokens;
 
         //
@@ -245,6 +253,9 @@ where
             was_ind:0,
 
         });
+
+        //
+        self.work_error_len=self.stk.len();
 
         //
         let fail_len=self.stk.len();
@@ -411,6 +422,7 @@ where
         self.expect_token_start2=self.top_tokens;
         self.expect_news2.clear();
         self.expects2.clear();
+        // self.expects_temp2.clear(); //not needed
 
         Ok(())
 
@@ -1004,6 +1016,11 @@ where
         // }
 
         //
+        self.expect_on_fail2(&cur);
+        self.expect_on_fail1();
+
+        self.expect_on_error2(&cur);
+        self.expect_on_error1(&cur);
         self.update_tokens(&cur,false); //could be true, but would do nothing
 
         //
@@ -1015,7 +1032,7 @@ where
     }
 
     fn grammar_and(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::And(gs, stow_first, error_ind)=cur.grammar.as_ref() else{panic!("");};
+        let GrammarNode::And(gs,  error_ind)=cur.grammar.as_ref() else{panic!("");};
         //
 
         if gs.is_empty() {return;}
@@ -1064,8 +1081,15 @@ where
         //         stow_new_len:cur.stow_new_len,
         //         stow_len: cur.stow_len,
 
-        //         expect_ind:cur.expect_ind,
-        //         expect_len:cur.expect_len,
+        //         // expect_ind:cur.expect_ind,
+        //         // expect_len:cur.expect_len,
+
+        //         expect_ind1:cur.expect_ind1,
+        //         expect_len1:cur.expect_len1,
+
+        //         expect_new_len2:cur.expect_new_len2,
+        //         expect_len2:cur.expect_len2,
+
 
         //         was_new_len:cur.was_new_len,
         //         was_ind:cur.was_ind,
@@ -1075,6 +1099,8 @@ where
         // } else {
         //     cur.work_fail_len
         // };
+
+        // let work_fail_len= if *error_ind!=0 && cur.grammar_ind>=*error_ind {self.work_error_len}else{cur.work_fail_len};
 
         //
 
@@ -1128,7 +1154,8 @@ where
             grammar: head,
             // grammar_ind:0,
             work_success_len: success_len,
-            work_fail_len: cur.work_fail_len,
+            // work_fail_len: cur.work_fail_len,
+            work_fail_len : if *error_ind!=0 && cur.grammar_ind>=*error_ind {self.work_error_len}else{cur.work_fail_len},
             tokens: cur.tokens,
             group_ind: cur.group_ind,
             group_len: cur.group_len,
@@ -1142,7 +1169,7 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
-            stow:if *stow_first {true} else {cur.stow},
+            stow:cur.stow, //if *stow_first {true} else {cur.stow},
             // or_id:cur.or_id,
             // and_first:true,
 
@@ -1644,6 +1671,12 @@ where
     fn add_expect_new2(&mut self, cur:&Work<'t,'g>,) -> usize {
         if !self.use_expect2 {return cur.expect_new_len2;}
 
+        //do it here or in on fail?
+        if self.expect_news2.last().map(|x|x.tokens_start.inds().start)==Some(cur.tokens.inds().start) {
+            return cur.expect_len2;
+        }
+
+        //
         // if cur.grammar.is_expect() && self.expect_news2.last().map(|x|x.expect_type.is_expect()).unwrap_or_default() {
 
         // }
@@ -1671,6 +1704,9 @@ where
         self.expect_news2.len()
     }
 
+    fn expect_on_error2(&mut self, cur:&Work<'t,'g>,) {
+        self.expects2.retain(|x|x.tokens_start.inds().start==self.expect_token_start2.inds().start);
+    }
     fn expect_on_success2(&mut self, cur:&Work<'t,'g>,) {
         if !self.use_expect2 {return;}
 
@@ -1683,16 +1719,28 @@ where
         // self.expects2.truncate(last.expect_len2);
 
         //
+        // let drained_expects=self.expects2.drain(last.expect_len2 ..)
+        //     // .filter(|x|x.tokens_start.inds().start>=cur.tokens.inds().start)
+        //     .filter(|x|x.tokens_start.inds().start==self.expect_token_start2.inds().start)
+        //     .collect::<Vec<_>>();
+
+        // println!("----- drained expects2 [{}]",drained_expects.iter().map(|x|format!("t{}:{:?}",x.tokens_start.inds().start,x.expect_type,)).collect::<Vec<_>>().join(", "));
+        // println!("----- expects2 [{}]",self.expects2.iter().map(|x|format!("t{}:{:?}",x.tokens_start.inds().start,x.expect_type,)).collect::<Vec<_>>().join(", "));
+        // // drained_expects.retain(|x|x.tokens_start.inds().start>=cur.tokens.inds().start); //use >= or just == ?
+
+                // self.expect_token_start2=self.expect_token_start2.max(cur.tokens);
+
+
+        //
         let drained_expects=self.expects2.drain(last.expect_len2 ..)
-            // .filter(|x|x.tokens_start.inds().start>=cur.tokens.inds().start)
             .filter(|x|x.tokens_start.inds().start==self.expect_token_start2.inds().start)
-            .collect::<Vec<_>>();
+            ;
 
-        println!("----- drained expects2 [{}]",drained_expects.iter().map(|x|format!("t{}:{:?}",x.tokens_start.inds().start,x.expect_type,)).collect::<Vec<_>>().join(", "));
-        println!("----- expects2 [{}]",self.expects2.iter().map(|x|format!("t{}:{:?}",x.tokens_start.inds().start,x.expect_type,)).collect::<Vec<_>>().join(", "));
-        // drained_expects.retain(|x|x.tokens_start.inds().start>=cur.tokens.inds().start); //use >= or just == ?
+        //
+        self.expects_temp2.extend(drained_expects);
+        self.expects2.extend(self.expects_temp2.drain(0..));
 
-        self.expects2.extend(drained_expects);
+        //
         last.expect_len2=self.expects2.len();
 
     }
@@ -1700,7 +1748,7 @@ where
     fn expect_on_fail2(&mut self, cur:&Work<'t,'g>,) {
         if !self.use_expect2 {return;}
 
-        let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
+        let Some(last)=self.stk.last_mut() else {return;}; //the func, not run on always
 
         // let draineds=self.expect_news2.drain(last.expect_new_len2 ..).collect::<Vec<_>>();
 
@@ -1735,16 +1783,19 @@ where
                             self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
                         }
                     }
-                } else if drained.tokens_start.inds().start >= self.expect_token_start2.inds().start {
+                } else {
+                    if drained.tokens_start.inds().start >= self.expect_token_start2.inds().start {
+                        self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
+                    }
+                }
+            } else {
+                if drained.tokens_start.inds().start >= self.expect_token_start2.inds().start {
                     self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
                 }
-            } else if drained.tokens_start.inds().start >= self.expect_token_start2.inds().start {
-                    self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start });
-                }
+            }
 
             if drained.tokens_start.inds().start > self.expect_token_start2.inds().start {
                 self.expect_token_start2=drained.tokens_start;
-
             }
         }
 
@@ -1807,6 +1858,27 @@ where
     }
 
 
+    fn expect_on_error1(&mut self, cur:&Work<'t,'g>,) {
+        if !self.use_expect1 {return;}
+
+        //
+        let max_token = self.expects1.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
+
+        self.expected_tokens_remaining1=max_token;
+
+        //
+        let max_token_start_ind=self.expected_tokens_remaining1.inds().start;
+
+        let parents= self.expects1.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
+
+        let expecteds=self.expects1.iter().enumerate().rev().filter_map(|(i,x)|(
+            x.tokens_start.inds().start == max_token_start_ind &&
+            !parents.contains(&i)
+        ).then(||(x.expect_type.clone(),x.clone()))).collect::<BTreeMap<_,_>>();
+
+        self.expects1=expecteds.iter().map(|(_k,v)|v.clone()).collect::<Vec<_>>();
+    }
+
     fn expect_on_success1(&mut self, ) {
         if !self.use_expect1 {return;}
 
@@ -1817,7 +1889,7 @@ where
     fn expect_on_fail1(&mut self, ) {
         if !self.use_expect1 {return;}
 
-        let Some(last)=self.stk.last_mut() else {panic!("");}; //the func, not run on always
+        let Some(last)=self.stk.last_mut() else {return;}; //the func, not run on always
         last.expect_len1=self.expects1.len();
     }
 
@@ -2317,6 +2389,10 @@ where
             let Some(last)=self.stk.last_mut() else {panic!("");};
             last.tokens=cur.tokens;
         }
+
+        if cur.tokens.inds().start > self.tokens_furthest.inds().start {
+            self.tokens_furthest=cur.tokens;
+        }
     }
 
     fn handle_exit_last_many(&mut self,cur:&Work<'t,'g>) { //if not parsing anything, exit the many
@@ -2337,36 +2413,78 @@ where
         //     println!("t {t:?} :: {} to {}",t.start_loc(),t.end_loc());
         // }
 
-        let out_loc=if self.expects1.is_empty() {
-            self.tokens_remaining.loc()
+        //
+        if self.use_expect2 {
+            if self.expects2.is_empty() {
+                self.tokens_remaining.loc()
+            } else {
+                self.expect_token_start2.loc()
+                // self.tokens_furthest.last_loc()
+                // self.tokens_furthest.first().map(|x|x.end_loc()).unwrap_or(self.tokens_furthest.loc())
+                // self.expect_token_start2.last_loc()
+            }
+        } else if self.use_expect1 {
+            if self.expects1.is_empty() {
+                self.tokens_remaining.loc()
+            } else {
+                self.expected_tokens_remaining1.loc()
+            }
         } else {
-            self.expected_tokens_remaining1.loc()
-        };
+            self.tokens_remaining.loc()
+        }
 
-        // println!("l3 {out_loc:?}");
+        // //
 
-        out_loc
+        // let out_loc=if self.expects1.is_empty() {
+        //     self.tokens_remaining.loc()
+        // } else {
+        //     if self.use_expect2 {
+        //         self.expect_token_start2.loc()
+        //     } else if self.use_expect1 {
+        //         self.expected_tokens_remaining1.loc()
+        //     } else {
+        //         self.tokens_remaining.loc()
+        //     }
+        // };
+
+        // // println!("l3 {out_loc:?}");
+
+        // out_loc
+    }
+
+    pub fn expects_string(&self) -> String {
+        if self.use_expect2 {
+            self.expecteds_string2()
+        } else if self.use_expect1 {
+            self.expecteds_string1()
+        } else {
+             String::new()
+        }
     }
 
 
-    //
-    pub fn expecteds_string(&self) -> String {
+    fn expecteds_string2(&self) -> String {
         if !self.use_expect1 {return String::new();}
 
         //
-        let max_token_start_ind=self.expected_tokens_remaining.inds().start;
+        self.expects2.iter().rev().map(|x|match &x.expect_type {
+            TempExpectType::Expect(n) => n,
+            TempExpectType::Int => "int",
+            TempExpectType::Float => "float",
+            TempExpectType::String => "string",
+            TempExpectType::Identifier => "identifier",
+            TempExpectType::Symbol(s) => s,
+            TempExpectType::Keyword(s) => s,
+            TempExpectType::Eol => "eol",
+        }).collect::<Vec<_>>().join(", ")
+    }
 
-        let parents= self.expects1.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
-
-        let expecteds=self.expects1.iter().enumerate().rev().filter_map(|(i,x)|(
-            x.tokens_start.inds().start == max_token_start_ind &&
-            !parents.contains(&i)
-        ).then(||(x.expect_type.clone(),x.clone()))).collect::<BTreeMap<_,_>>();
-
-        let expecteds=expecteds.iter().map(|(_k,v)|v.clone()).collect::<Vec<_>>();
+    //
+    fn expecteds_string1(&self) -> String {
+        if !self.use_expect1 {return String::new();}
 
         //
-        expecteds.iter().rev().map(|x|match &x.expect_type {
+        self.expects1.iter().rev().map(|x|match &x.expect_type {
             TempExpectType::Expect(n) => n,
             TempExpectType::Int => "int",
             TempExpectType::Float => "float",
@@ -2517,7 +2635,7 @@ where
         }
 
         //
-        if result.is_err() {
+        if self.use_expect1 && result.is_err() {
             if self.debug {
                 println!("expects:");
                 for (i,x) in self.expects1.iter().enumerate() {
@@ -2532,10 +2650,8 @@ where
 
                 }
             }
-            let max_token = self.expects1.iter().map(|x|x.tokens_start).max_by(|x,y|x.inds().start.cmp(&y.inds().start)).unwrap_or(self.tokens_remaining);
 
 
-            self.expected_tokens_remaining=max_token;
         }
 
         //
@@ -2628,8 +2744,8 @@ where
 
                 //
                 let grammar=match grammar.as_ref() {
-                    GrammarNode::And(gs,stow_first, error_after ) => {
-                        Rc::new(GrammarNode::And(Box::from(&gs[*grammar_ind..]),*stow_first,*error_after))
+                    GrammarNode::And(gs, error_after ) => {
+                        Rc::new(GrammarNode::And(Box::from(&gs[*grammar_ind..]),*error_after))
                     }
                     GrammarNode::Or(gs, ) => {
                         Rc::new(GrammarNode::Or(Box::from(&gs[*grammar_ind..]),))
