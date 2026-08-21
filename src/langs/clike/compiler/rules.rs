@@ -325,7 +325,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 ].and().opt(),
                 NonTerm("rparen"),
             ].and().expect("closing bracket"),
-        ].and().group("params"),
+        ].and().group("params").expect("call"),
 
         "field" => [
             Symbol("."),
@@ -334,7 +334,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 Identifier.group("field_name"),
                 // Error,
             ].or().expect("field").was("field"),
-        ].and(),
+        ].and().expect("field"),
 
         "index" => [
             NonTerm("lsquare"),
@@ -344,7 +344,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                     NonTerm("rsquare"),
                 ].and().expect("closing square bracket"),
             ].and().expect("index").was("index")
-        ].and(),
+        ].and().expect("index"),
 
         "primitive" => [
             Int,
