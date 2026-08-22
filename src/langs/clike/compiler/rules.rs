@@ -430,4 +430,3 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         _ => {return None;}
     }))
 }
-

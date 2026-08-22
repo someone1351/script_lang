@@ -370,14 +370,16 @@ impl Compiler {
                 GrammarWalkError::FailedParse => {
                     let expecteds=walker.expects_string();
 
-                    // let error_type= if expecteds.is_empty() {
-                    //     CompileErrorType::ParserUnexpected
-                    // } else {
-                    //     CompileErrorType::ParserExpected(expecteds)
-                    // };
-                    let error_type=CompileErrorType::ParserExpected(expecteds);
+                    let error_type= if expecteds.is_empty() {
+                        CompileErrorType::ParserUnexpected
+                    } else {
+                        CompileErrorType::ParserExpected(expecteds)
+                    };
+                    // let error_type=CompileErrorType::ParserExpected(expecteds);
 
                     return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type});
+
+                    // return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expects_string())});
                 }
                 // GrammarWalkError::Unfinished => todo!(),
                 // GrammarWalkError::RecursiveNonTerm(_) => todo!(),

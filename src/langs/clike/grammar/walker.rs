@@ -30,6 +30,9 @@ NOTE
 ** like if expecting semicolon, should point to end of token it ws epxected after
 ** if unknown token eg no expects, then should point at
 
+NOTE
+* a parse might actually end up on a success, but fail to parse all the input
+** due to things in the grammar being optional
 
 */
 use super::error::*;
@@ -1047,8 +1050,8 @@ where
         self.expect_on_fail2(&cur);
         self.expect_on_fail1();
 
-        self.expect_on_error2(&cur);
-        self.expect_on_error1(&cur);
+        // self.expect_on_error2(&cur);
+        // self.expect_on_error1(&cur);
         self.update_tokens(&cur,false); //could be true, but would do nothing
 
         //
@@ -1749,7 +1752,8 @@ where
         self.expect_news2.len()
     }
 
-    fn expect_on_error2(&mut self, cur:&Work<'t,'g>,) {
+    fn expect_on_error2(&mut self, ) {
+        // println!("here---");
         self.expects2.retain(|x|x.tokens_start.inds().start==self.expect_token_start2.inds().start
            && if let TempExpectType::Expect("")=&x.expect_type {false} else {true}
         );
@@ -1910,7 +1914,7 @@ where
     }
 
 
-    fn expect_on_error1(&mut self, cur:&Work<'t,'g>,) {
+    fn expect_on_error1(&mut self,  ) {
         if !self.use_expect1 {return;}
 
         //
@@ -2468,15 +2472,27 @@ where
         //
         if self.use_expect2 {
             if self.expects2.is_empty() {
-                let x=self.expect_token_start2.first().unwrap().prevs().rev().find(|x|!x.is_eol()).map(|x|x.end_loc());
+                // println!("-- here1");
+                let mut t=self.tokens_remaining;
+                t.find(|x|!x.is_eol())
+                    .map(|x|x.start_loc())
+                    .unwrap_or(self.tokens_remaining.loc())
 
-                x.unwrap_or(self.tokens_remaining.loc())
                 // self.tokens_remaining.loc()
             } else {
+                // println!("-- here2");
+                self.expect_token_start2.first().ok()
+                    // .or_else(||self.tokens_remaining.first().ok())
+                    .and_then(|x|x.prevs().rev().find(|x|!x.is_eol()))
+                    .map(|x|x.end_loc())
+                    // .map(|x|x.start_loc())
+                    .unwrap_or(self.tokens_remaining.loc())
+
+
                 // let x=self.expect_token_start2.first().unwrap().prevs().rev().find(|x|!x.is_eol()).map(|x|x.end_loc());
 
                 // x.unwrap_or(self.expect_token_start2.loc())
-                self.expect_token_start2.loc()
+                // self.expect_token_start2.loc()
                 // self.tokens_furthest.last_loc()
                 // self.tokens_furthest.first().map(|x|x.end_loc()).unwrap_or(self.tokens_furthest.loc())
                 // self.expect_token_start2.last_loc()
@@ -2522,7 +2538,7 @@ where
 
 
     fn expecteds_string2(&self) -> String {
-        if !self.use_expect1 {return String::new();}
+        if !self.use_expect2 {return String::new();}
 
         //
         self.expects2.iter().rev().map(|x|match &x.expect_type {
@@ -2695,6 +2711,13 @@ where
             if self.debug {
                 println!("parsed ok");
             }
+        }
+
+        //
+        if result.is_err() {
+
+            self.expect_on_error2();
+            self.expect_on_error1();
         }
 
         //
