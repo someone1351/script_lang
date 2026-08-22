@@ -196,6 +196,18 @@ impl<'a> TokenContainer<'a> {
 
         Err(self.start_loc())
     }
+
+    pub fn prev(&self,) ->Option<Self> {
+        if self.token_ind==0 {
+            None
+        } else {
+            Some(Self{ parsed: self.parsed, token_ind: self.token_ind-1 })
+        }
+    }
+    pub fn prevs(&self,) ->TokenIterContainer<'a> {
+        TokenIterContainer{ start: 0, end: self.token_ind, last_loc: Loc::zero(), parsed: self.parsed }
+    }
+
 }
 
 

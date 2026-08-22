@@ -143,8 +143,8 @@ where
             stk:Default::default(),
             step_count:Default::default(),
 
-            use_expect1:true,
-            use_expect2:true,
+            use_expect1:false, //old implementation
+            use_expect2:true, //new implementation
 
             // expected_loc:Loc::zero(),
             expected_tokens_remaining1:top_primitives.clone(),
@@ -1750,7 +1750,9 @@ where
     }
 
     fn expect_on_error2(&mut self, cur:&Work<'t,'g>,) {
-        self.expects2.retain(|x|x.tokens_start.inds().start==self.expect_token_start2.inds().start);
+        self.expects2.retain(|x|x.tokens_start.inds().start==self.expect_token_start2.inds().start
+           && if let TempExpectType::Expect("")=&x.expect_type {false} else {true}
+        );
     }
     fn expect_on_success2(&mut self, cur:&Work<'t,'g>,) {
         if !self.use_expect2 {return;}
@@ -2466,8 +2468,14 @@ where
         //
         if self.use_expect2 {
             if self.expects2.is_empty() {
-                self.tokens_remaining.loc()
+                let x=self.expect_token_start2.first().unwrap().prevs().rev().find(|x|!x.is_eol()).map(|x|x.end_loc());
+
+                x.unwrap_or(self.tokens_remaining.loc())
+                // self.tokens_remaining.loc()
             } else {
+                // let x=self.expect_token_start2.first().unwrap().prevs().rev().find(|x|!x.is_eol()).map(|x|x.end_loc());
+
+                // x.unwrap_or(self.expect_token_start2.loc())
                 self.expect_token_start2.loc()
                 // self.tokens_furthest.last_loc()
                 // self.tokens_furthest.first().map(|x|x.end_loc()).unwrap_or(self.tokens_furthest.loc())
@@ -2527,7 +2535,9 @@ where
             TempExpectType::Symbol(s) => s,
             TempExpectType::Keyword(s) => s,
             TempExpectType::Eol => "eol",
-        }).filter(|x|!x.is_empty()).collect::<Vec<_>>().join(", ")
+        })
+        // .filter(|x|!x.is_empty())
+        .collect::<Vec<_>>().join(", ")
     }
 
     //
@@ -2544,7 +2554,9 @@ where
             TempExpectType::Symbol(s) => s,
             TempExpectType::Keyword(s) => s,
             TempExpectType::Eol => "eol",
-        }).filter(|x|!x.is_empty()).collect::<Vec<_>>().join(", ")
+        })
+        // .filter(|x|!x.is_empty())
+        .collect::<Vec<_>>().join(", ")
     }
 
     //

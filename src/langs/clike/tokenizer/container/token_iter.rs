@@ -13,6 +13,7 @@ pub struct TokenIterContainer<'a> {
     pub parsed :&'a Tokenized,
     //todo add filtered:bool, // and .filtered() method for filtering out eols during iteration
 
+    // pub prev:Option<usize>,
 }
 
 impl<'a> TokenIterContainer<'a> {
