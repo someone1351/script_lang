@@ -154,14 +154,13 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "format_params" => [
             NonTerm("lparen"),
             [
+                [
+                    [String.group("string"), NonTerm("expr"),].or(),
+                    [NonTerm("comma"), NonTerm("expr"),].and().many0(),
+                    NonTerm("comma").opt(),
+                ].and().opt(),
                 NonTerm("rparen"),
-            ].and(),
-            [
-                [String, NonTerm("expr"),].or(),
-                [NonTerm("comma"), NonTerm("expr"),].and().many0(),
-                NonTerm("comma").opt(),
-            ].and().opt(),
-
+            ].and().expect("closing bracket"),
         ].and(),
 
         "if" => [
@@ -374,7 +373,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "set_op" => [
             Symbol("=").group("eq").no_expect(),
-            [ NonTerm("set_sub_op"), Symbol("=").expect("set"), ].and(),
+            [ NonTerm("set_sub_op"), Symbol("=") //.expect("set")
+                , ].and(),
         ].or(),
 
         "set_sub_op" => [

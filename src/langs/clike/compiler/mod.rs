@@ -395,11 +395,11 @@ impl Compiler {
         println!("-----------------");
         let walk=walker.get_walk();
 
-        // println!("{}",walk.root());
+        println!("{}",walk.root());
 
         println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
 
-        return Ok(BuildT::new(Build::default()));
+        // return Ok(BuildT::new(Build::default()));
 
         //
         let mut builder = builder::Builder::new();
