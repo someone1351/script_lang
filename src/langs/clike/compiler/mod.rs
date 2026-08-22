@@ -354,7 +354,7 @@ impl Compiler {
 
         //
         let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
-        walker.set_debug(true);
+        // walker.set_debug(true);
 
         let start_time = std::time::Instant::now();
         let result=walker.run("start") ;
@@ -368,7 +368,15 @@ impl Compiler {
 
             match e {
                 GrammarWalkError::FailedParse => {
-                    return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expects_string())});
+                    let expecteds=walker.expects_string();
+
+                    let error_type= if expecteds.is_empty() {
+                        CompileErrorType::ParserUnexpected
+                    } else {
+                        CompileErrorType::ParserExpected(expecteds)
+                    };
+
+                    return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type});
                 }
                 // GrammarWalkError::Unfinished => todo!(),
                 // GrammarWalkError::RecursiveNonTerm(_) => todo!(),

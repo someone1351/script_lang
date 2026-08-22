@@ -13,6 +13,7 @@ pub enum GrammarNode<'g> {
 
     Group(Rc<GrammarNode<'g>>,&'g str,),
     Expect(Rc<GrammarNode<'g>>, &'g str,),
+    // NoExpect(Rc<GrammarNode<'g>>, ),
     Stow(Rc<GrammarNode<'g>>),
 
     Was(Rc<GrammarNode<'g>>, &'g str),
@@ -54,6 +55,10 @@ impl<'g> GrammarNode<'g> {
     }
     pub fn expect(self,name: &'g str,) -> GrammarNode<'g> {
         Self::Expect(self.into(),name)
+    }
+    pub fn no_expect(self,) -> GrammarNode<'g> {
+        // Self::NoExpect(self.into(),)
+        self.expect("")
     }
     pub fn stow(self) -> GrammarNode<'g> {
         Self::Stow(self.into())
@@ -253,7 +258,8 @@ impl<'g> Debug for GrammarNode<'g> {
             },
             Self::NonTerm(arg0) => f.debug_tuple("NonTerm").field(arg0).finish(),
             Self::Group(arg0, arg1) => f.debug_tuple("Group").field(arg0).field(arg1).finish(),
-            Self::Expect(arg0, arg1) => f.debug_tuple("Expected").field(arg0).field(arg1).finish(),
+            Self::Expect(arg0, arg1) => f.debug_tuple("Expect").field(arg0).field(arg1).finish(),
+            // Self::NoExpect(arg0, ) => f.debug_tuple("NoExpect").field(arg0).finish(),
             Self::Stow(arg0) => f.debug_tuple("Stow").field(arg0).finish(),
 
             // Self::Prev(arg0) => f.debug_tuple("Prev").field(arg0).finish(),

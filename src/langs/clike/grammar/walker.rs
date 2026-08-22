@@ -24,6 +24,13 @@ NOTE
                 groupB(and(X hadB)),
                 groupC(and(X hadC)),
             )
+
+NOTE
+* need to point to errors at end of token, at token or maybe before?
+** like if expecting semicolon, should point to end of token it ws epxected after
+** if unknown token eg no expects, then should point at
+
+
 */
 use super::error::*;
 use super::temp_data::*;
@@ -235,6 +242,7 @@ where
             // hist_prevs_len: 0,
 
 
+            in_expect:false,
 
             expect_ind1:None,
             expect_len1:0,
@@ -298,6 +306,8 @@ where
 
             // hist_prevs_ind: 0,
             // hist_prevs_len: 0,
+
+            in_expect:false,
 
             expect_ind1:None,
             expect_len1:0,
@@ -363,6 +373,8 @@ where
 
                 // hist_prevs_ind: 0,
                 // hist_prevs_len: 0,
+
+                in_expect:false,
 
                 expect_ind1:None,
                 expect_len1:0,
@@ -454,6 +466,8 @@ where
 
             stow_len: cur.stow_len,
 
+            in_expect:cur.in_expect,
+
             expect_ind1:cur.expect_ind1,
             expect_len1:cur.expect_len1,
 
@@ -508,6 +522,8 @@ where
 
             // hist_prevs_ind: cur.hist_prevs_ind,
             // hist_prevs_len: cur.hist_prevs_len,
+
+            in_expect:cur.in_expect,
 
             expect_ind1:cur.expect_ind1,
             expect_len1:cur.expect_len1,
@@ -632,6 +648,8 @@ where
             // // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
+            in_expect:true,
+
             expect_ind1,
             expect_len1,
 
@@ -703,6 +721,8 @@ where
 
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
+
+            in_expect:cur.in_expect,
 
             expect_ind1:cur.expect_ind1,
             expect_len1:cur.expect_len1,
@@ -776,6 +796,8 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
+            in_expect:cur.in_expect,
+
             expect_ind1:cur.expect_ind1,
             expect_len1:cur.expect_len1,
 
@@ -838,6 +860,8 @@ where
 
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
+
+            in_expect:cur.in_expect,
 
             expect_ind1:cur.expect_ind1,
             expect_len1:cur.expect_len1,
@@ -902,6 +926,8 @@ where
 
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
+
+            in_expect:cur.in_expect,
 
             expect_ind1:cur.expect_ind1,
             expect_len1:cur.expect_len1,
@@ -981,6 +1007,8 @@ where
 
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
+
+            in_expect:cur.in_expect,
 
             expect_ind1:cur.expect_ind1,
             expect_len1:cur.expect_len1,
@@ -1133,6 +1161,8 @@ where
                 stow_new_len:cur.stow_new_len,
                 stow_len: cur.stow_len,
 
+                in_expect:cur.in_expect,
+
                 expect_ind1:cur.expect_ind1,
                 expect_len1:cur.expect_len1,
 
@@ -1193,6 +1223,8 @@ where
 
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
+
+            in_expect:cur.in_expect,
 
             expect_ind1:cur.expect_ind1,
             expect_len1:cur.expect_len1,
@@ -1307,6 +1339,8 @@ where
                 // expected_news_len:cur.expected_news_len,
                 // expect_len:cur.expect_len,
 
+                in_expect:cur.in_expect,
+
                 expect_ind1:cur.expect_ind1,
                 expect_len1:cur.expect_len1,
 
@@ -1374,6 +1408,8 @@ where
 
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
+
+            in_expect:cur.in_expect,
 
             expect_ind1:cur.expect_ind1,
             expect_len1:cur.expect_len1,
@@ -1671,10 +1707,19 @@ where
     fn add_expect_new2(&mut self, cur:&Work<'t,'g>,) -> usize {
         if !self.use_expect2 {return cur.expect_new_len2;}
 
+
+        //
+        // println!("----- isp={} e={}, cur.in_expect={}",cur.grammar.is_primtive(), self.expect_news2.is_empty(),cur.in_expect);
+        //don't add primitives if in expect
+        // if cur.grammar.is_primtive() && cur.in_expect {
+        //     // println!("")
+        //     return cur.expect_new_len2; //self.expect_news2.len()
+        // }
+
         //do it here or in on fail?
-        if self.expect_news2.last().map(|x|x.tokens_start.inds().start)==Some(cur.tokens.inds().start) {
-            return cur.expect_len2;
-        }
+        // if self.expect_news2.last().map(|x|x.tokens_start.inds().start)==Some(cur.tokens.inds().start) {
+        //     return cur.expect_new_len2; //self.expect_news2.len()
+        // }
 
         //
         // if cur.grammar.is_expect() && self.expect_news2.last().map(|x|x.expect_type.is_expect()).unwrap_or_default() {
@@ -1767,16 +1812,21 @@ where
         // self.expects2.extend(drained.map(|x|TempExpect2 { expect_type: x.expect_type, tokens_start: x.tokens_start }));
 
         //
-        let draineds=self.expect_news2.drain(last.expect_new_len2 ..);
+        let draineds=self.expect_news2.drain(last.expect_new_len2 ..); //here
 
         //first element with max token_ind
         let drained=draineds.rev().max_by(|x,y|x.tokens_start.inds().start.cmp(&y.tokens_start.inds().start));
 
         //
         if let Some(drained)=drained {
-            if let TempExpectType::Expect(..)=&drained.expect_type {
-                if let Some(last_token_ind)= self.expects2.get(drained.expect_len).map(|x|x.tokens_start.inds().start) {
-                    if drained.tokens_start.inds().start== last_token_ind { //replace
+            if let TempExpectType::Expect(_expect_name)=&drained.expect_type {
+                if let Some(last_token_ind)= self.expects2
+                    .get(drained.expect_len)
+                    .map(|x|x.tokens_start.inds().start)
+                { //has self.expect.last
+                    if //expect_name.is_empty() &&
+                        drained.tokens_start.inds().start== last_token_ind
+                    { //replace
                         self.expects2.truncate(drained.expect_len);
 
                         if drained.tokens_start.inds().start >= self.expect_token_start2.inds().start {
@@ -2468,6 +2518,7 @@ where
 
         //
         self.expects2.iter().rev().map(|x|match &x.expect_type {
+            // TempExpectType::NoExpect => "",
             TempExpectType::Expect(n) => n,
             TempExpectType::Int => "int",
             TempExpectType::Float => "float",
@@ -2476,7 +2527,7 @@ where
             TempExpectType::Symbol(s) => s,
             TempExpectType::Keyword(s) => s,
             TempExpectType::Eol => "eol",
-        }).collect::<Vec<_>>().join(", ")
+        }).filter(|x|!x.is_empty()).collect::<Vec<_>>().join(", ")
     }
 
     //
@@ -2493,7 +2544,7 @@ where
             TempExpectType::Symbol(s) => s,
             TempExpectType::Keyword(s) => s,
             TempExpectType::Eol => "eol",
-        }).collect::<Vec<_>>().join(", ")
+        }).filter(|x|!x.is_empty()).collect::<Vec<_>>().join(", ")
     }
 
     //
@@ -2718,6 +2769,7 @@ where
                     // hist_prevs_ind,
                     // hist_prevs_len,
                     // expected_news_len,expect_len,
+                    in_expect,
                     expect_ind1,expect_len1,
                     expect_new_len2,expect_len2,
                     // was_start_ind,was_ind,was_len,
@@ -2787,8 +2839,8 @@ where
                 //
                 if true {
                     println!("        expect2_new_len={expect_new_len2:?} ({}), expect_len2={expect_len2} ({})",self.expect_news2.len(),self.expects2.len(),);
-
-                     println!("        expect_news2=[{}]",
+                    println!("        in_expect={in_expect}");
+                    println!("        expect_news2=[{}]",
                         self.expect_news2.iter().enumerate()
                             .map(|(i,x)|format!("e{i}:t{}:{:?}",
                                 x.tokens_start.inds().start,

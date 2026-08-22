@@ -10,6 +10,7 @@ use super::super::tokenizer::TokenizerErrorType;
 pub enum CompileErrorType {
     Tokenizer(TokenizerErrorType),
     ParserExpected(String),
+    ParserUnexpected,
     Builder(BuilderErrorType),
     AstVar(ast::error::AstVarErrorType),
 }

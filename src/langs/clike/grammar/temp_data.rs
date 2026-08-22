@@ -15,6 +15,7 @@ use super::node::*;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TempExpectType<'g> {
+    // NoExpect,
     Expect(&'g str),
     Int,
     Float,
@@ -153,6 +154,8 @@ pub struct Work<'t,'g> {
 
     pub stow_new_len:usize,
     pub stow_len:usize,
+
+    pub in_expect:bool,
 
     pub expect_ind1:Option<usize>,
     pub expect_len1:usize,
