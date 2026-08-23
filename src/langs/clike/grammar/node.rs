@@ -14,7 +14,7 @@ pub enum GrammarNode<'g> {
     Group(Rc<GrammarNode<'g>>,&'g str,),
     Expect(Rc<GrammarNode<'g>>, &'g str,),
     // NoExpect(Rc<GrammarNode<'g>>, ),
-    Stow(Rc<GrammarNode<'g>>),
+    // Stow(Rc<GrammarNode<'g>>),
 
     Was(Rc<GrammarNode<'g>>, &'g str),
     // Had(Rc<GrammarNode<'g>>, &'g str),
@@ -60,9 +60,9 @@ impl<'g> GrammarNode<'g> {
         // Self::NoExpect(self.into(),)
         self.expect("")
     }
-    pub fn stow(self) -> GrammarNode<'g> {
-        Self::Stow(self.into())
-    }
+    // pub fn stow(self) -> GrammarNode<'g> {
+    //     Self::Stow(self.into())
+    // }
     // pub fn prev(self) -> GrammarNode<'g> {
     //     Self::Prev(self.into())
     // }
@@ -102,13 +102,13 @@ impl<'g> GrammarNode<'g> {
             false
         }
     }
-    pub fn is_stow(&self) -> bool {
-        if let Self::Stow(..)=self {
-            true
-        } else {
-            false
-        }
-    }
+    // pub fn is_stow(&self) -> bool {
+    //     if let Self::Stow(..)=self {
+    //         true
+    //     } else {
+    //         false
+    //     }
+    // }
     pub fn is_expect(&self) -> bool {
         if let GrammarNode::Expect(..)=self {
             true
@@ -260,7 +260,7 @@ impl<'g> Debug for GrammarNode<'g> {
             Self::Group(arg0, arg1) => f.debug_tuple("Group").field(arg0).field(arg1).finish(),
             Self::Expect(arg0, arg1) => f.debug_tuple("Expect").field(arg0).field(arg1).finish(),
             // Self::NoExpect(arg0, ) => f.debug_tuple("NoExpect").field(arg0).finish(),
-            Self::Stow(arg0) => f.debug_tuple("Stow").field(arg0).finish(),
+            // Self::Stow(arg0) => f.debug_tuple("Stow").field(arg0).finish(),
 
             // Self::Prev(arg0) => f.debug_tuple("Prev").field(arg0).finish(),
             Self::Was(arg0, arg1) => f.debug_tuple("Was").field(arg0).field(arg1).finish(),

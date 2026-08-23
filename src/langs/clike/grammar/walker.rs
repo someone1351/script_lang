@@ -443,44 +443,44 @@ where
 
     }
 
-    fn grammar_stow(&mut self,cur :Work<'t,'g>,) {
-        let GrammarNode::Stow(g, )=cur.grammar.as_ref() else{panic!("");};
+    // fn grammar_stow(&mut self,cur :Work<'t,'g>,) {
+    //     let GrammarNode::Stow(g, )=cur.grammar.as_ref() else{panic!("");};
 
-        //
-        let stow_new_len=self.hist_news_add(&cur);
+    //     //
+    //     let stow_new_len=self.hist_news_add(&cur);
 
-        //
-        self.stk.push(Work {
-            grammar: g.clone(),
+    //     //
+    //     self.stk.push(Work {
+    //         grammar: g.clone(),
 
-            work_success_len: cur.work_success_len,
-            work_fail_len: cur.work_fail_len,
-            tokens: cur.tokens,
-            group_ind: cur.group_ind,
-            group_len: cur.group_len,
+    //         work_success_len: cur.work_success_len,
+    //         work_fail_len: cur.work_fail_len,
+    //         tokens: cur.tokens,
+    //         group_ind: cur.group_ind,
+    //         group_len: cur.group_len,
 
-            grammar_ind:0,
-            user:true,
-            first:cur.first,
-            stow:cur.stow,
-            // or_id:cur.or_id,
+    //         grammar_ind:0,
+    //         user:true,
+    //         first:cur.first,
+    //         stow:cur.stow,
+    //         // or_id:cur.or_id,
 
-            stow_new_len,
+    //         stow_new_len,
 
-            stow_len: cur.stow_len,
+    //         stow_len: cur.stow_len,
 
-            in_expect:cur.in_expect,
+    //         in_expect:cur.in_expect,
 
-            expect_ind1:cur.expect_ind1,
-            expect_len1:cur.expect_len1,
+    //         expect_ind1:cur.expect_ind1,
+    //         expect_len1:cur.expect_len1,
 
-            expect_new_len2:cur.expect_new_len2,
-            expect_len2:cur.expect_len2,
+    //         expect_new_len2:cur.expect_new_len2,
+    //         expect_len2:cur.expect_len2,
 
-            was_new_len:cur.was_new_len,
-            was_ind:cur.was_ind,
-        });
-    }
+    //         was_new_len:cur.was_new_len,
+    //         was_ind:cur.was_ind,
+    //     });
+    // }
 
     fn grammar_was(&mut self,cur :Work<'t,'g>,) {
         let GrammarNode::Was(g,name, )=cur.grammar.as_ref() else{panic!("");};
@@ -2294,9 +2294,9 @@ where
             // cur.grammar.is_stow() &&
             cur.first //no longer using prevs, only stows/fails
         { //ignore grammars added by walker
-            let grammar=if  let GrammarNode::Stow(g, )=cur.grammar.as_ref() {g.clone()}else{cur.grammar.clone()};
+            // let grammar=if  let GrammarNode::Stow(g, )=cur.grammar.as_ref() {g.clone()}else{cur.grammar.clone()};
             self.hist_news.push(TempStowNew {
-                grammar,
+                grammar:cur.grammar.clone(),
                 tokens_start: cur.tokens.clone(),
                 // group_ind: cur.group_ind,
                 group_len:cur.group_len,
@@ -3075,7 +3075,7 @@ where
         //
         match cur.grammar.as_ref() {
             GrammarNode::Expect(..) => {self.grammar_expect(cur);}
-            GrammarNode::Stow(..) => {self.grammar_stow(cur);}
+            // GrammarNode::Stow(..) => {self.grammar_stow(cur);}
             GrammarNode::Was(..) => {self.grammar_was(cur);}
             GrammarNode::Had(..) => {self.grammar_had(cur);}
 
