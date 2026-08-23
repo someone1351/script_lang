@@ -1714,10 +1714,13 @@ where
         //
         // println!("----- isp={} e={}, cur.in_expect={}",cur.grammar.is_primtive(), self.expect_news2.is_empty(),cur.in_expect);
         //don't add primitives if in expect
-        // if cur.grammar.is_primtive() && cur.in_expect {
+        if cur.grammar.is_primtive() //disable primitive expects
+            // && !self.expect_news2.is_empty()
+            // // && cur.in_expect
+        {
         //     // println!("")
-        //     return cur.expect_new_len2; //self.expect_news2.len()
-        // }
+            return cur.expect_new_len2; //self.expect_news2.len()
+        }
 
         //do it here or in on fail?
         // if self.expect_news2.last().map(|x|x.tokens_start.inds().start)==Some(cur.tokens.inds().start) {

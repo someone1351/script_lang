@@ -93,7 +93,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "var_entry" => [
             Identifier.group("name"),
-            [NonTerm("var_set_op"), NonTerm("expr")].and().opt(),
+            [Symbol("="), NonTerm("expr")].and().opt(),
         ].and(),
 
         "set" => [
@@ -196,7 +196,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "or" => [
             [
                 NonTerm("xor"),
-                [ NonTerm("or_op"), NonTerm("xor"), ].and().many1(),
+                [
+                    [Symbol("|").no_expect(),Symbol("|").expect("or")].and(),
+                    NonTerm("xor"),
+                ].and().many1(),
             ].and().group("or"),
             NonTerm("xor"),
         ].or(),
@@ -204,7 +207,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "xor" => [
             [
                 NonTerm("and"),
-                [ NonTerm("xor_op"), NonTerm("and"), ].and().many1(),
+                [ Symbol("^").no_expect(), NonTerm("and"), ].and().many1(),
             ].and().group("xor"),
             NonTerm("and"),
         ].or(),
@@ -212,32 +215,58 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "and" => [
             [
                 NonTerm("compare"),
-                [ NonTerm("and_op"), NonTerm("compare"), ].and().many1(),
+                [ Symbol("&").no_expect(),Symbol("&").expect("and"), NonTerm("compare"), ].and().many1(),
             ].and().group("and"),
             NonTerm("compare"),
         ].or(),
 
+        // "compare" => [
+        //     [ NonTerm("factor"), NonTerm("compare_op"), NonTerm("factor"), ].and().group("compare"),
+        //     NonTerm("factor"),
+        // ].or(),
+
         "compare" => [
-            [ NonTerm("factor"), NonTerm("compare_op"), NonTerm("factor"), ].and().group("compare"),
+            [NonTerm("factor"), Symbol("<").no_expect(), NonTerm("factor"),].and().group("lt"),
+            [NonTerm("factor"), Symbol(">").no_expect(), NonTerm("factor"),].and().group("gt"),
+            [NonTerm("factor"), Symbol("<").no_expect(),Symbol("=").no_expect(), NonTerm("factor"),].and().group("le"),
+            [NonTerm("factor"), Symbol(">").no_expect(),Symbol("=").no_expect(), NonTerm("factor"),].and().group("ge"),
+            [NonTerm("factor"), Symbol("=").no_expect(),Symbol("=").expect("eq"), NonTerm("factor"),].and().group("eq"),
+            [NonTerm("factor"), Symbol("!").no_expect(),Symbol("=").expect("eq"), NonTerm("factor"),].and().group("ne"),
             NonTerm("factor"),
         ].or(),
 
-        "factor" => [
-            [
-                NonTerm("term"),
-                [ NonTerm("factor_op"), NonTerm("term"), ].and().many1(),
-            ].and().group("factor"),
-            NonTerm("term"),
-        ].or(),
+        // "factor" => [
+        //     [
+        //         NonTerm("term"),
+        //         [ NonTerm("factor_op"), NonTerm("term"), ].and().many1(),
+        //     ].and().group("factor"),
+        //     NonTerm("term"),
+        // ].or(),
 
+        // "term" => [
+        //     [
+        //         NonTerm("val"),
+        //         [NonTerm("term_op"),NonTerm("val"),].and().many1(),
+        //     ].and().group("term"),
+        //     NonTerm("val"),
+        // ].or(),
+
+        "factor" => [
+            NonTerm("term"),
+            [
+                [ Symbol("+").no_expect(), NonTerm("term"), ].and().group("add"),
+                [ Symbol("-").no_expect(), NonTerm("term"), ].and().group("sub"),
+            ].or().many0()
+        ].and(),
 
         "term" => [
-            [
-                NonTerm("val"),
-                [NonTerm("term_op"),NonTerm("val"),].and().many1(),
-            ].and().group("term"),
             NonTerm("val"),
-        ].or(),
+            [
+                [ Symbol("*").no_expect(), NonTerm("val"), ].and().group("mul"),
+                [ Symbol("/").no_expect(), NonTerm("val"), ].and().group("div"),
+                [ Symbol("%").no_expect(), NonTerm("val"), ].and().group("mod"),
+            ].or().many0()
+        ].and(),
 
         "val" => [
             NonTerm("prefix_op").many1().group("prefixes").opt(),
@@ -370,7 +399,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "for_to_op" => [Symbol("."),Symbol("."),].and(),
 
-        "var_set_op" => Symbol("="),
+        // "var_set_op" => Symbol("="),
 
         "set_op" => [
             Symbol("=").group("eq").no_expect(),
@@ -397,29 +426,29 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             Symbol("!").group("not"),
         ].or().no_expect(),
 
-        "xor_op" => Symbol("^").no_expect(),
-        "and_op" => [Symbol("&"),Symbol("&"),].and().no_expect(),
-        "or_op" => [Symbol("|"),Symbol("|"),].and().no_expect(),
+        // "xor_op" => Symbol("^").no_expect(),
+        // "and_op" => [Symbol("&"),Symbol("&"),].and().no_expect(),
+        // "or_op" => [Symbol("|"),Symbol("|"),].and().no_expect(),
 
-        "compare_op" => [
-            Symbol("<").group("lt"),
-            Symbol(">").group("gt"),
-            [Symbol("<"),Symbol("=")].and().group("le"),
-            [Symbol(">"),Symbol("=")].and().group("ge"),
-            [Symbol("="),Symbol("=")].and().group("eq"),
-            [Symbol("!"),Symbol("=")].and().group("ne"),
-        ].or().no_expect(),
+        // "compare_op" => [
+        //     Symbol("<").group("lt"),
+        //     Symbol(">").group("gt"),
+        //     [Symbol("<"),Symbol("=")].and().group("le"),
+        //     [Symbol(">"),Symbol("=")].and().group("ge"),
+        //     [Symbol("="),Symbol("=")].and().group("eq"),
+        //     [Symbol("!"),Symbol("=")].and().group("ne"),
+        // ].or().no_expect(),
 
-        "factor_op" => [
-            Symbol("+").group("add"),
-            Symbol("-").group("sub"),
-        ].or().no_expect(),
+        // "factor_op" => [
+        //     Symbol("+").group("add"),
+        //     Symbol("-").group("sub"),
+        // ].or().no_expect(),
 
-        "term_op" => [
-            Symbol("*").group("mul"),
-            Symbol("/").group("div"),
-            Symbol("%").group("mod"),
-        ].or().no_expect(),
+        // "term_op" => [
+        //     Symbol("*").group("mul"),
+        //     Symbol("/").group("div"),
+        //     Symbol("%").group("mod"),
+        // ].or().no_expect(),
 
         "lcurly" => Symbol("{"),
         "rcurly" => Symbol("}"),

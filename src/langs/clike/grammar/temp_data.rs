@@ -156,6 +156,7 @@ pub struct Work<'t,'g> {
     pub stow_len:usize,
 
     pub in_expect:bool,
+    // pub no_expect:bool,
 
     pub expect_ind1:Option<usize>,
     pub expect_len1:usize,
