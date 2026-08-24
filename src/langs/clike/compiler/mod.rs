@@ -381,6 +381,40 @@ impl Compiler {
                 }
             }
 
+            "block" => {
+                builder.block_start(None);
+
+                for x in top_group.children() {
+                    builder.eval(x);
+                }
+
+                builder.block_end();
+            }
+            "if" => {
+                //
+                builder.block_start(None);
+
+                //
+                for c in top_group.children() {
+                    if c.name()=="cond" {
+                        builder
+                            .block_start(None)
+                                .eval(c.child(0).unwrap())
+                                .to_block_end(JmpCond::False,0)
+                                .eval(c.child(1).unwrap())
+                                .to_block_end(JmpCond::None,1)
+                            .block_end();
+                    } else if c.name()=="else" {
+                        builder.eval(c.child(0).unwrap());
+                    } else {
+                        panic!("");
+                    }
+                }
+
+                //
+                builder.block_end();
+            }
+
 
             "index" => {
                 builder
