@@ -269,6 +269,35 @@ impl Compiler {
             "expr" => {
                 builder.eval(top_group.child(0).unwrap());
             }
+            "or"|"and" => {
+                let cond=if top_group.name()=="or" {JmpCond::True}else{JmpCond::False};
+
+                builder.block_start(None);
+
+                for c in top_group.children() {
+                    builder
+                        .eval(c)
+                        .to_block_end(cond,0)
+                        ;
+                }
+
+                builder.block_end();
+            }
+            "xor" => {
+                let mut cs=top_group.children();
+
+                builder.eval(cs.next().unwrap());
+
+                while !cs.is_empty() {
+                    builder
+                        .param_push()
+                        .eval(cs.next().unwrap())
+                        .param_push()
+                        .swap()
+                        .call_method("xor", 2)
+                        ;
+                }
+            }
             "lt"|"le"|"gt"|"ge"|"eq"|"ne" => {
                 let func=match top_group.name() {
                     "lt" => "lt",
