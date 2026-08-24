@@ -269,7 +269,25 @@ impl Compiler {
             "expr" => {
                 builder.eval(top_group.child(0).unwrap());
             }
-            "factor" => {
+            "lt"|"le"|"gt"|"ge"|"eq"|"ne" => {
+                let func=match top_group.name() {
+                    "lt" => "lt",
+                    "gt" => "gt",
+                    "le" => "le",
+                    "ge" => "ge",
+                    "eq" => "eq",
+                    "ne" => "ne",
+                    _ => panic!(""),
+                };
+                builder
+                    .eval(top_group.child(1).unwrap())
+                    .param_push()
+                    .eval(top_group.child(0).unwrap())
+                    .param_push()
+                    .call_method(func,2)
+                    ;
+            }
+            "factor"|"term" => {
                 let mut cs=top_group.children();
                 builder
                     .eval(cs.next().unwrap())
@@ -279,26 +297,6 @@ impl Compiler {
                     let func=match cs.next().unwrap().name() {
                         "add" => "add",
                         "sub" => "sub",
-                        _ => {panic!("");}
-                    };
-
-                    builder
-                        .param_push()
-                        .eval(cs.next().unwrap())
-                        .param_push()
-                        .swap()
-                        .call_method(func, 2)
-                        ;
-                }
-            }
-            "term" => {
-                let mut cs=top_group.children();
-                builder
-                    .eval(cs.next().unwrap())
-                    ;
-
-                while !cs.is_empty() {
-                    let func=match cs.next().unwrap().name() {
                         "mul" => "mul",
                         "div" => "div",
                         "mod" => "mod",
@@ -314,13 +312,16 @@ impl Compiler {
                         ;
                 }
             }
-            "neg" => {
+
+            "neg"|"not" => {
+                let func=match top_group.name() {
+                    "neg" => "neg",
+                    "not" => "not",
+                    _ => panic!(""),
+                };
+
                 builder.param_push();
-                builder.call_method("neg", 1);
-            }
-            "not" => {
-                builder.param_push();
-                builder.call_method("not", 1);
+                builder.call_method(func, 1);
             }
 
             "val" => {
