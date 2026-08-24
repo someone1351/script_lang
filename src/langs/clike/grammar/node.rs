@@ -60,6 +60,31 @@ impl<'g> GrammarNode<'g> {
         // Self::NoExpect(self.into(),)
         self.expect("")
     }
+    pub fn expected(self,) -> GrammarNode<'g> {
+        let name = match &self {
+            GrammarNode::NonTerm(s) => s,
+            GrammarNode::Had(s) => s,
+
+            GrammarNode::Group(_, s) => s,
+            GrammarNode::Was(_, s) => s,
+
+            GrammarNode::String => "string",
+            GrammarNode::Identifier => "identifier",
+            GrammarNode::Int => "int",
+            GrammarNode::Float => "float",
+            GrammarNode::Symbol(s) => s,
+            GrammarNode::Keyword(s) => s,
+            GrammarNode::Eol => "eol",
+
+            _ => "",
+        };
+
+        if name.is_empty() {
+            self
+        } else {
+            Self::Expect(self.into(),name)
+        }
+    }
     // pub fn stow(self) -> GrammarNode<'g> {
     //     Self::Stow(self.into())
     // }

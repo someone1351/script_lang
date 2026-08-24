@@ -267,8 +267,52 @@ impl Compiler {
                 builder.result_bool(false);
             }
             "expr" => {
-                // builder.eval_func(op_run(0, top_group.children()));
+                builder.eval(top_group.child(0).unwrap());
+            }
+            "factor" => {
+                let mut cs=top_group.children();
+                builder
+                    .eval(cs.next().unwrap())
+                    ;
 
+                while !cs.is_empty() {
+                    let func=match cs.next().unwrap().name() {
+                        "add" => "add",
+                        "sub" => "sub",
+                        _ => {panic!("");}
+                    };
+
+                    builder
+                        .param_push()
+                        .eval(cs.next().unwrap())
+                        .param_push()
+                        .swap()
+                        .call_method(func, 2)
+                        ;
+                }
+            }
+            "term" => {
+                let mut cs=top_group.children();
+                builder
+                    .eval(cs.next().unwrap())
+                    ;
+
+                while !cs.is_empty() {
+                    let func=match cs.next().unwrap().name() {
+                        "mul" => "mul",
+                        "div" => "div",
+                        "mod" => "mod",
+                        _ => {panic!("");}
+                    };
+
+                    builder
+                        .param_push()
+                        .eval(cs.next().unwrap())
+                        .param_push()
+                        .swap()
+                        .call_method(func, 2)
+                        ;
+                }
             }
             "neg" => {
                 builder.param_push();
@@ -278,6 +322,36 @@ impl Compiler {
                 builder.param_push();
                 builder.call_method("not", 1);
             }
+
+            "val" => {
+                let mut groups=top_group.children();
+
+                //prefixes
+                let prefixes= if groups.first().unwrap().name()=="prefixes" {
+                    groups.pop_front()
+                } else {
+                    None
+                };
+
+                //val
+                let val=groups.pop_front().unwrap();
+                // println!("val is {}",val.name());
+                builder.eval(val);
+
+                //field(s), index(s), call(s)
+                for rest in groups.rev() {
+                    builder.eval(rest);
+                }
+
+                //
+                if let Some(prefixes)=prefixes {
+                    for prefix in prefixes.children().rev() {
+                        builder.eval(prefix);
+                    }
+                }
+            }
+
+
             "index" => {
                 builder
                     .loc(top_group.tokens().first().unwrap().start_loc())
@@ -377,34 +451,6 @@ impl Compiler {
                     .eval(params_group)
                     .call_result(params_group.children().len())
                     ;
-            }
-
-            "val" => {
-                let mut groups=top_group.children();
-
-                //prefixes
-                let prefixes= if groups.first().unwrap().name()=="prefixes" {
-                    groups.pop_front()
-                } else {
-                    None
-                };
-
-                //val
-                let val=groups.pop_front().unwrap();
-                // println!("val is {}",val.name());
-                builder.eval(val);
-
-                //field(s), index(s), call(s)
-                for rest in groups.rev() {
-                    builder.eval(rest);
-                }
-
-                //
-                if let Some(prefixes)=prefixes {
-                    for prefix in prefixes.children().rev() {
-                        builder.eval(prefix);
-                    }
-                }
             }
             // "block" => {
             //     builder.eval(primitive)

@@ -29,7 +29,6 @@ impl<'t,'g> WalkGroupContainer<'t,'g> {
         }
 
         None
-
     }
     fn unfiltered_tokens(&self) -> TokenIterContainer<'t> {
         self.group().tokens

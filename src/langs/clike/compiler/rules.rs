@@ -81,7 +81,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
 
             // NonTerm("val"),
-        ].or().no_expect() //.expect("stmt")
+        ].or() //.expect("stmt")
         ,
 
         "var" => [
@@ -197,7 +197,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             [
                 NonTerm("xor"),
                 [
-                    [Symbol("|").no_expect(),Symbol("|").expect("or")].and(),
+                    [Symbol("|"),Symbol("|").expect("or")].and(),
                     NonTerm("xor"),
                 ].and().many1(),
             ].and().group("or"),
@@ -207,7 +207,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "xor" => [
             [
                 NonTerm("and"),
-                [ Symbol("^").no_expect(), NonTerm("and"), ].and().many1(),
+                [ Symbol("^"), NonTerm("and"), ].and().many1(),
             ].and().group("xor"),
             NonTerm("and"),
         ].or(),
@@ -215,7 +215,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "and" => [
             [
                 NonTerm("compare"),
-                [ Symbol("&").no_expect(),Symbol("&").expect("and"), NonTerm("compare"), ].and().many1(),
+                [ Symbol("&"),Symbol("&").expect("and"), NonTerm("compare"), ].and().many1(),
             ].and().group("and"),
             NonTerm("compare"),
         ].or(),
@@ -226,47 +226,47 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         // ].or(),
 
         "compare" => [
-            [NonTerm("factor"), Symbol("<").no_expect(), NonTerm("factor"),].and().group("lt"),
-            [NonTerm("factor"), Symbol(">").no_expect(), NonTerm("factor"),].and().group("gt"),
-            [NonTerm("factor"), Symbol("<").no_expect(),Symbol("=").no_expect(), NonTerm("factor"),].and().group("le"),
-            [NonTerm("factor"), Symbol(">").no_expect(),Symbol("=").no_expect(), NonTerm("factor"),].and().group("ge"),
-            [NonTerm("factor"), Symbol("=").no_expect(),Symbol("=").expect("eq"), NonTerm("factor"),].and().group("eq"),
-            [NonTerm("factor"), Symbol("!").no_expect(),Symbol("=").expect("eq"), NonTerm("factor"),].and().group("ne"),
+            [NonTerm("factor"), Symbol("<"), NonTerm("factor"),].and().group("lt"),
+            [NonTerm("factor"), Symbol(">"), NonTerm("factor"),].and().group("gt"),
+            [NonTerm("factor"), Symbol("<"),Symbol("="), NonTerm("factor"),].and().group("le"),
+            [NonTerm("factor"), Symbol(">"),Symbol("="), NonTerm("factor"),].and().group("ge"),
+            [NonTerm("factor"), Symbol("="),Symbol("=").expect("eq"), NonTerm("factor"),].and().group("eq"),
+            [NonTerm("factor"), Symbol("!"),Symbol("=").expect("ne"), NonTerm("factor"),].and().group("ne"),
             NonTerm("factor"),
         ].or(),
 
-        // "factor" => [
-        //     [
-        //         NonTerm("term"),
-        //         [ NonTerm("factor_op"), NonTerm("term"), ].and().many1(),
-        //     ].and().group("factor"),
-        //     NonTerm("term"),
-        // ].or(),
-
-        // "term" => [
-        //     [
-        //         NonTerm("val"),
-        //         [NonTerm("term_op"),NonTerm("val"),].and().many1(),
-        //     ].and().group("term"),
-        //     NonTerm("val"),
-        // ].or(),
-
         "factor" => [
-            NonTerm("term"),
             [
-                [ Symbol("+").no_expect(), NonTerm("term"), ].and().group("add"),
-                [ Symbol("-").no_expect(), NonTerm("term"), ].and().group("sub"),
-            ].or().many0()
-        ].and(),
+                NonTerm("term"),
+                [ NonTerm("factor_op"), NonTerm("term"), ].and().many1(),
+            ].and().group("factor"),
+            NonTerm("term"),
+        ].or(),
 
         "term" => [
-            NonTerm("val"),
             [
-                [ Symbol("*").no_expect(), NonTerm("val"), ].and().group("mul"),
-                [ Symbol("/").no_expect(), NonTerm("val"), ].and().group("div"),
-                [ Symbol("%").no_expect(), NonTerm("val"), ].and().group("mod"),
-            ].or().many0()
-        ].and(),
+                NonTerm("val"),
+                [NonTerm("term_op"),NonTerm("val"),].and().many1(),
+            ].and().group("term"),
+            NonTerm("val"),
+        ].or(),
+
+        // "factor" => [
+        //     NonTerm("term"),
+        //     [
+        //         [ Symbol("+"), NonTerm("term"), ].and().group("add"),
+        //         [ Symbol("-"), NonTerm("term"), ].and().group("sub"),
+        //     ].or().many0()
+        // ].and(),
+
+        // "term" => [
+        //     NonTerm("val"),
+        //     [
+        //         [ Symbol("*"), NonTerm("val"), ].and().group("mul"),
+        //         [ Symbol("/"), NonTerm("val"), ].and().group("div"),
+        //         [ Symbol("%"), NonTerm("val"), ].and().group("mod"),
+        //     ].or().many0()
+        // ].and(),
 
         "val" => [
             NonTerm("prefix_op").many1().group("prefixes").opt(),
@@ -354,7 +354,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 ].and().opt(),
                 NonTerm("rparen"),
             ].and().expect("closing bracket"),
-        ].and().group("params").no_expect(),
+        ].and().group("params"),
 
         "field" => [
             Symbol("."),
@@ -363,7 +363,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 Identifier.group("field_name"),
                 // Error,
             ].or().expect("field").was("field"),
-        ].and().no_expect(), //.expect("field"),
+        ].and(), //.expect("field"),
 
         "index" => [
             NonTerm("lsquare"),
@@ -373,7 +373,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                     NonTerm("rsquare"),
                 ].and().expect("closing square bracket"),
             ].and().expect("index").was("index")
-        ].and().no_expect(),
+        ].and(),
 
         "primitive" => [
             Int,
@@ -402,7 +402,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         // "var_set_op" => Symbol("="),
 
         "set_op" => [
-            Symbol("=").group("eq").no_expect(),
+            Symbol("=").group("eq"),
             [ NonTerm("set_sub_op"), Symbol("=") //.expect("set")
                 , ].and(),
         ].or(),
@@ -424,11 +424,11 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             Symbol("+"),
             Symbol("-").group("neg"),
             Symbol("!").group("not"),
-        ].or().no_expect(),
+        ].or(),
 
-        // "xor_op" => Symbol("^").no_expect(),
-        // "and_op" => [Symbol("&"),Symbol("&"),].and().no_expect(),
-        // "or_op" => [Symbol("|"),Symbol("|"),].and().no_expect(),
+        // "xor_op" => Symbol("^"),
+        // "and_op" => [Symbol("&"),Symbol("&"),].and(),
+        // "or_op" => [Symbol("|"),Symbol("|"),].and(),
 
         // "compare_op" => [
         //     Symbol("<").group("lt"),
@@ -437,18 +437,18 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         //     [Symbol(">"),Symbol("=")].and().group("ge"),
         //     [Symbol("="),Symbol("=")].and().group("eq"),
         //     [Symbol("!"),Symbol("=")].and().group("ne"),
-        // ].or().no_expect(),
+        // ].or(),
 
-        // "factor_op" => [
-        //     Symbol("+").group("add"),
-        //     Symbol("-").group("sub"),
-        // ].or().no_expect(),
+        "factor_op" => [
+            Symbol("+").group("add"),
+            Symbol("-").group("sub"),
+        ].or(),
 
-        // "term_op" => [
-        //     Symbol("*").group("mul"),
-        //     Symbol("/").group("div"),
-        //     Symbol("%").group("mod"),
-        // ].or().no_expect(),
+        "term_op" => [
+            Symbol("*").group("mul"),
+            Symbol("/").group("div"),
+            Symbol("%").group("mod"),
+        ].or(),
 
         "lcurly" => Symbol("{"),
         "rcurly" => Symbol("}"),
