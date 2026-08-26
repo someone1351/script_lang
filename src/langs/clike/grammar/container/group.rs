@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::{clike::tokenizer::FilteredTokenIterContainer, Loc};
+use crate::Loc;
 
 use super::super::super::{grammar::{container::WalkGroupIterContainer, data::{Walk, WalkGroup}}, tokenizer::{TokenContainer, TokenIterContainer}};
 
@@ -30,11 +30,8 @@ impl<'t,'g> WalkGroupContainer<'t,'g> {
 
         None
     }
-    fn unfiltered_tokens(&self) -> TokenIterContainer<'t> {
+    pub fn tokens(&self) -> TokenIterContainer<'t> {
         self.group().tokens
-    }
-    pub fn tokens(&self) -> FilteredTokenIterContainer<'t> {
-        self.group().tokens.filtered()
     }
     pub fn start_loc(&self) -> Loc {
         self.group().tokens.start_loc()
@@ -62,10 +59,10 @@ impl<'t,'g> Display for WalkGroupContainer<'t,'g> {
             match cur {
                 Thing::Group(cur) => {
                     writeln!(f,"{indent}group: {:?}",cur.name(),)?;
-                    let mut cur_tokens = cur.unfiltered_tokens();
+                    let mut cur_tokens = cur.tokens();
 
                     for child_group in cur.children().rev() {
-                        let child_tokens=child_group.unfiltered_tokens();
+                        let child_tokens=child_group.tokens();
                         let ps_len=cur_tokens.end-child_tokens.end;
                         let ps=cur_tokens.pop_back_amount(ps_len).unwrap();
 

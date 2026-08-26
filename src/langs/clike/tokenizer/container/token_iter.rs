@@ -293,9 +293,6 @@ impl<'a> TokenIterContainer<'a> {
         self.pop_get(true,move|p|p.has_symbol(symbol))
     }
 
-    pub fn filtered(&self) -> FilteredTokenIterContainer<'a> {
-        FilteredTokenIterContainer { start: self.start, end: self.end, parsed: self.parsed }
-    }
 }
 
 impl<'a> Iterator for TokenIterContainer<'a> {

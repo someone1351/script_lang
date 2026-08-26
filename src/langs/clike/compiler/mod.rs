@@ -225,7 +225,7 @@ impl Compiler {
 
         match top_group.name() {
             "primitive" => {
-                if let Some(p)=top_group.tokens().first() {
+                if let Ok(p)=top_group.tokens().first() {
                     builder.loc(p.start_loc());
                     println!("\t{:?}",p.token_type());
 
