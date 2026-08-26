@@ -355,32 +355,40 @@ impl Compiler {
                 builder.call_method(func, 1);
             }
 
+            "prefixes" => {
+                let prefixes=top_group.child(0).unwrap().children();
+                let val=top_group.child(1).unwrap();
+
+                builder.eval(val);
+
+                for p in prefixes.rev() {
+                    let func=match p.name() {
+                        "not" => "not",
+                        "neg" => "neg",
+                        "pos" => "",
+                        _ => panic!(""),
+                    };
+
+                    if !func.is_empty() {
+                        builder
+                            .param_push()
+                            .call_method(func, 1)
+                            ;
+                    }
+
+                }
+            }
             "val" => {
-                let mut groups=top_group.children();
+                let val= top_group.child(0).unwrap();
+                let rest = top_group.child(1).unwrap().children();
 
-                //prefixes
-                let prefixes= if groups.first().unwrap().name()=="prefixes" {
-                    groups.pop_front()
-                } else {
-                    None
-                };
-
-                //val
-                let val=groups.pop_front().unwrap();
-                // println!("val is {}",val.name());
                 builder.eval(val);
 
                 //field(s), index(s), call(s)
-                for rest in groups.rev() {
-                    builder.eval(rest);
+                for x in rest.rev() {
+                    builder.eval(x);
                 }
 
-                //
-                if let Some(prefixes)=prefixes {
-                    for prefix in prefixes.children().rev() {
-                        builder.eval(prefix);
-                    }
-                }
             }
 
             "block" => {

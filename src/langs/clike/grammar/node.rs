@@ -113,6 +113,9 @@ impl<'g> GrammarNode<'g> {
     pub fn is_and(&self) -> bool {
         if let GrammarNode::And(..)=self {true} else {false}
     }
+    pub fn is_eol(&self) -> bool {
+        if let GrammarNode::Eol=self {true} else {false}
+    }
     pub fn get_non_term_name(&self) -> Option<&'g str> {
         if let Self::NonTerm(n)=self {
             Some(n)

@@ -34,6 +34,10 @@ NOTE
 * a parse might actually end up on a success, but fail to parse all the input
 ** due to things in the grammar being optional
 
+TODO
+* make skipped eol's not be included in start of a group?
+** so then don't need filtered_token_iter
+
 */
 use super::error::*;
 use super::temp_data::*;
@@ -1639,63 +1643,75 @@ where
         true
     }
 
-    fn grammar_primitive<Q,P>(&mut self,mut cur:Work<'t,'g>,prim_func:Q) -> Option<ValueContainer<'t,P>>
-    where
-        P:Clone,
-        Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
+    fn grammar_primitive(&mut self,mut cur:Work<'t,'g>,)
     {
         //
         // let _hist_news_len=self.hist_news_add(&cur);
         // self.hist_stows_clear(&cur);
 
+        let is_group_token_start=if cur.group_ind!=0 {cur.tokens.inds().start==self.groups[cur.group_ind].tokens.inds().start}
+            else{false};
+
         //
-        match prim_func(&mut cur.tokens) {
-            Ok(v) => {
-                //
-                // self.stk.truncate(cur.success_len);
-                self.work_on_success(&cur);
-                self.update_tokens(&cur,true);
-                self.groups_on_success(&cur);
-                self.was_on_success(true); //before hist
-                self.hist_on_success(&cur,false);
 
-                self.expect_on_success2(&cur);
-                self.expect_on_success1();
-
-                //
-                // if self.debug {
-                //     println!("--- hmm stk={:?}",self.stk.iter().map(|x|x.grammar.clone()).collect::<Vec<_>>());
-
-                //     // if let Some(last)=self.stk.last() {
-                //     //     let last_hist_ends=&self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
-                //     //     println!("---last_hist_ends={:?}, len={}",last_hist_ends,last_hist_ends.len());
-                //     // }
-                // }
-
-                //
-                Some(v)
+        if  !cur.grammar.is_eol() {
+            while !cur.tokens.is_empty() {
+                let x=cur.tokens.first().unwrap();
+                if !x.is_eol() { break; }
+                cur.tokens.next().unwrap();
             }
-            Err(_loc) => {
-                // self.stk.truncate(cur.fail_len);
-                self.work_on_fail(&cur);
-                self.update_tokens(&cur,false);
-                self.hist_on_fail();
-                self.was_on_fail();
-                // // self.revert_last_hist_news();
-                // self.update_hist_on_fail(&cur);
-                // // let _expected_news_len=self.add_expected_new(&cur);
-                // // self.submit_expected_news(&cur);
+        }
 
-                self.groups_on_fail();
-                let (_expected_ind,_expecteds_len)=self.add_expect1(&cur);
-                let _expect_new_len2=self.add_expect_new2(&cur);
+        //
+        let tokens_start=cur.tokens;
 
-                self.expect_on_fail2(&cur);
-                self.expect_on_fail1();
+        //
+        let result=match cur.grammar.as_ref() {
+            GrammarNode::String => { cur.tokens.pop_string().is_ok() },
+            GrammarNode::Identifier => { cur.tokens.pop_identifier().is_ok() },
+            GrammarNode::Int => {cur.tokens.pop_int().is_ok() },
+            GrammarNode::Float => { cur.tokens.pop_float().is_ok() },
+            GrammarNode::Symbol(s) => { cur.tokens.pop_with_symbol(s).is_ok() },
+            GrammarNode::Keyword(s) => { cur.tokens.pop_with_keyword(s).is_ok() },
+            GrammarNode::Eol => {cur.tokens.pop_eol().is_ok() },
+            _ => {panic!("");}
+        };
 
-                //
-                None
+        if result {
+
+            if is_group_token_start {
+                let g=&mut self.groups[cur.group_ind];
+                g.tokens=tokens_start;
             }
+
+            //
+            self.work_on_success(&cur);
+            self.update_tokens(&cur,true);
+            self.groups_on_success(&cur);
+            self.was_on_success(true); //before hist
+            self.hist_on_success(&cur,false);
+
+            self.expect_on_success2(&cur);
+            self.expect_on_success1();
+
+        } else {
+            // self.stk.truncate(cur.fail_len);
+            self.work_on_fail(&cur);
+            self.update_tokens(&cur,false);
+            self.hist_on_fail();
+            self.was_on_fail();
+            // // self.revert_last_hist_news();
+            // self.update_hist_on_fail(&cur);
+            // // let _expected_news_len=self.add_expected_new(&cur);
+            // // self.submit_expected_news(&cur);
+
+            self.groups_on_fail();
+            let (_expected_ind,_expecteds_len)=self.add_expect1(&cur);
+            let _expect_new_len2=self.add_expect_new2(&cur);
+
+            self.expect_on_fail2(&cur);
+            self.expect_on_fail1();
+
         }
     }
 
@@ -3091,36 +3107,11 @@ where
             GrammarNode::Error => {return Err(self.grammar_error(cur));}
             GrammarNode::Always => {self.grammar_always(cur);}
 
-            GrammarNode::String => {
-                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_string(),) else{return Ok(());};
-                if self.debug {println!("--- string {v:?}");}
-            }
-            GrammarNode::Identifier => {
-                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_identifier(),) else{return Ok(());};
-                if self.debug {println!("--- identifier {v:?}");}
-            }
-            GrammarNode::Int => {
-                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_int(),) else{return Ok(());};
-                if self.debug {println!("--- int {v:?}");}
-            }
-            GrammarNode::Float => {
-                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_float(),) else{return Ok(());};
-                if self.debug {println!("--- float {v:?}");}
-            }
-            GrammarNode::Symbol(s) => {
-                let s= *s;
-                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_with_symbol(s),) else{return Ok(());};
-                if self.debug {println!("--- symbol {v:?}");}
-            }
-            GrammarNode::Keyword(s) => {
-                let s= *s;
-                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_with_keyword(s),) else{return Ok(());};
-                if self.debug {println!("--- keyword {v:?}");}
-            }
-            GrammarNode::Eol => {
-                let Some(_)=self.grammar_primitive(cur,|ps|ps.pop_eol(),) else{return Ok(());};
-                if self.debug {println!("--- eol");}
-            }
+            GrammarNode::String|GrammarNode::Identifier|GrammarNode::Int
+            |GrammarNode::Float|GrammarNode::Symbol(..)|GrammarNode::Keyword(..)
+            |GrammarNode::Eol
+                => { self.grammar_primitive(cur,); }
+
         }
 
         //

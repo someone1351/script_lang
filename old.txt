@@ -3086,3 +3086,136 @@ prevs
             //         });
             //     }
             // }
+			
+===
+
+            //
+            // if self.debug {
+            //     println!("--- hmm stk={:?}",self.stk.iter().map(|x|x.grammar.clone()).collect::<Vec<_>>());
+
+            //     // if let Some(last)=self.stk.last() {
+            //     //     let last_hist_ends=&self.hist_ends_stk[last.hist_ends_stk_len-1].elements;
+            //     //     println!("---last_hist_ends={:?}, len={}",last_hist_ends,last_hist_ends.len());
+            //     // }
+            // }
+
+            //
+            Some(v)
+			-> Option<ValueContainer<'t,P>>
+			
+    where
+        P:Clone,
+        Q:Fn(&mut TokenIterContainer<'t>)->Result<ValueContainer<'t,P>,Loc>,
+		<Q,P>
+		
+		
+            GrammarNode::String => {
+                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_string(),) else{return Ok(());};
+                if self.debug {println!("--- string {v:?}");}
+            }
+            GrammarNode::Identifier => {
+                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_identifier(),) else{return Ok(());};
+                if self.debug {println!("--- identifier {v:?}");}
+            }
+            GrammarNode::Int => {
+                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_int(),) else{return Ok(());};
+                if self.debug {println!("--- int {v:?}");}
+            }
+            GrammarNode::Float => {
+                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_float(),) else{return Ok(());};
+                if self.debug {println!("--- float {v:?}");}
+            }
+            GrammarNode::Symbol(s) => {
+                let s= *s;
+                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_with_symbol(s),) else{return Ok(());};
+                if self.debug {println!("--- symbol {v:?}");}
+            }
+            GrammarNode::Keyword(s) => {
+                let s= *s;
+                let Some(v)=self.grammar_primitive(cur,|ps|ps.pop_with_keyword(s),) else{return Ok(());};
+                if self.debug {println!("--- keyword {v:?}");}
+            }
+            GrammarNode::Eol => {
+                let Some(_)=self.grammar_primitive(cur,|ps|ps.pop_eol(),) else{return Ok(());};
+                if self.debug {println!("--- eol");}
+            }
+			
+			
+
+    fn pop_get<T,F>(&mut self,skip_eols:bool,func:F) -> Result<ValueContainer<'a,T>,Loc>
+    where
+        F:FnOnce(TokenContainer<'a>)->Result<ValueContainer<'a,T>,Loc>,
+    {
+        let mut tmp=self.clone();
+        if skip_eols {
+            while let Ok(x)=tmp.first() {
+                if !x.is_eol() {
+                    break;
+                }
+
+                tmp.pop_front().unwrap();
+            }
+        }
+
+
+        let v=tmp.first().and_then(func)?;
+
+        // if v.is_ok() {
+        tmp.pop_front().unwrap();
+        // self.last_loc=v.as_ref().unwrap().primitive.end_loc();
+        // self.last_loc=v.primitive.end_loc();
+        // }
+        *self=tmp;
+        Ok(v)
+    }
+
+    pub fn pop_eol(&mut self) -> Result<ValueContainer<'a,()>,Loc> {
+         self.pop_get(false,|p|p.get_eol())
+    }
+    pub fn pop_float(&mut self) -> Result<ValueContainer<'a,f64>,Loc> {
+        self.pop_get(true,|p|p.get_float())
+    }
+
+    pub fn pop_int(&mut self) -> Result<ValueContainer<'a,i64>,Loc> {
+        self.pop_get(true,|p|p.get_int())
+    }
+
+    pub fn pop_string(&mut self) -> Result<ValueContainer<'a,&'a str>,Loc> {
+        self.pop_get(true,|p|p.get_string())
+    }
+
+    pub fn pop_symbol(&mut self) -> Result<ValueContainer<'a,&'a str>,Loc> {
+        self.pop_get(true,|p|p.get_symbol())
+    }
+
+    pub fn pop_identifier(&mut self) -> Result<ValueContainer<'a,&'a str>,Loc> {
+        self.pop_get(true,|p|p.get_identifier())
+    }
+
+    pub fn pop_keyword(&mut self) -> Result<ValueContainer<'a,&'a str>,Loc> {
+        self.pop_get(true,|p|p.get_keyword())
+    }
+    // pub fn pop_with_identifiers<'b,I>(&mut self,idns:I) -> Result<ValueContainer<'a,&'a str>,Loc>
+    // where
+    //     I:IntoIterator<Item = &'b str>,
+    // {
+    //     self.pop_get(true,move|p|p.has_identifiers(idns))
+    // }
+
+    // pub fn pop_with_symbols<'b,I>(&mut self,symbols:I) -> Result<ValueContainer<'a,&'a str>,Loc>
+    // where
+    //     I:IntoIterator<Item = &'b str>,
+    // {
+    //     self.pop_get(true,move|p|p.has_symbols(symbols))
+    // }
+
+
+    pub fn pop_with_keyword<'b>(&mut self,keyword:&'b str) -> Result<ValueContainer<'a,&'a str>,Loc>
+    {
+        self.pop_get(true,move|p|p.has_keyword(keyword))
+    }
+
+    pub fn pop_with_symbol<'b,>(&mut self,symbol:&'b str) -> Result<ValueContainer<'a,&'a str>,Loc>
+    {
+        self.pop_get(true,move|p|p.has_symbol(symbol))
+    }

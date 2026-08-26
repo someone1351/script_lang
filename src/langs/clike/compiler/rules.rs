@@ -253,10 +253,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "term" => [
             [
-                NonTerm("val"),
-                [NonTerm("term_op"),NonTerm("val"),].and().many1(),
+                NonTerm("prefixes"),
+                [NonTerm("term_op"),NonTerm("prefixes"),].and().many1(),
             ].and().group("term"),
-            NonTerm("val"),
+            NonTerm("prefixes"),
         ].or(),
 
         // "factor" => [
@@ -276,8 +276,19 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         //     ].or().many0()
         // ].and(),
 
+        "prefixes" => [
+            [
+                [
+                    Symbol("+"),
+                    Symbol("-").group("neg"),
+                    Symbol("!").group("not"),
+                ].or().many1().group("prefixes"),
+                NonTerm("val"),
+            ].and().group("prefixes"),
+            NonTerm("val"),
+        ].or(),
+
         "val" => [
-            NonTerm("prefix_op").many1().group("prefixes").opt(),
             [
                 [ Identifier.group("idn"), NonTerm("call"), ].and().group("call_func"),
 
@@ -294,7 +305,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 NonTerm("block"),
                 [ NonTerm("lparen"), NonTerm("expr"), NonTerm("rparen"), ].and(),
             ].or(),
-            NonTerm("field_index_call").many0(),
+            NonTerm("field_index_call").many0().group("field_index_calls"),
         ].and().group("val"),
 
         "array" => [
@@ -427,11 +438,11 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             Symbol("^").group("xor"),
         ].or(),
 
-        "prefix_op" => [
-            Symbol("+"),
-            Symbol("-").group("neg"),
-            Symbol("!").group("not"),
-        ].or(),
+        // "prefix_op" => [
+        //     Symbol("+"),
+        //     Symbol("-").group("neg"),
+        //     Symbol("!").group("not"),
+        // ].or(),
 
         // "xor_op" => Symbol("^"),
         // "and_op" => [Symbol("&"),Symbol("&"),].and(),

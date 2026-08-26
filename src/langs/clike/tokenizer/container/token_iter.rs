@@ -232,34 +232,16 @@ impl<'a> TokenIterContainer<'a> {
     //         Ok(TokenContainer { parsed: self.parsed, primitive_ind:self.end-1,})
     //     }
     // }
-
     fn pop_get<T,F>(&mut self,skip_eols:bool,func:F) -> Result<ValueContainer<'a,T>,Loc>
     where
         F:FnOnce(TokenContainer<'a>)->Result<ValueContainer<'a,T>,Loc>,
     {
         let mut tmp=self.clone();
-        if skip_eols {
-            while let Ok(x)=tmp.first() {
-                if !x.is_eol() {
-                    break;
-                }
-
-                tmp.pop_front().unwrap();
-            }
-        }
-
-
         let v=tmp.first().and_then(func)?;
-
-        // if v.is_ok() {
         tmp.pop_front().unwrap();
-        // self.last_loc=v.as_ref().unwrap().primitive.end_loc();
-        // self.last_loc=v.primitive.end_loc();
-        // }
         *self=tmp;
         Ok(v)
     }
-
     pub fn pop_eol(&mut self) -> Result<ValueContainer<'a,()>,Loc> {
          self.pop_get(false,|p|p.get_eol())
     }
