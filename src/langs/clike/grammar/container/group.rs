@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::clike::tokenizer::FilteredTokenIterContainer;
+use crate::{clike::tokenizer::FilteredTokenIterContainer, Loc};
 
 use super::super::super::{grammar::{container::WalkGroupIterContainer, data::{Walk, WalkGroup}}, tokenizer::{TokenContainer, TokenIterContainer}};
 
@@ -35,6 +35,9 @@ impl<'t,'g> WalkGroupContainer<'t,'g> {
     }
     pub fn tokens(&self) -> FilteredTokenIterContainer<'t> {
         self.group().tokens.filtered()
+    }
+    pub fn start_loc(&self) -> Loc {
+        self.group().tokens.start_loc()
     }
 }
 

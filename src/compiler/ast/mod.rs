@@ -537,6 +537,9 @@ impl<'a> Ast<'a> {
         self.add_next(AstNodeType::ResultNil);
     }
 
+    //why start and end for decls?
+    // ir was so you could declare a func eg var f = fn(){} where f can't be seen inside the func
+    // eg decl_var_start, lambda, decl_var_end, set_var
     pub fn decl_var_start(&mut self,name:&'a str, init_nil:bool, anon_id:Option<usize>) {
         if self.body_node().depth==0 && anon_id.is_none() { //global
             let decl=AstDeclVar::Global;

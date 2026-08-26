@@ -323,7 +323,8 @@ impl Compiler {
                     ;
 
                 while !cs.is_empty() {
-                    let func=match cs.next().unwrap().name() {
+                    let op=cs.next().unwrap();
+                    let func=match op.name() {
                         "add" => "add",
                         "sub" => "sub",
                         "mul" => "mul",
@@ -337,6 +338,7 @@ impl Compiler {
                         .eval(cs.next().unwrap())
                         .param_push()
                         .swap()
+                        .loc(op.start_loc())
                         .call_method(func, 2)
                         ;
                 }
@@ -414,7 +416,187 @@ impl Compiler {
                 //
                 builder.block_end();
             }
+            "for" => {
+                let var= top_group.child(0).unwrap().name();
+                let from= top_group.child(1).unwrap();
+                let func=match top_group.child(2).unwrap().name() {
+                    "to" => "lt",
+                    "to_eq" => "le",
+                    _ => panic!(""),
+                };
+                let to= top_group.child(3).unwrap();
+                let body= top_group.child(4).unwrap();
 
+                builder
+                    .block_start(None)
+                        .decl_var_start(var, false)
+
+                            //why do these inside idn decl?
+                            .eval(to)
+                            .decl_anon_var("n", false)
+                            .set_anon_var("n")
+
+                            .decl_anon_var("r", false)
+                            .result_void() //why set to void?? oh "r" is the value of the body's return
+                            .set_anon_var("r")
+
+                        .decl_var_end()
+
+                        .eval(from)
+                        .set_var(var)
+
+                        .block_start(Some("loop"))
+                            .block_start(None)
+                                .get_anon_var("n")
+                                .param_push()
+                                .get_var(var) //shouldn't this be anon var i?
+                                .param_push()
+                                .call_method(func, 2)
+                                // .to_block_end_label(Some(false),"loop", None)
+                                .to_block_end(JmpCond::False, 1)
+
+                                .result_void()
+                                .eval(body)
+                                .set_anon_var("r") //
+                            .block_end()
+
+                            //incr index
+                            .result_int(1)
+                            .param_push()
+                            .get_var(var)
+                            .param_push()
+                            .call_method("add", 2)
+
+                            .set_var(var)
+
+                            //
+                            .to_block_start(JmpCond::None,0)
+                        .block_end()
+                        .get_anon_var("r")
+                    .block_end()
+                    ;
+            }
+
+            "while" => {
+                let cond= top_group.child(0).unwrap();
+                let body= top_group.child(1).unwrap();
+
+                builder
+                    // .loop_instr()
+                    .block_start(Some("loop"))
+                        .eval_with_flags(cond,[("in_loop_cond",1)]) //so breaks/continues in cond, don't break out of this loop, instead break out of an outer loop
+                        .param_push()
+                        .call_method("not", 1)
+                        .to_block_end(JmpCond::True //False
+                            ,0)
+                        // .eval_sexprs(body_stmts)
+                        .eval(body)
+                        .to_block_start(JmpCond::None,0)
+                    .block_end()
+                // .value_instr(&Value::Void)
+                ;
+            }
+
+            "continue" => {
+                let e=BuilderError::new(top_group.child(0).unwrap().tokens().first().unwrap().start_loc(), BuilderErrorType::ContinueNotInLoop);
+                let skip=builder.get_flag("in_loop_cond").is_some();
+                let skip = if skip {1} else {0};
+                builder.to_block_start_label(JmpCond::None,"loop",skip,Some(e));
+            }
+            "break" => {
+                let e=BuilderError::new(top_group.child(0).unwrap().tokens().first().unwrap().start_loc(), BuilderErrorType::ContinueNotInLoop);
+                let skip=builder.get_flag("in_loop_cond").is_some();
+                let skip = if skip {1} else {0};
+                builder.to_block_end_label(JmpCond::None,"loop",skip,Some(e));
+            }
+            "return" => {
+                if top_group.children().len()==1 {
+                    builder.eval(top_group.child(0).unwrap());
+                } else {
+                    builder.result_void();
+                }
+
+                let e = BuilderError::new(top_group.child(0).unwrap().tokens().first().unwrap().start_loc(), BuilderErrorType::ReturnNotInFunc);
+                builder.to_block_end_label(JmpCond::None, "func",0,Some(e));
+            }
+            "include" => {
+                let v = top_group.child(0).unwrap().tokens().first().unwrap().get_string().unwrap();
+                builder.include(v.value, v.token.start_loc());
+            }
+            "var" => {
+                let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
+                let val= top_group.child(1);
+
+                builder.decl_var_start(name.value,val.is_none());
+
+                if let Some(val)=val {
+                    builder.eval(val);
+                }
+
+                builder.decl_var_end();
+
+                if val.is_some() {
+                    builder.set_var(name.value);
+                }
+            }
+
+            "func" => {
+                let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
+
+                let params= top_group.child(1).unwrap().children()
+                    .map(|x|x.tokens().first().unwrap().get_identifier().unwrap().value);
+                let variadic = top_group.child(2).map(|x|x.name()=="variadic").unwrap_or_default();
+                let body= top_group.child(3).unwrap();
+
+                builder
+                    .decl_var_start(name.value,false)
+                    .decl_var_end();
+
+                //
+                builder
+                    .func_start(params,variadic)
+                        .block_start(Some("func"))
+                            .eval(body)
+                            .result_void()
+                        .block_end()
+                    .func_end();
+
+                builder.set_var(name.value);
+            }
+            "lambda" => {
+
+                let params= top_group.child(0).unwrap().children()
+                    .map(|x|x.tokens().first().unwrap().get_identifier().unwrap().value);
+                let variadic = top_group.child(1).map(|x|x.name()=="variadic").unwrap_or_default();
+                let body= top_group.child(2).unwrap();
+
+                //
+                builder
+                    .func_start(params,variadic)
+                        .block_start(Some("func"))
+                            .eval(body)
+                            .result_void()
+                        .block_end()
+                    .func_end();
+            }
+
+            "call_func" => {
+                let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
+                let params= top_group.child(1).unwrap().children();
+
+                for p in params.rev() {
+                    builder
+                        .eval(p)
+                        .param_push()
+                        ;
+                }
+
+                builder
+                    .loc(name.token.start_loc())
+                    .call(name.value, params.len());
+            }
+
+            ////
 
             "index" => {
                 builder
@@ -460,6 +642,7 @@ impl Compiler {
                         .param_push();
                 }
             }
+
             "call_field_index" => {
                 let field_group=top_group.child(0).unwrap();
                 let params_group=top_group.child(1).unwrap();

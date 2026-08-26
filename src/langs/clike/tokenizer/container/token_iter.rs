@@ -23,10 +23,22 @@ impl<'a> TokenIterContainer<'a> {
     pub fn last_loc(&self) -> Loc {
         self.last_loc
     }
-    pub fn loc(&self) -> Loc {
+    pub fn start_loc(&self) -> Loc {
         // self.first().map(|p|p.end_loc()).unwrap_or(self.last_loc) //why was it last_loc?
 
-        self.first().map(|p|p.start_loc()).unwrap_or(self.last_loc)
+        if self.is_empty() {
+            if self.start==self.parsed.primitives.len() {
+                self.parsed.primitives.last().map(|x|x.end_loc).unwrap_or(Loc::zero())
+            } else {
+                self.parsed.primitives[self.start].start_loc
+            }
+        } else {
+            self.first().unwrap().start_loc()
+        }
+
+
+        // self.first().map(|p|p.start_loc())
+        //     .unwrap_or(self.last_loc)
     }
 
     pub fn pop_front(&mut self) -> Result<TokenContainer<'a>,Loc> {

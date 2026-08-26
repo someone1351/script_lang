@@ -665,8 +665,15 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
             Ok(())
         })
     }
-    pub fn func_start(&mut self,params:Vec<&'a str>,variadic:bool) -> &mut Self {
+    pub fn func_start<P:IntoIterator<Item=&'a str>>(&mut self,
+        // params:Vec<&'a str>,
+        params:P,
+        variadic:bool) -> &mut Self
+    {
+
+        let params=params.into_iter().collect::<Vec<_>>();
         // self.add_node(BuilderNodeType::FuncStart(params,variadic))
+
         self.add_node(move|ast|{
             ast.func_start(params.clone(), variadic).unwrap();
             Ok(())

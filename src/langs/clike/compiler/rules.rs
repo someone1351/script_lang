@@ -88,13 +88,13 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             Keyword("var"),
             NonTerm("var_entry"),
             [ Symbol(","), NonTerm("var_entry"), ].and().many0(),
-            Symbol(",").opt(),
+            // Symbol(",").opt(),
         ].and(),
 
         "var_entry" => [
             Identifier.group("name"),
             [Symbol("="), NonTerm("expr")].and().opt(),
-        ].and(),
+        ].and().group("var"),
 
         "set" => [
             NonTerm("set_val"),
@@ -137,15 +137,23 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             NonTerm("lparen"),
             [
                 [
-                    Identifier.group("param"),
-                    [ Symbol(","), Identifier.group("param"), ].and().many0(),
-                    [ NonTerm("ellipsis"), Symbol(","), ].or().opt(),
-                ].and().opt(),
+                    [ NonTerm("func_params2"), NonTerm("func_variadic"), ].and(),
+                    [ NonTerm("func_params2"), NonTerm("func_not_variadic"), ].and(),
+                    [ Always.group("params"), Always.group("not_variadic"), ].and(),
+                ].or(),
                 NonTerm("rparen"),
             ].and().expect("closing bracket"),
+        ].and(),
+
+        "func_params2" => [
+            Identifier.group("param").expect("param"),
+            [ Symbol(","), Identifier.group("param").expect("param"), ].and().many0(),
         ].and().group("params"),
 
-        "ellipsis" => [Symbol("."),Symbol("."),Symbol("."),].and().group("ellipsis"),
+        "func_variadic" => [Symbol("."),Symbol("."),Symbol("."),].and().group("variadic"),
+        "func_not_variadic" => Symbol(",").opt().group("not_variadic"),
+
+        // "ellipsis" => [Symbol("."),Symbol("."),Symbol("."),].and().group("ellipsis"),
 
         "format" => [Keyword("format"),NonTerm("format_params"),].and(),
         "print" => [Keyword("print"),NonTerm("format_params"),].and(),
@@ -403,8 +411,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "set_op" => [
             Symbol("=").group("eq"),
-            [ NonTerm("set_sub_op"), Symbol("=") //.expect("set")
-                , ].and(),
+            [ NonTerm("set_sub_op"), Symbol("="), ].and(),
         ].or(),
 
         "set_sub_op" => [

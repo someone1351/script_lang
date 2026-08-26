@@ -1,5 +1,6 @@
 
 use crate::clike::tokenizer::data::TokenType;
+use crate::Loc;
 use super::super::super::tokenizer::data::Tokenized;
 
 use super::*;
@@ -17,6 +18,17 @@ impl<'a> FilteredTokenIterContainer<'a> {
     }
     pub fn to_vec(&self) -> Vec<TokenContainer<'a>> {
         self.collect::<Vec<_>>()
+    }
+    pub fn loc(&self) -> Loc {
+        if let Some(x)=self.first() {
+            x.start_loc()
+        } else if let Some(x)=self.parsed.primitives.get(self.start) {
+            x.start_loc
+        } else if let Some(x)=self.parsed.primitives.last() {
+            x.end_loc
+        } else {
+            Loc::zero()
+        }
     }
 }
 

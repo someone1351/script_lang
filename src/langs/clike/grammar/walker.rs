@@ -2479,7 +2479,7 @@ where
                 let mut t=self.tokens_remaining;
                 t.find(|x|!x.is_eol())
                     .map(|x|x.start_loc())
-                    .unwrap_or(self.tokens_remaining.loc())
+                    .unwrap_or(self.tokens_remaining.start_loc())
 
                 // self.tokens_remaining.loc()
             } else {
@@ -2489,7 +2489,7 @@ where
                     .and_then(|x|x.prevs().rev().find(|x|!x.is_eol()))
                     .map(|x|x.end_loc())
                     // .map(|x|x.start_loc())
-                    .unwrap_or(self.tokens_remaining.loc())
+                    .unwrap_or(self.tokens_remaining.start_loc())
 
 
                 // let x=self.expect_token_start2.first().unwrap().prevs().rev().find(|x|!x.is_eol()).map(|x|x.end_loc());
@@ -2502,12 +2502,12 @@ where
             }
         } else if self.use_expect1 {
             if self.expects1.is_empty() {
-                self.tokens_remaining.loc()
+                self.tokens_remaining.start_loc()
             } else {
-                self.expected_tokens_remaining1.loc()
+                self.expected_tokens_remaining1.start_loc()
             }
         } else {
-            self.tokens_remaining.loc()
+            self.tokens_remaining.start_loc()
         }
 
         // //
@@ -2666,10 +2666,10 @@ where
 
                     match e {
                         GrammarWalkError::RecursiveNonTerm(t) => {
-                            println!("Recursive NonTerm {t:?}, At {}",self.tokens_remaining.loc());
+                            println!("Recursive NonTerm {t:?}, At {}",self.tokens_remaining.start_loc());
                         }
                         GrammarWalkError::MissingNonTerm(t) => {
-                            println!("Missing NonTerm {t:?}, At {}",self.tokens_remaining.loc());
+                            println!("Missing NonTerm {t:?}, At {}",self.tokens_remaining.start_loc());
                         }
                         GrammarWalkError::FailedParse => {
 
