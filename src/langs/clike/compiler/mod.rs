@@ -596,6 +596,102 @@ impl Compiler {
                     .call(name.value, params.len());
             }
 
+            "set_var" => {
+                let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
+                let val= top_group.child(2).unwrap();
+                let op=top_group.child(1).unwrap();
+                let func=match op.name() {
+                    "add" => "add",
+                    "sub" => "sub",
+                    "mul" => "mul",
+                    "div" => "div",
+                    "mod" => "mod",
+                    "and" => "and",
+                    "or" => "or",
+                    "xor" => "xor",
+                    "eq" => "",
+                    _ => {panic!("");}
+                    };
+
+                //
+                builder.eval(val);
+
+                //
+                if !func.is_empty() {
+                    builder
+                        .param_push()
+                        .loc(name.token.start_loc())
+                        .get_var(name.value)
+                        .param_push()
+                        .loc(op.start_loc())
+                        .call_method(func, 2)
+                        ;
+                }
+
+                //
+                builder
+                    .loc(name.token.start_loc())
+                    .set_var(name.value)
+                    ;
+            }
+
+            "array" => {
+                let elements= top_group.children();
+
+                builder
+                    .call_method("array", 0)
+                    .decl_anon_var("d", false)
+                    .set_anon_var("d")
+                    ;
+
+                for e in elements {
+                    builder
+                        .eval(e)
+                        .param_push()
+                        .get_anon_var("d")
+                        .param_push()
+                        .call_method("push", 2)
+                        ;
+                }
+
+                builder.get_anon_var("d");
+            }
+
+            "dict" => {
+                let elements= top_group.children();
+
+                builder
+                    .call_method("dict", 0)
+                    .decl_anon_var("d", false)
+                    .set_anon_var("d")
+                    ;
+
+                for e in elements {
+                    let k=e.child(0).unwrap();
+                    let v=e.child(1).unwrap();
+
+
+                    builder
+                        .eval(v)
+                        .param_push();
+
+                    if k.name()=="name" {
+                        builder.result_string(k.tokens().first().unwrap().get_identifier().unwrap().value);
+                    } else {
+                        builder.eval(k);
+                    }
+
+                    builder
+                        .param_push()
+                        .get_anon_var("d")
+                        .param_push()
+                        .call_method("insert", 3)
+                        ;
+                }
+
+                builder.get_anon_var("d");
+            }
+
             ////
 
             "index" => {

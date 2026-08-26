@@ -97,16 +97,16 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and().group("var"),
 
         "set" => [
-            NonTerm("set_val"),
+            NonTerm("set_var"),
             NonTerm("set_field"),
             NonTerm("set_index"),
         ].or(),
 
-        "set_val" => [
+        "set_var" => [
             Identifier.group("name"),
             NonTerm("set_op"),
             NonTerm("expr"),
-        ].and().group("set_val"),
+        ].and().group("set_var"),
 
         "set_field" => [
             NonTerm("val").had("field"),
@@ -415,16 +415,16 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].or(),
 
         "set_sub_op" => [
-            Symbol("+").group("add_eq"),
-            Symbol("-").group("sub_eq"),
-            Symbol("*").group("mul_eq"),
-            Symbol("/").group("div_eq"),
-            Symbol("!").group("not_eq"),
+            Symbol("+").group("add"),
+            Symbol("-").group("sub"),
+            Symbol("*").group("mul"),
+            Symbol("/").group("div"),
+            Symbol("!").group("not"),
 
-            [Symbol("&"),Symbol("&"),].and().group("and_eq"),
-            [Symbol("|"),Symbol("|"),].and().group("or_eq"),
+            [Symbol("&"),Symbol("&"),].and().group("and"),
+            [Symbol("|"),Symbol("|"),].and().group("or"),
 
-            Symbol("^").group("xor_eq"),
+            Symbol("^").group("xor"),
         ].or(),
 
         "prefix_op" => [
