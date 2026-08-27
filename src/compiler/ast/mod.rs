@@ -698,6 +698,9 @@ impl<'a> Ast<'a> {
 
         Ok(())
     }
+    pub fn call_field(&mut self,params_num:usize,has_self:bool,) -> Result<(),AstError> {
+        Ok(())
+    }
     pub fn call_method(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> {
         //uses and pops off params_num amount off stack
 

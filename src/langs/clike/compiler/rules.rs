@@ -57,6 +57,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 NonTerm("end"),
                 NonTerm("stmt"),
             ].and().many0(),
+            NonTerm("end").many0(),
         ].and().opt(),
 
         "stmt" => [
@@ -355,10 +356,10 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "field_index_call" => [
             [NonTerm("index"),NonTerm("call"),].and().group("call_index"),
-            NonTerm("index"),
+            NonTerm("index").group("index"),
 
             [NonTerm("field"),NonTerm("call"),].and().group("call_field"),
-            NonTerm("field"),
+            NonTerm("field").group("field"),
 
             NonTerm("call").group("call_val"),
         ].or(),
@@ -382,7 +383,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 Identifier.group("field_name"),
                 // Error,
             ].or().expect("field").was("field"),
-        ].and(), //.expect("field"),
+        ].and(),
 
         "index" => [
             NonTerm("lsquare"),
@@ -409,7 +410,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "nil" => Keyword("nil").group("nil"),
         "void" => Keyword("void").group("void"),
 
-        "end" => [Symbol(";").many1(),Eol].or().expect("semicolon"),
+        "end" => [Symbol(";").many1(),Eol].or().many1().expect("semicolon"),
 
         "for_op" => [
             [NonTerm("for_to_op"),Symbol("=").opt(),].and().group("to_eq"),

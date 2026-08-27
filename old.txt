@@ -3219,3 +3219,155 @@ prevs
     {
         self.pop_get(true,move|p|p.has_symbol(symbol))
     }
+	
+
+                        "field_name" => {}
+                        "field_index" => {}
+                        "call_field_name" => {}
+                        "call_field_index" => {}
+						
+
+
+                    match x.name() {
+                        "field" => {
+
+                        }
+                        "index" => {
+
+                        }
+                        "call_field" => {
+
+                        }
+                        "call_index" => {
+
+                        }
+                        _ => {panic!("");}
+                    }
+					
+
+            ////
+
+            "index" => {
+                builder
+                    .loc(top_group.tokens().first().unwrap().start_loc())
+                    .param_push()
+                    .eval(top_group.child(0).unwrap())
+                    .param_push()
+                    .swap()
+                    .get_field(false)
+                    ;
+            }
+            "field_index" => {
+                let field=top_group.tokens().first().unwrap().get_int().unwrap();
+                builder
+                    .loc(field.token.start_loc())
+                    .param_push()
+                    .result_int(field.value)
+
+                    .param_push()
+                    .swap()
+                    .get_field(false)
+                    ;
+            }
+            "field_name" => {
+                let field=top_group.tokens().first().unwrap().get_identifier().unwrap();
+                builder
+                    .loc(field.token.start_loc())
+                    .param_push()
+                    .result_string(field.value)
+
+                    .param_push()
+                    .swap()
+                    .get_field(false)
+                    ;
+            }
+
+            "params" => {
+                let params_group=top_group.child(1).unwrap();
+
+                for param in params_group.children().rev() {
+                    builder
+                        .eval(param)
+                        .param_push();
+                }
+            }
+
+            "call_field_index" => {
+                let field_group=top_group.child(0).unwrap();
+                let params_group=top_group.child(1).unwrap();
+                let field_val=field_group.tokens().first().unwrap().get_int().unwrap();
+                let params_num=params_group.children().len();
+
+                //self.ind(..) => self[ind](self, ..)
+
+                builder
+                    .decl_anon_var("self", false)
+                    .set_anon_var("self")
+                    .eval(params_group)
+                    .get_anon_var("self")
+                    .param_push()
+                    .eval(field_group)
+                    .loc(field_val.token.start_loc())
+                    .call_result(params_num)
+                    ;
+            }
+            "call_field_name" => {
+                let field_group=top_group.child(0).unwrap();
+                let params_group=top_group.child(1).unwrap();
+                let field_val=field_group.tokens().first().unwrap().get_identifier().unwrap();
+                let params_num=params_group.children().len();
+
+                //self.field(..) => self.field(self, ..)
+
+                builder
+                    .decl_anon_var("self", false)
+                    .set_anon_var("self")
+                    .eval(params_group)
+                    .get_anon_var("self")
+                    .param_push()
+                    .eval(field_group)
+                    .loc(field_val.token.start_loc())
+                    .call_method_or_result(field_val.value, params_num)
+                    ;
+            }
+            "call_idn" => {
+                let idn_group=top_group.child(0).unwrap();
+                let params_group=top_group.child(1).unwrap();
+                let name=idn_group.tokens().first().unwrap().get_identifier().unwrap();
+
+                builder
+                    .eval(params_group)
+                    .loc(name.token.start_loc())
+                    .call(name.value, params_group.children().len());
+            }
+            "call_val" => {
+                let params_group=top_group.child(0).unwrap();
+
+                builder
+                    .eval(params_group)
+                    .call_result(params_group.children().len())
+                    ;
+            }
+            // "block" => {
+            //     builder.eval(primitive)
+            // }
+			
+                //self
+                builder.param_push();
+			     //field
+                match field.name() {
+                    "field_name" => {
+                        let x=field.tokens().first().unwrap().get_identifier().unwrap().value;
+                        builder.result_string(x);
+                    }
+                    "field_index" => {
+                        let x=field.tokens().first().unwrap().get_int().unwrap().value;
+                        builder.result_int(x);
+                    }
+                    _ => {panic!("");}
+                }
+				
+				 //.expect("field"),
+
+        // "field_name" => [ Symbol("."), Identifier.group("field"), ].and(),
+        // "field_index" => [ Symbol("."), Int.group("field"), ].and(),

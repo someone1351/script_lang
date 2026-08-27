@@ -230,18 +230,10 @@ impl Compiler {
                     println!("\t{:?}",p.token_type());
 
                     match p.token_type() {
-                        TokenTypeContainer::Float(x) => {
-                            builder.result_float(x);
-                        },
-                        TokenTypeContainer::Int(x) => {
-                            builder.result_int(x);
-                        },
-                        TokenTypeContainer::String(x) => {
-                            builder.result_string(x);
-                        },
-                        TokenTypeContainer::Identifier(x) => {
-                            builder.get_var(x);
-                        },
+                        TokenTypeContainer::Float(x) => { builder.result_float(x); },
+                        TokenTypeContainer::Int(x) => { builder.result_int(x); },
+                        TokenTypeContainer::String(x) => { builder.result_string(x); },
+                        TokenTypeContainer::Identifier(x) => { builder.get_var(x); },
                         _ => {panic!("");}
                     }
                 }
@@ -365,17 +357,13 @@ impl Compiler {
                     let func=match p.name() {
                         "not" => "not",
                         "neg" => "neg",
-                        "pos" => "",
                         _ => panic!(""),
                     };
 
-                    if !func.is_empty() {
-                        builder
-                            .param_push()
-                            .call_method(func, 1)
-                            ;
-                    }
-
+                    builder
+                        .param_push()
+                        .call_method(func, 1)
+                        ;
                 }
             }
             "val" => {
@@ -385,12 +373,87 @@ impl Compiler {
                 builder.eval(val);
 
                 //field(s), index(s), call(s)
-                for x in rest.rev() {
+                for x in rest {
                     builder.eval(x);
                 }
+            }
+            "field" => {
+                let field= top_group.child(0).unwrap();
 
+                builder
+                    .param_push() //self
+                    .eval(field)
+                    .param_push() //val
+                    .swap()
+                    .loc(top_group.start_loc())
+                    .get_field(false);
+            }
+            "field_name" => {
+                builder.result_string(top_group.tokens().first().unwrap().get_identifier().unwrap().value);
+            }
+            "field_index" => {
+                builder.result_int(top_group.tokens().first().unwrap().get_int().unwrap().value);
+            }
+            "index" => {
+                let expr= top_group.child(0).unwrap();
+
+                builder
+                    .param_push() //self
+                    .eval(expr)
+                    .param_push() //val
+                    .swap()
+                    .loc(top_group.start_loc())
+                    .get_field(false);
+            }
+            "call_field" => {
+                let field= top_group.child(0).unwrap();
+                let params=top_group.child(1).unwrap();
+
+                builder
+                    .decl_anon_var("self", false)
+                    .set_anon_var("self")
+                    .eval(params)
+                    .eval(field)
+                    .param_push() //val
+                    .get_anon_var("self")
+                    .param_push() //self
+                    .loc(top_group.start_loc())
+                    .call_field(params.children().len(),true)
+                    ;
+            }
+            "call_index" => {
+                let index= top_group.child(0).unwrap();
+                let params=top_group.child(1).unwrap();
+
+                builder
+                    .decl_anon_var("self", false)
+                    .set_anon_var("self")
+                    .eval(params) //params
+                    .eval(index)
+                    .param_push() //index
+                    .get_anon_var("self")
+                    .param_push() //self
+                    .loc(top_group.start_loc())
+                    .call_field(params.children().len(),false)
+                    ;
             }
 
+            "call_func" => {
+                let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
+                let params= top_group.child(1).unwrap();
+
+                builder
+                    .eval(params)
+                    .loc(name.token.start_loc())
+                    .call(name.value, params.children().len());
+            }
+            "params" => {
+                for p in top_group.children().rev() {
+                    builder
+                        .eval(p)
+                        .param_push();
+                }
+            }
             "block" => {
                 builder.block_start(None);
 
@@ -588,22 +651,6 @@ impl Compiler {
                     .func_end();
             }
 
-            "call_func" => {
-                let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
-                let params= top_group.child(1).unwrap().children();
-
-                for p in params.rev() {
-                    builder
-                        .eval(p)
-                        .param_push()
-                        ;
-                }
-
-                builder
-                    .loc(name.token.start_loc())
-                    .call(name.value, params.len());
-            }
-
             "set_var" => {
                 let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
                 let val= top_group.child(2).unwrap();
@@ -700,112 +747,6 @@ impl Compiler {
                 builder.get_anon_var("d");
             }
 
-            ////
-
-            "index" => {
-                builder
-                    .loc(top_group.tokens().first().unwrap().start_loc())
-                    .param_push()
-                    .eval(top_group.child(0).unwrap())
-                    .param_push()
-                    .swap()
-                    .get_field(false)
-                    ;
-            }
-            "field_index" => {
-                let field=top_group.tokens().first().unwrap().get_int().unwrap();
-                builder
-                    .loc(field.token.start_loc())
-                    .param_push()
-                    .result_int(field.value)
-
-                    .param_push()
-                    .swap()
-                    .get_field(false)
-                    ;
-            }
-            "field_name" => {
-                let field=top_group.tokens().first().unwrap().get_identifier().unwrap();
-                builder
-                    .loc(field.token.start_loc())
-                    .param_push()
-                    .result_string(field.value)
-
-                    .param_push()
-                    .swap()
-                    .get_field(false)
-                    ;
-            }
-
-            "params" => {
-                let params_group=top_group.child(1).unwrap();
-
-                for param in params_group.children().rev() {
-                    builder
-                        .eval(param)
-                        .param_push();
-                }
-            }
-
-            "call_field_index" => {
-                let field_group=top_group.child(0).unwrap();
-                let params_group=top_group.child(1).unwrap();
-                let field_val=field_group.tokens().first().unwrap().get_int().unwrap();
-                let params_num=params_group.children().len();
-
-                //self.ind(..) => self[ind](self, ..)
-
-                builder
-                    .decl_anon_var("self", false)
-                    .set_anon_var("self")
-                    .eval(params_group)
-                    .get_anon_var("self")
-                    .param_push()
-                    .eval(field_group)
-                    .loc(field_val.token.start_loc())
-                    .call_result(params_num)
-                    ;
-            }
-            "call_field_name" => {
-                let field_group=top_group.child(0).unwrap();
-                let params_group=top_group.child(1).unwrap();
-                let field_val=field_group.tokens().first().unwrap().get_identifier().unwrap();
-                let params_num=params_group.children().len();
-
-                //self.field(..) => self.field(self, ..)
-
-                builder
-                    .decl_anon_var("self", false)
-                    .set_anon_var("self")
-                    .eval(params_group)
-                    .get_anon_var("self")
-                    .param_push()
-                    .eval(field_group)
-                    .loc(field_val.token.start_loc())
-                    .call_method_or_result(field_val.value, params_num)
-                    ;
-            }
-            "call_idn" => {
-                let idn_group=top_group.child(0).unwrap();
-                let params_group=top_group.child(1).unwrap();
-                let name=idn_group.tokens().first().unwrap().get_identifier().unwrap();
-
-                builder
-                    .eval(params_group)
-                    .loc(name.token.start_loc())
-                    .call(name.value, params_group.children().len());
-            }
-            "call_val" => {
-                let params_group=top_group.child(0).unwrap();
-
-                builder
-                    .eval(params_group)
-                    .call_result(params_group.children().len())
-                    ;
-            }
-            // "block" => {
-            //     builder.eval(primitive)
-            // }
             _ => {
                 panic!("{}",top_group.name());
                 // builder.eval(primitive)

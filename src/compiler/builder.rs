@@ -494,6 +494,13 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         })
     }
 
+    pub fn call_field(&mut self,params_num:usize,has_self:bool,) -> &mut Self {
+        self.add_node(move|ast|{
+            ast.call_field( params_num, has_self).unwrap();
+            Ok(())
+        })
+    }
+
     pub fn call_method(&mut self,name:&'a str,params_num:usize) -> &mut Self {
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::CallMethod(n,params_num))
