@@ -699,6 +699,16 @@ impl<'a> Ast<'a> {
         Ok(())
     }
     pub fn call_field(&mut self,params_num:usize,has_self:bool,) -> Result<(),AstError> {
+
+        if self.last_node().stack_pushed_num < params_num + 2 {
+            return Err(AstError::CallNotEnoughParamsPushedOnStack);
+        }
+
+        //todo add call_field type
+        self.add_next(AstNodeType::CallMethod{name:"name",params_num:params_num+2});
+
+        //
+        self.last_node_mut().stack_pushed_num-=params_num+2;
         Ok(())
     }
     pub fn call_method(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> {

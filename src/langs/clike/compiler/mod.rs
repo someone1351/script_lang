@@ -223,6 +223,10 @@ impl Compiler {
     ) -> Result<(),BuilderError<BuilderErrorType>> {
         println!("{:?}:",top_group.name());
 
+        *next_anon_id+=1;
+        builder.set_anon_scope(*next_anon_id);
+
+
         match top_group.name() {
             "primitive" => {
                 if let Ok(p)=top_group.tokens().trimmed().first() {
@@ -242,26 +246,6 @@ impl Compiler {
                     }
                 }
             }
-            // "nil" => {
-            //     let p=top_group.tokens().trimmed().first().unwrap();
-            //     builder.loc(p.start_loc());
-            //     builder.result_nil();
-            // }
-            // "void" => {
-            //     let p=top_group.tokens().trimmed().first().unwrap();
-            //     builder.loc(p.start_loc());
-            //     builder.result_void();
-            // }
-            // "true" => {
-            //     let p=top_group.tokens().trimmed().first().unwrap();
-            //     builder.loc(p.start_loc());
-            //     builder.result_bool(true);
-            // }
-            // "false" => {
-            //     let p=top_group.tokens().trimmed().first().unwrap();
-            //     builder.loc(p.start_loc());
-            //     builder.result_bool(false);
-            // }
             "expr" => {
                 builder.eval(top_group.child(0).unwrap());
             }
@@ -372,20 +356,15 @@ impl Compiler {
             }
             "postfixes" => {
                 let val= top_group.child(0).unwrap();
-                let rest = top_group.child(1).unwrap().children();
+                let postfixes = top_group.child(1).unwrap().children();
 
                 builder.eval(val);
 
                 //field(s), index(s), call(s)
-                for x in rest {
+                for x in postfixes {
                     builder.eval(x);
                 }
             }
-            // "val" => {
-            //     let val= top_group.child(0).unwrap();
-
-            //     builder.eval(val);
-            // }
             "field" => {
                 let field= top_group.child(0).unwrap();
 
@@ -419,15 +398,17 @@ impl Compiler {
                 let params=top_group.child(1).unwrap();
 
                 builder
-                    .decl_anon_var("self", false)
-                    .set_anon_var("self")
-                    .eval(params)
-                    .eval(field)
-                    .param_push() //val
-                    .get_anon_var("self")
-                    .param_push() //self
-                    .loc(top_group.start_loc())
-                    .call_field(params.children().len(),true)
+                    .block_start(None)
+                        .decl_anon_var("self", false)
+                        .set_anon_var("self")
+                        .eval(params)
+                        .eval(field)
+                        .param_push() //val
+                        .get_anon_var("self")
+                        .param_push() //self
+                        .loc(top_group.start_loc())
+                        .call_field(params.children().len(),true)
+                    .block_end()
                     ;
             }
             "call_index" => {
@@ -435,15 +416,17 @@ impl Compiler {
                 let params=top_group.child(1).unwrap();
 
                 builder
-                    .decl_anon_var("self", false)
-                    .set_anon_var("self")
-                    .eval(params) //params
-                    .eval(index)
-                    .param_push() //index
-                    .get_anon_var("self")
-                    .param_push() //self
-                    .loc(top_group.start_loc())
-                    .call_field(params.children().len(),false)
+                    .block_start(None)
+                        .decl_anon_var("self", false)
+                        .set_anon_var("self")
+                        .eval(params) //params
+                        .eval(index)
+                        .param_push() //index
+                        .get_anon_var("self")
+                        .param_push() //self
+                        .loc(top_group.start_loc())
+                        .call_field(params.children().len(),false)
+                    .block_end()
                     ;
             }
 
@@ -699,10 +682,54 @@ impl Compiler {
                     ;
             }
 
+            "set_field" => {
+                // let var= top_group.child(0);
+                // let op=top_group.child(1).unwrap();
+                // let val= top_group.child(2).unwrap();
+                // let func=match op.name() {
+                //     "add" => "add",
+                //     "sub" => "sub",
+                //     "mul" => "mul",
+                //     "div" => "div",
+                //     "mod" => "mod",
+                //     "and" => "and",
+                //     "or" => "or",
+                //     "xor" => "xor",
+                //     "eq" => "",
+                //     _ => {panic!("");}
+                //     };
+
+                // //
+                // builder.eval(val);
+
+                // //
+                // if !func.is_empty() {
+                //     builder
+                //         .param_push()
+                //         .loc(name.token.start_loc())
+                //         .get_var(name.value)
+                //         .param_push()
+                //         .loc(op.start_loc())
+                //         .call_method(func, 2)
+                //         ;
+                // }
+
+                // //
+                // builder
+                //     .loc(name.token.start_loc())
+                //     .set_var(name.value)
+                //     ;
+            }
+
+            "set_index" => {
+
+            }
+
             "array" => {
                 let elements= top_group.children();
 
                 builder
+                    .block_start(None)
                     .call_method("array", 0)
                     .decl_anon_var("d", false)
                     .set_anon_var("d")
@@ -718,13 +745,17 @@ impl Compiler {
                         ;
                 }
 
-                builder.get_anon_var("d");
+                builder
+                    .get_anon_var("d")
+                    .block_end()
+                    ;
             }
 
             "dict" => {
                 let elements= top_group.children();
 
                 builder
+                    .block_start(None)
                     .call_method("dict", 0)
                     .decl_anon_var("d", false)
                     .set_anon_var("d")
@@ -753,7 +784,10 @@ impl Compiler {
                         ;
                 }
 
-                builder.get_anon_var("d");
+                builder
+                    .get_anon_var("d")
+                    .block_end()
+                    ;
             }
 
             _ => {
@@ -764,6 +798,7 @@ impl Compiler {
             }
         }
 
+        //
 
         Ok(())
     }

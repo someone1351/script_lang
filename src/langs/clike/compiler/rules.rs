@@ -63,7 +63,6 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
 
         "stmt" => [
             NonTerm("var"),
-            NonTerm("set"),
 
             NonTerm("for"),
             NonTerm("while"),
@@ -79,6 +78,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             NonTerm("print"),
             NonTerm("println"),
 
+            NonTerm("set"),
             NonTerm("expr"),
 
 
@@ -293,7 +293,7 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "postfixes" => [
             [
                 NonTerm("val"),
-                NonTerm("field_index_call").many0().group("field_index_calls"),
+                NonTerm("field_index_call").many1().group("field_index_calls"),
             ].and().group("postfixes"),
             NonTerm("val"),
         ].or(),

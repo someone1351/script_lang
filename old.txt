@@ -3371,3 +3371,25 @@ prevs
 
         // "field_name" => [ Symbol("."), Identifier.group("field"), ].and(),
         // "field_index" => [ Symbol("."), Int.group("field"), ].and(),
+
+
+            // "nil" => {
+            //     let p=top_group.tokens().trimmed().first().unwrap();
+            //     builder.loc(p.start_loc());
+            //     builder.result_nil();
+            // }
+            // "void" => {
+            //     let p=top_group.tokens().trimmed().first().unwrap();
+            //     builder.loc(p.start_loc());
+            //     builder.result_void();
+            // }
+            // "true" => {
+            //     let p=top_group.tokens().trimmed().first().unwrap();
+            //     builder.loc(p.start_loc());
+            //     builder.result_bool(true);
+            // }
+            // "false" => {
+            //     let p=top_group.tokens().trimmed().first().unwrap();
+            //     builder.loc(p.start_loc());
+            //     builder.result_bool(false);
+            // }
