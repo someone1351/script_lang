@@ -52,12 +52,13 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "start" => NonTerm("stmts"),
 
         "stmts" => [
+            NonTerm("end").opt(),
             NonTerm("stmt"),
             [
                 NonTerm("end"),
                 NonTerm("stmt"),
             ].and().many0(),
-            NonTerm("end").many0(),
+            NonTerm("end").opt(),
         ].and().opt(),
 
         "stmt" => [
@@ -110,13 +111,13 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and().group("set_var"),
 
         "set_field" => [
-            NonTerm("val").had("field"),
+            NonTerm("postfixes").had("field"),
             NonTerm("set_op"),
             NonTerm("expr"),
         ].and().group("set_field"),
 
         "set_index" => [
-            NonTerm("val").had("index"),
+            NonTerm("postfixes").had("index"),
             NonTerm("set_op"),
             NonTerm("expr"),
         ].and().group("set_field"),
@@ -284,30 +285,35 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                     Symbol("-").group("neg"),
                     Symbol("!").group("not"),
                 ].or().many1().group("prefixes"),
-                NonTerm("val"),
+                NonTerm("postfixes"),
             ].and().group("prefixes"),
+            NonTerm("postfixes"),
+        ].or(),
+
+        "postfixes" => [
+            [
+                NonTerm("val"),
+                NonTerm("field_index_call").many0().group("field_index_calls"),
+            ].and().group("postfixes"),
             NonTerm("val"),
         ].or(),
 
         "val" => [
-            [
-                [ Identifier.group("idn"), NonTerm("call"), ].and().group("call_func"),
+            [ Identifier.group("idn"), NonTerm("call"), ].and().group("call_func"),
 
-                NonTerm("primitive"),
-                NonTerm("bool"),
-                NonTerm("nil"),
-                NonTerm("void"),
+            NonTerm("primitive"),
+            // NonTerm("bool"),
+            // NonTerm("nil"),
+            // NonTerm("void"),
 
-                NonTerm("array"),
-                NonTerm("dict"),
+            NonTerm("array"),
+            NonTerm("dict"),
 
-                NonTerm("if"),
-                NonTerm("lambda"),
-                NonTerm("block"),
-                [ NonTerm("lparen"), NonTerm("expr"), NonTerm("rparen"), ].and(),
-            ].or(),
-            NonTerm("field_index_call").many0().group("field_index_calls"),
-        ].and().group("val"),
+            NonTerm("if"),
+            NonTerm("lambda"),
+            NonTerm("block"),
+            [ NonTerm("lparen"), NonTerm("expr"), NonTerm("rparen"), ].and(),
+        ].or(),
 
         "array" => [
             NonTerm("lsquare"),
@@ -336,11 +342,14 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         "dict_val" => [
             [
                 Identifier.group("name"),
+
                 [
-                    [ Int, String, ].or().group("primitive"),
-                    NonTerm("bool"),
-                    NonTerm("nil"),
-                ].or().group("val"),
+                    Int, String,
+                    Keyword("nil"),
+                    Keyword("true"),
+                    Keyword("false"),
+                ].or().group("primitive"),
+
             ].or().expect("key"),
             Symbol(":").expect("colon"),
             [NonTerm("expr"),Error,].or(), //not needed unlike in val's field_index_calls, because that was optional, this is not
@@ -399,18 +408,22 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             Int,
             Float,
             String,
-            Identifier.group("idn"),
+            Identifier,
+            Keyword("nil"),
+            Keyword("void"),
+            Keyword("true"),
+            Keyword("false"),
         ].or().group("primitive"),
 
-        "bool" => [
-            Keyword("true").group("true"),
-            Keyword("false").group("false"),
-        ].or(),
+        // "bool" => [
+        //     Keyword("true").group("true"),
+        //     Keyword("false").group("false"),
+        // ].or(),
 
-        "nil" => Keyword("nil").group("nil"),
-        "void" => Keyword("void").group("void"),
+        // "nil" => Keyword("nil").group("nil"),
+        // "void" => Keyword("void").group("void"),
 
-        "end" => [Symbol(";").many1(),Eol].or().many1().expect("semicolon"),
+        "end" => [Symbol(";"),Eol].or().many1().expect("semicolon"),
 
         "for_op" => [
             [NonTerm("for_to_op"),Symbol("=").opt(),].and().group("to_eq"),

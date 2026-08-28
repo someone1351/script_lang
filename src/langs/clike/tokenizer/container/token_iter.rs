@@ -293,6 +293,20 @@ impl<'a> TokenIterContainer<'a> {
         self.pop_get(true,move|p|p.has_symbol(symbol))
     }
 
+    pub fn trim(&mut self) {
+        // while self.next()
+        //     .map(|x|!x.is_eol())
+        //     .unwrap_or_default()
+        // {
+        // }
+        while self.pop_eol().is_ok() {}
+    }
+    pub fn trimmed(self) -> Self {
+        let mut t=self;
+        t.trim();
+        t
+    }
+
 }
 
 impl<'a> Iterator for TokenIterContainer<'a> {

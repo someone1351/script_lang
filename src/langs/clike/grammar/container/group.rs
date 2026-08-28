@@ -34,7 +34,7 @@ impl<'t,'g> WalkGroupContainer<'t,'g> {
         self.group().tokens
     }
     pub fn start_loc(&self) -> Loc {
-        self.group().tokens.start_loc()
+        self.group().tokens.trimmed().start_loc()
     }
 }
 

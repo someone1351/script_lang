@@ -225,39 +225,43 @@ impl Compiler {
 
         match top_group.name() {
             "primitive" => {
-                if let Ok(p)=top_group.tokens().first() {
+                if let Ok(p)=top_group.tokens().trimmed().first() {
                     builder.loc(p.start_loc());
-                    println!("\t{:?}",p.token_type());
+                    //println!("\t{:?}",p.token_type());
 
                     match p.token_type() {
                         TokenTypeContainer::Float(x) => { builder.result_float(x); },
                         TokenTypeContainer::Int(x) => { builder.result_int(x); },
                         TokenTypeContainer::String(x) => { builder.result_string(x); },
                         TokenTypeContainer::Identifier(x) => { builder.get_var(x); },
+                        TokenTypeContainer::Keyword("true") => { builder.result_bool(true); },
+                        TokenTypeContainer::Keyword("false") => { builder.result_bool(false); },
+                        TokenTypeContainer::Keyword("nil") => { builder.result_nil(); },
+                        TokenTypeContainer::Keyword("void") => { builder.result_void(); },
                         _ => {panic!("");}
                     }
                 }
             }
-            "nil" => {
-                let p=top_group.tokens().first().unwrap();
-                builder.loc(p.start_loc());
-                builder.result_nil();
-            }
-            "void" => {
-                let p=top_group.tokens().first().unwrap();
-                builder.loc(p.start_loc());
-                builder.result_void();
-            }
-            "true" => {
-                let p=top_group.tokens().first().unwrap();
-                builder.loc(p.start_loc());
-                builder.result_bool(true);
-            }
-            "false" => {
-                let p=top_group.tokens().first().unwrap();
-                builder.loc(p.start_loc());
-                builder.result_bool(false);
-            }
+            // "nil" => {
+            //     let p=top_group.tokens().trimmed().first().unwrap();
+            //     builder.loc(p.start_loc());
+            //     builder.result_nil();
+            // }
+            // "void" => {
+            //     let p=top_group.tokens().trimmed().first().unwrap();
+            //     builder.loc(p.start_loc());
+            //     builder.result_void();
+            // }
+            // "true" => {
+            //     let p=top_group.tokens().trimmed().first().unwrap();
+            //     builder.loc(p.start_loc());
+            //     builder.result_bool(true);
+            // }
+            // "false" => {
+            //     let p=top_group.tokens().trimmed().first().unwrap();
+            //     builder.loc(p.start_loc());
+            //     builder.result_bool(false);
+            // }
             "expr" => {
                 builder.eval(top_group.child(0).unwrap());
             }
@@ -366,7 +370,7 @@ impl Compiler {
                         ;
                 }
             }
-            "val" => {
+            "postfixes" => {
                 let val= top_group.child(0).unwrap();
                 let rest = top_group.child(1).unwrap().children();
 
@@ -377,6 +381,11 @@ impl Compiler {
                     builder.eval(x);
                 }
             }
+            // "val" => {
+            //     let val= top_group.child(0).unwrap();
+
+            //     builder.eval(val);
+            // }
             "field" => {
                 let field= top_group.child(0).unwrap();
 
@@ -389,10 +398,10 @@ impl Compiler {
                     .get_field(false);
             }
             "field_name" => {
-                builder.result_string(top_group.tokens().first().unwrap().get_identifier().unwrap().value);
+                builder.result_string(top_group.tokens().trimmed().first().unwrap().get_identifier().unwrap().value);
             }
             "field_index" => {
-                builder.result_int(top_group.tokens().first().unwrap().get_int().unwrap().value);
+                builder.result_int(top_group.tokens().trimmed().first().unwrap().get_int().unwrap().value);
             }
             "index" => {
                 let expr= top_group.child(0).unwrap();
@@ -439,7 +448,7 @@ impl Compiler {
             }
 
             "call_func" => {
-                let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
+                let name= top_group.child(0).unwrap().tokens().trimmed().first().unwrap().get_identifier().unwrap();
                 let params= top_group.child(1).unwrap();
 
                 builder
@@ -569,13 +578,13 @@ impl Compiler {
             }
 
             "continue" => {
-                let e=BuilderError::new(top_group.child(0).unwrap().tokens().first().unwrap().start_loc(), BuilderErrorType::ContinueNotInLoop);
+                let e=BuilderError::new(top_group.start_loc(), BuilderErrorType::ContinueNotInLoop);
                 let skip=builder.get_flag("in_loop_cond").is_some();
                 let skip = if skip {1} else {0};
                 builder.to_block_start_label(JmpCond::None,"loop",skip,Some(e));
             }
             "break" => {
-                let e=BuilderError::new(top_group.child(0).unwrap().tokens().first().unwrap().start_loc(), BuilderErrorType::ContinueNotInLoop);
+                let e=BuilderError::new(top_group.start_loc(), BuilderErrorType::ContinueNotInLoop);
                 let skip=builder.get_flag("in_loop_cond").is_some();
                 let skip = if skip {1} else {0};
                 builder.to_block_end_label(JmpCond::None,"loop",skip,Some(e));
@@ -587,15 +596,15 @@ impl Compiler {
                     builder.result_void();
                 }
 
-                let e = BuilderError::new(top_group.child(0).unwrap().tokens().first().unwrap().start_loc(), BuilderErrorType::ReturnNotInFunc);
+                let e = BuilderError::new(top_group.start_loc(), BuilderErrorType::ReturnNotInFunc);
                 builder.to_block_end_label(JmpCond::None, "func",0,Some(e));
             }
             "include" => {
-                let v = top_group.child(0).unwrap().tokens().first().unwrap().get_string().unwrap();
+                let v = top_group.child(0).unwrap().tokens().trimmed().first().unwrap().get_string().unwrap();
                 builder.include(v.value, v.token.start_loc());
             }
             "var" => {
-                let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
+                let name= top_group.child(0).unwrap().tokens().trimmed().first().unwrap().get_identifier().unwrap();
                 let val= top_group.child(1);
 
                 builder.decl_var_start(name.value,val.is_none());
@@ -612,10 +621,10 @@ impl Compiler {
             }
 
             "func" => {
-                let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
+                let name= top_group.child(0).unwrap().tokens().trimmed().first().unwrap().get_identifier().unwrap();
 
                 let params= top_group.child(1).unwrap().children()
-                    .map(|x|x.tokens().first().unwrap().get_identifier().unwrap().value);
+                    .map(|x|x.tokens().trimmed().first().unwrap().get_identifier().unwrap().value);
                 let variadic = top_group.child(2).map(|x|x.name()=="variadic").unwrap_or_default();
                 let body= top_group.child(3).unwrap();
 
@@ -637,7 +646,7 @@ impl Compiler {
             "lambda" => {
 
                 let params= top_group.child(0).unwrap().children()
-                    .map(|x|x.tokens().first().unwrap().get_identifier().unwrap().value);
+                    .map(|x|x.tokens().trimmed().first().unwrap().get_identifier().unwrap().value);
                 let variadic = top_group.child(1).map(|x|x.name()=="variadic").unwrap_or_default();
                 let body= top_group.child(2).unwrap();
 
@@ -652,7 +661,7 @@ impl Compiler {
             }
 
             "set_var" => {
-                let name= top_group.child(0).unwrap().tokens().first().unwrap().get_identifier().unwrap();
+                let name= top_group.child(0).unwrap().tokens().trimmed().first().unwrap().get_identifier().unwrap();
                 let val= top_group.child(2).unwrap();
                 let op=top_group.child(1).unwrap();
                 let func=match op.name() {
@@ -731,7 +740,7 @@ impl Compiler {
                         .param_push();
 
                     if k.name()=="name" {
-                        builder.result_string(k.tokens().first().unwrap().get_identifier().unwrap().value);
+                        builder.result_string(k.tokens().trimmed().first().unwrap().get_identifier().unwrap().value);
                     } else {
                         builder.eval(k);
                     }

@@ -1649,21 +1649,28 @@ where
         // let _hist_news_len=self.hist_news_add(&cur);
         // self.hist_stows_clear(&cur);
 
-        let is_group_token_start=if cur.group_ind!=0 {cur.tokens.inds().start==self.groups[cur.group_ind].tokens.inds().start}
-            else{false};
+        // let is_group_token_start=if cur.group_ind!=0 {cur.tokens.inds().start==self.groups[cur.group_ind].tokens.inds().start}
+        //     else{false};
 
         //
 
-        if  !cur.grammar.is_eol() {
-            while !cur.tokens.is_empty() {
-                let x=cur.tokens.first().unwrap();
-                if !x.is_eol() { break; }
-                cur.tokens.next().unwrap();
-            }
+        // if  !cur.grammar.is_eol() {
+        //     while !cur.tokens.is_empty() {
+        //         let x=cur.tokens.first().unwrap();
+        //         if !x.is_eol() { break; }
+        //         cur.tokens.next().unwrap();
+        //     }
+        // }
+
+        //
+        // let tokens_start=cur.tokens;
+
+        //
+        if !cur.grammar.is_eol() {
+            cur.tokens.trim();
         }
 
         //
-        let tokens_start=cur.tokens;
 
         //
         let result=match cur.grammar.as_ref() {
@@ -1679,10 +1686,10 @@ where
 
         if result {
 
-            if is_group_token_start {
-                let g=&mut self.groups[cur.group_ind];
-                g.tokens=tokens_start;
-            }
+            // if is_group_token_start {
+            //     let g=&mut self.groups[cur.group_ind];
+            //     g.tokens=tokens_start;
+            // }
 
             //
             self.work_on_success(&cur);
@@ -2702,12 +2709,12 @@ where
         }
 
         //
-        if self.debug {
-            println!("groups={:?}",self.groups);
-        }
+        // if self.debug {
+        //     println!("groups={:?}",self.groups);
+        // }
 
-        //
-
+        //trim eols
+        self.tokens_remaining.trim();
 
         //
         if !result.is_err() && !self.tokens_remaining.is_empty() {
@@ -2740,41 +2747,41 @@ where
         }
 
         //
-        if self.use_expect1 && result.is_err() {
-            if self.debug {
-                println!("expects:");
-                for (i,x) in self.expects1.iter().enumerate() {
-                    // println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
+        // if self.use_expect1 && result.is_err() {
+        //     if self.debug {
+        //         println!("expects:");
+        //         for (i,x) in self.expects1.iter().enumerate() {
+        //             // println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
 
-                    println!("    e{i}:p{}:t{} {:?} :: {:?}",
-                        x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
-                        x.tokens_start.inds().start,
-                        x.expect_type,
-                        x.tokens_start,
-                    );
+        //             println!("    e{i}:p{}:t{} {:?} :: {:?}",
+        //                 x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
+        //                 x.tokens_start.inds().start,
+        //                 x.expect_type,
+        //                 x.tokens_start,
+        //             );
 
-                }
-            }
+        //         }
+        //     }
 
 
-        }
-
-        //
-        if self.debug {
-            println!("===a {}",self.tokens_remaining.is_empty());
-        }
+        // }
 
         //
-        if self.debug {
-            for (i,g) in self.groups.iter().enumerate() {
-                println!("g{i}: {:?} {:?}",g.name,g.tokens);
-            }
-        }
+        // if self.debug {
+        //     println!("===a {}",self.tokens_remaining.is_empty());
+        // }
 
         //
-        if self.debug {
-            println!("top_primitives={:?}", self.top_tokens );
-        }
+        // if self.debug {
+        //     for (i,g) in self.groups.iter().enumerate() {
+        //         println!("g{i}: {:?} {:?}",g.name,g.tokens);
+        //     }
+        // }
+
+        // //
+        // if self.debug {
+        //     println!("top_primitives={:?}", self.top_tokens );
+        // }
 
         //
         result
