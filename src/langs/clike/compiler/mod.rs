@@ -356,12 +356,12 @@ impl Compiler {
             }
             "postfixes" => {
                 let val= top_group.child(0).unwrap();
-                let postfixes = top_group.child(1).unwrap().children();
+                let postfixes = top_group.child(1).unwrap();
 
                 builder.eval(val);
 
                 //field(s), index(s), call(s)
-                for x in postfixes {
+                for x in postfixes.children() {
                     builder.eval(x);
                 }
             }
@@ -682,8 +682,52 @@ impl Compiler {
                     ;
             }
 
-            "set_field" => {
-                // let var= top_group.child(0);
+            "set_field"|"set_index" => {
+                let postfixes = top_group.child(0).unwrap();
+                let op = top_group.child(1).unwrap();
+                let expr = top_group.child(2).unwrap();
+
+
+                let var=postfixes.child(0).unwrap();
+                let fields=postfixes.child(1).unwrap();
+
+
+                // builder.eval(var);
+
+                //
+                let mut q = 0;
+
+                for i in (0..fields.children().len()-1).rev() {
+                    let c = fields.child(i).unwrap();
+
+                    if c.name()=="call_index" || c.name()=="call_field" {
+                        q=i+1;
+                        break;
+                    }
+                }
+
+                //
+                if q!=fields.children().len() {
+                    builder.eval(var);
+
+                    //field(s), index(s), call(s)
+                    for i in q..fields.children().len()-1 {
+                        let field=fields.child(i).unwrap();
+
+                        builder.eval(field);
+                    }
+                }
+
+                // //
+
+
+
+                // //
+                // let field=postfixes.last().unwrap();
+
+
+                // //
+
                 // let op=top_group.child(1).unwrap();
                 // let val= top_group.child(2).unwrap();
                 // let func=match op.name() {
@@ -721,9 +765,6 @@ impl Compiler {
                 //     ;
             }
 
-            "set_index" => {
-
-            }
 
             "array" => {
                 let elements= top_group.children();

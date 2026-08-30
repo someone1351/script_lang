@@ -25,11 +25,22 @@ impl<'t,'g> WalkGroupContainer<'t,'g> {
         let group=self.group();
 
         if ind < group.children.len() {
-            return Some(WalkGroupContainer{ walk: self.walk, group_ind: group.children.start+ind });
+            Some(WalkGroupContainer{ walk: self.walk, group_ind: group.children.start+ind })
+        } else {
+            None
         }
-
-        None
     }
+    pub fn first(&self) -> Option<WalkGroupContainer<'t,'g>> {
+        self.child(0)
+    }
+    pub fn last(&self) -> Option<WalkGroupContainer<'t,'g>> {
+        if self.children().is_empty() {
+            None
+        } else {
+            self.child(self.children().len()-1)
+        }
+    }
+
     pub fn tokens(&self) -> TokenIterContainer<'t> {
         self.group().tokens
     }

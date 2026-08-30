@@ -302,13 +302,8 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
             [ Identifier.group("idn"), NonTerm("call"), ].and().group("call_func"),
 
             NonTerm("primitive"),
-            // NonTerm("bool"),
-            // NonTerm("nil"),
-            // NonTerm("void"),
-
             NonTerm("array"),
             NonTerm("dict"),
-
             NonTerm("if"),
             NonTerm("lambda"),
             NonTerm("block"),
