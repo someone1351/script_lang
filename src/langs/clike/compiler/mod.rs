@@ -131,6 +131,7 @@ impl Compiler {
         let start_time = std::time::Instant::now();
         let result=walker.run("start") ;
 
+
         let time_elapsed=start_time.elapsed().as_secs_f64();
         //
         if let Err(e)=result {
@@ -182,6 +183,8 @@ impl Compiler {
             builder.eval(g);
         }
 
+        //
+        builder.end_stack_check();
 
         //builder needs to be passed a primitive_iter instead of primitive?
 
@@ -431,68 +434,45 @@ impl Compiler {
                 let var=postfixes.child(0).unwrap();
                 let fields=postfixes.child(1).unwrap();
 
-                // builder
-
-                //     .eval(expr)
-                //     .param_push()
-                //     .eval(fields.last().unwrap().child(0).unwrap())
-                //     .param_push()
-                //     .eval(var)
-                //     .param_push()
-                //     .set_field(false, true) //why need islast? non last are optional?
-                //     ;
-                // builder.eval(var);
 
                 //
-                let mut q = 0;
+                builder.eval(var); //self
 
-                for i in (0..fields.children().len()-1).rev() {
+                //
+                let last_call_ind = (0..fields.children().len()-1).rev().find(|&i|{
                     let c = fields.child(i).unwrap();
-
-                    if c.name()=="call_index" || c.name()=="call_field" {
-                        q=i+1;
-                        break;
-                    }
-                }
-
-                //
-                builder.eval(var);
+                    c.name()=="call_index" || c.name()=="call_field"
+                }).unwrap_or(0);
 
                 //get field(s), index(s), call(s)
-                for i in q..fields.children().len()-1 {
+                for i in last_call_ind..fields.children().len()-1 {
                     let field=fields.child(i).unwrap();
 
                     builder
-                        .param_push() //dup
-                        .eval(field)
+                        .param_push() //self, dup
+                        .eval(field) //evals field|index
                         ;
-
-                    // builder
-                    //     .eval(field)
-
-                    //     .param_push()
-                    //     .swap()
-                    //     .param_push()
-                    //     .swap()
-                    //     ;
                 }
 
                 //
                 if fields.children().len() != 1 {
-                    builder.param_push();
+                    builder.param_push(); //dup
                 }
 
                 //
                 builder
-                    .param_push() //dup
                     .param_push() //self
+
                     .eval(expr)
                     .param_push()  //to
-                    .eval(fields.last().unwrap().child(0).unwrap())
+
+                    .eval(fields.last().unwrap().child(0).unwrap()) //evals field_name|field_index|expr
                     .param_push() //field
+
+                    // .rot_right() //todo remove
                     .rot_left() //todo remove
-                    .rot_right()
-                    .rot_right()
+                    // .call_method("test", 0)
+                    .loc(fields.last().unwrap().start_loc())
                     .set_field(false, true) //why need islast? non last are optional?
 
                     ;
@@ -510,10 +490,12 @@ impl Compiler {
                     }
 
                     builder
-                        .eval(field.child(0).unwrap())
-                        .param_push()
-                        .rot_left() //todo remove//
-                        .swap()
+                        .eval(field.child(0).unwrap()) //evals field_name|field_index|expr
+                        .param_push() //field
+
+                        .rot_left() //todo remove
+
+                        .loc(field.child(0).unwrap().start_loc())
                         .set_field(false, false)
                         ;
 

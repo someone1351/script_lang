@@ -779,6 +779,16 @@ impl<'a> Ast<'a> {
     // }
 
     //////////////////
+    ///
+    pub fn end_stack_check(&self) -> Result<(),AstError> {  //check no params still pushed at end of program, not necessary
+        let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
+
+        if stack_pushed_num!=0 {
+            Err(AstError::LocalPushValuesNotZero(stack_pushed_num))
+        } else {
+            Ok(())
+        }
+    }
 
     pub fn print(&self) {
         let mut stk = vec![0];

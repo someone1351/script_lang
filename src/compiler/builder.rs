@@ -666,6 +666,13 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         })
     }
 
+    pub fn end_stack_check(&mut self) -> &mut Self {
+        self.add_node(|ast|{
+            ast.end_stack_check().unwrap();
+            Ok(())
+        })
+    }
+
     pub fn pop_params(&mut self) -> &mut Self {
         self.add_node(|ast|{
             ast.pop_params();
@@ -867,8 +874,12 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         //push to_val
         self //=> field result
             .param_push() //=> field result to_val
-            .rot_right() //=> result to_val field
-            .rot_right(); //=> to_val field result
+            //wrong
+            // .rot_right() //=> result to_val field
+            // .rot_right() //=> to_val field result
+
+            .rot_right() //=> to_val field result
+            ;
 
         //
         // self.call_method("set_field", 3);
@@ -889,7 +900,9 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         for field in fields
         {
             self
-                .rot_right()
+                // .rot_right()
+                // .rot_right()
+
                 .rot_right()
                 .swap()
 

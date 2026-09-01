@@ -1416,7 +1416,7 @@ impl<'a,X> Machine<'a,X> {
         let stack_len = self.stack.len();
 
         if stack_len>=3 {
-            self.stack[stack_len-3 ..].rotate_left(1);
+            self.stack[stack_len-3 ..].rotate_right(1);
             self.debugger.stack_rot_right();
         } else {
             return Err(MachineError::from_machine(self, MachineErrorType::InvalidStackAccess(3) ));
@@ -1428,7 +1428,7 @@ impl<'a,X> Machine<'a,X> {
         let stack_len = self.stack.len();
 
         if stack_len>=3 {
-            self.stack[stack_len-3 ..].rotate_right(1);
+            self.stack[stack_len-3 ..].rotate_left(1);
             self.debugger.stack_rot_left();
         } else {
             return Err(MachineError::from_machine(self, MachineErrorType::InvalidStackAccess(3) ));

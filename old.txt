@@ -3424,3 +3424,29 @@ prevs
                     .block_end()
                     ;
             }
+			
+
+                // builder
+
+                //     .eval(expr)
+                //     .param_push() //to
+                //     .eval(fields.last().unwrap().child(0).unwrap())
+                //     .param_push() //field
+                //     .eval(var)
+                //     .param_push() //self
+                //     .set_field(false, true) //why need islast? non last are optional?
+                //     ;
+                // builder.eval(var);
+				
+ //
+                let mut q = 0;
+
+                //find where last call field/index is
+                for i in (0..fields.children().len()-1).rev() {
+                    let c = fields.child(i).unwrap();
+
+                    if c.name()=="call_index" || c.name()=="call_field" {
+                        q=i+1;
+                        break;
+                    }
+                }

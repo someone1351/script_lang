@@ -1,7 +1,6 @@
 
 //abc("",1,2.5,false)
-var d={b:{c:{e:66,f:99},d:2},};
+var d={b:{c2:11,c:{e:66,f:99},d:2},};
 
-d.b.c.f = 5
-
-d.b.c.f
+d.b.c.f = 5;d.b.c.f
+//d.b=4;d.b
