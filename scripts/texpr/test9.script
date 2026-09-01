@@ -1,4 +1,9 @@
 
-var v (array 6)
-v.push 123
+#var v (array 6)
+#v.push 123
 #println v
+
+
+var v (array (dict ["abc" (array )]))
+v.0.abc.push 99
+v.0.abc.{0}

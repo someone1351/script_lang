@@ -8,7 +8,7 @@ ${some_func}.x
 
 {call some_func}.x
 
-{get {call some_func} :x}
+#{get {call some_func} :x}
 
 
 {
