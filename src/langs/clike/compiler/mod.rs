@@ -365,14 +365,14 @@ impl Compiler {
                     builder.eval(x);
                 }
             }
-            "field" => {
+            "field"|"index" => {
                 let field= top_group.child(0).unwrap();
 
                 builder
                     .param_push() //self
                     .eval(field)
                     .param_push() //val
-                    .swap()
+                    .swap() //todo remove
                     .loc(top_group.start_loc())
                     .get_field(false);
             }
@@ -382,53 +382,219 @@ impl Compiler {
             "field_index" => {
                 builder.result_int(top_group.tokens().trimmed().first().unwrap().get_int().unwrap().value);
             }
-            "index" => {
-                let expr= top_group.child(0).unwrap();
 
+            "set_var" => {
+                let name= top_group.child(0).unwrap().tokens().trimmed().first().unwrap().get_identifier().unwrap();
+                let val= top_group.child(2).unwrap();
+                let op=top_group.child(1).unwrap();
+                let func=match op.name() {
+                    "add" => "add",
+                    "sub" => "sub",
+                    "mul" => "mul",
+                    "div" => "div",
+                    "mod" => "mod",
+                    "and" => "and",
+                    "or" => "or",
+                    "xor" => "xor",
+                    "eq" => "",
+                    _ => {panic!("");}
+                    };
+
+                //
+                builder.eval(val);
+
+                //
+                if !func.is_empty() {
+                    builder
+                        .param_push()
+                        .loc(name.token.start_loc())
+                        .get_var(name.value)
+                        .param_push()
+                        .loc(op.start_loc())
+                        .call_method(func, 2)
+                        ;
+                }
+
+                //
                 builder
+                    .loc(name.token.start_loc())
+                    .set_var(name.value)
+                    ;
+            }
+
+            "set_field"|"set_index" => {
+                let postfixes = top_group.child(0).unwrap();
+                let op = top_group.child(1).unwrap();
+                let expr = top_group.child(2).unwrap();
+
+
+                let var=postfixes.child(0).unwrap();
+                let fields=postfixes.child(1).unwrap();
+
+                // builder
+
+                //     .eval(expr)
+                //     .param_push()
+                //     .eval(fields.last().unwrap().child(0).unwrap())
+                //     .param_push()
+                //     .eval(var)
+                //     .param_push()
+                //     .set_field(false, true) //why need islast? non last are optional?
+                //     ;
+                // builder.eval(var);
+
+                //
+                let mut q = 0;
+
+                for i in (0..fields.children().len()-1).rev() {
+                    let c = fields.child(i).unwrap();
+
+                    if c.name()=="call_index" || c.name()=="call_field" {
+                        q=i+1;
+                        break;
+                    }
+                }
+
+                //
+                builder.eval(var);
+
+                //get field(s), index(s), call(s)
+                for i in q..fields.children().len()-1 {
+                    let field=fields.child(i).unwrap();
+
+                    builder
+                        .param_push() //dup
+                        .eval(field)
+                        ;
+
+                    // builder
+                    //     .eval(field)
+
+                    //     .param_push()
+                    //     .swap()
+                    //     .param_push()
+                    //     .swap()
+                    //     ;
+                }
+
+                //
+                if fields.children().len() != 1 {
+                    builder.param_push();
+                }
+
+                //
+                builder
+                    .param_push() //dup
                     .param_push() //self
                     .eval(expr)
-                    .param_push() //val
-                    .swap()
-                    .loc(top_group.start_loc())
-                    .get_field(false);
+                    .param_push()  //to
+                    .eval(fields.last().unwrap().child(0).unwrap())
+                    .param_push() //field
+                    .rot_left() //todo remove
+                    .rot_right()
+                    .rot_right()
+                    .set_field(false, true) //why need islast? non last are optional?
+
+                    ;
+
+                //set remaing fields chain
+                for i in (0..fields.children().len()-1).rev() {
+                    let field=fields.child(i).unwrap();
+
+                    if i!=0 {
+                        builder
+                            .swap()
+                            .dup()
+                            .rot_left()
+                            ;
+                    }
+
+                    builder
+                        .eval(field.child(0).unwrap())
+                        .param_push()
+                        .rot_left() //todo remove//
+                        .swap()
+                        .set_field(false, false)
+                        ;
+
+                }
+
+                //
+
+
+
+                // //
+                // let field=postfixes.last().unwrap();
+
+
+                // //
+
+                // let op=top_group.child(1).unwrap();
+                // let val= top_group.child(2).unwrap();
+                // let func=match op.name() {
+                //     "add" => "add",
+                //     "sub" => "sub",
+                //     "mul" => "mul",
+                //     "div" => "div",
+                //     "mod" => "mod",
+                //     "and" => "and",
+                //     "or" => "or",
+                //     "xor" => "xor",
+                //     "eq" => "",
+                //     _ => {panic!("");}
+                //     };
+
+                // //
+                // builder.eval(val);
+
+                // //
+                // if !func.is_empty() {
+                //     builder
+                //         .param_push()
+                //         .loc(name.token.start_loc())
+                //         .get_var(name.value)
+                //         .param_push()
+                //         .loc(op.start_loc())
+                //         .call_method(func, 2)
+                //         ;
+                // }
+
+                // //
+                // builder
+                //     .loc(name.token.start_loc())
+                //     .set_var(name.value)
+                //     ;
             }
-            "call_field" => {
+
+            "call_field"|"call_index" => {
                 let field= top_group.child(0).unwrap();
                 let params=top_group.child(1).unwrap();
+                let has_self=top_group.name()=="call_field";
 
                 builder
-                    .block_start(None)
+                    .block_start(None) //todo remove
+                        //todo remove
                         .decl_anon_var("self", false)
                         .set_anon_var("self")
+
+                        //
                         .eval(params)
+
+                        //
                         .eval(field)
                         .param_push() //val
-                        .get_anon_var("self")
-                        .param_push() //self
-                        .loc(top_group.start_loc())
-                        .call_field(params.children().len(),true)
-                    .block_end()
-                    ;
-            }
-            "call_index" => {
-                let index= top_group.child(0).unwrap();
-                let params=top_group.child(1).unwrap();
 
-                builder
-                    .block_start(None)
-                        .decl_anon_var("self", false)
-                        .set_anon_var("self")
-                        .eval(params) //params
-                        .eval(index)
-                        .param_push() //index
-                        .get_anon_var("self")
+                        //
+                        .get_anon_var("self") //todo remove
                         .param_push() //self
+
+                        //
                         .loc(top_group.start_loc())
-                        .call_field(params.children().len(),false)
-                    .block_end()
+                        .call_field(params.children().len(),has_self)
+                    .block_end() //todo remove
                     ;
             }
+
 
             "call_func" => {
                 let name= top_group.child(0).unwrap().tokens().trimmed().first().unwrap().get_identifier().unwrap();
@@ -643,127 +809,6 @@ impl Compiler {
                     .func_end();
             }
 
-            "set_var" => {
-                let name= top_group.child(0).unwrap().tokens().trimmed().first().unwrap().get_identifier().unwrap();
-                let val= top_group.child(2).unwrap();
-                let op=top_group.child(1).unwrap();
-                let func=match op.name() {
-                    "add" => "add",
-                    "sub" => "sub",
-                    "mul" => "mul",
-                    "div" => "div",
-                    "mod" => "mod",
-                    "and" => "and",
-                    "or" => "or",
-                    "xor" => "xor",
-                    "eq" => "",
-                    _ => {panic!("");}
-                    };
-
-                //
-                builder.eval(val);
-
-                //
-                if !func.is_empty() {
-                    builder
-                        .param_push()
-                        .loc(name.token.start_loc())
-                        .get_var(name.value)
-                        .param_push()
-                        .loc(op.start_loc())
-                        .call_method(func, 2)
-                        ;
-                }
-
-                //
-                builder
-                    .loc(name.token.start_loc())
-                    .set_var(name.value)
-                    ;
-            }
-
-            "set_field"|"set_index" => {
-                let postfixes = top_group.child(0).unwrap();
-                let op = top_group.child(1).unwrap();
-                let expr = top_group.child(2).unwrap();
-
-
-                let var=postfixes.child(0).unwrap();
-                let fields=postfixes.child(1).unwrap();
-
-
-                // builder.eval(var);
-
-                //
-                let mut q = 0;
-
-                for i in (0..fields.children().len()-1).rev() {
-                    let c = fields.child(i).unwrap();
-
-                    if c.name()=="call_index" || c.name()=="call_field" {
-                        q=i+1;
-                        break;
-                    }
-                }
-
-                //
-                if q!=fields.children().len() {
-                    builder.eval(var);
-
-                    //field(s), index(s), call(s)
-                    for i in q..fields.children().len()-1 {
-                        let field=fields.child(i).unwrap();
-
-                        builder.eval(field);
-                    }
-                }
-
-                // //
-
-
-
-                // //
-                // let field=postfixes.last().unwrap();
-
-
-                // //
-
-                // let op=top_group.child(1).unwrap();
-                // let val= top_group.child(2).unwrap();
-                // let func=match op.name() {
-                //     "add" => "add",
-                //     "sub" => "sub",
-                //     "mul" => "mul",
-                //     "div" => "div",
-                //     "mod" => "mod",
-                //     "and" => "and",
-                //     "or" => "or",
-                //     "xor" => "xor",
-                //     "eq" => "",
-                //     _ => {panic!("");}
-                //     };
-
-                // //
-                // builder.eval(val);
-
-                // //
-                // if !func.is_empty() {
-                //     builder
-                //         .param_push()
-                //         .loc(name.token.start_loc())
-                //         .get_var(name.value)
-                //         .param_push()
-                //         .loc(op.start_loc())
-                //         .call_method(func, 2)
-                //         ;
-                // }
-
-                // //
-                // builder
-                //     .loc(name.token.start_loc())
-                //     .set_var(name.value)
-                //     ;
-            }
 
 
             "array" => {

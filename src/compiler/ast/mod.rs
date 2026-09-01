@@ -146,6 +146,11 @@ TODO
 
 TODO
 * for var gotos, keep list of labels stored as vals, then in each gotovar, get only valid labels, and check which is used, and set vars to undefined from there
+
+TODO
+* make get_index take params on stack [self,field] instead of [field,self]
+* make set_index take params on stack [self,value,field] instead of [value,field,self]
+* call_field is currently [... params, field, self] instead change to [self,field,params ...]
 */
 
 use std::{collections::{HashMap,  HashSet},  path::Path};
