@@ -3450,3 +3450,22 @@ prevs
                         break;
                     }
                 }
+				
+				
+                //
+                builder
+                    .param_push() //self
+
+                    .eval(expr)
+                    .param_push()  //to
+
+                    .eval(fields.last().unwrap().child(0).unwrap()) //evals field_name|field_index|expr
+                    .param_push() //field
+
+                    // .rot_right() //todo remove
+                    .rot_left() //todo remove
+                    // .call_method("test", 0)
+                    .loc(fields.last().unwrap().start_loc())
+                    .set_field(false, true) //why need islast? non last are optional?
+
+                    ;

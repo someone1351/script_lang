@@ -430,6 +430,18 @@ impl Compiler {
                 let op = top_group.child(1).unwrap();
                 let expr = top_group.child(2).unwrap();
 
+                let func=match op.name() {
+                    "add" => "add",
+                    "sub" => "sub",
+                    "mul" => "mul",
+                    "div" => "div",
+                    "mod" => "mod",
+                    "and" => "and",
+                    "or" => "or",
+                    "xor" => "xor",
+                    "eq" => "",
+                    _ => {panic!("");}
+                    };
 
                 let var=postfixes.child(0).unwrap();
                 let fields=postfixes.child(1).unwrap();
@@ -444,28 +456,54 @@ impl Compiler {
                     c.name()=="call_index" || c.name()=="call_field"
                 }).unwrap_or(0);
 
-                //get field(s), index(s), call(s)
-                for i in last_call_ind..fields.children().len()-1 {
-                    let field=fields.child(i).unwrap();
-
-                    builder
-                        .param_push() //self, dup
-                        .eval(field) //evals field|index
-                        ;
-                }
-
                 //
                 if fields.children().len() != 1 {
+                    //get field(s), index(s), call(s)
+                    for i in last_call_ind..fields.children().len()-1 {
+                        let field=fields.child(i).unwrap();
+
+                        builder
+                            .param_push() //self, dup
+                            .eval(field) //evals field|index
+                            ;
+                    }
+
+                    //
                     builder.param_push(); //dup
                 }
 
                 //
                 builder
                     .param_push() //self
+                    ;
+
+                //
+                if !func.is_empty() {
+                    builder
+                        .eval(fields.last().unwrap()) //evals field|index
+                        .param_push() //prev_val
+                        ;
+                }
+
+                //
+                builder
 
                     .eval(expr)
                     .param_push()  //to
+                ;
 
+                //
+                if !func.is_empty() {
+                    builder
+                        .swap()
+                        .loc(op.start_loc())
+                        .call_method(func, 2)
+                        .param_push() //prev_val+to
+                        ;
+                }
+
+                //
+                builder
                     .eval(fields.last().unwrap().child(0).unwrap()) //evals field_name|field_index|expr
                     .param_push() //field
 
