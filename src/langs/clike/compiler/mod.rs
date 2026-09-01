@@ -535,54 +535,7 @@ impl Compiler {
                         .loc(field.child(0).unwrap().start_loc())
                         .set_field(false, false)
                         ;
-
                 }
-
-                //
-
-
-
-                // //
-                // let field=postfixes.last().unwrap();
-
-
-                // //
-
-                // let op=top_group.child(1).unwrap();
-                // let val= top_group.child(2).unwrap();
-                // let func=match op.name() {
-                //     "add" => "add",
-                //     "sub" => "sub",
-                //     "mul" => "mul",
-                //     "div" => "div",
-                //     "mod" => "mod",
-                //     "and" => "and",
-                //     "or" => "or",
-                //     "xor" => "xor",
-                //     "eq" => "",
-                //     _ => {panic!("");}
-                //     };
-
-                // //
-                // builder.eval(val);
-
-                // //
-                // if !func.is_empty() {
-                //     builder
-                //         .param_push()
-                //         .loc(name.token.start_loc())
-                //         .get_var(name.value)
-                //         .param_push()
-                //         .loc(op.start_loc())
-                //         .call_method(func, 2)
-                //         ;
-                // }
-
-                // //
-                // builder
-                //     .loc(name.token.start_loc())
-                //     .set_var(name.value)
-                //     ;
             }
 
             "call_field"|"call_index" => {
