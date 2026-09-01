@@ -507,9 +507,8 @@ impl Compiler {
                     .eval(fields.last().unwrap().child(0).unwrap()) //evals field_name|field_index|expr
                     .param_push() //field
 
-                    // .rot_right() //todo remove
                     .rot_left() //todo remove
-                    // .call_method("test", 0)
+
                     .loc(fields.last().unwrap().start_loc())
                     .set_field(false, true) //why need islast? non last are optional?
 
@@ -593,9 +592,9 @@ impl Compiler {
 
                 builder
                     .block_start(None) //todo remove
-                        //todo remove
-                        .decl_anon_var("self", false)
-                        .set_anon_var("self")
+
+                        .decl_anon_var("self", false) //todo remove
+                        .set_anon_var("self") //todo remove
 
                         //
                         .eval(params)
@@ -605,7 +604,7 @@ impl Compiler {
                         .param_push() //val
 
                         //
-                        .get_anon_var("self") //todo remove
+                        .get_anon_var("self") //todo remove, replace with push above it's decl?
                         .param_push() //self
 
                         //
