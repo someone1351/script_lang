@@ -359,12 +359,9 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         ].and().group("block"),
 
         "field_index_call" => [
-            [NonTerm("index"),NonTerm("call"),].and().group("call_index"),
-            NonTerm("index").group("index"),
-
             [NonTerm("field"),NonTerm("call"),].and().group("call_field"),
             NonTerm("field").group("field"),
-
+            NonTerm("index").group("index"),
             NonTerm("call").group("call_val"),
         ].or(),
 
@@ -386,18 +383,14 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
                 Int.group("field_index"),
                 Identifier.group("field_name"),
                 // Error,
-            ].or().expect("field").was("field"),
-        ].and(),
+            ].or().expect("field"),
+        ].and().was("field"),
 
         "index" => [
             NonTerm("lsquare"),
-            [
-                [
-                    NonTerm("expr"),
-                    NonTerm("rsquare"),
-                ].and().expect("closing square bracket"),
-            ].and().expect("index").was("index")
-        ].and(),
+            NonTerm("expr"),
+            NonTerm("rsquare").expect("closing square bracket"),
+        ].and().was("index"),
 
         "primitive" => [
             Int,

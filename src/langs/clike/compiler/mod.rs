@@ -369,15 +369,16 @@ impl Compiler {
                 }
             }
             "field"|"index" => {
-                let field= top_group.child(0).unwrap();
+                let field_inner= top_group.child(0).unwrap(); //field_name|field_index|expr
+                let is_symbol = field_inner.name()=="field_name";
 
                 builder
                     .param_push() //self
-                    .eval(field)
+                    .eval(field_inner)
                     .param_push() //val
                     .swap() //todo remove
                     .loc(top_group.start_loc())
-                    .get_field(false);
+                    .get_field(is_symbol);
             }
             "field_name" => {
                 builder.result_string(top_group.tokens().trimmed().first().unwrap().get_identifier().unwrap().value);
@@ -453,7 +454,7 @@ impl Compiler {
                 //
                 let last_call_ind = (0..fields.children().len()-1).rev().find(|&i|{
                     let c = fields.child(i).unwrap();
-                    c.name()=="call_index" || c.name()=="call_field"
+                    c.name()=="call_val" || c.name()=="call_field"
                 }).unwrap_or(0);
 
                 //
@@ -503,20 +504,28 @@ impl Compiler {
                 }
 
                 //
-                builder
-                    .eval(fields.last().unwrap().child(0).unwrap()) //evals field_name|field_index|expr
-                    .param_push() //field
+                {
+                    let field=fields.last().unwrap(); //field|index
+                    let field_inner=field.child(0).unwrap(); //field_name|field_index|expr
+                    let is_symbol=field_inner.name()=="field_name";
 
-                    .rot_left() //todo remove
+                    builder
+                        .eval(field_inner) //evals field_name|field_index|expr
+                        .param_push() //field
 
-                    .loc(fields.last().unwrap().start_loc())
-                    .set_field(false, true) //why need islast? non last are optional?
+                        .rot_left() //todo remove
 
-                    ;
+                        .loc(field.start_loc())
+                        .set_field(is_symbol, true) //why need islast? non last are optional?
+
+                        ;
+                }
 
                 //set remaing fields chain
                 for i in (0..fields.children().len()-1).rev() {
-                    let field=fields.child(i).unwrap();
+                    let field=fields.child(i).unwrap();  //field|index
+                    let field_inner=field.child(0).unwrap(); //field_name|field_index|expr
+                    let is_symbol=field_inner.name()=="field_name";
 
                     if i!=0 {
                         builder
@@ -527,21 +536,41 @@ impl Compiler {
                     }
 
                     builder
-                        .eval(field.child(0).unwrap()) //evals field_name|field_index|expr
+                        .eval(field_inner) //evals field_name|field_index|expr
                         .param_push() //field
 
                         .rot_left() //todo remove
 
-                        .loc(field.child(0).unwrap().start_loc())
-                        .set_field(false, false)
+                        .loc(field_inner.start_loc())
+                        .set_field(is_symbol, false)
                         ;
                 }
             }
+            "call_val" => {
+                let params=top_group.child(0).unwrap();
 
-            "call_field"|"call_index" => {
+                builder
+                    .block_start(None) //todo remove
+
+                        .decl_anon_var("self", false) //todo remove
+                        .set_anon_var("self") //todo remove
+
+                        //
+                        .eval(params)
+
+                        //
+                        .get_anon_var("self") //todo remove, replace with push above it's decl?
+
+                        //
+                        .loc(top_group.start_loc())
+                        .call_result(params.children().len(),)
+
+                    .block_end() //todo remove
+                    ;
+            }
+            "call_field" => {
                 let field= top_group.child(0).unwrap();
                 let params=top_group.child(1).unwrap();
-                let has_self=top_group.name()=="call_field";
 
                 builder
                     .block_start(None) //todo remove
@@ -562,7 +591,9 @@ impl Compiler {
 
                         //
                         .loc(top_group.start_loc())
-                        .call_field(params.children().len(),has_self)
+                        .call_field(params.children().len(),)
+
+                        // .call_method(name, params_num)
                     .block_end() //todo remove
                     ;
             }

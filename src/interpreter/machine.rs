@@ -23,6 +23,10 @@ TODO
 ** because for loop macro, stores void, and might be replaced with last val used, added allow_void to set stk instrs
 *** can't rely on result_val because it is ued to calc for loop index
 *** could push last val on stack, do ind calc, and then pop last val back onto result val? messy
+
+
+TODO
+* remove method calls on get_field ?
 */
 
 use std::collections::HashMap;
@@ -489,8 +493,11 @@ impl<'a,X> Machine<'a,X> {
                     // let field_name=self.get_stack_offset_value(1)?.get_string().unwrap();
 
                     if let Some(field_name)=field_val.get_string() {
-                        if let Some(x)=self.lib_scope.get_method(field_name.as_str(),[&self_val])
-                            .or_else(||self.lib_scope.get_method_field_named(field_name.as_str(),[&self_val]))
+                        if let Some(x)=
+                            // self.lib_scope.get_method(field_name.as_str(),[&self_val])
+                            //     .or_else(||
+                                    self.lib_scope.get_method_field_named(field_name.as_str(),[&self_val])
+                            //     )
                         {
                             // println!("--");
                             self.stack_swap()?; // self=>field
@@ -590,6 +597,9 @@ impl<'a,X> Machine<'a,X> {
                         self.stack_pop_amount(params_num)?;
                     }
                 }
+            }
+            &Instruction::CallField { params_num,  } => {
+
             }
             Instruction::Jmp{cond,instr_pos:new_instr_pos, debug} => {
                 if *new_instr_pos > cur_build.instructions.len() {

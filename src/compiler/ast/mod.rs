@@ -703,14 +703,14 @@ impl<'a> Ast<'a> {
 
         Ok(())
     }
-    pub fn call_field(&mut self,params_num:usize,has_self:bool,) -> Result<(),AstError> {
+    pub fn call_field(&mut self,params_num:usize,) -> Result<(),AstError> {
 
         if self.last_node().stack_pushed_num < params_num + 2 {
             return Err(AstError::CallNotEnoughParamsPushedOnStack);
         }
 
-        //todo add call_field type
-        self.add_next(AstNodeType::CallMethod{name:"name",params_num:params_num+2});
+        //
+        self.add_next(AstNodeType::CallField{params_num:params_num,});
 
         //
         self.last_node_mut().stack_pushed_num-=params_num+2;
@@ -1360,6 +1360,10 @@ impl<'a> Ast<'a> {
                     {
                         self.get_node_mut(cur_node_ind).stack_size-=params_num;
                     }
+                    AstNodeType::CallField { params_num, .. } =>
+                    {
+                        self.get_node_mut(cur_node_ind).stack_size-=params_num+2;
+                    }
                     AstNodeType::SetField{..} => {
                         self.get_node_mut(cur_node_ind).stack_size-=3;
                     }
@@ -1769,6 +1773,9 @@ impl<'a> Ast<'a> {
                 // AstNodeType::GetGlobalVarRef { name, }=> {
                 //     instructions.push(Instruction::GetGlobalVarRef(symbol_inds.get(name), ));
                 // }
+                AstNodeType::CallField { params_num,  } => {
+                    instructions.push(Instruction::CallField { params_num,  });
+                }
                 AstNodeType::CallMethod{name,params_num} => {
                     instructions.push(Instruction::CallMethod(symbol_inds.get(name),params_num));
                 }

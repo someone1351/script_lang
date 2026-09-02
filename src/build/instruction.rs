@@ -134,5 +134,5 @@ pub enum Instruction {
 
     GetField{is_field_symbol:bool}, //is_field_static //what is is_field_static for? if is true, then can use to call methods eg int.abc = abc(int), but if false, then int.abc is only int["abc"]
     SetField{is_field_symbol:bool,is_last:bool,}, //is_field_static
-
+    CallField{params_num:usize,},
 }
