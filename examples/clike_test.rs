@@ -42,6 +42,7 @@ pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
     //
     {
         let mut var_scope=VarScope::new();
+        // var_scope.decl("self", Some(Value::int(5))).unwrap();
 
         let mut core_val =();
         let mut machine = Machine::new(&mut gc_scope,&lib_scope, &mut var_scope,  &mut core_val);
