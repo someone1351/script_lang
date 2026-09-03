@@ -4,7 +4,7 @@ use super::super::super::build::Loc;
 #[derive(Debug,Clone)]
 pub enum AstError {
     // LocalVarDeclPushSizeNotZero,
-    CallNotEnoughParamsPushedOnStack,
+    NotEnoughParamsOnStack,
     StackSizeAlreadyZero,
     // LocalVarDeclNotInBlockOrRoot,
     ClosingFunctionNotMatching,

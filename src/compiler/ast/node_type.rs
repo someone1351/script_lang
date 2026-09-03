@@ -25,11 +25,13 @@ pub enum AstNodeType<'a> {
         // cond:Option<bool>,
         cond:JmpCond,
         block_node_ind:usize,
+        // pop_params:usize,
     },
     ToBlockEnd{
         // cond:Option<bool>,
         cond:JmpCond,
         block_node_ind:usize,
+        // pop_params:usize,
     },
 
     GotoVar{go_var_ind:usize,anon_id:Option<usize>},
@@ -63,7 +65,7 @@ pub enum AstNodeType<'a> {
     //
     CallMethod{name:&'a str,params_num:usize},
     TryCallMethod{name:&'a str,params_num:usize},
-    CallMethodOrResult{name:&'a str,params_num:usize},
+    // CallMethodOrResult{name:&'a str,params_num:usize},
     CallField{params_num:usize, },
     // HasMethod{name:&'a str,},
     CallResult{params_num:usize},

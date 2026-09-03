@@ -226,6 +226,8 @@ impl<'a> Ast<'a> {
     fn add_next(&mut self,node_type:AstNodeType<'a>) {
         let mut stack_pushed_num=0;
 
+        // let mut last_sibling_node_ind=None;
+
         if let AstNodeType::Function{..}=&node_type {
         } else {
             for child_ind in (0 .. self.body_node().children.len()).rev() {
@@ -234,10 +236,14 @@ impl<'a> Ast<'a> {
                 if let AstNodeType::Function{..}=self.get_node(child_node_ind).node_type {
                 } else {
                     stack_pushed_num=self.get_node(child_node_ind).stack_pushed_num;
+                    // last_sibling_node_ind=Some(child_node_ind);
                     break;
                 }
             }
         }
+
+        //
+        // let stack_pushed_num=last_sibling_node_ind.map(|i|self.get_node(i).stack_pushed_num).unwrap_or(0);
 
         //
         let child_ind=self.body_node().children.len();
@@ -265,13 +271,13 @@ impl<'a> Ast<'a> {
     }
 
     fn end_body(&mut self) -> Result<(),AstError> {
-        if let Some(&child_node_ind) = self.body_node().children.last() {
-            let stack_pushed_num=self.get_node(child_node_ind).stack_pushed_num;
+        // if let Some(&child_node_ind) = self.body_node().children.last() {
+        //     let stack_pushed_num=self.get_node(child_node_ind).stack_pushed_num;
 
-            if stack_pushed_num!=0 {
-                return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
-            }
-        }
+        //     if stack_pushed_num!=0 {
+        //         return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
+        //     }
+        // }
 
         let parent_ind = self.body_node_mut().parent.unwrap();
         self.last_node_ind=self.body_node_ind;
@@ -297,13 +303,26 @@ impl<'a> Ast<'a> {
         Ok(())
     }
 
-    pub fn pop_params(&mut self) {
+    pub fn pop_all_params(&mut self) {
         let params = self.last_node().stack_pushed_num;
 
         if params > 0 {
             self.add_next(AstNodeType::StackPop(params));
             self.last_node_mut().stack_pushed_num=0;
         }
+    }
+
+    pub fn pop_params(&mut self,params_num:usize) -> Result<(), AstError> {
+        if self.last_node().stack_pushed_num < params_num {
+            return Err(AstError::NotEnoughParamsOnStack);
+        }
+
+        if params_num != 0 {
+            self.add_next(AstNodeType::StackPop(params_num));
+            self.last_node_mut().stack_pushed_num-=params_num;
+        }
+
+        Ok(())
     }
     pub fn func_start(&mut self,in_params:Vec<&'a str>,variadic:bool) -> Result<(), AstError> {
         if variadic && in_params.len()==0 {
@@ -363,11 +382,11 @@ impl<'a> Ast<'a> {
     }
 
     pub fn to_block_start(&mut self, cond:JmpCond, block_offset:usize) -> Result<(),AstError> { //Result<bool,AstError>
-        let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
+        // let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
 
-        if stack_pushed_num!=0 {
-            return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
-        }
+        // if stack_pushed_num!=0 {
+        //     return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
+        // }
 
         //
         let mut cur_node_ind = self.body_node_ind;
@@ -375,7 +394,11 @@ impl<'a> Ast<'a> {
 
         while let AstNodeType::Block{..} = self.nodes.get(cur_node_ind).unwrap().node_type {
             if i==block_offset {
-                self.add_next(AstNodeType::ToBlockStart{cond,block_node_ind:cur_node_ind});
+                self.add_next(AstNodeType::ToBlockStart{
+                    cond,
+                    block_node_ind:cur_node_ind,
+                    // pop_params:stack_pushed_num
+                });
                 // return Ok(true);
                 return Ok(());
             } else {
@@ -389,11 +412,11 @@ impl<'a> Ast<'a> {
     }
 
     pub fn to_block_end(&mut self, cond:JmpCond, block_offset:usize) -> Result<(),AstError> {
-        let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
+        // let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
 
-        if stack_pushed_num!=0 {
-            return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
-        }
+        // if stack_pushed_num!=0 {
+        //     return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
+        // }
 
         //
         let mut cur_node_ind = self.body_node_ind;
@@ -401,7 +424,10 @@ impl<'a> Ast<'a> {
 
         while let AstNodeType::Block{..} = self.nodes.get(cur_node_ind).unwrap().node_type {
             if i==block_offset {
-                self.add_next(AstNodeType::ToBlockEnd{cond,block_node_ind:cur_node_ind});
+                self.add_next(AstNodeType::ToBlockEnd{
+                    cond,block_node_ind:cur_node_ind,
+                    // pop_params:stack_pushed_num
+                });
                 // return Ok(true);
                 return Ok(());
             } else {
@@ -415,11 +441,11 @@ impl<'a> Ast<'a> {
     }
 
     pub fn to_label_block_start(&mut self, cond:JmpCond, block_label:&'a str, skip:usize) -> Result<bool,AstError> {
-        let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
+        // let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
 
-        if stack_pushed_num!=0 {
-            return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
-        }
+        // if stack_pushed_num!=0 {
+        //     return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
+        // }
 
         //
         // let mut cur_node_ind = self.body_node().parent.unwrap();
@@ -430,7 +456,11 @@ impl<'a> Ast<'a> {
             if let Some(label)=label {
                 if block_label==label {
                     if i==skip {
-                        self.add_next(AstNodeType::ToBlockStart{cond,block_node_ind:cur_node_ind});
+                        self.add_next(AstNodeType::ToBlockStart{
+                            cond,
+                            block_node_ind:cur_node_ind,
+                            // pop_params:stack_pushed_num
+                        });
                         return Ok(true);
                     }
 
@@ -454,11 +484,11 @@ impl<'a> Ast<'a> {
         //without skip, it would break out of the inner while, instead of the outer
         //
 
-        let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
+        // let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
 
-        if stack_pushed_num!=0 {
-            return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
-        }
+        // if stack_pushed_num!=0 {
+        //     return Err(AstError::LocalPushValuesNotZero(stack_pushed_num));
+        // }
 
         //
         let mut cur_node_ind = self.body_node_ind;
@@ -468,7 +498,11 @@ impl<'a> Ast<'a> {
             if let Some(label)=label {
                 if block_label==label {
                     if i==skip {
-                        self.add_next(AstNodeType::ToBlockEnd{cond,block_node_ind:cur_node_ind});
+                        self.add_next(AstNodeType::ToBlockEnd{
+                            cond,
+                            block_node_ind:cur_node_ind,
+                            // pop_params:stack_pushed_num
+                        });
                         return Ok(true);
                     }
 
@@ -652,7 +686,7 @@ impl<'a> Ast<'a> {
         //uses and pops off params_num amount off stack
 
         if self.last_node().stack_pushed_num < params_num {
-            return Err(AstError::CallNotEnoughParamsPushedOnStack);
+            return Err(AstError::NotEnoughParamsOnStack);
         }
 
         self.add_next(AstNodeType::CallVarOrMethod{name,params_num,var:AstAccessVar::None, anon_id});
@@ -683,7 +717,7 @@ impl<'a> Ast<'a> {
     }
     pub fn set_field(&mut self,is_field_symbol:bool,is_last: bool)-> Result<(),AstError> {
         if self.last_node().stack_pushed_num < 3 {
-            return Err(AstError::CallNotEnoughParamsPushedOnStack);
+            return Err(AstError::NotEnoughParamsOnStack);
         }
 
         // self.add_next(AstNodeType::CallMethod{name:"set_field",params_num:3});
@@ -694,7 +728,7 @@ impl<'a> Ast<'a> {
     }
     pub fn get_field(&mut self,is_field_symbol:bool)-> Result<(),AstError> {
         if self.last_node().stack_pushed_num < 2 {
-            return Err(AstError::CallNotEnoughParamsPushedOnStack);
+            return Err(AstError::NotEnoughParamsOnStack);
         }
 
         // self.add_next(AstNodeType::CallMethod{name:"get_field",params_num:2});
@@ -706,7 +740,7 @@ impl<'a> Ast<'a> {
     pub fn call_field(&mut self,params_num:usize,) -> Result<(),AstError> {
 
         if self.last_node().stack_pushed_num < params_num + 2 {
-            return Err(AstError::CallNotEnoughParamsPushedOnStack);
+            return Err(AstError::NotEnoughParamsOnStack);
         }
 
         //
@@ -720,7 +754,7 @@ impl<'a> Ast<'a> {
         //uses and pops off params_num amount off stack
 
         if self.last_node().stack_pushed_num < params_num {
-            return Err(AstError::CallNotEnoughParamsPushedOnStack);
+            return Err(AstError::NotEnoughParamsOnStack);
         }
 
         self.add_next(AstNodeType::CallMethod{name,params_num});
@@ -729,10 +763,10 @@ impl<'a> Ast<'a> {
         Ok(())
     }
     pub fn try_call_method(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> {
-        //uses and pops off params_num amount off stack
+        println!("---- {} < {}",self.last_node().stack_pushed_num , params_num);
 
         if self.last_node().stack_pushed_num < params_num {
-            return Err(AstError::CallNotEnoughParamsPushedOnStack);
+            return Err(AstError::NotEnoughParamsOnStack);
         }
 
         self.add_next(AstNodeType::TryCallMethod{name,params_num});
@@ -740,19 +774,19 @@ impl<'a> Ast<'a> {
         Ok(())
     }
 
-    pub fn call_method_or_result(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> {
-        //uses and pops off params_num amount off stack
+    // pub fn call_method_or_result(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> {
+    //     //uses and pops off params_num amount off stack
 
-        if self.last_node().stack_pushed_num < params_num {
-            return Err(AstError::CallNotEnoughParamsPushedOnStack);
-        }
+    //     if self.last_node().stack_pushed_num < params_num {
+    //         return Err(AstError::NotEnoughParamsOnStack);
+    //     }
 
-        self.add_next(AstNodeType::CallMethodOrResult{name,params_num});
+    //     self.add_next(AstNodeType::CallMethodOrResult{name,params_num});
 
-        self.last_node_mut().stack_pushed_num-=params_num;
+    //     self.last_node_mut().stack_pushed_num-=params_num;
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
     // pub fn has_method(&mut self,name:&'a str) -> Result<(),AstError> {
     //     //checks if method exists, store bool in result?
 
@@ -763,9 +797,10 @@ impl<'a> Ast<'a> {
     // }
     pub fn call_result(&mut self,params_num:usize) -> Result<(),AstError> {
         //uses and pops off params_num amount off stack
+        println!("---- {} < {}",self.last_node().stack_pushed_num , params_num);
 
         if self.last_node().stack_pushed_num < params_num {
-            return Err(AstError::CallNotEnoughParamsPushedOnStack);
+            return Err(AstError::NotEnoughParamsOnStack);
         }
 
         self.add_next(AstNodeType::CallResult{params_num});
@@ -791,7 +826,7 @@ impl<'a> Ast<'a> {
 
     //////////////////
     ///
-    pub fn end_stack_check(&self) -> Result<(),AstError> {  //check no params still pushed at end of program, not necessary
+    pub fn check_stack_params_zero(&self) -> Result<(),AstError> {  //check no params still pushed at end of program, not necessary
         let stack_pushed_num=self.last_sibling_node().and_then(|x|Some(x.stack_pushed_num)).unwrap_or(0);
 
         if stack_pushed_num!=0 {
@@ -1365,7 +1400,7 @@ impl<'a> Ast<'a> {
                         self.get_node_mut(cur_node_ind).stack_size-=amount;
                     }
                     AstNodeType::CallMethod { params_num, .. }
-                    | AstNodeType::CallMethodOrResult { params_num, .. }
+                    // | AstNodeType::CallMethodOrResult { params_num, .. }
                     | AstNodeType::CallResult { params_num }
                     | AstNodeType::CallVarOrMethod { params_num, .. } =>
                     {
@@ -1500,9 +1535,17 @@ impl<'a> Ast<'a> {
 
             match cur_node.node_type {
                 AstNodeType::Root if exited => { //on exit
-                    //pop locals
-                    if cur_node.local_decls.len()>0 {
-                        instructions.push(Instruction::StackPop(cur_node.local_decls.len()));
+                    // //pop locals
+                    // if cur_node.local_decls.len()>0 {
+                    //     instructions.push(Instruction::StackPop(cur_node.local_decls.len()));
+                    // }
+
+
+                    //
+                    let last_stack_pushed_num=cur_node.children.last().map(|&last_child_node_ind|self.get_node(last_child_node_ind).stack_pushed_num).unwrap_or(0);
+
+                    if cur_node.local_decls.len()>0 || last_stack_pushed_num>0 {
+                        instructions.push(Instruction::StackPop(cur_node.local_decls.len()+last_stack_pushed_num));
                     }
                 }
                 AstNodeType::Root => { //on enter
@@ -1522,10 +1565,18 @@ impl<'a> Ast<'a> {
                     }
                 }
                 AstNodeType::Block{..} if exited => { //on exit
-                    //pop locals
-                    if cur_node.local_decls.len()>0 {
-                        instructions.push(Instruction::StackPop(cur_node.local_decls.len()));
+                    // //pop locals
+                    // if cur_node.local_decls.len()>0 {
+                    //     instructions.push(Instruction::StackPop(cur_node.local_decls.len()));
+                    // }
+
+                    //
+                    let last_stack_pushed_num=cur_node.children.last().map(|&last_child_node_ind|self.get_node(last_child_node_ind).stack_pushed_num).unwrap_or(0);
+
+                    if cur_node.local_decls.len()>0 || last_stack_pushed_num>0 {
+                        instructions.push(Instruction::StackPop(cur_node.local_decls.len()+last_stack_pushed_num));
                     }
+
 
                     //
                     if let Some(to_end_instr_inds)=block_to_ends.get(&cur_node_ind) {
@@ -1794,9 +1845,9 @@ impl<'a> Ast<'a> {
                 AstNodeType::TryCallMethod{name,params_num} => {
                     instructions.push(Instruction::TryCallMethod{name:symbol_inds.get(name),params_num});
                 }
-                AstNodeType::CallMethodOrResult{name,params_num} => {
-                    instructions.push(Instruction::CallMethodOrResult(symbol_inds.get(name),params_num));
-                }
+                // AstNodeType::CallMethodOrResult{name,params_num} => {
+                //     instructions.push(Instruction::CallMethodOrResult(symbol_inds.get(name),params_num));
+                // }
                 AstNodeType::CallResult{params_num} => {
                     instructions.push(Instruction::CallResult(params_num));
                 }

@@ -516,21 +516,21 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         // self.add_node(BuilderNodeType::CallMethod(n,params_num))
 
         self.add_node(move|ast|{
-            ast.call_method(name, params_num).unwrap();
+            ast.try_call_method(name, params_num).unwrap();
             Ok(())
         })
     }
 
-    pub fn call_method_or_result(&mut self,name:&'a str,params_num:usize) -> &mut Self {
-        // self.commit_param_locs();
-        // self.add_node(BuilderNodeType::TryCallMethod(n,params_num))
+    // pub fn call_method_or_result(&mut self,name:&'a str,params_num:usize) -> &mut Self {
+    //     // self.commit_param_locs();
+    //     // self.add_node(BuilderNodeType::TryCallMethod(n,params_num))
 
 
-        self.add_node(move|ast|{
-            ast.call_method_or_result(name, params_num).unwrap();
-            Ok(())
-        })
-    }
+    //     self.add_node(move|ast|{
+    //         ast.call_method_or_result(name, params_num).unwrap();
+    //         Ok(())
+    //     })
+    // }
 
     pub fn call(&mut self,name:&'a str,params_num:usize) -> &mut Self {
         // self.commit_param_locs();
@@ -610,6 +610,25 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         })
     }
 
+    // pub fn to_block_start_ext(&mut self,cond:JmpCond,block_offset:usize, pop_params:bool) -> &mut Self {
+    //     // self.add_node(BuilderNodeType::BlockToStart(cond,block_offset))
+
+    //     self.add_node(move|ast|{
+    //         if pop_params {ast.pop_all_params();}
+    //         ast.to_block_start(cond, block_offset).unwrap();
+    //         Ok(())
+    //     })
+    // }
+    // pub fn to_block_end_ext(&mut self,cond:JmpCond,block_offset:usize, pop_params:bool) -> &mut Self {
+    //     // self.add_node(BuilderNodeType::BlockToEnd(cond,block_offset))
+
+    //     self.add_node(move|ast|{
+    //         if pop_params {ast.pop_all_params();}
+    //         ast.to_block_end(cond, block_offset).unwrap();
+    //         Ok(())
+    //     })
+    // }
+
     pub fn to_block_start_label(&mut self,cond:JmpCond,label:&'a str, skip:usize, err : Option<BuilderError<E>>) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToStartLabel(cond,label,err))
 
@@ -678,17 +697,25 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
 
     pub fn end_stack_check(&mut self) -> &mut Self {
         self.add_node(|ast|{
-            ast.end_stack_check().unwrap();
+            ast.check_stack_params_zero().unwrap();
             Ok(())
         })
     }
 
-    pub fn pop_params(&mut self) -> &mut Self {
+    pub fn pop_all_params(&mut self) -> &mut Self {
         self.add_node(|ast|{
-            ast.pop_params();
+            ast.pop_all_params();
             Ok(())
         })
     }
+
+    pub fn pop_params(&mut self, params_num:usize) -> &mut Self {
+        self.add_node(move|ast|{
+            ast.pop_params(params_num).unwrap();
+            Ok(())
+        })
+    }
+
     pub fn func_start<P:IntoIterator<Item=&'a str>>(&mut self,
         // params:Vec<&'a str>,
         params:P,

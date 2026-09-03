@@ -795,45 +795,55 @@ impl<X> LibScope<X> {
         self.inner_get_method(&MethodInputType2::Field { no_symbols }, params)
     }
 
-    pub fn field_named<'m>(&'m mut self,name : &'m str,
-        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
-    ) -> MethodInput<'m,X> {
-        MethodInput {
-            lib_scope: self,
-            // name,
-            input_type:MethodInputType::FieldNamed { name, },
-            method_type:MethodType::NonMut(Arc::new(func)),
-            args: Vec::new(),
-            optional_start: None,
-            // variadic: false,
-        }
-    }
-    pub fn field_no_symbols<'m>(&'m mut self,
-        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
-    ) -> MethodInput<'m,X> {
-        MethodInput {
-            lib_scope: self,
-            // name,
-            input_type:MethodInputType::Field { no_symbols:true, } ,
-            method_type:MethodType::NonMut(Arc::new(func)),
-            args: Vec::new(),
-            optional_start: None,
-            // variadic: false,
-        }
-    }
+
+
+    //////////////////
+
+    // pub fn field_named<'m>(&'m mut self,name : &'m str,
+    //     func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
+    // ) -> MethodInput<'m,X> {
+    //     MethodInput {
+    //         lib_scope: self,
+    //         // name,
+    //         input_type:MethodInputType::FieldNamed { name, },
+    //         method_type:MethodType::NonMut(Arc::new(func)),
+    //         args: Vec::new(),
+    //         optional_start: None,
+    //         // variadic: false,
+    //     }
+    // }
+    // pub fn field_no_symbols<'m>(&'m mut self,
+    //     func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
+    // ) -> MethodInput<'m,X> {
+    //     MethodInput {
+    //         lib_scope: self,
+    //         // name,
+    //         input_type:MethodInputType::Field { no_symbols:true, } ,
+    //         method_type:MethodType::NonMut(Arc::new(func)),
+    //         args: Vec::new(),
+    //         optional_start: None,
+    //         // variadic: false,
+    //     }
+    // }
+    // pub fn field<'m>(&'m mut self, //no_symbols:bool,
+    //     func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
+    // ) -> MethodInput<'m,X> {
+    //     MethodInput {
+    //         lib_scope: self,
+    //         // name,
+    //         input_type:MethodInputType::Field { no_symbols:false, } ,
+    //         method_type:MethodType::NonMut(Arc::new(func)),
+    //         args: Vec::new(),
+    //         optional_start: None,
+    //         // variadic: false,
+    //     }
+    // }
     pub fn field<'m>(&'m mut self, //no_symbols:bool,
         func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
     ) -> MethodInput<'m,X> {
-        MethodInput {
-            lib_scope: self,
-            // name,
-            input_type:MethodInputType::Field { no_symbols:false, } ,
-            method_type:MethodType::NonMut(Arc::new(func)),
-            args: Vec::new(),
-            optional_start: None,
-            // variadic: false,
-        }
+        self.method("field", func)
     }
+
     pub fn method<'m>(&'m mut self,name : &'m str,
         func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
     ) -> MethodInput<'m,X> {
@@ -863,6 +873,19 @@ impl<X> LibScope<X> {
 
     //
 
+    // pub fn func<'m>(&'m mut self,name : &'m str,
+    //     func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
+    // ) -> MethodInput<'m,X> {
+    //     MethodInput {
+    //         lib_scope: self,
+    //         // name,
+    //         input_type:MethodInputType::Method { name, },
+    //         method_type:MethodType::NonMut(Arc::new(func)),
+    //         args: Vec::new(),
+    //         optional_start: None,
+    //         // variadic: false,
+    //     }
+    // }
 
 }
 

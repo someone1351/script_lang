@@ -176,7 +176,7 @@ impl Compiler {
 
         //
         let mut builder = builder::Builder::new();
-        // // // builder.eval(parsed.root_block_primitive().get_block().unwrap().primitives());
+        // // // // builder.eval(parsed.root_block_primitive().get_block().unwrap().primitives());
         for g in walk.root().children() {
             println!("={:?}",g.name());
 
@@ -185,6 +185,19 @@ impl Compiler {
 
         //
         builder.end_stack_check();
+
+        // builder
+        //     .block_start(None)
+        //     .result_int(4)
+        //     .param_push()
+        //     .param_push()
+        //     .param_push()
+        //     .to_block_end(JmpCond::Nil, 0)
+        //     .param_push()
+        //     .block_end()
+        //     // .result_nil()
+        //     .param_push()
+        //     ;
 
         //builder needs to be passed a primitive_iter instead of primitive?
 
@@ -379,8 +392,8 @@ impl Compiler {
                     .param_push() //val
                     .swap() //todo remove
                     .loc(top_group.start_loc())
-                    .get_field(true)
-                    // .call_method(func, 2)
+                    // .get_field(is_symbol)
+                    .call_method(func, 2)
                     ;
             }
             "field_name" => {
@@ -521,8 +534,8 @@ impl Compiler {
                         .rot_left() //todo remove
 
                         .loc(field.start_loc())
-                        .set_field(true, true) //why need islast? non last are optional?
-                        // .call_method(func, 3)
+                        // .set_field(is_symbol, true) //why need islast? non last are optional?
+                        .call_method(func, 3)
                         ;
                 }
 
@@ -547,7 +560,9 @@ impl Compiler {
                         .rot_left() //todo remove
 
                         .loc(field_inner.start_loc())
-                        .set_field(is_symbol, false)
+                        // .set_field(is_symbol, false)
+                        .try_call_method(func, 3)
+                        .pop_params(3)
                         ;
                 }
             }
@@ -574,7 +589,8 @@ impl Compiler {
                     ;
             }
             "call_field" => {
-                let field= top_group.child(0).unwrap();
+                let field= top_group.child(0).unwrap(); //file_name
+                let field_name=field.tokens().pop_identifier().unwrap().value;
                 let params=top_group.child(1).unwrap();
 
                 builder
@@ -584,19 +600,37 @@ impl Compiler {
                         .set_anon_var("self") //todo remove
 
                         //
-                        .eval(params)
+                        // .block_start(None)
+                        .block_start(None)
+                            //
+                            .eval(params)
 
-                        //
-                        .eval(field)
-                        .param_push() //val
+                            //
+                            .get_anon_var("self") //todo remove, replace with push above it's decl?
+                            .param_push() //self
 
-                        //
-                        .get_anon_var("self") //todo remove, replace with push above it's decl?
-                        .param_push() //self
+                            //
+                            .loc(top_group.start_loc())
+                            // .call_field(params.children().len(),)
+                            .try_call_method(field_name, params.children().len()+1)
 
-                        //
-                        .loc(top_group.start_loc())
-                        .call_field(params.children().len(),)
+
+                            .to_block_end(JmpCond::NotUndefined, 0,)
+
+                            .dup() //self
+
+                            .eval(field) //field_name
+                            .param_push() //field
+                            .swap()
+
+                            .loc(top_group.start_loc())
+                            .call_method("field",2)
+
+                            .call_result(params.children().len()+1)
+                            // .to_block_end(JmpCond::None, 1)
+                        .block_end()
+                            // .pop_params(params.children().len()+1)
+                        // .block_end()
 
                         // .call_method(name, params_num)
                     .block_end() //todo remove
