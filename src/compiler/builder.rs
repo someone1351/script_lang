@@ -511,6 +511,16 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         })
     }
 
+    pub fn try_call_method(&mut self,name:&'a str,params_num:usize) -> &mut Self {
+        // self.commit_param_locs();
+        // self.add_node(BuilderNodeType::CallMethod(n,params_num))
+
+        self.add_node(move|ast|{
+            ast.call_method(name, params_num).unwrap();
+            Ok(())
+        })
+    }
+
     pub fn call_method_or_result(&mut self,name:&'a str,params_num:usize) -> &mut Self {
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::TryCallMethod(n,params_num))

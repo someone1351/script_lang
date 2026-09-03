@@ -370,7 +370,8 @@ impl Compiler {
             }
             "field"|"index" => {
                 let field_inner= top_group.child(0).unwrap(); //field_name|field_index|expr
-                let is_symbol = field_inner.name()=="field_name";
+                // let is_symbol = field_inner.name()=="field_name";
+                let func = if field_inner.name()=="field_name" {"field"} else {"index"};
 
                 builder
                     .param_push() //self
@@ -378,7 +379,9 @@ impl Compiler {
                     .param_push() //val
                     .swap() //todo remove
                     .loc(top_group.start_loc())
-                    .get_field(is_symbol);
+                    .get_field(true)
+                    // .call_method(func, 2)
+                    ;
             }
             "field_name" => {
                 builder.result_string(top_group.tokens().trimmed().first().unwrap().get_identifier().unwrap().value);
@@ -507,7 +510,9 @@ impl Compiler {
                 {
                     let field=fields.last().unwrap(); //field|index
                     let field_inner=field.child(0).unwrap(); //field_name|field_index|expr
-                    let is_symbol=field_inner.name()=="field_name";
+                    // let is_symbol=field_inner.name()=="field_name";
+                    let func = if field_inner.name()=="field_name" {"field"} else {"index"};
+
 
                     builder
                         .eval(field_inner) //evals field_name|field_index|expr
@@ -516,8 +521,8 @@ impl Compiler {
                         .rot_left() //todo remove
 
                         .loc(field.start_loc())
-                        .set_field(is_symbol, true) //why need islast? non last are optional?
-
+                        .set_field(true, true) //why need islast? non last are optional?
+                        // .call_method(func, 3)
                         ;
                 }
 

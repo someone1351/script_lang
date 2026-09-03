@@ -431,7 +431,7 @@ impl<'a,X> Machine<'a,X> {
         if let Some(x)=self.get_method(name, params_num) {
             let symbol = StringVal::new(name);
             self.debugger.add_func_name(&symbol.as_str());
-            self.inner_call_bound_func(params_num, x)?; //,symbol.clone()
+            self.inner_call_bound_func(params_num, x,true)?; //,symbol.clone()
             Ok(Some(self.result_val()))
         } else {
             Ok(None)
@@ -505,7 +505,7 @@ impl<'a,X> Machine<'a,X> {
                             // println!("==");
 
                             self.debugger.add_func_name(field_name.as_str());
-                            self.inner_call_bound_func(1, x)?;
+                            self.inner_call_bound_func(1, x,true)?;
 
                             done=true;
                         }
@@ -528,7 +528,7 @@ impl<'a,X> Machine<'a,X> {
 
                     {
                         self.debugger.add_func_name("field"); //should have enum eg method(name), field,
-                        self.inner_call_bound_func(params_num, x)?;
+                        self.inner_call_bound_func(params_num, x,true)?;
                     } else {
                         let param_types=self.get_stack_param_types(params_num);
                         return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(
@@ -565,7 +565,7 @@ impl<'a,X> Machine<'a,X> {
                             // println!("==");
 
                             self.debugger.add_func_name(field_name.as_str());
-                            self.inner_call_bound_func(2, x)?;
+                            self.inner_call_bound_func(2, x,true)?;
 
                             done=true;
                         }
@@ -586,7 +586,7 @@ impl<'a,X> Machine<'a,X> {
                     if let Some(x)=x //self.get_method(symbol, params_num)
                     {
                         self.debugger.add_func_name("field");
-                        self.inner_call_bound_func(params_num, x)?;
+                        self.inner_call_bound_func(params_num, x,true)?;
                     } else if is_last {
                         let param_types=self.get_stack_param_types(params_num);
                         return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(
@@ -827,7 +827,7 @@ impl<'a,X> Machine<'a,X> {
                         }
                     } else if let Some(x)=self.get_method(data.name.as_str(), params_num) {
                         self.debugger.add_func_name(data.name.as_str());
-                        self.inner_call_bound_func(params_num, x)?; //,symbol.clone()
+                        self.inner_call_bound_func(params_num, x,true)?; //,symbol.clone()
                         //return Ok(()); //continue;
                     } else {
                         let param_types=self.get_stack_param_types(params_num);
@@ -936,7 +936,7 @@ impl<'a,X> Machine<'a,X> {
                     self.set_result_val(v);
                 } else if let Some(x)=self.get_method(symbol.as_str(), 0) {
                     self.debugger.add_func_name(&symbol.as_str());
-                    self.inner_call_bound_func(0, x)?;
+                    self.inner_call_bound_func(0, x,true)?;
                 } else {
                     return Err(MachineError::from_machine(self, MachineErrorType::MethodOrGlobalVarNotFound(symbol.to_string()) ));
                 }
@@ -948,19 +948,29 @@ impl<'a,X> Machine<'a,X> {
 
                 if let Some(x)=self.get_method(symbol.as_str(), params_num) {
                     self.debugger.add_func_name(symbol.as_str());
-                    self.inner_call_bound_func(params_num, x)?;
+                    self.inner_call_bound_func(params_num, x,true)?;
                 } else {
                     let param_types=self.get_stack_param_types(params_num);
                     return Err(MachineError::from_machine(self, MachineErrorType::MethodNotFound(symbol.to_string(),param_types) ));
                 }
             }
 
+            Instruction::TryCallMethod{ name:symbol, params_num } => {
+                let params_num =*params_num;
+
+                if let Some(x)=self.get_method(symbol.as_str(), params_num) {
+                    self.debugger.add_func_name(symbol.as_str());
+                    self.inner_call_bound_func(params_num, x,false)?;
+                } else {
+                    self.set_result_val(Value::Undefined);
+                }
+            }
             Instruction::CallMethodOrResult(symbol, params_num) => {
                 let params_num =*params_num;
 
                 if let Some(x)=self.get_method(symbol.as_str(), params_num) {
                     self.debugger.add_func_name(symbol.as_str());
-                    self.inner_call_bound_func(params_num, x)?;
+                    self.inner_call_bound_func(params_num, x,true)?;
                 } else {
                     // self.stack_pop_amount(params_num)?;
 
@@ -986,7 +996,7 @@ impl<'a,X> Machine<'a,X> {
                     }
                 } else if let Some(x)=self.get_method(symbol.as_str(), params_num) {
                     self.debugger.add_func_name(symbol.as_str());
-                    self.inner_call_bound_func(params_num, x)?; //,symbol.clone()
+                    self.inner_call_bound_func(params_num, x,true)?; //,symbol.clone()
                 } else {
 
                     let param_types=self.get_stack_param_types(params_num);
@@ -1054,7 +1064,7 @@ impl<'a,X> Machine<'a,X> {
     }
 
 
-    fn inner_call_bound_func(&mut self, params_num : usize, bound_func : Method<X>) -> Result<(),MachineError> {
+    fn inner_call_bound_func(&mut self, params_num : usize, bound_func : Method<X>, pop_params:bool,) -> Result<(),MachineError> {
 
         self.debugger.push_frame_bound_func(params_num, &self.stack, &self.result_val());
 
@@ -1096,11 +1106,13 @@ impl<'a,X> Machine<'a,X> {
         match v {
             Ok(v)=>{
 
-                self.set_result_val(v);
+                if pop_params {
+                    self.set_result_val(v);
 
-                self.stack_pop_amount(params_num)?;
+                    self.stack_pop_amount(params_num)?;
 
-                self.debugger.pop_frame();
+                    self.debugger.pop_frame();
+                }
 
                 // self.gc_scope.remove_norefs(); //hmm called already with set_result? and possibly on stack_pop_amount(params_num>0)
 
@@ -1186,7 +1198,7 @@ impl<'a,X> Machine<'a,X> {
             // println!("~=== {params_num} : {}",self.stack.len());
             if let Some(x)=self.get_method("call", params_num+1) {
                 self.debugger.add_func_name("call");
-                self.inner_call_bound_func(params_num+1, x)?;
+                self.inner_call_bound_func(params_num+1, x,true)?;
 
                 //
                 self.instr_pos+=1;
@@ -1223,7 +1235,7 @@ impl<'a,X> Machine<'a,X> {
         if let Some(func)=self.get_method(name,params_num) {
             // self.debugger.add_func_name("call");
             self.debugger.add_func_name(name);
-            self.inner_call_bound_func(params_num, func)?;
+            self.inner_call_bound_func(params_num, func,true)?;
             Ok(self.result_val())
         } else {
             let param_types=self.get_stack_param_types(params_num);
@@ -1278,7 +1290,7 @@ impl<'a,X> Machine<'a,X> {
             }
         } else if let Some(x)=self.get_method(name, params_num) {
             self.debugger.add_func_name(name);
-            self.inner_call_bound_func(params_num, x)?; //,symbol.clone()
+            self.inner_call_bound_func(params_num, x,true)?; //,symbol.clone()
         } else {
             return Ok(None);
         }
