@@ -161,7 +161,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     }).custom_ref::<Array>().end();
 
     //get_field(array,int)
-    lib_scope.methods(["field","index"],|context|{
+    lib_scope.methods(["_field","_index"],|context|{
 
         context.param(0).as_custom().with_data_ref_ext(|x:&Array|{
             let index=context.param(1).as_index(x.len());
@@ -173,7 +173,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     }).custom_ref::<Array>().int().end();
 
     //set_field(array,int,any)
-    lib_scope.methods(["field","index"],|context|{
+    lib_scope.methods(["_field","_index"],|context|{
         let ind=context.param(1).as_int();
         let val=context.param(2);
         let array=context.param(0);

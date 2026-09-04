@@ -823,7 +823,7 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
                 .swap()
                 // .call_method("get_field", 2)
                 // .get_field(field.1)
-                .call_method(if field.1 {"field"}else{"index"}, 2)
+                .call_method(if field.1 {"_field"}else{"_index"}, 2)
 
                 ;
         }
@@ -893,7 +893,7 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
                 //get_field
                 // self.call_method("get_field", 2);
                 // self.get_field(field.1);
-                self.call_method(if field.1 {"field"}else{"index"}, 2);
+                self.call_method(if field.1 {"_field"}else{"_index"}, 2);
             }
         }
 
@@ -924,7 +924,7 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         //
         // // self.call_method("set_field", 3);
         // self.set_field(last_field.1,true);
-        self.call_method(if last_field.1 {"field"}else{"index"}, 3);
+        self.call_method(if last_field.1 {"_field"}else{"_index"}, 3);
 
 
         //sometimes is unecessary to call, for things like arrays and dicts, since they hold "pointer" like values,
@@ -963,7 +963,7 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
 
                 // .call_method("set_field", 3)
                 // .set_field(field.1,false)
-                .try_call_method(if last_field.1 {"field"}else{"index"}, 3)
+                .try_call_method(if last_field.1 {"_field"}else{"_index"}, 3)
                 .pop_params(3)
                 ;
         }

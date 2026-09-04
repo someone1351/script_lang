@@ -131,7 +131,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     }).custom_ref::<Dict>().end();
 
     //get_field(dict,any)
-    lib_scope.methods(["field","index"],|context|{
+    lib_scope.methods(["_field","_index"],|context|{
         let dict=context.param(0).as_custom();
         // let key=context.value_to_string(&context.param(1))?;
         let key=context.param(1);
@@ -142,7 +142,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         .end();
 
     //set_field(dict,any,any)
-    lib_scope.methods(["field","index"],|context|{
+    lib_scope.methods(["_field","_index"],|context|{
         let dict=context.param(0);
         // let key=context.value_to_string(&context.param(1))?;
 
@@ -263,7 +263,7 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     // }).custom_ref::<HashMap<String,Value>>().str().end();
 
     //get_field(dict,any)
-    lib_scope.methods(["field","index"],|context|{
+    lib_scope.methods(["_field","_index"],|context|{
         let dict=context.param(0).as_custom();
         let key=context.param(1).as_string();
         dict.with_data_ref_ext(|data:&HashMap<StringVal,Value>|{Ok(data.get(&key).and_then(|x|Some(x.clone())).unwrap_or(Value::Nil))})

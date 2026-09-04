@@ -385,8 +385,8 @@ impl Compiler {
                 let field_inner= top_group.child(0).unwrap(); //field_name|field_index|expr
                 // let is_symbol = field_inner.name()=="field_name";
                 let func = match field_inner.name() {
-                    "field_name"|"field_index" => "field",
-                    "expr" => "index",
+                    "field_name"|"field_index" => "_field",
+                    "expr" => "_index",
                     _ => panic!(""),
                 };
 
@@ -529,8 +529,8 @@ impl Compiler {
                     let field_inner=field.child(0).unwrap(); //field_name|field_index|expr
                     // let is_symbol=field_inner.name()=="field_name";
                     let func = match field_inner.name() {
-                        "field_name"|"field_index" => "field",
-                        "expr" => "index",
+                        "field_name"|"field_index" => "_field",
+                        "expr" => "_index",
                         _ => panic!(""),
                     };
 
@@ -632,7 +632,7 @@ impl Compiler {
                             .swap()
 
                             .loc(top_group.start_loc())
-                            .call_method("field",2)
+                            .call_method("_field",2)
 
                             .call_result(params.children().len()+1)
                             // .to_block_end(JmpCond::None, 1)
