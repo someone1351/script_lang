@@ -715,41 +715,41 @@ impl<'a> Ast<'a> {
 
         Ok(())
     }
-    pub fn set_field(&mut self,is_field_symbol:bool,is_last: bool)-> Result<(),AstError> {
-        if self.last_node().stack_pushed_num < 3 {
-            return Err(AstError::NotEnoughParamsOnStack);
-        }
+    // pub fn set_field(&mut self,is_field_symbol:bool,is_last: bool)-> Result<(),AstError> {
+    //     if self.last_node().stack_pushed_num < 3 {
+    //         return Err(AstError::NotEnoughParamsOnStack);
+    //     }
 
-        // self.add_next(AstNodeType::CallMethod{name:"set_field",params_num:3});
-        self.add_next(AstNodeType::SetField{ is_field_symbol,is_last });
-        self.last_node_mut().stack_pushed_num-=3;
+    //     // self.add_next(AstNodeType::CallMethod{name:"set_field",params_num:3});
+    //     self.add_next(AstNodeType::SetField{ is_field_symbol,is_last });
+    //     self.last_node_mut().stack_pushed_num-=3;
 
-        Ok(())
-    }
-    pub fn get_field(&mut self,is_field_symbol:bool)-> Result<(),AstError> {
-        if self.last_node().stack_pushed_num < 2 {
-            return Err(AstError::NotEnoughParamsOnStack);
-        }
+    //     Ok(())
+    // }
+    // pub fn get_field(&mut self,is_field_symbol:bool)-> Result<(),AstError> {
+    //     if self.last_node().stack_pushed_num < 2 {
+    //         return Err(AstError::NotEnoughParamsOnStack);
+    //     }
 
-        // self.add_next(AstNodeType::CallMethod{name:"get_field",params_num:2});
-        self.add_next(AstNodeType::GetField{ is_field_symbol, });
-        self.last_node_mut().stack_pushed_num-=2;
+    //     // self.add_next(AstNodeType::CallMethod{name:"get_field",params_num:2});
+    //     self.add_next(AstNodeType::GetField{ is_field_symbol, });
+    //     self.last_node_mut().stack_pushed_num-=2;
 
-        Ok(())
-    }
-    pub fn call_field(&mut self,params_num:usize,) -> Result<(),AstError> {
+    //     Ok(())
+    // }
+    // pub fn call_field(&mut self,params_num:usize,) -> Result<(),AstError> {
 
-        if self.last_node().stack_pushed_num < params_num + 2 {
-            return Err(AstError::NotEnoughParamsOnStack);
-        }
+    //     if self.last_node().stack_pushed_num < params_num + 2 {
+    //         return Err(AstError::NotEnoughParamsOnStack);
+    //     }
 
-        //
-        self.add_next(AstNodeType::CallField{params_num:params_num,});
+    //     //
+    //     self.add_next(AstNodeType::CallField{params_num:params_num,});
 
-        //
-        self.last_node_mut().stack_pushed_num-=params_num+2;
-        Ok(())
-    }
+    //     //
+    //     self.last_node_mut().stack_pushed_num-=params_num+2;
+    //     Ok(())
+    // }
     pub fn call_method(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> {
         //uses and pops off params_num amount off stack
 
@@ -1407,16 +1407,16 @@ impl<'a> Ast<'a> {
                         self.get_node_mut(cur_node_ind).stack_size-=params_num;
                     }
                     AstNodeType::TryCallMethod { .. } => {}
-                    AstNodeType::CallField { params_num, .. } =>
-                    {
-                        self.get_node_mut(cur_node_ind).stack_size-=params_num+2;
-                    }
-                    AstNodeType::SetField{..} => {
-                        self.get_node_mut(cur_node_ind).stack_size-=3;
-                    }
-                    AstNodeType::GetField{..} => {
-                        self.get_node_mut(cur_node_ind).stack_size-=2;
-                    }
+                    // AstNodeType::CallField { params_num, .. } =>
+                    // {
+                    //     self.get_node_mut(cur_node_ind).stack_size-=params_num+2;
+                    // }
+                    // AstNodeType::SetField{..} => {
+                    //     self.get_node_mut(cur_node_ind).stack_size-=3;
+                    // }
+                    // AstNodeType::GetField{..} => {
+                    //     self.get_node_mut(cur_node_ind).stack_size-=2;
+                    // }
                     _ => {}
                 }
 
@@ -1836,9 +1836,9 @@ impl<'a> Ast<'a> {
                 // AstNodeType::GetGlobalVarRef { name, }=> {
                 //     instructions.push(Instruction::GetGlobalVarRef(symbol_inds.get(name), ));
                 // }
-                AstNodeType::CallField { params_num,  } => {
-                    instructions.push(Instruction::CallField { params_num,  });
-                }
+                // AstNodeType::CallField { params_num,  } => {
+                //     instructions.push(Instruction::CallField { params_num,  });
+                // }
                 AstNodeType::CallMethod{name,params_num} => {
                     instructions.push(Instruction::CallMethod(symbol_inds.get(name),params_num));
                 }
@@ -1936,14 +1936,14 @@ impl<'a> Ast<'a> {
                     }
 
                 }
-                AstNodeType::SetField { is_field_symbol,is_last } => {
-                    instructions.push(Instruction::SetField{is_field_symbol,is_last});
-                    // instructions.push(Instruction::CallMethod(symbol_inds.get("set_field"),3));
-                }
-                AstNodeType::GetField{ is_field_symbol } => {
-                    instructions.push(Instruction::GetField{is_field_symbol});
-                    // instructions.push(Instruction::CallMethod(symbol_inds.get("get_field"),2));
-                }
+                // AstNodeType::SetField { is_field_symbol,is_last } => {
+                //     instructions.push(Instruction::SetField{is_field_symbol,is_last});
+                //     // instructions.push(Instruction::CallMethod(symbol_inds.get("set_field"),3));
+                // }
+                // AstNodeType::GetField{ is_field_symbol } => {
+                //     instructions.push(Instruction::GetField{is_field_symbol});
+                //     // instructions.push(Instruction::CallMethod(symbol_inds.get("get_field"),2));
+                // }
 
                 AstNodeType::GotoVar {..}=> {
 

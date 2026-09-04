@@ -478,28 +478,28 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         })
     }
 
-    pub fn set_field(&mut self,is_field_symbol:bool,is_last: bool) -> &mut Self {
-        self.add_node(move|ast|{
-            // ast.call_method("set_field", 3).unwrap();
-            ast.set_field(is_field_symbol,is_last).unwrap();
-            Ok(())
-        })
-    }
+    // pub fn set_field(&mut self,is_field_symbol:bool,is_last: bool) -> &mut Self {
+    //     self.add_node(move|ast|{
+    //         // ast.call_method("set_field", 3).unwrap();
+    //         ast.set_field(is_field_symbol,is_last).unwrap();
+    //         Ok(())
+    //     })
+    // }
 
-    pub fn get_field(&mut self,is_field_symbol:bool) -> &mut Self {
-        self.add_node(move|ast|{
-            // ast.call_method("get_field", 2).unwrap();
-            ast.get_field(is_field_symbol).unwrap();
-            Ok(())
-        })
-    }
+    // pub fn get_field(&mut self,is_field_symbol:bool) -> &mut Self {
+    //     self.add_node(move|ast|{
+    //         // ast.call_method("get_field", 2).unwrap();
+    //         ast.get_field(is_field_symbol).unwrap();
+    //         Ok(())
+    //     })
+    // }
 
-    pub fn call_field(&mut self,params_num:usize,) -> &mut Self {
-        self.add_node(move|ast|{
-            ast.call_field( params_num, ).unwrap();
-            Ok(())
-        })
-    }
+    // pub fn call_field(&mut self,params_num:usize,) -> &mut Self {
+    //     self.add_node(move|ast|{
+    //         ast.call_field( params_num, ).unwrap();
+    //         Ok(())
+    //     })
+    // }
 
     pub fn call_method(&mut self,name:&'a str,params_num:usize) -> &mut Self {
         // self.commit_param_locs();
@@ -822,7 +822,9 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
                 .param_push()
                 .swap()
                 // .call_method("get_field", 2)
-                .get_field(field.1)
+                // .get_field(field.1)
+                .call_method(if field.1 {"field"}else{"index"}, 2)
+
                 ;
         }
 
@@ -890,7 +892,8 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
 
                 //get_field
                 // self.call_method("get_field", 2);
-                self.get_field(field.1);
+                // self.get_field(field.1);
+                self.call_method(if field.1 {"field"}else{"index"}, 2);
             }
         }
 
@@ -919,8 +922,10 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
             ;
 
         //
-        // self.call_method("set_field", 3);
-        self.set_field(last_field.1,true);
+        // // self.call_method("set_field", 3);
+        // self.set_field(last_field.1,true);
+        self.call_method(if last_field.1 {"field"}else{"index"}, 3);
+
 
         //sometimes is unecessary to call, for things like arrays and dicts, since they hold "pointer" like values,
         //  and not copies, but for get_field's that return a copy and not a "pointer", then
@@ -957,7 +962,9 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
                 // // //todo: on try method fail, pop off unused params? don't need to, ast handles that?
 
                 // .call_method("set_field", 3)
-                .set_field(field.1,false)
+                // .set_field(field.1,false)
+                .try_call_method(if last_field.1 {"field"}else{"index"}, 3)
+                .pop_params(3)
                 ;
         }
 

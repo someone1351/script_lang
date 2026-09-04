@@ -481,126 +481,126 @@ impl<'a,X> Machine<'a,X> {
         let instr=cur_build.instructions.get(self.instr_pos).unwrap();
 
         match instr {
-            &Instruction::GetField { is_field_symbol } => {
+            // &Instruction::GetField { is_field_symbol } => {
 
-                // println!("hmm {self_val:?} {field_val:?}");
+            //     // println!("hmm {self_val:?} {field_val:?}");
 
-                let mut done=false;
-                let field_val=self.get_stack_offset_value(1)?;
-                let self_val=self.get_stack_offset_value(0)?;
+            //     let mut done=false;
+            //     let field_val=self.get_stack_offset_value(1)?;
+            //     let self_val=self.get_stack_offset_value(0)?;
 
-                if is_field_symbol {
-                    // let field_name=self.get_stack_offset_value(1)?.get_string().unwrap();
+            //     if is_field_symbol {
+            //         // let field_name=self.get_stack_offset_value(1)?.get_string().unwrap();
 
-                    if let Some(field_name)=field_val.get_string() {
-                        if let Some(x)=
-                            // self.lib_scope.get_method(field_name.as_str(),[&self_val])
-                            //     .or_else(||
-                                    self.lib_scope.get_method_field_named(field_name.as_str(),[&self_val])
-                            //     )
-                        {
-                            // println!("--");
-                            self.stack_swap()?; // self=>field
-                            self.stack_pop_amount(1)?; //field
-                            // println!("==");
+            //         if let Some(field_name)=field_val.get_string() {
+            //             if let Some(x)=
+            //                 // self.lib_scope.get_method(field_name.as_str(),[&self_val])
+            //                 //     .or_else(||
+            //                         self.lib_scope.get_method_field_named(field_name.as_str(),[&self_val])
+            //                 //     )
+            //             {
+            //                 // println!("--");
+            //                 self.stack_swap()?; // self=>field
+            //                 self.stack_pop_amount(1)?; //field
+            //                 // println!("==");
 
-                            self.debugger.add_func_name(field_name.as_str());
-                            self.inner_call_bound_func(1, x,true)?;
+            //                 self.debugger.add_func_name(field_name.as_str());
+            //                 self.inner_call_bound_func(1, x,true)?;
 
-                            done=true;
-                        }
-                    }
-                }
+            //                 done=true;
+            //             }
+            //         }
+            //     }
 
-                if !done {
-                    let params_num =2;
-                    // let symbol="get_field";
+            //     if !done {
+            //         let params_num =2;
+            //         // let symbol="get_field";
 
-                    let x= if is_field_symbol {
-                        self.lib_scope.get_method_field(false, [&self_val,&field_val])
-                    } else {
-                        self.lib_scope.get_method_field(false, [&self_val,&field_val])
-                            .or_else(||self.lib_scope.get_method_field(true, [&self_val,&field_val]))
-                    };
+            //         let x= if is_field_symbol {
+            //             self.lib_scope.get_method_field(false, [&self_val,&field_val])
+            //         } else {
+            //             self.lib_scope.get_method_field(false, [&self_val,&field_val])
+            //                 .or_else(||self.lib_scope.get_method_field(true, [&self_val,&field_val]))
+            //         };
 
-                    if let Some(x)=x
-                        // self.get_method(symbol, params_num)
+            //         if let Some(x)=x
+            //             // self.get_method(symbol, params_num)
 
-                    {
-                        self.debugger.add_func_name("field"); //should have enum eg method(name), field,
-                        self.inner_call_bound_func(params_num, x,true)?;
-                    } else {
-                        let param_types=self.get_stack_param_types(params_num);
-                        return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(
-                            // symbol.to_string(),
-                            field_val.as_string().to_string(),
-                            param_types) ));
-                    }
-                }
-            }
-            &Instruction::SetField{is_field_symbol,is_last} => {
-                let params_num =3;
-                // let symbol="set_field";
+            //         {
+            //             self.debugger.add_func_name("field"); //should have enum eg method(name), field,
+            //             self.inner_call_bound_func(params_num, x,true)?;
+            //         } else {
+            //             let param_types=self.get_stack_param_types(params_num);
+            //             return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(
+            //                 // symbol.to_string(),
+            //                 field_val.as_string().to_string(),
+            //                 param_types) ));
+            //         }
+            //     }
+            // }
+            // &Instruction::SetField{is_field_symbol,is_last} => {
+            //     let params_num =3;
+            //     // let symbol="set_field";
 
-                let to_val=self.get_stack_offset_value(2)?;
-                let field_val=self.get_stack_offset_value(1)?;
-                let self_val=self.get_stack_offset_value(0)?;
+            //     let to_val=self.get_stack_offset_value(2)?;
+            //     let field_val=self.get_stack_offset_value(1)?;
+            //     let self_val=self.get_stack_offset_value(0)?;
 
-                //
-                if to_val.is_void() {
-                    // println!("v2");
-                    return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
-                }
+            //     //
+            //     if to_val.is_void() {
+            //         // println!("v2");
+            //         return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
+            //     }
 
-                //
-                let mut done=false;
+            //     //
+            //     let mut done=false;
 
-                if is_field_symbol {
-                    if let Some(field_name)=field_val.get_string() {
-                        if let Some(x)=self.lib_scope.get_method_field_named(field_name.as_str(),[&self_val,&to_val])
-                        {
-                            // println!("--");
-                            self.stack_swap()?; // self=>field
-                            self.stack_pop_amount(1)?; //field
-                            // println!("==");
+            //     if is_field_symbol {
+            //         if let Some(field_name)=field_val.get_string() {
+            //             if let Some(x)=self.lib_scope.get_method_field_named(field_name.as_str(),[&self_val,&to_val])
+            //             {
+            //                 // println!("--");
+            //                 self.stack_swap()?; // self=>field
+            //                 self.stack_pop_amount(1)?; //field
+            //                 // println!("==");
 
-                            self.debugger.add_func_name(field_name.as_str());
-                            self.inner_call_bound_func(2, x,true)?;
+            //                 self.debugger.add_func_name(field_name.as_str());
+            //                 self.inner_call_bound_func(2, x,true)?;
 
-                            done=true;
-                        }
-                    }
-                }
+            //                 done=true;
+            //             }
+            //         }
+            //     }
 
-                if !done {
-                    let x= if is_field_symbol {
-                        self.lib_scope.get_method_field(false, [&self_val,&field_val,&to_val])
-                    } else {
-                        self.lib_scope.get_method_field(false, [&self_val,&field_val,&to_val])
-                            .or_else(||self.lib_scope.get_method_field(true, [&self_val,&field_val,&to_val]))
-                    };
-                    // println!("hmm {:?}",self.get_stack_offset_value(1));
-                    // if let Some(x)=self.get_method(symbol, 2) {
-                    // }
-                    // else
-                    if let Some(x)=x //self.get_method(symbol, params_num)
-                    {
-                        self.debugger.add_func_name("field");
-                        self.inner_call_bound_func(params_num, x,true)?;
-                    } else if is_last {
-                        let param_types=self.get_stack_param_types(params_num);
-                        return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(
-                            field_val.as_string().to_string(),
-                            param_types,
-                        ) ));
-                    } else { //ignore fail if not last (as in set chain,)
-                        self.stack_pop_amount(params_num)?;
-                    }
-                }
-            }
-            &Instruction::CallField { params_num,  } => {
+            //     if !done {
+            //         let x= if is_field_symbol {
+            //             self.lib_scope.get_method_field(false, [&self_val,&field_val,&to_val])
+            //         } else {
+            //             self.lib_scope.get_method_field(false, [&self_val,&field_val,&to_val])
+            //                 .or_else(||self.lib_scope.get_method_field(true, [&self_val,&field_val,&to_val]))
+            //         };
+            //         // println!("hmm {:?}",self.get_stack_offset_value(1));
+            //         // if let Some(x)=self.get_method(symbol, 2) {
+            //         // }
+            //         // else
+            //         if let Some(x)=x //self.get_method(symbol, params_num)
+            //         {
+            //             self.debugger.add_func_name("field");
+            //             self.inner_call_bound_func(params_num, x,true)?;
+            //         } else if is_last {
+            //             let param_types=self.get_stack_param_types(params_num);
+            //             return Err(MachineError::from_machine(self, MachineErrorType::FieldNotFound(
+            //                 field_val.as_string().to_string(),
+            //                 param_types,
+            //             ) ));
+            //         } else { //ignore fail if not last (as in set chain,)
+            //             self.stack_pop_amount(params_num)?;
+            //         }
+            //     }
+            // }
+            // &Instruction::CallField { params_num,  } => {
 
-            }
+            // }
             Instruction::Jmp{cond,instr_pos:new_instr_pos, debug} => {
                 if *new_instr_pos > cur_build.instructions.len() {
                     return Err(MachineError::from_machine(self, MachineErrorType::JmpErr(*new_instr_pos)));

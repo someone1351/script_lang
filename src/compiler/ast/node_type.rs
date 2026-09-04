@@ -66,7 +66,7 @@ pub enum AstNodeType<'a> {
     CallMethod{name:&'a str,params_num:usize},
     TryCallMethod{name:&'a str,params_num:usize},
     // CallMethodOrResult{name:&'a str,params_num:usize},
-    CallField{params_num:usize, },
+    // CallField{params_num:usize, },
     // HasMethod{name:&'a str,},
     CallResult{params_num:usize},
 
@@ -104,7 +104,7 @@ pub enum AstNodeType<'a> {
     // ScopePop,
     //ScopeVar(&'a str), //name
 
-    SetField{is_field_symbol:bool,is_last: bool},
-    GetField{is_field_symbol:bool},
+    // SetField{is_field_symbol:bool,is_last: bool},
+    // GetField{is_field_symbol:bool},
 }
 

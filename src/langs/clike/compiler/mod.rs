@@ -384,7 +384,11 @@ impl Compiler {
             "field"|"index" => {
                 let field_inner= top_group.child(0).unwrap(); //field_name|field_index|expr
                 // let is_symbol = field_inner.name()=="field_name";
-                let func = if field_inner.name()=="field_name" {"field"} else {"index"};
+                let func = match field_inner.name() {
+                    "field_name"|"field_index" => "field",
+                    "expr" => "index",
+                    _ => panic!(""),
+                };
 
                 builder
                     .param_push() //self
@@ -524,7 +528,11 @@ impl Compiler {
                     let field=fields.last().unwrap(); //field|index
                     let field_inner=field.child(0).unwrap(); //field_name|field_index|expr
                     // let is_symbol=field_inner.name()=="field_name";
-                    let func = if field_inner.name()=="field_name" {"field"} else {"index"};
+                    let func = match field_inner.name() {
+                        "field_name"|"field_index" => "field",
+                        "expr" => "index",
+                        _ => panic!(""),
+                    };
 
 
                     builder
@@ -543,7 +551,7 @@ impl Compiler {
                 for i in (0..fields.children().len()-1).rev() {
                     let field=fields.child(i).unwrap();  //field|index
                     let field_inner=field.child(0).unwrap(); //field_name|field_index|expr
-                    let is_symbol=field_inner.name()=="field_name";
+                    // let is_symbol=field_inner.name()=="field_name";
 
                     if i!=0 {
                         builder

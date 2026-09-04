@@ -146,27 +146,27 @@ impl Arg {
     }
 }
 
-#[derive(Clone, Copy)]
-pub enum MethodInputType<'m> {
-    Method{name:&'m str},
-    FieldNamed{name:&'m str},
-    Field{no_symbols:bool},
-}
-#[derive(Clone, Hash,Eq,PartialEq )]
-pub enum MethodInputType2 {
-    Method{name:String},
-    FieldNamed{name:String},
-    Field{no_symbols:bool},
-}
-impl Into<MethodInputType2> for  MethodInputType<'_> {
-    fn into(self) -> MethodInputType2 {
-        match self {
-            MethodInputType::Method { name } => MethodInputType2::Method { name: name.to_string() },
-            MethodInputType::FieldNamed { name } => MethodInputType2::FieldNamed { name: name.to_string() },
-            MethodInputType::Field { no_symbols: allow_symbols } => MethodInputType2::Field { no_symbols: allow_symbols },
-        }
-    }
-}
+// #[derive(Clone, Copy)]
+// pub enum MethodInputType<'m> {
+//     Method{name:&'m str},
+//     FieldNamed{name:&'m str},
+//     Field{no_symbols:bool},
+// }
+// #[derive(Clone, Hash,Eq,PartialEq )]
+// pub enum MethodInputType2 {
+//     Method{name:String},
+//     FieldNamed{name:String},
+//     Field{no_symbols:bool},
+// }
+// impl Into<MethodInputType2> for  MethodInputType<'_> {
+//     fn into(self) -> MethodInputType2 {
+//         match self {
+//             MethodInputType::Method { name } => MethodInputType2::Method { name: name.to_string() },
+//             MethodInputType::FieldNamed { name } => MethodInputType2::FieldNamed { name: name.to_string() },
+//             MethodInputType::Field { no_symbols: allow_symbols } => MethodInputType2::Field { no_symbols: allow_symbols },
+//         }
+//     }
+// }
 // impl<'m> Into<MethodInputType<'m>> for MethodInputType2 {
 //     fn into(self) -> MethodInputType<'m> {
 //         match self {
@@ -194,9 +194,10 @@ impl Into<MethodInputType2> for  MethodInputType<'_> {
 pub struct MethodInput<'m,X> {
     lib_scope:&'m mut LibScope<X>,
     // name:&'m str,
-    input_type:MethodInputType<'m>,
+    // input_type:MethodInputType<'m>,
     method_type:MethodType<X>,
 
+    names : Vec<&'m str>,
     args : Vec<Vec<Arg>>,
     optional_start : Option<usize>,
     // variadic:bool,
@@ -333,7 +334,7 @@ impl<'m,X> MethodInput<'m,X> {
         self
     }
 
-    pub fn inner_end(mut self,variadic:bool) -> Self {
+    fn inner_end(mut self,variadic:bool) -> Self {
         if self.args.len() > 0 {
 
                 //could n= arg0.len*arg1.len * .. * argn.len
@@ -396,9 +397,11 @@ impl<'m,X> MethodInput<'m,X> {
 
                 //     }
                 // }
-                self.lib_scope.inner_insert_method(self.input_type, args, self.optional_start, variadic, self.method_type.clone());
 
-                positions[0]+=1;
+                for &n in self.names.iter() {
+                    self.lib_scope.inner_insert_method(n, args.clone(), self.optional_start, variadic, self.method_type.clone());
+                }
+                positions[0]+=1; //what is this
             }
         } else {
 
@@ -413,7 +416,15 @@ impl<'m,X> MethodInput<'m,X> {
             //     }
             // }
 
-            self.lib_scope.inner_insert_method(self.input_type, [], self.optional_start, variadic, self.method_type.clone());
+            for &n in self.names.iter() {
+                self.lib_scope.inner_insert_method(
+                    // self.input_type,
+                    n,
+                    [], self.optional_start, variadic,
+                    self.method_type.clone(),
+                );
+            }
+
         }
 
         //
@@ -428,6 +439,11 @@ impl<'m,X> MethodInput<'m,X> {
     pub fn variadic_end(self) -> Self {
         self.inner_end(true)
     }
+
+    // pub fn name(mut self, name:&'m str) -> Self {
+    //     self.names.push(name);
+    //     self
+    // }
 }
 
 pub type FuncType<X> = Arc<dyn Fn(FuncContext<X>)->Result<Value,MachineError>+'static +Send+Sync> ;
@@ -481,8 +497,8 @@ pub struct Method<X> {
 #[derive(Clone)]
 pub struct LibScope<X> { //
     constants : HashMap<String,Value>,
-    // methods : HashMap<String,usize>, //node_ind
-    methods : HashMap<MethodInputType2,usize>, //node_ind
+    methods : HashMap<String,usize>, //node_ind
+    // methods : HashMap<MethodInputType2,usize>, //node_ind
     nodes : Vec<ArgNode<X>>,
 }
 
@@ -517,12 +533,12 @@ impl<X> LibScope<X> {
     }
 
     fn get_insert_root_node_ind(&mut self,
-        // n:&str
-        input_type:MethodInputType<'_>,
+        n:&str
+        // input_type:MethodInputType<'_>,
     ) -> usize {
         *self.methods.entry(
-            // n.to_string()
-            input_type.into()
+            n.to_string()
+            // input_type.into()
         ).or_insert_with(||{
             let ind=self.nodes.len();
             self.nodes.push(Default::default());
@@ -542,10 +558,10 @@ impl<X> LibScope<X> {
     }
 
     fn get_root_node_ind(&self,
-        // n:&str
-        input_type:&MethodInputType2
+        n:&str
+        // input_type:&MethodInputType2
     ) -> Option<usize> {
-        self.methods.get(input_type).cloned()
+        self.methods.get(n).cloned()
     }
 
     fn get_node(&self,node_ind:usize) -> &ArgNode<X> {
@@ -561,15 +577,14 @@ impl<X> LibScope<X> {
     }
 
     fn inner_insert_method<T>(&mut self,
-        // n:&str,
-        input_type:MethodInputType<'_>,
+        n:&str,
+        // input_type:MethodInputType<'_>,
         args : T,optional_start : Option<usize>,variadic:bool,func:MethodType<X>)
     where
         T:AsRef<[Arg]>
     {
         let args=args.as_ref().to_vec();
-        let root_node_ind=self.get_insert_root_node_ind(input_type //n
-            );
+        let root_node_ind=self.get_insert_root_node_ind(n);
 
         if args.len()==0 || optional_start==Some(0) {
             let root_node=self.nodes.get_mut(root_node_ind).unwrap();
@@ -599,8 +614,8 @@ impl<X> LibScope<X> {
     }
 
     fn inner_get_method<'x,I>(&self,
-        // n : &str,
-        input_type:&MethodInputType2,
+        n : &str,
+        // input_type:&MethodInputType2,
         params : I) -> Option<Method<X>>
     where
         I: IntoIterator<Item=&'x Value>,
@@ -610,7 +625,7 @@ impl<X> LibScope<X> {
 
         let params = params.into_iter().collect::<Vec<_>>();
 
-        let Some(root_node_ind)=self.get_root_node_ind(input_type) else {
+        let Some(root_node_ind)=self.get_root_node_ind(n) else {
             return None;
         };
 
@@ -770,30 +785,30 @@ impl<X> LibScope<X> {
     where
         I: IntoIterator<Item=&'x Value>
     {
-        self.inner_get_method(&MethodInputType2::Method { name: n.to_string() }, params)
+        self.inner_get_method(n, params)
     }
 
-    pub fn get_method_field_named<'x,I>(&self,
-        n : &str,
-        params : I,
-        // var_scope : &VarScope,
-    ) -> Option<Method<X>>
-    where
-        I: IntoIterator<Item=&'x Value>
-    {
-        self.inner_get_method(&MethodInputType2::FieldNamed{ name: n.to_string() }, params)
-    }
+    // pub fn get_method_field_named<'x,I>(&self,
+    //     n : &str,
+    //     params : I,
+    //     // var_scope : &VarScope,
+    // ) -> Option<Method<X>>
+    // where
+    //     I: IntoIterator<Item=&'x Value>
+    // {
+    //     self.inner_get_method(&MethodInputType2::FieldNamed{ name: n.to_string() }, params)
+    // }
 
-    pub fn get_method_field<'x,I>(&self,
-        no_symbols:bool,
-        params : I,
-        // var_scope : &VarScope,
-    ) -> Option<Method<X>>
-    where
-        I: IntoIterator<Item=&'x Value>
-    {
-        self.inner_get_method(&MethodInputType2::Field { no_symbols }, params)
-    }
+    // pub fn get_method_field<'x,I>(&self,
+    //     no_symbols:bool,
+    //     params : I,
+    //     // var_scope : &VarScope,
+    // ) -> Option<Method<X>>
+    // where
+    //     I: IntoIterator<Item=&'x Value>
+    // {
+    //     self.inner_get_method(&MethodInputType2::Field { no_symbols }, params)
+    // }
 
 
 
@@ -838,25 +853,25 @@ impl<X> LibScope<X> {
     //         // variadic: false,
     //     }
     // }
-    pub fn field<'m>(&'m mut self, //no_symbols:bool,
-        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
-    ) -> MethodInput<'m,X> {
-        self.method("field", func)
-    }
+    // pub fn field<'m>(&'m mut self, //no_symbols:bool,
+    //     func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
+    // ) -> MethodInput<'m,X> {
+    //     self.method("field", func)
+    // }
 
-    pub fn method<'m>(&'m mut self,name : &'m str,
-        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
-    ) -> MethodInput<'m,X> {
-        MethodInput {
-            lib_scope: self,
-            // name,
-            input_type:MethodInputType::Method { name, },
-            method_type:MethodType::NonMut(Arc::new(func)),
-            args: Vec::new(),
-            optional_start: None,
-            // variadic: false,
-        }
-    }
+    // pub fn method<'m>(&'m mut self,name : &'m str,
+    //     func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
+    // ) -> MethodInput<'m,X> {
+    //     MethodInput {
+    //         lib_scope: self,
+    //         // name,
+    //         input_type:MethodInputType::Method { name, },
+    //         method_type:MethodType::NonMut(Arc::new(func)),
+    //         args: Vec::new(),
+    //         optional_start: None,
+    //         // variadic: false,
+    //     }
+    // }
     // pub fn method_mut<'m>(&'m mut self,name : &'m str,
     //     // slot:usize
     //     func:impl FnMut(FuncContext<X>)->Result<Value,MachineError> + 'static + Send + Sync
@@ -873,20 +888,26 @@ impl<X> LibScope<X> {
 
     //
 
-    // pub fn func<'m>(&'m mut self,name : &'m str,
-    //     func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
-    // ) -> MethodInput<'m,X> {
-    //     MethodInput {
-    //         lib_scope: self,
-    //         // name,
-    //         input_type:MethodInputType::Method { name, },
-    //         method_type:MethodType::NonMut(Arc::new(func)),
-    //         args: Vec::new(),
-    //         optional_start: None,
-    //         // variadic: false,
-    //     }
-    // }
-
+    pub fn methods<'m,const N: usize>(&'m mut self,
+        names: [&'m str; N],
+        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
+    ) -> MethodInput<'m,X> {
+        MethodInput {
+            lib_scope: self,
+            names:names.to_vec(),
+            // name,
+            // input_type:MethodInputType::Method { name, },
+            method_type:MethodType::NonMut(Arc::new(func)),
+            args: Vec::new(),
+            optional_start: None,
+            // variadic: false,
+        }
+    }
+   pub fn method<'m>(&'m mut self,name : &'m str,
+        func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
+    ) -> MethodInput<'m,X> {
+        self.methods([name], func)
+    }
 }
 
 /*
