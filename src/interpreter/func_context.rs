@@ -141,21 +141,21 @@ impl<'q,'a,'c,X> FuncContext<'q,'a,X> { //,'b //,'b
         self.machine.try_call_method(name, &params.as_ref().to_vec())
     }
 
-    pub fn global_decl(&mut self,name:&str,to_value:Option<Value>) -> Result<(),MachineError> {
-        self.machine.global_decl(name, to_value)
-    }
-    pub fn global_set<T:AsRef<[Value]>>(&mut self,name:&str,fields:T,to_value:Value) -> Result<(),MachineError> {
-        self.machine.global_set(name, &fields.as_ref().to_vec(), to_value)
-    }
-    pub fn global_get<T:AsRef<[Value]>>(&mut self,name:&str,fields:T) -> Result<Value,MachineError> {
-        self.machine.global_get(name, &fields.as_ref().to_vec())
-    }
-    pub fn value_set<T:AsRef<[Value]>>(&mut self,value:Value,fields:T,to_value:Value) -> Result<(),MachineError> {
-        self.machine.value_set(value, &fields.as_ref().to_vec(), to_value)
-    }
-    pub fn value_get<T:AsRef<[Value]>>(&mut self,value:Value,fields:T) -> Result<Value,MachineError> {
-        self.machine.value_get(value, &fields.as_ref().to_vec())
-    }
+    // pub fn global_decl(&mut self,name:&str,to_value:Option<Value>) -> Result<(),MachineError> {
+    //     self.machine.global_decl(name, to_value)
+    // }
+    // pub fn global_set<T:AsRef<[Value]>>(&mut self,name:&str,fields:T,to_value:Value) -> Result<(),MachineError> {
+    //     self.machine.global_set(name, &fields.as_ref().to_vec(), to_value)
+    // }
+    // pub fn global_get<T:AsRef<[Value]>>(&mut self,name:&str,fields:T) -> Result<Value,MachineError> {
+    //     self.machine.global_get(name, &fields.as_ref().to_vec())
+    // }
+    // pub fn value_set<T:AsRef<[Value]>>(&mut self,value:Value,fields:T,to_value:Value) -> Result<(),MachineError> {
+    //     self.machine.value_set(value, &fields.as_ref().to_vec(), to_value)
+    // }
+    // pub fn value_get<T:AsRef<[Value]>>(&mut self,value:Value,fields:T) -> Result<Value,MachineError> {
+    //     self.machine.value_get(value, &fields.as_ref().to_vec())
+    // }
     pub fn constant_get(&self,name:&str) -> Option<Value> {
         self.machine.constant_get(name)
     }

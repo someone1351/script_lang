@@ -926,6 +926,180 @@ impl Compiler {
                     ;
             }
 
+            "print" => {
+                builder
+                    .eval(top_group.child(0).unwrap())
+                    .param_push()
+                    .call_method("stdout", 1)
+
+                    .result_string("\n")
+                    .param_push()
+                    .call_method("stdout", 1)
+                    ;
+
+            }
+            "println" => {
+                builder
+                    .eval(top_group.child(0).unwrap())
+                    .param_push()
+                    .call_method("stdout", 1)
+                    ;
+            }
+
+            "format" => {
+
+                if top_group.children().is_empty() {
+                    builder.result_string("");
+                    return Ok(());
+                }
+
+                //
+                builder
+                    .result_string("")
+                    .param_push();
+
+                //
+                let mut j=0;
+
+                if let Ok(x)=top_group.child(0).unwrap().tokens().pop_string() {
+                    let s=x.value;
+
+                    j+=1;
+
+
+                    //parse format string
+
+                    // let s =record.get(1).unwrap().string().unwrap();
+                    let mut cs=s.chars();
+                    let mut char_ind=0;
+
+                    let mut texts: Vec<(usize, usize)>= vec![(0,0)];
+                    let mut vars: Vec<(usize, usize)> =Vec::new();
+
+                    while let Some(c)=cs.next() {
+                        char_ind+=1;
+
+                        match c {
+                            '{' => {
+                                vars.push((char_ind,char_ind));
+
+                                while let Some(c)=cs.next() {
+                                    char_ind+=1;
+
+                                    match c {
+                                        '}' => {
+                                            vars.last_mut().unwrap().1=char_ind-1;
+                                            break;
+                                        }
+                                        '\\' => {
+                                            if cs.next().is_some() {
+                                                char_ind+=1;
+                                            }
+
+                                            continue;
+                                        }
+                                        _=>{
+                                        }
+                                    }
+                                }
+
+                                texts.push((char_ind,char_ind));
+                            }
+                            '\\' => {
+                                if cs.next().is_some() {
+                                    char_ind+=1;
+                                    texts.last_mut().unwrap().1=char_ind;
+                                }
+
+                                continue;
+                            }
+                            _=>{
+                                texts.last_mut().unwrap().1=char_ind;
+                            }
+                        }
+                    }
+
+                    //
+
+                    for i in 0 .. texts.len() {
+                        let (text_start,text_end) = texts[i];
+                        let text_str=&s[text_start..text_end];
+
+                        // println!("a: {text_str:?}");
+
+                        if !text_str.is_empty() {
+                            builder
+                                .result_string(text_str)
+                                .param_push()
+                                .swap()
+                                .call_method("add", 2)
+                                .param_push()
+                                ;
+                        }
+
+                        if let Some((var_start,var_end)) = vars.get(i).cloned() {
+                            let var_str=&s[var_start..var_end];
+                            // println!("v: {var_str:?}");
+
+                            if var_str.is_empty() {
+                                // println!("hmm2 {:?}",record.start_loc());
+                                // println!("hmm {:?}",record.param(j).map(|x|x.primitive()));
+
+                                if let Some(x)=top_group.child(j) {
+                                    builder.eval(x);
+                                } else {
+                                    builder.result_nil();
+                                }
+
+                                j+=1;
+                            } else {
+                                builder.get_var(var_str);
+                            }
+
+                            builder
+                                .param_push()
+                                .call_method("string", 1)
+
+                                .param_push()
+                                .swap()
+                                .call_method("add", 2)
+
+                                .param_push();
+                        }
+                    }
+
+                }
+
+                for k in j .. top_group.children().len() {
+                    if k>=2 {
+                        builder
+                            .result_string(" ")
+
+                            .param_push()
+                            .swap()
+                            .call_method("add", 2)
+                            .param_push();
+                    }
+
+
+                    builder
+
+                        .eval(top_group.child(k).unwrap())
+
+                        .param_push()
+                        .call_method("string", 1)
+
+                        .param_push()
+                        .swap()
+                        .call_method("add", 2)
+
+                        .param_push();
+                }
+
+
+                builder.pop();
+            }
+
             _ => {
                 panic!("{}",top_group.name());
                 // builder.eval(primitive)

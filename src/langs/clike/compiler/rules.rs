@@ -158,20 +158,20 @@ pub fn get_non_term<'a>(n:& str) -> Option<Rc<GrammarNode<'a>>> {
         // "ellipsis" => [Symbol("."),Symbol("."),Symbol("."),].and().group("ellipsis"),
 
         "format" => [Keyword("format"),NonTerm("format_params"),].and(),
-        "print" => [Keyword("print"),NonTerm("format_params"),].and(),
-        "println" => [Keyword("println"),NonTerm("format_params"),].and(),
+        "print" => [Keyword("print"),NonTerm("format_params"),].and().group("print"),
+        "println" => [Keyword("println"),NonTerm("format_params"),].and().group("println"),
 
         "format_params" => [
             NonTerm("lparen"),
             [
                 [
                     [String.group("string"), NonTerm("expr"),].or(),
-                    [NonTerm("comma"), NonTerm("expr"),].and().many0(),
-                    NonTerm("comma").opt(),
+                    [Symbol(","), NonTerm("expr"),].and().many0(),
+                    Symbol(",").opt(),
                 ].and().opt(),
                 NonTerm("rparen"),
             ].and().expect("closing bracket"),
-        ].and(),
+        ].and().group("format"),
 
         "if" => [
             [Keyword("if"), NonTerm("expr"), NonTerm("block"), ].and().group("cond"),

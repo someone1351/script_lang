@@ -1,7 +1,7 @@
-use std::{hash::Hash,  sync::Arc};
+use std::{fmt::Debug, hash::Hash, sync::Arc};
 
 
-#[derive(Clone,Debug,Eq,Ord)]
+#[derive(Clone,Eq,Ord)]
 pub enum StringVal {
     Str(&'static str),
     String(Arc<String>),
@@ -93,6 +93,15 @@ impl std::borrow::Borrow<str> for StringVal {
 impl std::fmt::Display for StringVal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_str())
+    }
+}
+
+impl Debug for StringVal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Str(arg0) => write!(f,"str{arg0:?}"),
+            Self::String(arg0) => write!(f,"string:{arg0:?}"),
+        }
     }
 }
 // impl Join for StringVal {

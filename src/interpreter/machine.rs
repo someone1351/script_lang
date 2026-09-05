@@ -1311,115 +1311,115 @@ impl<'a,X> Machine<'a,X> {
         }
     }
 
-    pub fn global_decl(&mut self,name:&str,to_value:Option<Value>) -> Result<(),MachineError> {
-        if self.error_state { //why?
-            self.clear();
-        }
+    // pub fn global_decl(&mut self,name:&str,to_value:Option<Value>) -> Result<(),MachineError> {
+    //     if self.error_state { //why?
+    //         self.clear();
+    //     }
 
-        //
-        self.var_scope.decl(name, to_value)
-            .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
-        Ok(())
-    }
+    //     //
+    //     self.var_scope.decl(name, to_value)
+    //         .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
+    //     Ok(())
+    // }
 
-    pub fn global_set<T:AsRef<[Value]>>(&mut self,name:&str,fields:T,to_value:Value) -> Result<(),MachineError> {
-        if self.error_state { //why?
-            self.clear();
-        }
+    // pub fn global_set<T:AsRef<[Value]>>(&mut self,name:&str,fields:T,to_value:Value) -> Result<(),MachineError> {
+    //     if self.error_state { //why?
+    //         self.clear();
+    //     }
 
-        //
-        let fields = fields.as_ref().to_vec();
+    //     //
+    //     let fields = fields.as_ref().to_vec();
 
-        if fields.len()==0 { //set global to the value
-            if !self.var_scope.set(name,to_value).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
-                return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(name.to_string()) ));
-            }
+    //     if fields.len()==0 { //set global to the value
+    //         if !self.var_scope.set(name,to_value).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
+    //             return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(name.to_string()) ));
+    //         }
 
-        } else {
-            let Some(global_val) = self.var_scope.get(name).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?
-            else {
-                return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(name.to_string()) ));
-            };
+    //     } else {
+    //         let Some(global_val) = self.var_scope.get(name).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?
+    //         else {
+    //             return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(name.to_string()) ));
+    //         };
 
-            self.value_set(global_val, fields, to_value)?;
-        }
+    //         self.value_set(global_val, fields, to_value)?;
+    //     }
 
-        return Ok(());
-    }
+    //     return Ok(());
+    // }
 
-    pub fn global_get<T:AsRef<[Value]>>(&mut self,name:&str,fields:T) -> Result<Value,MachineError> {
-        if self.error_state { //why?
-            self.clear();
-        }
+    // pub fn global_get<T:AsRef<[Value]>>(&mut self,name:&str,fields:T) -> Result<Value,MachineError> {
+    //     if self.error_state { //why?
+    //         self.clear();
+    //     }
 
-        //
-        let Some(global_val) = self.var_scope.get(name)
-            .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?
-        else {
-            return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(name.to_string()) ));
-        };
+    //     //
+    //     let Some(global_val) = self.var_scope.get(name)
+    //         .or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?
+    //     else {
+    //         return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(name.to_string()) ));
+    //     };
 
-        self.value_get(global_val, fields)
-    }
+    //     self.value_get(global_val, fields)
+    // }
 
-    pub fn value_set<T:AsRef<[Value]>>(&mut self,value:Value,fields:T,to_value:Value) -> Result<(),MachineError> {
-        if self.error_state { //why?
-            self.clear();
-        }
+    // pub fn value_set<T:AsRef<[Value]>>(&mut self,value:Value,fields:T,to_value:Value) -> Result<(),MachineError> {
+    //     if self.error_state { //why?
+    //         self.clear();
+    //     }
 
-        //
-        let fields = fields.as_ref().to_vec();
+    //     //
+    //     let fields = fields.as_ref().to_vec();
 
-        if fields.len() == 0 {
-            return Ok(()); //no fields provided, do nothing
-        }
+    //     if fields.len() == 0 {
+    //         return Ok(()); //no fields provided, do nothing
+    //     }
 
-        //
-        let mut rets = vec![value.clone_leaf()];
+    //     //
+    //     let mut rets = vec![value.clone_leaf()];
 
-        //gets
-        for i in 0..fields.len()-1 {
-            let ret=self.call_method("get_field", [rets.last().unwrap().clone_root(),fields.get(i).unwrap().clone_root()])?;
-            rets.push(ret);
-        }
+    //     //gets
+    //     for i in 0..fields.len()-1 {
+    //         let ret=self.call_method("get_field", [rets.last().unwrap().clone_root(),fields.get(i).unwrap().clone_root()])?;
+    //         rets.push(ret);
+    //     }
 
-        //
-        rets.push(to_value);
+    //     //
+    //     rets.push(to_value);
 
-        //sets
-        for i in (0..rets.len()-1).rev() {
-            self.call_method("set_field", [
-                rets.get(i).unwrap().clone_root(),
-                fields.get(i).unwrap().clone_root(),
-                rets.get(i+1).unwrap().clone_root(),
-            ])?;
-        }
+    //     //sets
+    //     for i in (0..rets.len()-1).rev() {
+    //         self.call_method("set_field", [
+    //             rets.get(i).unwrap().clone_root(),
+    //             fields.get(i).unwrap().clone_root(),
+    //             rets.get(i+1).unwrap().clone_root(),
+    //         ])?;
+    //     }
 
-        //
-        Ok(())
-    }
+    //     //
+    //     Ok(())
+    // }
 
-    pub fn value_get<T:AsRef<[Value]>>(&mut self,value:Value,fields:T) -> Result<Value,MachineError> {
-        if self.error_state { //why?
-            self.clear();
-        }
+    // pub fn value_get<T:AsRef<[Value]>>(&mut self,value:Value,fields:T) -> Result<Value,MachineError> {
+    //     if self.error_state { //why?
+    //         self.clear();
+    //     }
 
-        //
-        self.inner_value_get::<T>(value,fields) //,true
-    }
+    //     //
+    //     self.inner_value_get::<T>(value,fields) //,true
+    // }
 
-    fn inner_value_get<T:AsRef<[Value]>>(&mut self,value:Value,fields:T) -> Result<Value,MachineError> {
-        let mut fields = fields.as_ref().to_vec();
-        fields.reverse();
+    // fn inner_value_get<T:AsRef<[Value]>>(&mut self,value:Value,fields:T) -> Result<Value,MachineError> {
+    //     let mut fields = fields.as_ref().to_vec();
+    //     fields.reverse();
 
-        let mut cur_value=value;
+    //     let mut cur_value=value;
 
-        while let Some(field)=fields.pop() {
-            cur_value = self.call_method("get_field", [cur_value,field])?;
-        }
+    //     while let Some(field)=fields.pop() {
+    //         cur_value = self.call_method("get_field", [cur_value,field])?;
+    //     }
 
-        Ok(cur_value)
-    }
+    //     Ok(cur_value)
+    // }
 
     fn stack_swap(&mut self) -> Result<(),MachineError> {
         let stack_len = self.stack.len();
