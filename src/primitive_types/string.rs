@@ -99,8 +99,8 @@ impl std::fmt::Display for StringVal {
 impl Debug for StringVal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Str(arg0) => write!(f,"str{arg0:?}"),
-            Self::String(arg0) => write!(f,"string:{arg0:?}"),
+            Self::Str(arg0) => write!(f,"{arg0:?}"),
+            Self::String(arg0) => write!(f,"{arg0:?}"),
         }
     }
 }

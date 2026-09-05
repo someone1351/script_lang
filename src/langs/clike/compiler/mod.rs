@@ -1071,7 +1071,7 @@ impl Compiler {
                 }
 
                 for k in j .. top_group.children().len() {
-                    if k>=2 {
+                    if k>0 {
                         builder
                             .result_string(" ")
 
