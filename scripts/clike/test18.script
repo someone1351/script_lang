@@ -13,8 +13,11 @@
 
 //"abc"
 
-//"\\{\q".substr(1)
+"\\{\q"
+//.substr(0,1)
 
-"abcdef".substr(1,2)
+//"abcdef".substr(1,20)
 
 //substr("abcdef",2,2)
+
+//var a= {q:fn(self){return self}}; a.q()

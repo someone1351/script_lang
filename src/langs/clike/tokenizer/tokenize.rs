@@ -182,13 +182,13 @@ fn parse_string<'a>(
                         //     'n'=>'\n',
                         //     _=>xs[1],
                         // });
-                        s.push(match xs[1] {
-                            's'=>' ',
-                            't'=>'\t',
-                            'r'=>'\r',
-                            'n'=>'\n',
-                            _=>xs[1],
-                        });
+                        match xs[1] {
+                            's'=>{s.push(' ');}
+                            't'=>{s.push('\t');}
+                            'r'=>{s.push('\r');}
+                            'n'=>{s.push('\n');}
+                            _=>{s.extend([xs[0],xs[1]]);}
+                        };
                     } else if quote=="'" {
                         s+=quote;
                     } else {
