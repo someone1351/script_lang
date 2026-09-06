@@ -73,13 +73,27 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
         let start=start.min(str_len);
 
         let end: usize=if context.params_num()==2{
-            str_len
+            str_len-start
         }else{
-            context.param(2).as_int().try_into()?
+            let param2:usize=context.param(2).as_int().try_into()?;
+            start + param2
         }.min(str_len);
 
+        //
+        // let cs=string.as_str().chars().collect::<Vec<_>>();
+        let mut out=String::new();
 
-        Ok(Value::string(if start>=end { "" } else { &string.as_str()[start..end] }))
+        if start<end {
+            // out=cs[start..end].iter().collect();
+            out=string.as_str().chars().skip(start).take(end-start).collect();
+        }
+
+        println!("start={start}, end={end}, out={out:?}");
+
+        //
+        Ok(Value::string(out))
+
+        // Ok(Value::string(if start>=end { "" } else { &string.as_str()[start..end] }))
     })
         .str().int().optional().int().end();
 

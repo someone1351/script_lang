@@ -175,6 +175,13 @@ fn parse_string<'a>(
 
                 if xs[0]=='\\' {
                     if quote.starts_with("\"") {
+                        // s.push(match xs[1] {
+                        //     's'=>' ',
+                        //     't'=>'\t',
+                        //     'r'=>'\r',
+                        //     'n'=>'\n',
+                        //     _=>xs[1],
+                        // });
                         s.push(match xs[1] {
                             's'=>' ',
                             't'=>'\t',

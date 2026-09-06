@@ -10,7 +10,7 @@ TODO
 */
 
 mod error;
-mod input;
+pub mod input;
 mod data;
 mod tokenize;
 

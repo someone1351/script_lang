@@ -27,6 +27,7 @@ use crate::clike::compiler::builder_error::BuilderErrorType;
 use crate::clike::grammar::container::{WalkGroupContainer, WalkGroupIterContainer};
 use crate::clike::grammar::walker::GrammarWalker;
 use crate::clike::grammar::GrammarWalkError;
+use crate::clike::tokenizer::input::Input;
 // use crate::ccexpr_compiler::grammar::grammar_run;
 // use std::path::PathBuf;
 // use super::parser::parse;
@@ -73,20 +74,6 @@ pub struct Compiler {
 impl Compiler {
 
     pub fn new() -> Self {
-        // let mut cmds: HashMap<&'static str,Vec<Cmd>> = HashMap::new();
-
-        // cmds.insert("break", vec![break_cmd]);
-        // cmds.insert("continue", vec![continue_cmd]);
-        // cmds.insert("for", vec![for_cmd]);
-        // cmds.insert("format", vec![format_cmd,]);
-        // cmds.insert("fn", vec![func_cmd, lambda_cmd]);
-        // cmds.insert("if", vec![if_cmd]);
-        // cmds.insert("include", vec![include_cmd]);
-        // cmds.insert("print", vec![print_cmd]);
-        // cmds.insert("println", vec![println_cmd]);
-        // cmds.insert("return", vec![return_cmd]);
-        // cmds.insert("var", vec![var_cmd]);
-        // cmds.insert("while", vec![while_cmd]);
 
         Self {
             // cmds
@@ -961,60 +948,111 @@ impl Compiler {
                 //
                 let mut j=0;
 
+                //first param is string
                 if let Ok(x)=top_group.child(0).unwrap().tokens().pop_string() {
                     let s=x.value;
 
                     j+=1;
 
+                    //
+
+                    let mut texts= vec![0..0];
+                    let mut vars =Vec::new();
+
+
+                    let mut input = Input::new(x.value);
+
+                    // //
+                    // for (i,c) in s.char_indices() {
+
+                    // }
 
                     //parse format string
-
-                    // let s =record.get(1).unwrap().string().unwrap();
                     let mut cs=s.chars();
+                    let mut texts2: Vec<String> = Vec::new();
+                    let mut formats2: Vec<String> = Vec::new();
+                    enum Closing { Single, Double, }
+                    let mut closings: Vec<Closing> = Vec::new();
+
+                    while !input.is_end() {
+                        if let Some(x)=input.has(0, ["{","\\{", "}"]).or_else(||input.get(0,1)) {
+                            match x {
+                                "{" => {
+
+                                }
+                                "}" => {
+
+                                }
+                                "\\{" => {
+
+                                }
+                                _ => {
+
+                                }
+                            }
+                        }
+
+
+                    }
+
+
+                    while let Some(c)=cs.next() {
+                        if c == '{' {
+                            while let Some(c2)=cs.next() {
+                                match c2 {
+                                    '{' => {
+                                        closings.push(Closing::Single);
+
+                                    }
+                                    '}' => {
+
+                                    }
+                                    _ => {
+
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+
+
                     let mut char_ind=0;
 
-                    let mut texts: Vec<(usize, usize)>= vec![(0,0)];
-                    let mut vars: Vec<(usize, usize)> =Vec::new();
 
                     while let Some(c)=cs.next() {
                         char_ind+=1;
 
                         match c {
                             '{' => {
-                                vars.push((char_ind,char_ind));
+                                vars.push(char_ind..char_ind);
 
                                 while let Some(c)=cs.next() {
                                     char_ind+=1;
 
                                     match c {
                                         '}' => {
-                                            vars.last_mut().unwrap().1=char_ind-1;
+                                            vars.last_mut().unwrap().end=char_ind-1;
                                             break;
                                         }
-                                        '\\' => {
-                                            if cs.next().is_some() {
-                                                char_ind+=1;
-                                            }
 
-                                            continue;
-                                        }
                                         _=>{
                                         }
                                     }
                                 }
 
-                                texts.push((char_ind,char_ind));
+                                texts.push(char_ind..char_ind);
                             }
                             '\\' => {
                                 if cs.next().is_some() {
                                     char_ind+=1;
-                                    texts.last_mut().unwrap().1=char_ind;
+                                    texts.last_mut().unwrap().end=char_ind;
                                 }
 
                                 continue;
                             }
                             _=>{
-                                texts.last_mut().unwrap().1=char_ind;
+                                texts.last_mut().unwrap().end=char_ind;
                             }
                         }
                     }
@@ -1022,8 +1060,7 @@ impl Compiler {
                     //
 
                     for i in 0 .. texts.len() {
-                        let (text_start,text_end) = texts[i];
-                        let text_str=&s[text_start..text_end];
+                        let text_str=&s[texts[i].clone()];
 
                         // println!("a: {text_str:?}");
 
@@ -1037,8 +1074,8 @@ impl Compiler {
                                 ;
                         }
 
-                        if let Some((var_start,var_end)) = vars.get(i).cloned() {
-                            let var_str=&s[var_start..var_end];
+                        if let Some(var) = vars.get(i).cloned() {
+                            let var_str=&s[var];
                             // println!("v: {var_str:?}");
 
                             if var_str.is_empty() {
@@ -1070,6 +1107,7 @@ impl Compiler {
 
                 }
 
+                //
                 for k in j .. top_group.children().len() {
                     if k>0 {
                         builder

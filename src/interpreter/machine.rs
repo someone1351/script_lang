@@ -1106,8 +1106,9 @@ impl<'a,X> Machine<'a,X> {
         match v {
             Ok(v)=>{
 
+                self.set_result_val(v);
                 if pop_params {
-                    self.set_result_val(v);
+                    // self.set_result_val(v);
 
                     self.stack_pop_amount(params_num)?;
 
