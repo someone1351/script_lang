@@ -2,6 +2,14 @@ use std::{fmt::Debug, rc::Rc};
 
 // use super::super::grammar::error::GrammarWalkError;
 
+/*
+TODO
+* could add Trim node, that sets Work::trim to true, then on primitive, calls tokens.trim() before trying to get primitive
+** would use eg Symbol("+").trim()
+** or have it immediately trim tokens instead of setting flag
+*** could call it before a group so that eol is trimmed out of the group
+**** eg Symbol("+").group("plus").trim()
+*/
 
 
 #[derive(Clone,Hash,PartialEq,Eq)]
