@@ -29,64 +29,81 @@ impl<'a> TokenContainer<'a> {
     }
 
     pub fn token_type(&self) -> TokenTypeContainer<'a> {
-        match self.primitive().token_type {
-            TokenType::Float(x, _) => TokenTypeContainer::Float(x),
-            TokenType::Int(x, _) => TokenTypeContainer::Int(x),
-            TokenType::String(x) => TokenTypeContainer::String(self.parsed.texts[x].as_str()),
-            TokenType::Symbol(x) => TokenTypeContainer::Symbol(self.parsed.texts[x].as_str()),
-            TokenType::Identifier(x) => TokenTypeContainer::Identifier(self.parsed.texts[x].as_str()),
-            TokenType::Keyword(x) => TokenTypeContainer::Keyword(self.parsed.texts[x].as_str()),
+        let token=self.primitive();
+        let text=token.text_ind.map(|x|self.parsed.texts[x].as_str());
+
+        match token.token_type {
+            TokenType::Float(x, ) => TokenTypeContainer::Float(x),
+            TokenType::Int(x, ) => TokenTypeContainer::Int(x),
+            TokenType::String => TokenTypeContainer::String(text.unwrap()),
+            TokenType::Symbol => TokenTypeContainer::Symbol(text.unwrap()),
+            TokenType::Identifier => TokenTypeContainer::Identifier(text.unwrap()),
+            TokenType::Keyword => TokenTypeContainer::Keyword(text.unwrap()),
             // PrimitiveType::End => PrimitiveTypeContainer::End,
             TokenType::Eol => TokenTypeContainer::Eol,
         }
     }
 
     pub fn get_float(&self) -> Result<ValueContainer<'a,f64>,Loc> {
-        if let TokenType::Float(value, _)=self.primitive().token_type {
+        if let TokenType::Float(value)=self.primitive().token_type {
             Ok(ValueContainer{ token: self.clone(), value })
         } else {
             Err(self.start_loc())
         }
     }
     pub fn get_int(&self) -> Result<ValueContainer<'a,i64>,Loc> {
-        if let TokenType::Int(value, _)=self.primitive().token_type {
+        if let TokenType::Int(value)=self.primitive().token_type {
             Ok(ValueContainer{ token: self.clone(), value })
         } else {
             Err(self.start_loc())
         }
     }
     pub fn get_string(&self) -> Result<ValueContainer<'a,&'a str>,Loc> {
-        if let TokenType::String(x)=self.primitive().token_type {
-            Ok(ValueContainer{ token: self.clone(), value: self.parsed.texts[x].as_str() })
+        let token=self.primitive();
+
+        if let TokenType::String=token.token_type {
+            let value=self.parsed.texts[token.text_ind.unwrap()].as_str();
+            Ok(ValueContainer{ token: self.clone(), value,  })
         } else {
             Err(self.start_loc())
         }
     }
 
     pub fn get_symbol(&self) -> Result<ValueContainer<'a,&'a str>,Loc> {
-        if let TokenType::Symbol(x)=self.primitive().token_type {
-            Ok(ValueContainer{ token: self.clone(), value: self.parsed.texts[x].as_str() })
+        let token=self.primitive();
+
+        if let TokenType::Symbol=token.token_type {
+            let value=self.parsed.texts[token.text_ind.unwrap()].as_str();
+            Ok(ValueContainer{ token: self.clone(), value, })
         } else {
             Err(self.start_loc())
         }
     }
     pub fn get_identifier(&self) -> Result<ValueContainer<'a,&'a str>,Loc> {
-        if let TokenType::Identifier(x)=self.primitive().token_type {
-            Ok(ValueContainer{ token: self.clone(), value: self.parsed.texts[x].as_str() })
+        let token=self.primitive();
+
+        if let TokenType::Identifier=token.token_type {
+            let value=self.parsed.texts[token.text_ind.unwrap()].as_str();
+            Ok(ValueContainer{ token: self.clone(), value, })
         } else {
             Err(self.start_loc())
         }
     }
 
     pub fn get_keyword(&self) -> Result<ValueContainer<'a,&'a str>,Loc> {
-        if let TokenType::Keyword(x)=self.primitive().token_type {
-            Ok(ValueContainer{ token: self.clone(), value: self.parsed.texts[x].as_str() })
+        let token=self.primitive();
+
+        if let TokenType::Keyword=token.token_type {
+            let value=self.parsed.texts[token.text_ind.unwrap()].as_str();
+            Ok(ValueContainer{ token: self.clone(), value, })
         } else {
             Err(self.start_loc())
         }
     }
     pub fn get_eol(&self) -> Result<ValueContainer<'a,()>,Loc> {
-        if let TokenType::Eol=self.primitive().token_type {
+        let token=self.primitive();
+
+        if let TokenType::Eol=token.token_type {
             Ok(ValueContainer{ token: self.clone(), value: () })
         } else {
             Err(self.start_loc())
@@ -133,7 +150,7 @@ impl<'a> TokenContainer<'a> {
     }
 
     pub fn is_string(&self) -> bool {
-        if let TokenType::String(_)=self.primitive().token_type {
+        if let TokenType::String=self.primitive().token_type {
             true
         } else {
             false
@@ -156,7 +173,7 @@ impl<'a> TokenContainer<'a> {
         }
     }
     pub fn is_identifier(&self) -> bool {
-        if let TokenType::Identifier(_)=self.primitive().token_type {
+        if let TokenType::Identifier=self.primitive().token_type {
             true
         } else {
             false

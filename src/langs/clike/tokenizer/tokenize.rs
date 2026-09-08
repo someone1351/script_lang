@@ -124,18 +124,18 @@ fn parse_number(
     let token=input.get(0, i).unwrap();
 
     let text_map_size=text_map.len();
-    let text_ind=*text_map.entry(token.to_string()).or_insert(text_map_size);
+    let text_ind=Some(*text_map.entry(token.to_string()).or_insert(text_map_size));
 
     let primitive_type=if is_float {
-        TokenType::Float(token.parse().unwrap(),text_ind,)
+        TokenType::Float(token.parse().unwrap(),)
     } else {
-        TokenType::Int(token.parse().unwrap(),text_ind,)
+        TokenType::Int(token.parse().unwrap(),)
     };
 
     input.next(i);
     let end_loc=input.loc();
 
-    Some(Token { start_loc, end_loc, token_type: primitive_type })
+    Some(Token { start_loc, end_loc, token_type: primitive_type,text_ind, })
 }
 
 fn parse_string<'a>(
@@ -236,12 +236,12 @@ fn parse_string<'a>(
 
         //
         let text_map_size=text_map.len();
-        let text_ind=*text_map.entry(s).or_insert(text_map_size);
+        let text_ind=Some(*text_map.entry(s).or_insert(text_map_size));
 
         //
         let end_loc=input.loc();
-        let primitive_type=TokenType::String(text_ind);
-        return Ok(Some(Token { token_type: primitive_type, start_loc, end_loc }))
+        let primitive_type=TokenType::String;
+        return Ok(Some(Token { token_type: primitive_type, start_loc, end_loc,text_ind }))
     }
 
     Ok(None)
@@ -259,14 +259,14 @@ fn parse_char_symbol(
         let start_loc=input.loc();
 
         let text_map_size=text_map.len();
-        let text_ind=*text_map.entry(x.to_string()).or_insert(text_map_size);
+        let text_ind=Some(*text_map.entry(x.to_string()).or_insert(text_map_size));
 
         input.next(1);
         let end_loc=input.loc();
         // Some((text_ind,start_loc,end_loc))
 
-        let primitive_type=TokenType::Symbol(text_ind);
-        Some(Token { token_type: primitive_type, start_loc, end_loc, })
+        let primitive_type=TokenType::Symbol;
+        Some(Token { token_type: primitive_type, start_loc, end_loc, text_ind,})
     } else {
         None
     }
@@ -308,20 +308,21 @@ where
     let kw=is_keyword(val.as_str());
 
     let text_map_size=text_map.len();
-    let text_ind=*text_map.entry(val).or_insert(text_map_size);
+    let text_ind=Some(*text_map.entry(val).or_insert(text_map_size));
 
     input.next(i);
     let end_loc=input.loc();
 
-    let primitive_type=if kw {TokenType::Keyword(text_ind)} else {TokenType::Identifier(text_ind)};
-    Some(Token { token_type: primitive_type, start_loc, end_loc })
+    let primitive_type=if kw {TokenType::Keyword} else {TokenType::Identifier};
+    Some(Token { token_type: primitive_type, start_loc, end_loc, text_ind })
 }
 
 fn parse_eol(input:&mut Input) -> Option<Token> {
     if let Some(x)=input.has(0, ["\r\n","\n"]) {
         input.next(x.len());
         let primitive_type=TokenType::Eol;
-        Some(Token { token_type: primitive_type, start_loc: input.prev_loc(), end_loc: input.loc() })
+        let text_ind=None;
+        Some(Token { token_type: primitive_type, start_loc: input.prev_loc(), end_loc: input.loc(),text_ind })
     } else {
         None
     }

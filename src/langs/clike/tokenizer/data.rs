@@ -6,12 +6,12 @@ use crate::build::Loc;
 
 #[derive(Debug,Clone,PartialEq)]
 pub enum TokenType {
-    Float(f64,usize,), //num,text_ind,
-    Int(i64,usize,),//num,text_ind,
-    String(usize),//text_ind
-    Symbol(usize), //text_ind
-    Identifier(usize), //text_ind
-    Keyword(usize), //text_ind
+    Float(f64),//,usize,), //num,text_ind,
+    Int(i64),//,usize,),//num,text_ind,
+    String,//(usize),//text_ind
+    Symbol,//(usize), //text_ind
+    Identifier,//(usize), //text_ind
+    Keyword,//(usize), //text_ind
     Eol,
 }
 
@@ -20,6 +20,7 @@ pub struct Token {
     pub token_type:TokenType,
     pub start_loc : Loc, //for block is first brace
     pub end_loc : Loc, //for block last brace, or if has param/fields then last field
+    pub text_ind:Option<usize>,
 }
 
 pub struct Tokenized {
