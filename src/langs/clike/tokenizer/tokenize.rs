@@ -174,7 +174,7 @@ fn parse_string<'a>(
                 let xs=x.chars().collect::<Vec<_>>();
 
                 if xs[0]=='\\' {
-                    if quote.starts_with("\"") {
+                    if quote.starts_with("\"") { //is " or """
                         // s.push(match xs[1] {
                         //     's'=>' ',
                         //     't'=>'\t',
@@ -182,17 +182,35 @@ fn parse_string<'a>(
                         //     'n'=>'\n',
                         //     _=>xs[1],
                         // });
+
                         match xs[1] {
-                            's'=>{s.push(' ');}
-                            't'=>{s.push('\t');}
-                            'r'=>{s.push('\r');}
-                            'n'=>{s.push('\n');}
-                            _=>{s.extend([xs[0],xs[1]]);}
+                            's'=>{
+                                s.push(' ');}
+                            't'=>{
+                                s.push('\t');}
+                            'r'=>{
+                                s.push('\r');}
+                            'n'=>{
+                                s.push('\n');
+                            }
+                            '"' => { //if quote.len()==1
+                                s.push(xs[1]);
+                            }
+                            _=>{
+                                s.extend(&xs);
+                            }
                         };
                     } else if quote=="'" {
-                        s+=quote;
+                        match xs[1] {
+                            '\'' => {
+                                s.push(xs[1]);
+                            }
+                            _ => {
+                                s.extend(&xs);
+                            }
+                        }
                     } else {
-                        s+=x;
+                        s.extend(&xs);
                     }
 
                     input.next(2);
