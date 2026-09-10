@@ -36,41 +36,51 @@ impl<'g> TempExpectType<'g> {
     }
 }
 
-#[derive(Clone, Debug, )]
-pub struct TempExpectNew2<'t,'g> {
+#[derive(Clone, )]
+pub struct TempExpectNew2<'g, TS>
+where
+    TS:Clone,
+{
     pub expect_type:TempExpectType<'g>,
-    pub tokens_start:TokenIterContainer<'t>,
+    pub tokens_start:TS,
     pub expect_len:usize,
 }
 
-#[derive(Clone, Debug, )]
-pub struct TempExpect2<'t,'g> {
+#[derive(Clone,  )]
+pub struct TempExpect2<'g,TS>
+where
+    TS:Clone,
+{
     pub expect_type:TempExpectType<'g>,
-    pub tokens_start:TokenIterContainer<'t>,
+    pub tokens_start:TS,
 }
 
-#[derive(Clone, Debug, )]
-pub struct TempExpect1<'t,'g> {
+#[derive(Clone,  )]
+pub struct TempExpect1<'g, TS> {
     pub expect_type:TempExpectType<'g>,
     pub parent:Option<usize>,
-    pub tokens_start:TokenIterContainer<'t>,
+    pub tokens_start:TS,
     // pub last:bool,
 }
 
-#[derive(Clone, Debug)]
-pub struct TempStowNew<'t,'g> {
-    pub grammar:Rc<GrammarNode<'g>>,
-    pub tokens_start:TokenIterContainer<'t>,
+#[derive(Clone, )]
+pub struct TempStowNew<'g,P,TS>
+where
+    P:Clone+core::hash::Hash+PartialEq+Eq,
+    TS:Clone,
+{
+    pub grammar:Rc<GrammarNode<'g,P>>,
+    pub tokens_start:TS,
     pub group_len:usize,
     pub stow_len:usize,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, )]
 pub struct TempWas<'g> {
     pub name:&'g str,
 }
 
-#[derive(Clone,Debug,)]
+#[derive(Clone,)]
 pub enum TempStowWas<'g> {
     Was(TempWas<'g>),
     Primitive,
@@ -78,16 +88,23 @@ pub enum TempStowWas<'g> {
 }
 
 
-#[derive(Clone,Debug,)]
-pub struct TempStowSuccess<'t,'g> {
-    pub grammar: Rc<GrammarNode<'g>>,
-    pub tokens_after:TokenIterContainer<'t>,
+#[derive(Clone,)]
+pub struct TempStowSuccess<'g,P,TS>
+where
+    P:Clone+core::hash::Hash+PartialEq+Eq,
+    TS: Clone,
+{
+    pub grammar: Rc<GrammarNode<'g,P>>,
+    pub tokens_after:TS,
     pub stow_groups_end:usize,
     pub was:TempStowWas<'g>,
 }
 #[derive(Clone,Debug,)]
-pub struct TempStowFail<'g> {
-    pub grammar:Rc<GrammarNode<'g>>,
+pub struct TempStowFail<'g,P>
+where
+    P:Clone+core::hash::Hash+PartialEq+Eq,
+{
+    pub grammar:Rc<GrammarNode<'g,P>>,
 }
 
 // #[derive(Clone,Debug,)]
@@ -105,38 +122,54 @@ pub struct TempStowFail<'g> {
 // }
 
 
-#[derive(Clone,Debug,)]
-pub struct TempStow<'t,'g> {
+#[derive(Clone,)]
+pub struct TempStow<'g,P,TS>
+where
+
+    P:Clone+core::hash::Hash+PartialEq+Eq,
+    TS:Clone,
+{
     pub stow_groups_start:usize,
     // pub val : TempStowVal<'t,'g>,
     pub tokens_start_ind:usize,
 
-    pub success : Option<TempStowSuccess<'t,'g>>,
-    pub fail : Option<TempStowFail<'g>>,
+    pub success : Option<TempStowSuccess<'g,P,TS>>,
+    pub fail : Option<TempStowFail<'g,P>>,
 }
 
 #[derive(Clone)]
-pub struct TempGroup<'t,'g> {
+pub struct TempGroup<'g,TS>
+where
+    TS:Clone,
+{
     pub name:&'g str,
     pub parent:usize, //group
-    pub tokens:TokenIterContainer<'t>,
+    pub tokens:TS,
 }
 
-impl<'t,'g> Debug for  TempGroup<'t,'g> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("TempGroupInfo")
-        .field("name", &self.name)
-        .field("parent", &self.parent)
-        // .field("primitives", &self.primitives)
-        .field("primitive_ind_start", &self.tokens.inds().start)
-        .finish()
-    }
-}
+// impl<'t,'g> Debug for  TempGroup<'t,'g> {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         f.debug_struct("TempGroupInfo")
+//         .field("name", &self.name)
+//         .field("parent", &self.parent)
+//         // .field("primitives", &self.primitives)
+//         .field("primitive_ind_start", &self.tokens.inds().start)
+//         .finish()
+//     }
+// }
 
 #[derive(Clone)]
-pub struct Work<'t,'g> {
-    pub grammar:Rc<GrammarNode<'g>>,
-    pub tokens:TokenIterContainer<'t>,
+pub struct Work<'g,P,TS>
+where
+
+    P:Clone+core::hash::Hash+PartialEq+Eq,
+    // T:Clone,
+    // I: Iterator<Item=T>+Clone,
+    TS:Clone,
+{
+    pub grammar:Rc<GrammarNode<'g,P>>,
+    // pub tokens:TokenIterContainer<'t>,
+    pub tokens:TS,
 
     pub grammar_ind:usize,
     pub user:bool, //gramamr added by input grammar, not walker //used to know whether to push hist_begins stk or not //used with and/or/many

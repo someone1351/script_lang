@@ -1,6 +1,8 @@
 // use std::ops::{Bound, Range, RangeBounds};
 use std::ops::Range;
 use crate::build::Loc;
+use crate::clike::compiler::rules::GrammarPrimitive;
+use crate::clike::grammar::{GrammarPrimitiveTrait, TokenIterTrait};
 use super::super::super::tokenizer::data::Tokenized;
 
 use super::*;
@@ -352,4 +354,58 @@ impl<'a> std::fmt::Debug for TokenIterContainer<'a> {
         f.write_fmt(format_args!("[{}]", self.clone().map(|p|format!("{p:?}")).collect::<Vec<String>>().join(", ")))
 
     }
+}
+
+impl<'t,'g> TokenIterTrait<GrammarPrimitive<'g>> for TokenIterContainer<'t> {
+    fn is_trimmable(&self) -> bool {
+        false
+
+    }
+    // fn get<F:Fn(GrammarPrimitive<'g>)->Option<TokenContainer<'t>>>(&self, func:F) -> Option<TokenContainer<'t>> {
+    //     None
+    // }
+
+    fn index(&self) -> usize {
+        self.inds().start
+
+    }
+
+    fn pop_primitive(&mut self, p:&GrammarPrimitive<'g>) -> bool {
+        match p {
+            GrammarPrimitive::String => self.pop_string().is_ok(),
+            GrammarPrimitive::Identifier => self.pop_identifier().is_ok(),
+            GrammarPrimitive::Int => self.pop_int().is_ok(),
+            GrammarPrimitive::Float => self.pop_float().is_ok(),
+            GrammarPrimitive::Symbol(s) => self.pop_with_symbol(s).is_ok(),
+            GrammarPrimitive::Keyword(s) => self.pop_with_keyword(s).is_ok(),
+            GrammarPrimitive::Eol => self.pop_eol().is_ok(),
+        }
+    }
+
+    fn trim2(&mut self) {
+        self.trim();
+    }
+
+    fn truncate(&mut self,size:usize,) {
+        let end2=self.start+size;
+
+        if self.end > end2 {
+            self.end=end2;
+        }
+    }
+
+    fn len2(&self) -> usize {
+        self.len()
+    }
+
+    fn is_empty2(&self) -> bool {
+        self.is_empty()
+    }
+
+    fn inds2(&self) -> Range<usize> {
+        self.inds()
+    }
+
+
+
 }

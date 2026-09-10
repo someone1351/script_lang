@@ -19,7 +19,7 @@ todo:
 // #![allow(unused)]
 mod compiler_error;
 // mod cmds;
-mod rules;
+pub mod rules;
 mod builder_error;
 
 use crate::builder::{Builder, BuilderError};
@@ -31,7 +31,7 @@ use crate::clike::tokenizer::input::Input;
 // use crate::ccexpr_compiler::grammar::grammar_run;
 // use std::path::PathBuf;
 // use super::parser::parse;
-use crate::clike::tokenizer::{tokenize, TokenTypeContainer, TokenizerErrorType};
+use crate::clike::tokenizer::{tokenize, TokenIterContainer, TokenTypeContainer, TokenizerErrorType};
 use crate::primitive_types::StringVal;
 
 use crate::{build::*, compiler::builder};
@@ -63,7 +63,7 @@ pub use compiler_error::*;
     //     next_anon_id:&mut usize,
     // ) -> Result<(),BuilderError<BuilderErrorType>> {
 
-type ClikeBuilder<'a,'t,'g> = Builder<'a,WalkGroupContainer<'t,'g>,BuilderErrorType>;
+type ClikeBuilder<'a,'t,'g> = Builder<'a,WalkGroupContainer<'g,TokenIterContainer<'t>>,BuilderErrorType>;
 type ClikeBuilderResult=Result<(), BuilderError<BuilderErrorType>>;
 
 pub struct Compiler {
@@ -137,7 +137,10 @@ impl Compiler {
                     };
                     // let error_type=CompileErrorType::ParserExpected(expecteds);
 
-                    return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type});
+                    return Err(CompileError{path:pathbuf,src,loc:
+                        // walker.last_loc()
+                        walker.last_loc2().start_loc()
+                        ,error_type});
 
                     // return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expects_string())});
                 }
@@ -155,7 +158,7 @@ impl Compiler {
         println!("-----------------");
         let walk=walker.get_walk();
 
-        println!("{}",walk.root());
+        // println!("{}",walk.root());
 
         println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
 
@@ -220,8 +223,8 @@ impl Compiler {
 
     pub fn run<'a,'t,'g>(&self,
         // builder:&mut CExprBuilder<'a>,
-        builder:&mut Builder<'a,WalkGroupContainer<'t,'g>,BuilderErrorType>,
-        top_group:WalkGroupContainer<'t,'g>,
+        builder:&mut Builder<'a,WalkGroupContainer<'g,TokenIterContainer<'t>>,BuilderErrorType>,
+        top_group:WalkGroupContainer<'g,TokenIterContainer<'t>>,
         next_anon_id:&mut usize,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
         println!("{:?}:",top_group.name());
@@ -321,7 +324,7 @@ impl Compiler {
                         .eval(cs.next().unwrap())
                         .param_push()
                         .swap()
-                        .loc(op.start_loc())
+                        .loc(op.tokens().start_loc())
                         .call_method(func, 2)
                         ;
                 }
@@ -382,7 +385,7 @@ impl Compiler {
                     .eval(field_inner)
                     .param_push() //val
                     .swap() //todo remove
-                    .loc(top_group.start_loc())
+                    .loc(top_group.tokens().start_loc())
                     // .get_field(is_symbol)
                     .call_method(func, 2)
                     ;
@@ -421,7 +424,7 @@ impl Compiler {
                         .loc(name.token.start_loc())
                         .get_var(name.value)
                         .param_push()
-                        .loc(op.start_loc())
+                        .loc(op.tokens().start_loc())
                         .call_method(func, 2)
                         ;
                 }
@@ -504,7 +507,7 @@ impl Compiler {
                 if !func.is_empty() {
                     builder
                         .swap()
-                        .loc(op.start_loc())
+                        .loc(op.tokens().start_loc())
                         .call_method(func, 2)
                         .param_push() //prev_val+to
                         ;
@@ -528,7 +531,7 @@ impl Compiler {
 
                         .rot_left() //todo remove
 
-                        .loc(field.start_loc())
+                        .loc(field.tokens().start_loc())
                         // .set_field(is_symbol, true) //why need islast? non last are optional?
                         .call_method(func, 3)
                         ;
@@ -554,7 +557,7 @@ impl Compiler {
 
                         .rot_left() //todo remove
 
-                        .loc(field_inner.start_loc())
+                        .loc(field_inner.tokens().start_loc())
                         // .set_field(is_symbol, false)
                         .try_call_method(func, 3)
                         .pop_params(3)
@@ -577,7 +580,7 @@ impl Compiler {
                         .get_anon_var("self") //todo remove, replace with push above it's decl?
 
                         //
-                        .loc(top_group.start_loc())
+                        .loc(top_group.tokens().start_loc())
                         .call_result(params.children().len(),)
 
                     .block_end() //todo remove
@@ -605,7 +608,7 @@ impl Compiler {
                             .param_push() //self
 
                             //
-                            .loc(top_group.start_loc())
+                            .loc(top_group.tokens().start_loc())
                             // .call_field(params.children().len(),)
                             .try_call_method(field_name, params.children().len()+1)
 
@@ -618,7 +621,7 @@ impl Compiler {
                             .param_push() //field
                             .swap()
 
-                            .loc(top_group.start_loc())
+                            .loc(top_group.tokens().start_loc())
                             .call_method("_field",2)
 
                             .call_result(params.children().len()+1)
@@ -764,13 +767,13 @@ impl Compiler {
             }
 
             "continue" => {
-                let e=BuilderError::new(top_group.start_loc(), BuilderErrorType::ContinueNotInLoop);
+                let e=BuilderError::new(top_group.tokens().start_loc(), BuilderErrorType::ContinueNotInLoop);
                 let skip=builder.get_flag("in_loop_cond").is_some();
                 let skip = if skip {1} else {0};
                 builder.to_block_start_label(JmpCond::None,"loop",skip,Some(e));
             }
             "break" => {
-                let e=BuilderError::new(top_group.start_loc(), BuilderErrorType::ContinueNotInLoop);
+                let e=BuilderError::new(top_group.tokens().start_loc(), BuilderErrorType::ContinueNotInLoop);
                 let skip=builder.get_flag("in_loop_cond").is_some();
                 let skip = if skip {1} else {0};
                 builder.to_block_end_label(JmpCond::None,"loop",skip,Some(e));
@@ -782,7 +785,7 @@ impl Compiler {
                     builder.result_void();
                 }
 
-                let e = BuilderError::new(top_group.start_loc(), BuilderErrorType::ReturnNotInFunc);
+                let e = BuilderError::new(top_group.tokens().start_loc(), BuilderErrorType::ReturnNotInFunc);
                 builder.to_block_end_label(JmpCond::None, "func",0,Some(e));
             }
             "include" => {

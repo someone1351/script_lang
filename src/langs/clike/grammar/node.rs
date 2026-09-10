@@ -6,107 +6,115 @@ use std::{fmt::Debug, rc::Rc};
 TODO
 * could add Trim node, that sets Work::trim to true, then on primitive, calls tokens.trim() before trying to get primitive
 ** would use eg Symbol("+").trim()
+*** have it trim on group and primitive
 ** or have it immediately trim tokens instead of setting flag
 *** could call it before a group so that eol is trimmed out of the group
 **** eg Symbol("+").group("plus").trim()
 */
 
 
-#[derive(Clone,Hash,PartialEq,Eq)]
-pub enum GrammarNode<'g> {
-    Many(Rc<GrammarNode<'g>>),
-    And(Box<[Rc<GrammarNode<'g>>]>,usize), //stow_first, error_ind
-    Or( Box<[Rc<GrammarNode<'g>>]>,), //should store reversed?
+#[derive(Clone,Hash,PartialEq,Eq,)]
+pub enum GrammarNode<'g,P>
+where
+    P:Clone+core::hash::Hash+PartialEq+Eq,
+{
+    Many(Rc<GrammarNode<'g,P>>),
+    And(Box<[Rc<GrammarNode<'g,P>>]>,usize), //stow_first, error_ind
+    Or( Box<[Rc<GrammarNode<'g,P>>]>,), //should store reversed?
     NonTerm(&'g str),
 
-    Group(Rc<GrammarNode<'g>>,&'g str,),
-    Expect(Rc<GrammarNode<'g>>, &'g str,),
-    // NoExpect(Rc<GrammarNode<'g>>, ),
-    // Stow(Rc<GrammarNode<'g>>),
+    Group(Rc<GrammarNode<'g,P>>,&'g str,),
+    Expect(Rc<GrammarNode<'g,P>>, &'g str,),
+    // NoExpect(Rc<GrammarNode<'g,P>>, ),
+    // Stow(Rc<GrammarNode<'g,P>>),
 
-    Was(Rc<GrammarNode<'g>>, &'g str),
-    // Had(Rc<GrammarNode<'g>>, &'g str),
+    Was(Rc<GrammarNode<'g,P>>, &'g str),
+    // Had(Rc<GrammarNode<'g,P>>, &'g str),
     Had(&'g str),
 
-    // Prev(Rc<GrammarNode<'g>>),
+    // Prev(Rc<GrammarNode<'g,P>>),
 
-    String,
-    Identifier,
-    Int,
-    Float,
-    Symbol(&'g str),
-    Keyword(&'g str),
-    Eol,
+    Primitive(P),
+    // String,
+    // Identifier,
+    // Int,
+    // Float,
+    // Symbol(&'g str),
+    // Keyword(&'g str),
+    // Eol,
 
     Always, //always succeeds
     // Error(GrammarWalkError<'g>),
     Error,
 
 
-    // Stow(Rc<GrammarNode<'g>>),
+    // Stow(Rc<GrammarNode<'g,P>>),
 
-    // Mark(Rc<GrammarNode<'g>>),
+    // Mark(Rc<GrammarNode<'g,P>>),
 }
 
-impl<'g> GrammarNode<'g> {
-    pub fn many0(self) -> GrammarNode<'g> {
+impl<'g,P> GrammarNode<'g,P>
+where
+    P:Clone+core::hash::Hash+PartialEq+Eq,
+{
+    pub fn many0(self) -> GrammarNode<'g,P> {
         Self::Many(self.into())
     }
-    pub fn many1(self) -> GrammarNode<'g> {
+    pub fn many1(self) -> GrammarNode<'g,P> {
         [self.clone(),self.many0(),].and()
     }
-    pub fn opt(self) -> GrammarNode<'g> {
+    pub fn opt(self) -> GrammarNode<'g,P> {
         [self.into(),Self::Always].or()
     }
-    pub fn group(self,name: &'g str) -> GrammarNode<'g> {
+    pub fn group(self,name: &'g str) -> GrammarNode<'g,P> {
         Self::Group(self.into(),name)
     }
-    pub fn expect(self,name: &'g str,) -> GrammarNode<'g> {
+    pub fn expect(self,name: &'g str,) -> GrammarNode<'g,P> {
         Self::Expect(self.into(),name)
     }
-    pub fn no_expect(self,) -> GrammarNode<'g> {
+    pub fn no_expect(self,) -> GrammarNode<'g,P> {
         // Self::NoExpect(self.into(),)
         self.expect("")
     }
-    pub fn expected(self,) -> GrammarNode<'g> {
-        let name = match &self {
-            GrammarNode::NonTerm(s) => s,
-            GrammarNode::Had(s) => s,
+    // pub fn expected(self,) -> GrammarNode<'g,P> {
+    //     let name = match &self {
+    //         GrammarNode::NonTerm(s) => s,
+    //         GrammarNode::Had(s) => s,
 
-            GrammarNode::Group(_, s) => s,
-            GrammarNode::Was(_, s) => s,
+    //         GrammarNode::Group(_, s) => s,
+    //         GrammarNode::Was(_, s) => s,
 
-            GrammarNode::String => "string",
-            GrammarNode::Identifier => "identifier",
-            GrammarNode::Int => "int",
-            GrammarNode::Float => "float",
-            GrammarNode::Symbol(s) => s,
-            GrammarNode::Keyword(s) => s,
-            GrammarNode::Eol => "eol",
+    //         GrammarNode::String => "string",
+    //         GrammarNode::Identifier => "identifier",
+    //         GrammarNode::Int => "int",
+    //         GrammarNode::Float => "float",
+    //         GrammarNode::Symbol(s) => s,
+    //         GrammarNode::Keyword(s) => s,
+    //         GrammarNode::Eol => "eol",
 
-            _ => "",
-        };
+    //         _ => "",
+    //     };
 
-        if name.is_empty() {
-            self
-        } else {
-            Self::Expect(self.into(),name)
-        }
-    }
-    // pub fn stow(self) -> GrammarNode<'g> {
-    //     Self::Stow(self.into())
+    //     if name.is_empty() {
+    //         self
+    //     } else {
+    //         Self::Expect(self.into(),name)
+    //     }
     // }
-    // pub fn prev(self) -> GrammarNode<'g> {
-    //     Self::Prev(self.into())
-    // }
-    pub fn was(self,name: &'g str,) -> GrammarNode<'g> {
+    // // pub fn stow(self) -> GrammarNode<'g,P> {
+    // //     Self::Stow(self.into())
+    // // }
+    // // pub fn prev(self) -> GrammarNode<'g,P> {
+    // //     Self::Prev(self.into())
+    // // }
+    pub fn was(self,name: &'g str,) -> GrammarNode<'g,P> {
         Self::Was(self.into(),name)
     }
-    pub fn had(self,name: &'g str,) -> GrammarNode<'g> {
+    pub fn had(self,name: &'g str,) -> GrammarNode<'g,P> {
         // Self::Had(self.into(),name)
         [self.into(),Self::Had(name)].and()
     }
-    // pub fn stow(self) -> GrammarNode<'g> {
+    // pub fn stow(self) -> GrammarNode<'g,P> {
     //     Self::Stow(self.into())
     // }
     pub fn is_many(&self) -> bool {
@@ -121,9 +129,9 @@ impl<'g> GrammarNode<'g> {
     pub fn is_and(&self) -> bool {
         if let GrammarNode::And(..)=self {true} else {false}
     }
-    pub fn is_eol(&self) -> bool {
-        if let GrammarNode::Eol=self {true} else {false}
-    }
+    // pub fn is_eol(&self) -> bool {
+    //     if let GrammarNode::Eol=self {true} else {false}
+    // }
     pub fn get_non_term_name(&self) -> Option<&'g str> {
         if let Self::NonTerm(n)=self {
             Some(n)
@@ -182,70 +190,87 @@ impl<'g> GrammarNode<'g> {
         }
     }
     pub fn is_primtive(&self) -> bool {
-        match self {
-            // GrammarNode::Many(grammar_node) => todo!(),
-            // GrammarNode::And(grammar_nodes) => todo!(),
-            // GrammarNode::Or(grammar_nodes) => todo!(),
-            // GrammarNode::NonTerm(_) => todo!(),
-            // GrammarNode::Group(grammar_node, _) => todo!(),
-            // GrammarNode::Expected(grammar_node, _) => todo!(),
-            // GrammarNode::Prev(grammar_node) => todo!(),
-            GrammarNode::String => true,
-            GrammarNode::Identifier => true,
-            GrammarNode::Int => true,
-            GrammarNode::Float => true,
-            GrammarNode::Symbol(_) => true,
-            GrammarNode::Keyword(_) => true,
-            GrammarNode::Eol => true,
-            // GrammarNode::Always => todo!(),
-            // GrammarNode::Error(grammar_walk_error) => todo!(),
-            _ => false,
-        }
+        if let Self::Primitive(..)=self {true}else{false}
+
+        // match self {
+        //     // GrammarNode::Many(grammar_node) => todo!(),
+        //     // GrammarNode::And(grammar_nodes) => todo!(),
+        //     // GrammarNode::Or(grammar_nodes) => todo!(),
+        //     // GrammarNode::NonTerm(_) => todo!(),
+        //     // GrammarNode::Group(grammar_node, _) => todo!(),
+        //     // GrammarNode::Expected(grammar_node, _) => todo!(),
+        //     // GrammarNode::Prev(grammar_node) => todo!(),
+        //     GrammarNode::String => true,
+        //     GrammarNode::Identifier => true,
+        //     GrammarNode::Int => true,
+        //     GrammarNode::Float => true,
+        //     GrammarNode::Symbol(_) => true,
+        //     GrammarNode::Keyword(_) => true,
+        //     GrammarNode::Eol => true,
+        //     // GrammarNode::Always => todo!(),
+        //     // GrammarNode::Error(grammar_walk_error) => todo!(),
+        //     _ => false,
+        // }
     }
 }
 
 //todo have array stored in rev for or/and
-pub trait GrammarArrayTrait<'g> {
-    fn and(self) -> GrammarNode<'g>;
-    fn and1(self) -> GrammarNode<'g>;
-    fn or(self) -> GrammarNode<'g>;
+pub trait GrammarArrayTrait<'g,P>
+
+where
+    P:Clone+core::hash::Hash+PartialEq+Eq,
+{
+    fn and(self) -> GrammarNode<'g,P>;
+    fn and1(self) -> GrammarNode<'g,P>;
+    fn or(self) -> GrammarNode<'g,P>;
 }
 
-impl<'g,const N: usize> GrammarArrayTrait <'g> for [GrammarNode<'g>; N] {
-    fn and(self) -> GrammarNode<'g> {
+impl<'g,P,const N: usize> GrammarArrayTrait <'g,P> for [GrammarNode<'g,P>; N]
+where
+    P:Clone+core::hash::Hash+PartialEq+Eq,
+{
+    fn and(self) -> GrammarNode<'g,P> {
         // GrammarNode::And(self.into())
         GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),0)
     }
-    fn and1(self) -> GrammarNode<'g> {
+    fn and1(self) -> GrammarNode<'g,P> {
         // GrammarNode::And(self.into())
         GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),1)
     }
-    fn or(self) -> GrammarNode<'g> {
+    fn or(self) -> GrammarNode<'g,P> {
         // GrammarNode::Or(self.into())
         GrammarNode::Or(self.into_iter().map(|x|x.into()).collect(),)
     }
 }
 
-pub trait GrammarStrTrait<'g> {
-    fn non_term(self) -> GrammarNode<'g>;
-    fn symbol(self) -> GrammarNode<'g>;
-    fn keyword(self) -> GrammarNode<'g>;
-    // fn had(self) -> GrammarNode<'g>;
+pub trait GrammarStrTrait<'g,P>
+
+where
+    P:Clone+core::hash::Hash+PartialEq+Eq,
+{
+    fn non_term(self) -> GrammarNode<'g,P>;
+    // fn symbol(self) -> GrammarNode<'g,P>;
+    // fn keyword(self) -> GrammarNode<'g,P>;
+    // // fn had(self) -> GrammarNode<'g,P>;
 }
 
-impl<'g> GrammarStrTrait <'g> for &'g str {
-    fn non_term(self) -> GrammarNode<'g> {
+impl<'g,P> GrammarStrTrait <'g,P> for &'g str
+
+where
+    P:Clone+core::hash::Hash+PartialEq+Eq,
+{
+    fn non_term(self) -> GrammarNode<'g,P> {
         GrammarNode::NonTerm(self)
     }
-    fn symbol(self) -> GrammarNode<'g> {
-        GrammarNode::Symbol(self)
-    }
-    fn keyword(self) -> GrammarNode<'g> {
-        GrammarNode::Keyword(self)
-    }
-    // fn had(self) -> GrammarNode<'g> {
-    //     GrammarNode::Had(self)
+    // fn symbol(self) -> GrammarNode<'g,P> {
+    //     GrammarNode::Symbol(self)
     // }
+    // fn keyword(self) -> GrammarNode<'g,P> {
+    //     GrammarNode::Keyword(self)
+    // }
+    // // fn had(self) -> GrammarNode<'g,P> {
+    // //     GrammarNode::Had(self)
+    // // }
 }
 
 // impl<'a, const N: usize> From<[GrammarItem<'a>; N]> for  GrammarItem<'a> {
@@ -273,7 +298,11 @@ impl<'g> GrammarStrTrait <'g> for &'g str {
 // }
 
 
-impl<'g> Debug for GrammarNode<'g> {
+impl<'g,P> Debug for GrammarNode<'g,P>
+
+where
+    P:Clone+core::hash::Hash+PartialEq+Eq+Debug,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Many(arg0) => f.debug_tuple("Many").field(arg0).finish(),
@@ -303,14 +332,14 @@ impl<'g> Debug for GrammarNode<'g> {
             // Self::Had(arg0, arg1) => f.debug_tuple("Had").field(arg0).field(arg1).finish(),
             Self::Had(arg0) => f.debug_tuple("Had").field(arg0).finish(),
 
-
-            Self::String => write!(f, "String"),
-            Self::Identifier => write!(f, "Identifier"),
-            Self::Int => write!(f, "Int"),
-            Self::Float => write!(f, "Float"),
-            Self::Symbol(arg0) => f.debug_tuple("Symbol").field(arg0).finish(),
-            Self::Keyword(arg0) => f.debug_tuple("Keyword").field(arg0).finish(),
-            Self::Eol => write!(f, "Eol"),
+            Self::Primitive(arg0) => f.debug_tuple("Primitive").field(arg0).finish(),
+            // Self::String => write!(f, "String"),
+            // Self::Identifier => write!(f, "Identifier"),
+            // Self::Int => write!(f, "Int"),
+            // Self::Float => write!(f, "Float"),
+            // Self::Symbol(arg0) => f.debug_tuple("Symbol").field(arg0).finish(),
+            // Self::Keyword(arg0) => f.debug_tuple("Keyword").field(arg0).finish(),
+            // Self::Eol => write!(f, "Eol"),
             Self::Always => write!(f, "Always"),
             // Self::Error(arg0) => f.debug_tuple("Error").field(arg0).finish(),
             Self::Error => f.debug_tuple("Error").finish(),

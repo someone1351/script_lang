@@ -26,6 +26,8 @@ mod temp_data;
 mod utils;
 
 
+use std::ops::Range;
+
 // use node::*;
 pub use error::*;
 
@@ -104,3 +106,25 @@ NOTE
 ** then inside the func have two sets of matches one for stowed and the other for not
 
 */
+
+pub trait GrammarPrimitiveTrait {
+    fn is_trimmable(&self) -> bool;
+}
+
+
+pub trait TokenTrait<P> {
+    fn index(&self) -> usize;
+}
+
+pub trait TokenIterTrait<P> {
+    fn is_trimmable(&self) -> bool;
+    // fn get<F:Fn(P)->Option<T>>(&self, func:F) -> Option<T>;
+    fn pop_primitive(&mut self, p:&P) -> bool;
+    fn index(&self) -> usize;
+    fn inds2(&self) -> Range<usize>;
+    fn trim2(&mut self);
+    fn truncate(&mut self,size:usize,);
+    fn len2(&self) -> usize;
+    fn is_empty2(&self) -> bool;
+    // fn first(&self) -> Option<T>;
+}
