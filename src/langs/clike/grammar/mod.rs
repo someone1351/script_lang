@@ -118,11 +118,11 @@ pub trait TokenTrait<P> {
 
 pub trait TokenIterTrait {
     fn is_trimmable(&self) -> bool;
-    fn index(&self) -> usize;
+    // fn index(&self) -> usize;
     fn inds2(&self) -> Range<usize>;
     fn trim2(&mut self);
-    fn truncate(&mut self,size:usize,);
-    fn take2(&mut self,size:usize,);
+    fn truncate2(&mut self,size:usize,);
+    fn eat2(&mut self,size:usize,);
     fn len2(&self) -> usize;
     fn is_empty2(&self) -> bool;
     // fn first(&self) -> Option<T>;

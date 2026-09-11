@@ -329,24 +329,24 @@ impl<'t> Iterator for TokenIterContainer<'t> {
     }
 }
 
-// impl<'t> DoubleEndedIterator for TokenIterContainer<'t> {
-//     fn next_back(&mut self) -> Option<TokenContainer<'t>> {
-//         if self.end > self.start {
-//             self.end-=1;
-//             let primitive_ind=self.end;
+impl<'t> DoubleEndedIterator for TokenIterContainer<'t> {
+    fn next_back(&mut self) -> Option<TokenContainer<'t>> {
+        if self.end > self.start {
+            self.end-=1;
+            let primitive_ind=self.end;
 
-//             // let last_loc=if self.len()==1 {
-//             //     self.last_loc
-//             // } else {
-//             //     self.parsed.primitives[primitive_ind-1].end_loc
-//             // };
+            // let last_loc=if self.len()==1 {
+            //     self.last_loc
+            // } else {
+            //     self.parsed.primitives[primitive_ind-1].end_loc
+            // };
 
-//             Some(TokenContainer {token_ind: primitive_ind,parsed: self.parsed,}) //last_loc
-//         } else {
-//             None
-//         }
-//     }
-// }
+            Some(TokenContainer {token_ind: primitive_ind,parsed: self.parsed,}) //last_loc
+        } else {
+            None
+        }
+    }
+}
 
 impl<'t> std::fmt::Debug for TokenIterContainer<'t> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -365,17 +365,17 @@ impl<'t> TokenIterTrait for TokenIterContainer<'t> {
     //     None
     // }
 
-    fn index(&self) -> usize {
-        self.inds().start
+    // fn index(&self) -> usize {
+    //     self.inds().start
 
-    }
+    // }
 
 
     fn trim2(&mut self) {
         self.trim();
     }
 
-    fn truncate(&mut self,size:usize,) {
+    fn truncate2(&mut self,size:usize,) {
         let end2=self.start+size;
 
         if self.end > end2 {
@@ -383,11 +383,15 @@ impl<'t> TokenIterTrait for TokenIterContainer<'t> {
         }
     }
 
-    fn take2(&mut self,size:usize,) {
+    fn eat2(&mut self,size:usize,) {
         // if self.len()>=size {
 
         // }
-        self.take(size);
+        // self.take(size);
+
+        for _ in 0..size.min(self.len()) {
+            self.next().unwrap();
+        }
     }
     fn len2(&self) -> usize {
         self.len()

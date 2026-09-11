@@ -1684,7 +1684,7 @@ where
         // let _hist_news_len=self.hist_news_add(&cur);
         // self.hist_stows_clear(&cur);
 
-        // let is_group_token_start=if cur.group_ind!=0 {cur.tokens.index()==self.groups[cur.group_ind].tokens.index()}
+        // let is_group_token_start=if cur.group_ind!=0 {cur.tokens.inds2().start==self.groups[cur.group_ind].tokens.inds2().start}
         //     else{false};
 
         //
@@ -1789,7 +1789,7 @@ where
         }
 
         //do it here or in on fail?
-        // if self.expect_news2.last().map(|x|x.tokens_start.index())==Some(cur.tokens.index()) {
+        // if self.expect_news2.last().map(|x|x.tokens_start.inds2().start)==Some(cur.tokens.inds2().start) {
         //     return cur.expect_new_len2; //self.expect_news2.len()
         // }
 
@@ -1825,7 +1825,7 @@ where
 
     fn expect_on_error2(&mut self, ) {
         // println!("here---");
-        self.expects2.retain(|x|x.tokens_start.index()==self.expect_token_start2.index()
+        self.expects2.retain(|x|x.tokens_start.inds2().start==self.expect_token_start2.inds2().start
            && if let TempExpectType::Expect("")=&x.expect_type {false} else {true}
         );
     }
@@ -1842,20 +1842,20 @@ where
 
         //
         // let drained_expects=self.expects2.drain(last.expect_len2 ..)
-        //     // .filter(|x|x.tokens_start.index()>=cur.tokens.index())
-        //     .filter(|x|x.tokens_start.index()==self.expect_token_start2.index())
+        //     // .filter(|x|x.tokens_start.inds2().start>=cur.tokens.inds2().start)
+        //     .filter(|x|x.tokens_start.inds2().start==self.expect_token_start2.inds2().start)
         //     .collect::<Vec<_>>();
 
-        // println!("----- drained expects2 [{}]",drained_expects.iter().map(|x|format!("t{}:{:?}",x.tokens_start.index(),x.expect_type,)).collect::<Vec<_>>().join(", "));
-        // println!("----- expects2 [{}]",self.expects2.iter().map(|x|format!("t{}:{:?}",x.tokens_start.index(),x.expect_type,)).collect::<Vec<_>>().join(", "));
-        // // drained_expects.retain(|x|x.tokens_start.index()>=cur.tokens.index()); //use >= or just == ?
+        // println!("----- drained expects2 [{}]",drained_expects.iter().map(|x|format!("t{}:{:?}",x.tokens_start.inds2().start,x.expect_type,)).collect::<Vec<_>>().join(", "));
+        // println!("----- expects2 [{}]",self.expects2.iter().map(|x|format!("t{}:{:?}",x.tokens_start.inds2().start,x.expect_type,)).collect::<Vec<_>>().join(", "));
+        // // drained_expects.retain(|x|x.tokens_start.inds2().start>=cur.tokens.inds2().start); //use >= or just == ?
 
                 // self.expect_token_start2=self.expect_token_start2.max(cur.tokens);
 
 
         //
         let drained_expects=self.expects2.drain(last.expect_len2 ..)
-            .filter(|x|x.tokens_start.index()==self.expect_token_start2.index())
+            .filter(|x|x.tokens_start.inds2().start==self.expect_token_start2.inds2().start)
             ;
 
         //
@@ -1878,11 +1878,11 @@ where
         // // if cur.grammar.is_expect() && self.expect_news2.last().map(|x|x.expect_type.is_expect()).unwrap_or_default() {
         // // }
 
-        // let token_start_ind_max=draineds.iter().map(|x|x.tokens_start.index()).max().unwrap_or(self.expect_token_start2.index());
+        // let token_start_ind_max=draineds.iter().map(|x|x.tokens_start.inds2().start).max().unwrap_or(self.expect_token_start2.inds2().start);
 
-        // let draineds=draineds.into_iter().filter(|x|x.tokens_start.index()==token_start_ind_max).collect::<Vec<_>>();
+        // let draineds=draineds.into_iter().filter(|x|x.tokens_start.inds2().start==token_start_ind_max).collect::<Vec<_>>();
 
-        // if self.expect_token_start2.index()< token_start_ind_max {
+        // if self.expect_token_start2.inds2().start< token_start_ind_max {
         //     self.expects2.clear();
         // }
 
@@ -1892,36 +1892,36 @@ where
         let draineds=self.expect_news2.drain(last.expect_new_len2 ..); //here
 
         //first element with max token_ind
-        let drained=draineds.rev().max_by(|x,y|x.tokens_start.index().cmp(&y.tokens_start.index()));
+        let drained=draineds.rev().max_by(|x,y|x.tokens_start.inds2().start.cmp(&y.tokens_start.inds2().start));
 
         //
         if let Some(drained)=drained {
             if let TempExpectType::Expect(_expect_name)=&drained.expect_type {
                 if let Some(last_token_ind)= self.expects2
                     .get(drained.expect_len)
-                    .map(|x|x.tokens_start.index())
+                    .map(|x|x.tokens_start.inds2().start)
                 { //has self.expect.last
                     if //expect_name.is_empty() &&
-                        drained.tokens_start.index()== last_token_ind
+                        drained.tokens_start.inds2().start== last_token_ind
                     { //replace
                         self.expects2.truncate(drained.expect_len);
 
-                        if drained.tokens_start.index() >= self.expect_token_start2.index() {
+                        if drained.tokens_start.inds2().start >= self.expect_token_start2.inds2().start {
                             self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start.clone() });
                         }
                     }
                 } else {
-                    if drained.tokens_start.index() >= self.expect_token_start2.index() {
+                    if drained.tokens_start.inds2().start >= self.expect_token_start2.inds2().start {
                         self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start.clone() });
                     }
                 }
             } else {
-                if drained.tokens_start.index() >= self.expect_token_start2.index() {
+                if drained.tokens_start.inds2().start >= self.expect_token_start2.inds2().start {
                     self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start.clone() });
                 }
             }
 
-            if drained.tokens_start.index() > self.expect_token_start2.index() {
+            if drained.tokens_start.inds2().start > self.expect_token_start2.inds2().start {
                 self.expect_token_start2=drained.tokens_start;
             }
         }
@@ -1940,9 +1940,9 @@ where
         //check if prim and parent pos is same as cur pos
         //
 
-        let parent_start=cur.expect_ind1.map(|i|self.expects1[i].tokens_start.index()) ;
+        let parent_start=cur.expect_ind1.map(|i|self.expects1[i].tokens_start.inds2().start) ;
 
-        if parent_start==Some(cur.tokens.index()) {
+        if parent_start==Some(cur.tokens.inds2().start) {
             return (cur.expect_ind1,cur.expect_len1);
         }
 
@@ -1989,17 +1989,17 @@ where
         if !self.use_expect1 {return;}
 
         //
-        let max_token = self.expects1.iter().map(|x|x.tokens_start.clone()).max_by(|x,y|x.index().cmp(&y.index())).unwrap_or(self.tokens_remaining.clone());
+        let max_token = self.expects1.iter().map(|x|x.tokens_start.clone()).max_by(|x,y|x.inds2().start.cmp(&y.inds2().start)).unwrap_or(self.tokens_remaining.clone());
 
         self.expected_tokens_remaining1=max_token;
 
         //
-        let max_token_start_ind=self.expected_tokens_remaining1.index();
+        let max_token_start_ind=self.expected_tokens_remaining1.inds2().start;
 
         let parents= self.expects1.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
 
         let expecteds=self.expects1.iter().enumerate().rev().filter_map(|(i,x)|(
-            x.tokens_start.index() == max_token_start_ind &&
+            x.tokens_start.inds2().start == max_token_start_ind &&
             !parents.contains(&i)
         ).then(||(x.expect_type.clone(),x.clone()))).collect::<BTreeMap<_,_>>();
 
@@ -2335,7 +2335,7 @@ where
 
                 success:None,
                 fail:None,
-                tokens_start_ind:cur.tokens.index(),
+                tokens_start_ind:cur.tokens.inds2().start,
             });
 
             if self.hist_stows.len()!=cur.stow_len+1 {
@@ -2470,7 +2470,7 @@ where
             // //
             // group.tokens=group_prims;
 
-            group.tokens.truncate(n);
+            group.tokens.truncate2(n);
             g=group.parent;
         }
 
@@ -2488,7 +2488,7 @@ where
     //     if !self.non_term_recursive_check { return  Ok(Default::default()); }
 
     //     //
-    //     let v=(t,cur_primitives.index());
+    //     let v=(t,cur_primitives.inds2().start);
 
     //     //
     //     if cur_visiteds.contains(&v) { return Err(GrammarWalkError::RecursiveNonTerm(t)); }
@@ -2519,7 +2519,7 @@ where
             last.tokens=cur.tokens.clone();
         }
 
-        if cur.tokens.index() > self.tokens_furthest.index() {
+        if cur.tokens.inds2().start > self.tokens_furthest.inds2().start {
             self.tokens_furthest=cur.tokens.clone();
         }
     }
@@ -2691,7 +2691,7 @@ where
     }
 
     //
-    pub fn get_walk(&self) -> Walk<'g,TS> {
+    pub fn get_walk(&self, in_betweens:bool) -> Walk<'g,TS> {
         //
         let mut groups_out: Vec<WalkGroup<'g,TS>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
 
@@ -2754,46 +2754,68 @@ where
         }
 
         //insert groups for ungrouped tokens
-        let mut groups_out2=vec![WalkGroup{
-            name: groups_out[0].name.clone(),
-            children: 0..0,
-            tokens: groups_out[0].tokens.clone(),
-        }];
+        if in_betweens {
+            let mut groups_out2=vec![WalkGroup{
+                name: groups_out[0].name.clone(),
+                children: 0..0,
+                tokens: groups_out[0].tokens.clone(),
+            }];
 
-        {
-            let mut stk=vec![0];
+            {
+                let mut stk=vec![(0,0)]; //old_group_ind, new_group_ind
 
-            while let Some(gind)=stk.pop() {
-                let g=&groups_out[gind];
+                while let Some((gind,gind_new))=stk.pop() {
+                    let g=&groups_out[gind];
+                    let group_outs2_start=groups_out2.len();
+                    // for cind in g.children.clone() {
 
-                // for cind in g.children.clone() {
-
-                // }
-
-                let mut v=Vec::new();
-
-                let mut cur_tokens = g.tokens.clone();
-
-                // for child_group in self.children()
-                for cind in g.children.clone()
-                {
-                    let child_group=&groups_out[cind];
-                    let child_tokens=child_group.tokens.clone();
-                    let between_tokens_len=child_tokens.inds2().start-cur_tokens.inds2().start;
-
-                    // if between_tokens_len!=0 {
-                        let mut between_tokens=cur_tokens.clone();
-                        between_tokens.truncate(between_tokens_len);
-                        v.push(between_tokens);
                     // }
 
-                    cur_tokens.take2(between_tokens_len+child_tokens.len2());
-                }
+                    let mut cur_tokens = g.tokens.clone();
 
-                // if cur_tokens.len2()!=0 && v.len() {
-                    v.push(cur_tokens);
-                // }
+                    let mut children_new_inds=Vec::new();
+
+                    for cind in g.children.clone()
+                    {
+                        let child_group=&groups_out[cind];
+                        let child_tokens=child_group.tokens.clone();
+                        let between_tokens_len=child_tokens.inds2().start-cur_tokens.inds2().start;
+
+                        if between_tokens_len!=0 {
+                            let mut between_tokens=cur_tokens.clone();
+                            between_tokens.truncate2(between_tokens_len);
+                            groups_out2.push(WalkGroup { name: None, children: 0..0, tokens: between_tokens });
+                        }
+
+                        children_new_inds.push((cind,groups_out2.len()));
+
+                        groups_out2.push(WalkGroup {
+                            name: child_group.name,
+                            children: 0..0,
+                            tokens: child_group.tokens.clone(),
+                        });
+
+                        // cur_tokens.take2(between_tokens_len+child_tokens.len2());
+                        cur_tokens.eat2(child_tokens.inds2().end-cur_tokens.clone().inds2().start);
+                        // cur_tokens.take(n)
+                    }
+
+                    if cur_tokens.len2()!=0 &&g.children.len()!=0 {
+                        groups_out2.push(WalkGroup { name: None, children: 0..0, tokens: cur_tokens });
+                    }
+
+
+                    stk.extend(children_new_inds.into_iter().rev());
+                    {
+                        let group_outs2_end=groups_out2.len();
+                        let gnew=&mut groups_out2[gind_new];
+                        gnew.children=group_outs2_start..group_outs2_end;
+
+                    }
+                }
             }
+
+            groups_out=groups_out2;
         }
 
         //
@@ -2883,11 +2905,11 @@ where
         //     if self.debug {
         //         println!("expects:");
         //         for (i,x) in self.expects1.iter().enumerate() {
-        //             // println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.index(),x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
+        //             // println!("e {:?} || {:?} || {} => {} || {:?}",x.expected_type,x.tokens_start.inds2().start,x.tokens_start.loc(),x.tokens_start.last_loc(),x.tokens_start.inds());
 
         //             println!("    e{i}:p{}:t{} {:?} :: {:?}",
         //                 x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
-        //                 x.tokens_start.index(),
+        //                 x.tokens_start.inds2().start,
         //                 x.expect_type,
         //                 x.tokens_start,
         //             );
@@ -3036,7 +3058,7 @@ where
                     println!("        expect_news2=[{}]",
                         self.expect_news2.iter().enumerate()
                             .map(|(i,x)|format!("e{i}:t{}:{:?}",
-                                x.tokens_start.index(),
+                                x.tokens_start.inds2().start,
                                 x.expect_type,
                             ))
                             .collect::<Vec<_>>().join(", "),
@@ -3044,7 +3066,7 @@ where
                      println!("        expects2=[{}]",
                         self.expects2.iter().enumerate()
                             .map(|(i,x)|format!("e{i}:t{}:{:?}",
-                                x.tokens_start.index(),
+                                x.tokens_start.inds2().start,
                                 x.expect_type,
                             ))
                             .collect::<Vec<_>>().join(", "),
@@ -3059,7 +3081,7 @@ where
                         self.expects1.iter().enumerate()
                             .map(|(i,x)|format!("e{i}:p{}:t{}:{:?}",
                                 x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
-                                x.tokens_start.index(),
+                                x.tokens_start.inds2().start,
                                 x.expect_type,
                             ))
                             .collect::<Vec<_>>().join(", "),
@@ -3070,7 +3092,7 @@ where
                     for (i,x) in self.expects1.iter().enumerate() {
                         println!("            e{i}:p{}:t{}: {:?}",
                             x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
-                            x.tokens_start.index(),
+                            x.tokens_start.inds2().start,
                             x.expect_type,
                         );
                     }
@@ -3121,7 +3143,7 @@ where
                     println!("        hist_news: len={stow_new_len} ({})",self.hist_news.len(),);
 
                     for (i,h) in self.hist_news.iter().enumerate() {
-                        println!("            {i}:t{}: {:?}",h.tokens_start.index(),h.grammar)
+                        println!("            {i}:t{}: {:?}",h.tokens_start.inds2().start,h.grammar)
                     }
 
                     //

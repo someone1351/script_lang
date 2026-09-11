@@ -23,6 +23,9 @@ where
     pub fn name(&self) -> &'g str {
         self.group().name.unwrap_or("")
     }
+    pub fn name2(&self) -> Option<&'g str> {
+        self.group().name
+    }
     pub fn children(&self) -> WalkGroupIterContainer<'g,TS> {
         let group=self.group();
         WalkGroupIterContainer{ walk: self.walk, start: group.children.start, end: group.children.end }
@@ -67,11 +70,11 @@ where
 
             // if between_tokens_len!=0 {
                 let mut between_tokens=cur_tokens.clone();
-                between_tokens.truncate(between_tokens_len);
+                between_tokens.truncate2(between_tokens_len);
                 v.push(between_tokens);
             // }
 
-            cur_tokens.take2(between_tokens_len+child_tokens.len2());
+            cur_tokens.eat2(between_tokens_len+child_tokens.len2());
         }
 
         // if cur_tokens.len2()!=0 && v.len() {

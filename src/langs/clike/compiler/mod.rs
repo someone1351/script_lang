@@ -157,43 +157,71 @@ impl Compiler {
 
         //
         println!("-----------------");
-        let walk=walker.get_walk();
-
-
-        // println!("{}",walk.root());
         {
-            enum Thing<'g,TS>
-            where
-                TS:Clone+TokenIterTrait,
-            {
-                Tokens(TS),
-                Group(WalkGroupContainer<'g,TS>),
-            }
-            let mut stk= vec![(Thing::Group(walk.root()),0)];
+
+            let walk2=walker.get_walk(true);
+
+            let mut stk=vec![(walk2.root(),0)];
 
             while let Some((cur,depth))=stk.pop() {
                 let indent="    ".repeat(depth);
+                // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
+                // println!("{indent}group: {:?} : [{}]",cur.name2(),xx);
+                if let Some(name)=cur.name2() {
+                    // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
+                    println!("{indent}group: {name:?}",);
+                    stk.extend(cur.children().rev().map(|c|(c,depth+1)));
 
-                // println!()
-
-                match cur {
-                    Thing::Tokens(_) => {
-
-                    }
-                    Thing::Group(group) => {
-                        if !group.children().is_empty() {
-                            let betweens=group.between_tokens();
-
-                            // for i in 0..betweens.len
+                    if cur.children().len()==0 {
+                        for t in cur.tokens() {
+                            println!("{indent}    {t:?}");
                         }
-
-                        stk.extend(group.children().map(|g|(Thing::Group(g),depth+1)));
-
                     }
-                }
+                } else  {
+                    for t in cur.tokens() {
+                        println!("{indent}{t:?}");
+                    }
 
+                }
             }
         }
+        let walk=walker.get_walk(false);
+
+        println!("===---===");
+        println!("{}",walk.root());
+        // {
+        //     enum Thing<'g,TS>
+        //     where
+        //         TS:Clone+TokenIterTrait,
+        //     {
+        //         Tokens(TS),
+        //         Group(WalkGroupContainer<'g,TS>),
+        //     }
+        //     let mut stk= vec![(Thing::Group(walk.root()),0)];
+
+        //     while let Some((cur,depth))=stk.pop() {
+        //         let indent="    ".repeat(depth);
+
+        //         // println!()
+
+        //         match cur {
+        //             Thing::Tokens(_) => {
+
+        //             }
+        //             Thing::Group(group) => {
+        //                 if !group.children().is_empty() {
+        //                     let betweens=group.between_tokens();
+
+        //                     // for i in 0..betweens.len
+        //                 }
+
+        //                 stk.extend(group.children().map(|g|(Thing::Group(g),depth+1)));
+
+        //             }
+        //         }
+
+        //     }
+        // }
 
         println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
 
