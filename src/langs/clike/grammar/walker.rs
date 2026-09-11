@@ -46,7 +46,17 @@ TODO
 
 * also allow group name to be a generic, ie enum
 ** or a func to handle putting it in an enum or whatever
+
+TODO
+* on grammar_primitive bein run
+** if the primitive wasn't trimmable, and tokens needed to be trimmed
+*** need to some how when ending the group, to trim the group;s token
+**** maybe set a flag in work, and on success, pass it on
+
+TODO
+* have option to add groups for tokens that are inbetween sibinling groups
 */
+
 use super::error::*;
 use super::temp_data::*;
 use core::panic;
@@ -2740,6 +2750,49 @@ where
                 if c.start==0 {c.start=i;}
                 c.start=c.start.min(i);
                 c.end=c.end.max(i+1);
+            }
+        }
+
+        //insert groups for ungrouped tokens
+        let mut groups_out2=vec![WalkGroup{
+            name: groups_out[0].name.clone(),
+            children: 0..0,
+            tokens: groups_out[0].tokens.clone(),
+        }];
+
+        {
+            let mut stk=vec![0];
+
+            while let Some(gind)=stk.pop() {
+                let g=&groups_out[gind];
+
+                // for cind in g.children.clone() {
+
+                // }
+
+                let mut v=Vec::new();
+
+                let mut cur_tokens = g.tokens.clone();
+
+                // for child_group in self.children()
+                for cind in g.children.clone()
+                {
+                    let child_group=&groups_out[cind];
+                    let child_tokens=child_group.tokens.clone();
+                    let between_tokens_len=child_tokens.inds2().start-cur_tokens.inds2().start;
+
+                    // if between_tokens_len!=0 {
+                        let mut between_tokens=cur_tokens.clone();
+                        between_tokens.truncate(between_tokens_len);
+                        v.push(between_tokens);
+                    // }
+
+                    cur_tokens.take2(between_tokens_len+child_tokens.len2());
+                }
+
+                // if cur_tokens.len2()!=0 && v.len() {
+                    v.push(cur_tokens);
+                // }
             }
         }
 
