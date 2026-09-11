@@ -24,9 +24,10 @@ mod builder_error;
 
 use crate::builder::{Builder, BuilderError};
 use crate::clike::compiler::builder_error::BuilderErrorType;
+use crate::clike::compiler::rules::GrammarPrimitive;
 use crate::clike::grammar::container::{WalkGroupContainer, WalkGroupIterContainer};
 use crate::clike::grammar::walker::GrammarWalker;
-use crate::clike::grammar::GrammarWalkError;
+use crate::clike::grammar::{GrammarWalkError, TokenIterTrait};
 use crate::clike::tokenizer::input::Input;
 // use crate::ccexpr_compiler::grammar::grammar_run;
 // use std::path::PathBuf;
@@ -158,7 +159,41 @@ impl Compiler {
         println!("-----------------");
         let walk=walker.get_walk();
 
+
         // println!("{}",walk.root());
+        {
+            enum Thing<'g,TS>
+            where
+                TS:Clone+TokenIterTrait,
+            {
+                Tokens(TS),
+                Group(WalkGroupContainer<'g,TS>),
+            }
+            let mut stk= vec![(Thing::Group(walk.root()),0)];
+
+            while let Some((cur,depth))=stk.pop() {
+                let indent="    ".repeat(depth);
+
+                // println!()
+
+                match cur {
+                    Thing::Tokens(_) => {
+
+                    }
+                    Thing::Group(group) => {
+                        if !group.children().is_empty() {
+                            let betweens=group.between_tokens();
+
+                            // for i in 0..betweens.len
+                        }
+
+                        stk.extend(group.children().map(|g|(Thing::Group(g),depth+1)));
+
+                    }
+                }
+
+            }
+        }
 
         println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
 

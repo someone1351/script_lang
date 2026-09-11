@@ -1,5 +1,7 @@
 use std::ops::{Bound, RangeBounds};
 
+use crate::clike::grammar::TokenIterTrait;
+
 use super::super::super::grammar::{container::WalkGroupContainer, data::Walk};
 
 #[derive(Clone, )]
@@ -14,7 +16,7 @@ where
 
 impl<'g,TS> WalkGroupIterContainer<'g,TS>
 where
-    TS:Clone,
+    TS:Clone+TokenIterTrait,
 {
     pub fn pop_front(&mut self) -> Option<WalkGroupContainer<'g,TS>,> {
         if self.start < self.end {
@@ -159,7 +161,7 @@ where
 
 impl<'g,TS> Iterator for WalkGroupIterContainer<'g,TS>
 where
-    TS:Clone,
+    TS:Clone+TokenIterTrait,
 {
     type Item = WalkGroupContainer<'g,TS>;
 
@@ -178,7 +180,7 @@ where
 
 impl<'g,TS> DoubleEndedIterator for WalkGroupIterContainer<'g,TS>
 where
-    TS:Clone,
+    TS:Clone+TokenIterTrait,
 {
     fn next_back(&mut self) -> Option<WalkGroupContainer<'g,TS>> {
         if self.end > self.start {

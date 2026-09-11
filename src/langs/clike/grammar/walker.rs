@@ -38,6 +38,14 @@ TODO
 * make skipped eol's not be included in start of a group?
 ** so then don't need filtered_token_iter
 
+
+TODO
+* replace non terms with generic, so can use enums for them
+** could have NonTerms{Start,NonTerm(NT)}
+*** so can declare enum hidden inside of rules func
+
+* also allow group name to be a generic, ie enum
+** or a func to handle putting it in an enum or whatever
 */
 use super::error::*;
 use super::temp_data::*;
@@ -51,6 +59,7 @@ use std::rc::Rc;
 use crate::build::Loc;
 use crate::clike::grammar;
 use crate::clike::grammar::GrammarPrimitiveTrait;
+use crate::clike::grammar::TokenIterGetTrait;
 use crate::clike::grammar::TokenIterTrait;
 // use crate::clike::tokenizer::TokenContainer;
 use super::super::grammar::data::{Walk,WalkGroup};
@@ -150,7 +159,7 @@ impl<'g,P,T,TS,G> GrammarWalker<'g,P,T,TS,G>
 where
     P:Clone+core::hash::Hash+PartialEq+Eq+Debug+GrammarPrimitiveTrait,
     T:Clone,
-    TS: Iterator<Item=T>+Clone+TokenIterTrait<P>+Debug,
+    TS: Iterator<Item=T>+Clone+TokenIterTrait+Debug + TokenIterGetTrait<P> ,
     G: Fn(&str)->Option<Rc<GrammarNode<'g,P>>>,
 {
 
@@ -2719,7 +2728,7 @@ where
             let g=&group_infos[gind];
 
             //
-            groups_out.push(WalkGroup { name: g.name,
+            groups_out.push(WalkGroup { name: Some(g.name),
                 children: 0..0, // csum..csum+c
                 tokens: g.tokens.clone(),
             });

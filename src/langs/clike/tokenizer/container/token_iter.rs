@@ -2,23 +2,23 @@
 use std::ops::Range;
 use crate::build::Loc;
 use crate::clike::compiler::rules::GrammarPrimitive;
-use crate::clike::grammar::{GrammarPrimitiveTrait, TokenIterTrait};
+use crate::clike::grammar::{GrammarPrimitiveTrait, TokenIterGetTrait, TokenIterTrait};
 use super::super::super::tokenizer::data::Tokenized;
 
 use super::*;
 
 #[derive(Copy,Clone)]
-pub struct TokenIterContainer<'a> {
+pub struct TokenIterContainer<'t> {
     pub start : usize, //if 0, then 0 hasnt been traversed yet
     pub end : usize, //if last_ind then last_ind has been traversed
     pub last_loc:Loc,
-    pub parsed :&'a Tokenized,
+    pub parsed :&'t Tokenized,
     //todo add filtered:bool, // and .filtered() method for filtering out eols during iteration
 
     // pub prev:Option<usize>,
 }
 
-impl<'a> TokenIterContainer<'a> {
+impl<'t> TokenIterContainer<'t> {
     pub fn inds(&self) -> Range<usize> {
         self.start..self.end
     }
@@ -43,7 +43,7 @@ impl<'a> TokenIterContainer<'a> {
         //     .unwrap_or(self.last_loc)
     }
 
-    pub fn pop_front(&mut self) -> Result<TokenContainer<'a>,Loc> {
+    pub fn pop_front(&mut self) -> Result<TokenContainer<'t>,Loc> {
         if self.start < self.end {
             let primitive_ind=self.start;
             self.last_loc=self.parsed.primitives[self.start].end_loc;
@@ -56,7 +56,7 @@ impl<'a> TokenIterContainer<'a> {
             Err(self.last_loc)
         }
     }
-    pub fn pop_back(&mut self) -> Result<TokenContainer<'a>,Loc> {
+    pub fn pop_back(&mut self) -> Result<TokenContainer<'t>,Loc> {
         if self.start < self.end {
             self.end-=1;
             let primitive_ind=self.end;
@@ -73,7 +73,7 @@ impl<'a> TokenIterContainer<'a> {
         }
     }
 
-    pub fn pop_front_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'a>> {
+    pub fn pop_front_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'t>> {
         if self.start+amount > self.end { //|| amount==0
             // println!("{}+{} > {}", self.start,amount,self.end);
             None
@@ -85,7 +85,7 @@ impl<'a> TokenIterContainer<'a> {
             Some(TokenIterContainer{last_loc:self.last_loc, start: start2, end: end2, parsed: self.parsed })
         }
     }
-    pub fn pop_back_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'a>> {
+    pub fn pop_back_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'t>> {
         if self.start+amount > self.end
         // || amount==0
         {
@@ -193,7 +193,7 @@ impl<'a> TokenIterContainer<'a> {
     //     Some(TokenIterContainer {last_loc,start: x_start, end: x_end, parsed: self.parsed})
     // }
 
-    pub fn get_amount(&self,amount:usize) -> Option<TokenIterContainer<'a>> {
+    pub fn get_amount(&self,amount:usize) -> Option<TokenIterContainer<'t>> {
         if amount > self.len() {
             return None;
         }
@@ -216,7 +216,7 @@ impl<'a> TokenIterContainer<'a> {
 
     }
 
-    pub fn first(&self) -> Result<TokenContainer<'a>,Loc> {
+    pub fn first(&self) -> Result<TokenContainer<'t>,Loc> {
         // self.get(0)
 
         if self.is_empty() {
@@ -234,9 +234,9 @@ impl<'a> TokenIterContainer<'a> {
     //         Ok(TokenContainer { parsed: self.parsed, primitive_ind:self.end-1,})
     //     }
     // }
-    fn pop_get<T,F>(&mut self,skip_eols:bool,func:F) -> Result<ValueContainer<'a,T>,Loc>
+    fn pop_get<T,F>(&mut self,skip_eols:bool,func:F) -> Result<ValueContainer<'t,T>,Loc>
     where
-        F:FnOnce(TokenContainer<'a>)->Result<ValueContainer<'a,T>,Loc>,
+        F:FnOnce(TokenContainer<'t>)->Result<ValueContainer<'t,T>,Loc>,
     {
         let mut tmp=self.clone();
         let v=tmp.first().and_then(func)?;
@@ -244,30 +244,30 @@ impl<'a> TokenIterContainer<'a> {
         *self=tmp;
         Ok(v)
     }
-    pub fn pop_eol(&mut self) -> Result<ValueContainer<'a,()>,Loc> {
+    pub fn pop_eol(&mut self) -> Result<ValueContainer<'t,()>,Loc> {
          self.pop_get(false,|p|p.get_eol())
     }
-    pub fn pop_float(&mut self) -> Result<ValueContainer<'a,f64>,Loc> {
+    pub fn pop_float(&mut self) -> Result<ValueContainer<'t,f64>,Loc> {
         self.pop_get(true,|p|p.get_float())
     }
 
-    pub fn pop_int(&mut self) -> Result<ValueContainer<'a,i64>,Loc> {
+    pub fn pop_int(&mut self) -> Result<ValueContainer<'t,i64>,Loc> {
         self.pop_get(true,|p|p.get_int())
     }
 
-    pub fn pop_string(&mut self) -> Result<ValueContainer<'a,&'a str>,Loc> {
+    pub fn pop_string(&mut self) -> Result<ValueContainer<'t,&'t str>,Loc> {
         self.pop_get(true,|p|p.get_string())
     }
 
-    pub fn pop_symbol(&mut self) -> Result<ValueContainer<'a,&'a str>,Loc> {
+    pub fn pop_symbol(&mut self) -> Result<ValueContainer<'t,&'t str>,Loc> {
         self.pop_get(true,|p|p.get_symbol())
     }
 
-    pub fn pop_identifier(&mut self) -> Result<ValueContainer<'a,&'a str>,Loc> {
+    pub fn pop_identifier(&mut self) -> Result<ValueContainer<'t,&'t str>,Loc> {
         self.pop_get(true,|p|p.get_identifier())
     }
 
-    pub fn pop_keyword(&mut self) -> Result<ValueContainer<'a,&'a str>,Loc> {
+    pub fn pop_keyword(&mut self) -> Result<ValueContainer<'t,&'t str>,Loc> {
         self.pop_get(true,|p|p.get_keyword())
     }
     // pub fn pop_with_identifiers<'b,I>(&mut self,idns:I) -> Result<ValueContainer<'a,&'a str>,Loc>
@@ -285,12 +285,12 @@ impl<'a> TokenIterContainer<'a> {
     // }
 
 
-    pub fn pop_with_keyword<'b>(&mut self,keyword:&'b str) -> Result<ValueContainer<'a,&'a str>,Loc>
+    pub fn pop_with_keyword<'b>(&mut self,keyword:&'b str) -> Result<ValueContainer<'t,&'t str>,Loc>
     {
         self.pop_get(true,move|p|p.has_keyword(keyword))
     }
 
-    pub fn pop_with_symbol<'b,>(&mut self,symbol:&'b str) -> Result<ValueContainer<'a,&'a str>,Loc>
+    pub fn pop_with_symbol<'b,>(&mut self,symbol:&'b str) -> Result<ValueContainer<'t,&'t str>,Loc>
     {
         self.pop_get(true,move|p|p.has_symbol(symbol))
     }
@@ -311,8 +311,8 @@ impl<'a> TokenIterContainer<'a> {
 
 }
 
-impl<'a> Iterator for TokenIterContainer<'a> {
-    type Item = TokenContainer<'a>;
+impl<'t> Iterator for TokenIterContainer<'t> {
+    type Item = TokenContainer<'t>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
@@ -329,26 +329,26 @@ impl<'a> Iterator for TokenIterContainer<'a> {
     }
 }
 
-impl<'a> DoubleEndedIterator for TokenIterContainer<'a> {
-    fn next_back(&mut self) -> Option<TokenContainer<'a>> {
-        if self.end > self.start {
-            self.end-=1;
-            let primitive_ind=self.end;
+// impl<'t> DoubleEndedIterator for TokenIterContainer<'t> {
+//     fn next_back(&mut self) -> Option<TokenContainer<'t>> {
+//         if self.end > self.start {
+//             self.end-=1;
+//             let primitive_ind=self.end;
 
-            // let last_loc=if self.len()==1 {
-            //     self.last_loc
-            // } else {
-            //     self.parsed.primitives[primitive_ind-1].end_loc
-            // };
+//             // let last_loc=if self.len()==1 {
+//             //     self.last_loc
+//             // } else {
+//             //     self.parsed.primitives[primitive_ind-1].end_loc
+//             // };
 
-            Some(TokenContainer {token_ind: primitive_ind,parsed: self.parsed,}) //last_loc
-        } else {
-            None
-        }
-    }
-}
+//             Some(TokenContainer {token_ind: primitive_ind,parsed: self.parsed,}) //last_loc
+//         } else {
+//             None
+//         }
+//     }
+// }
 
-impl<'a> std::fmt::Debug for TokenIterContainer<'a> {
+impl<'t> std::fmt::Debug for TokenIterContainer<'t> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 
         f.write_fmt(format_args!("[{}]", self.clone().map(|p|format!("{p:?}")).collect::<Vec<String>>().join(", ")))
@@ -356,7 +356,7 @@ impl<'a> std::fmt::Debug for TokenIterContainer<'a> {
     }
 }
 
-impl<'t,'g> TokenIterTrait<GrammarPrimitive<'g>> for TokenIterContainer<'t> {
+impl<'t> TokenIterTrait for TokenIterContainer<'t> {
     fn is_trimmable(&self) -> bool {
         false
 
@@ -370,17 +370,6 @@ impl<'t,'g> TokenIterTrait<GrammarPrimitive<'g>> for TokenIterContainer<'t> {
 
     }
 
-    fn pop_primitive(&mut self, p:&GrammarPrimitive<'g>) -> bool {
-        match p {
-            GrammarPrimitive::String => self.pop_string().is_ok(),
-            GrammarPrimitive::Identifier => self.pop_identifier().is_ok(),
-            GrammarPrimitive::Int => self.pop_int().is_ok(),
-            GrammarPrimitive::Float => self.pop_float().is_ok(),
-            GrammarPrimitive::Symbol(s) => self.pop_with_symbol(s).is_ok(),
-            GrammarPrimitive::Keyword(s) => self.pop_with_keyword(s).is_ok(),
-            GrammarPrimitive::Eol => self.pop_eol().is_ok(),
-        }
-    }
 
     fn trim2(&mut self) {
         self.trim();
@@ -394,6 +383,12 @@ impl<'t,'g> TokenIterTrait<GrammarPrimitive<'g>> for TokenIterContainer<'t> {
         }
     }
 
+    fn take2(&mut self,size:usize,) {
+        // if self.len()>=size {
+
+        // }
+        self.take(size);
+    }
     fn len2(&self) -> usize {
         self.len()
     }
@@ -408,4 +403,21 @@ impl<'t,'g> TokenIterTrait<GrammarPrimitive<'g>> for TokenIterContainer<'t> {
 
 
 
+
+
+}
+
+impl<'g,'t> TokenIterGetTrait<GrammarPrimitive<'g>> for TokenIterContainer<'t> {
+
+    fn pop_primitive(&mut self, p:&GrammarPrimitive<'g>) -> bool {
+        match p {
+            GrammarPrimitive::String => self.pop_string().is_ok(),
+            GrammarPrimitive::Identifier => self.pop_identifier().is_ok(),
+            GrammarPrimitive::Int => self.pop_int().is_ok(),
+            GrammarPrimitive::Float => self.pop_float().is_ok(),
+            GrammarPrimitive::Symbol(s) => self.pop_with_symbol(s).is_ok(),
+            GrammarPrimitive::Keyword(s) => self.pop_with_keyword(s).is_ok(),
+            GrammarPrimitive::Eol => self.pop_eol().is_ok(),
+        }
+    }
 }

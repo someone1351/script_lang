@@ -1,13 +1,13 @@
-use std::fmt::Display;
+use std::{fmt::Display, marker::PhantomData};
 
-use crate::Loc;
+use crate::{clike::grammar::TokenIterTrait, Loc};
 
 use super::super::super::{grammar::{container::WalkGroupIterContainer, data::{Walk, WalkGroup}}, tokenizer::{TokenContainer, TokenIterContainer}};
 
 #[derive(Clone, Copy)]
 pub struct WalkGroupContainer<'g,TS>
 where
-    TS:Clone,
+    TS:Clone+TokenIterTrait,
 {
     pub walk:&'g Walk<'g,TS>,
     pub group_ind:usize,
@@ -15,13 +15,13 @@ where
 
 impl<'g,TS> WalkGroupContainer<'g,TS>
 where
-    TS:Clone,
+    TS:Clone+TokenIterTrait,
 {
     fn group(&self) -> &WalkGroup<'g,TS> {
         &self.walk.groups[self.group_ind]
     }
     pub fn name(&self) -> &'g str {
-        self.group().name
+        self.group().name.unwrap_or("")
     }
     pub fn children(&self) -> WalkGroupIterContainer<'g,TS> {
         let group=self.group();
@@ -55,9 +55,34 @@ where
 
     //     // self.group().tokens.trimmed().start_loc()
     // }
+    pub fn between_tokens(&self) -> Vec<TS> {
+        let mut v=Vec::new();
+
+        // writeln!(f,"{indent}group: {:?}",cur.name(),)?;
+        let mut cur_tokens = self.tokens();
+
+        for child_group in self.children() {
+            let child_tokens=child_group.tokens();
+            let between_tokens_len=child_tokens.inds2().start-cur_tokens.inds2().start;
+
+            // if between_tokens_len!=0 {
+                let mut between_tokens=cur_tokens.clone();
+                between_tokens.truncate(between_tokens_len);
+                v.push(between_tokens);
+            // }
+
+            cur_tokens.take2(between_tokens_len+child_tokens.len2());
+        }
+
+        // if cur_tokens.len2()!=0 && v.len() {
+            v.push(cur_tokens);
+        // }
+
+        v
+    }
 }
 
-// impl<'g,TS> std::fmt::Debug for WalkGroupContainer<'g,TS>
+// impl<'g,TS> std::fmt::Debug for WalkGroupContainer<'g,P,TS>
 // where
 //     TS:Clone,
 // {
@@ -66,14 +91,14 @@ where
 //     }
 // }
 
-// impl<'g,TS> Display for WalkGroupContainer<'g,TS>
+// impl<'g,TS> Display for WalkGroupContainer<'g,P,TS>
 // where
 //     TS:Clone,
 // {
 //     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 //         enum Thing<'g,TS> {
 //             Token(TokenContainer<'t>),
-//             Group(WalkGroupContainer<'g,TS>),
+//             Group(WalkGroupContainer<'g,P,TS>),
 //         }
 
 //         let mut stk = vec![(Thing::Group(*self),0)];
