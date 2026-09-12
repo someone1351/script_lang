@@ -1732,6 +1732,7 @@ where
         // };
 
         if result {
+            self.group_set_trim(&p, cur.group_ind,cur.tokens.clone());
 
             // if is_group_token_start {
             //     let g=&mut self.groups[cur.group_ind];
@@ -2457,6 +2458,22 @@ where
         let Some(last)=self.stk.last() else {panic!("");};
 
         self.groups.truncate(last.group_len);
+    }
+
+    fn group_set_trim(&mut self,
+
+        primitive:&P,
+        cur_group_ind:usize,
+        before_tokens:TS,
+    ) {
+        // let Some(last)=self.stk.last_mut() else {return;};
+
+        let group=&mut self.groups[cur_group_ind];
+
+        if group.tokens.inds2().start==before_tokens.inds2().start {
+            group.trim=!primitive.is_trimmable(); //may change multiple times as And's fail
+        }
+
     }
 
     fn groups_on_success(&mut self,
