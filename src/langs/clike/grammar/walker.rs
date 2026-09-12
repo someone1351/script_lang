@@ -572,23 +572,23 @@ where
             // self.hist_prevs[cur.hist_prevs_ind..].iter().find(|x|x.grammar.eq(g)).is_some()
         {
             // self.stk.truncate(cur.success_len);
-            self.work_on_success(&cur);
+            self.work_stk_truncate(cur.work_success_len);
 
             //whats to stop a and(X, many(prev(X))) ?
             self.handle_exit_last_many(&cur); //this
 
             //
             // self.hist_news_truncate_to_last(); //why on success??
-            self.update_tokens(&cur,true);
-            self.groups_on_success(&cur,);
+            self.update_tokens(cur.tokens.clone(),true);
+            self.groups_on_success(cur.group_ind,cur.group_len,cur.tokens.clone());
             self.was_on_success(false); //before hist
-            self.hist_on_success(&cur,false,);
-            self.expect_on_success2(&cur);
+            self.hist_on_success(cur.grammar.clone(),cur.group_len,cur.tokens.clone(),false,);
+            self.expect_on_success2();
             self.expect_on_success1();
         } else {
             // self.stk.truncate(cur.fail_len);
-            self.work_on_fail(&cur);
-            self.update_tokens(&cur,false);
+            self.work_stk_truncate(cur.work_fail_len);
+            self.update_tokens(cur.tokens.clone(),false);
             // // self.revert_last_hist_news();
             self.hist_on_fail();
             self.was_on_fail();
@@ -598,7 +598,7 @@ where
             // // // let (_expected_ind,_expecteds_len)=self.add_expected2(&cur);
 
             // // self.submit_expected_news(&cur);
-            self.expect_on_fail2(&cur);
+            self.expect_on_fail2();
             self.expect_on_fail1();
         }
     }
@@ -1065,12 +1065,12 @@ where
         // }
 
         //
-        self.expect_on_fail2(&cur);
+        self.expect_on_fail2();
         self.expect_on_fail1();
 
         // self.expect_on_error2(&cur);
         // self.expect_on_error1(&cur);
-        self.update_tokens(&cur,false); //could be true, but would do nothing
+        self.update_tokens(cur.tokens.clone(),false); //could be true, but would do nothing
 
         //
         // self.expect_news_drain(&cur); //necessary here? no since it is finishing here?
@@ -1478,7 +1478,7 @@ where
     //         self.hist_prevs[cur.hist_prevs_ind..].iter().find(|x|x.grammar.eq(g)).is_some()
     //     {
     //         // self.stk.truncate(cur.success_len);
-    //         self.work_on_success(&cur);
+    //         self.work_stk_truncate(cur.work_success_len);
 
     //         //whats to stop a and(X, many(prev(X))) ?
     //         self.handle_exit_last_many(&cur); //this
@@ -1491,7 +1491,7 @@ where
     //         self.expected2_on_success();
     //     } else {
     //         // self.stk.truncate(cur.fail_len);
-    //         self.work_on_fail(&cur);
+    //         self.work_stk_truncate(cur.work_fail_len);
     //         self.update_tokens(&cur,false);
     //         // // self.revert_last_hist_news();
     //         self.hist_on_fail();
@@ -1507,14 +1507,14 @@ where
 
     fn grammar_always(&mut self,cur :Work<'g,P,TS>,) {
         // self.stk.truncate(cur.success_len);
-        self.work_on_success(&cur);
+        self.work_stk_truncate(cur.work_success_len);
         // let _hist_news_len=self.hist_news_add(&cur);
         // self.hist_stows_clear(&cur);
         self.handle_exit_last_many(&cur);
-        self.update_tokens(&cur,true);
-        self.groups_on_success(&cur,); //here
+        self.update_tokens(cur.tokens.clone(),true);
+        self.groups_on_success(cur.group_ind,cur.group_len,cur.tokens.clone()); //here
         self.was_on_success(false); //before hist
-        self.hist_on_success(&cur,false);
+        self.hist_on_success(cur.grammar.clone(),cur.group_len,cur.tokens.clone(),false);
 
         //why was this previously commented out?
         //  because grammar could finish without parsing anything due to optionals
@@ -1548,11 +1548,11 @@ where
 
         //
         // self.stk.truncate(cur.fail_len);
-        self.work_on_fail(&cur);
-        self.update_tokens(&cur,false);
+        self.work_stk_truncate(cur.work_fail_len);
+        self.update_tokens(cur.tokens.clone(),false);
         self.hist_on_fail();
         self.was_on_fail();
-        self.expect_on_fail2(&cur);
+        self.expect_on_fail2();
         self.expect_on_fail1();
         self.groups_on_fail();
 
@@ -1648,12 +1648,12 @@ where
 
         //
 
-        self.work_on_success(&cur);
-        self.update_tokens(&cur,true);
-        self.groups_on_success(&cur,);
+        self.work_stk_truncate(cur.work_success_len);
+        self.update_tokens(cur.tokens.clone(),true);
+        self.groups_on_success(cur.group_ind,cur.group_len,cur.tokens.clone());
         self.was_on_success(was_prim); //before hist
-        self.hist_on_success(&cur,true,); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
-        self.expect_on_success2(&cur);
+        self.hist_on_success(cur.grammar.clone(),cur.group_len,cur.tokens.clone(),true,); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+        self.expect_on_success2();
         self.expect_on_success1();
 
         //
@@ -1734,19 +1734,19 @@ where
             // }
 
             //
-            self.work_on_success(&cur);
-            self.update_tokens(&cur,true);
-            self.groups_on_success(&cur,);
+            self.work_stk_truncate(cur.work_success_len);
+            self.update_tokens(cur.tokens.clone(),true);
+            self.groups_on_success(cur.group_ind,cur.group_len,cur.tokens.clone());
             self.was_on_success(true); //before hist
-            self.hist_on_success(&cur,false);
+            self.hist_on_success(cur.grammar.clone(),cur.group_len,cur.tokens.clone(),false);
 
-            self.expect_on_success2(&cur);
+            self.expect_on_success2();
             self.expect_on_success1();
 
         } else {
             // self.stk.truncate(cur.fail_len);
-            self.work_on_fail(&cur);
-            self.update_tokens(&cur,false);
+            self.work_stk_truncate(cur.work_fail_len);
+            self.update_tokens(cur.tokens.clone(),false);
             self.hist_on_fail();
             self.was_on_fail();
             // // self.revert_last_hist_news();
@@ -1758,19 +1758,25 @@ where
             let (_expected_ind,_expecteds_len)=self.add_expect1(&cur);
             let _expect_new_len2=self.add_expect_new2(&cur);
 
-            self.expect_on_fail2(&cur);
+            self.expect_on_fail2();
             self.expect_on_fail1();
 
         }
     }
 
-    fn work_on_success(&mut self, cur:&Work<'g,P,TS>,) {
-        self.stk.truncate(cur.work_success_len);
+    // fn work_on_success(&mut self,
+    //     cur:&Work<'g,P,TS>,
+    // ) {
+    //     self.stk.truncate(cur.work_success_len);
+    // }
+
+    fn work_stk_truncate(&mut self,len:usize) {
+        self.stk.truncate(len);
     }
 
-    fn work_on_fail(&mut self, cur:&Work<'g,P,TS>,) {
-        self.stk.truncate(cur.work_fail_len);
-    }
+    // fn work_on_fail(&mut self, cur:&Work<'g,P,TS>,) {
+    //     self.stk.truncate(cur.work_fail_len);
+    // }
 
     fn add_expect_new2(&mut self, cur:&Work<'g,P,TS>,) -> usize {
         if !self.use_expect2 {return cur.expect_new_len2;}
@@ -1828,7 +1834,7 @@ where
            && if let TempExpectType::Expect("")=&x.expect_type {false} else {true}
         );
     }
-    fn expect_on_success2(&mut self, cur:&Work<'g,P,TS>,) {
+    fn expect_on_success2(&mut self, ) {
         if !self.use_expect2 {return;}
 
         let Some(last)=self.stk.last_mut() else {return;}; //the func, not run on always... does now
@@ -1866,7 +1872,7 @@ where
 
     }
 
-    fn expect_on_fail2(&mut self, cur:&Work<'g,P,TS>,) {
+    fn expect_on_fail2(&mut self, ) {
         if !self.use_expect2 {return;}
 
         let Some(last)=self.stk.last_mut() else {return;}; //the func, not run on always
@@ -2162,7 +2168,10 @@ where
     }
 
     fn hist_on_success(&mut self,
-        cur:&Work<'g,P,TS>,
+        cur_grammar:Rc<GrammarNode<'g,P>>,
+        cur_group_len:usize,
+        cur_tokens:TS,
+        // cur:&Work<'g,P,TS>,
         //what was this for again? something to do with not adding cur grammar to hist_stows?
         //  it was for not adding cur grammar to hist_new?
         gotten:bool,
@@ -2223,7 +2232,7 @@ where
                     //
                     let group_ind_offset=self.groups[drained_stow_new.group_len].parent;
 
-                    self.stow_groups.extend(self.groups[drained_stow_new.group_len..cur.group_len].iter().map(|x|TempGroup{
+                    self.stow_groups.extend(self.groups[drained_stow_new.group_len..cur_group_len].iter().map(|x|TempGroup{
                         parent: x.parent
                         -group_ind_offset
                         , ..x.clone()
@@ -2249,14 +2258,14 @@ where
 
                 hist_stow.success=Some(TempStowSuccess {
                     grammar: drained_stow_new.grammar.clone(),
-                    tokens_after: cur.tokens.clone(),
+                    tokens_after: cur_tokens.clone(),
                     stow_groups_end: self.stow_groups.len(),
                     // stow_prevs_end: self.hist_stows_prevs.len(),
                     // was:self.wases.get(cur.was_ind).cloned(),
                     was: //self.wases[last.was_ind..].last().m
                     if last.was_ind!=self.wases.len() {
                         TempStowWas::Was(self.wases.last().cloned().unwrap())
-                    } else if cur.grammar.is_primtive() {
+                    } else if cur_grammar.is_primtive() {
                         TempStowWas::Primitive
                     } else {
                         TempStowWas::None
@@ -2446,7 +2455,10 @@ where
     }
 
     fn groups_on_success(&mut self,
-        cur :&Work<'g,P,TS>,
+        cur_group_ind:usize,
+        cur_group_len:usize,
+        cur_tokens:TS,
+        // cur :&Work<'g,P,TS>,
         // before_tokens : Option<TS>,
         // cur_group_ind:usize,
         // cur_primitives:TokenIterContainer<'t>,
@@ -2471,8 +2483,8 @@ where
         // }
 
         //
-        if cur.group_ind!=last.group_ind { //group close
-            let group=&mut self.groups[cur.group_ind];
+        if cur_group_ind!=last.group_ind { //group close
+            let group=&mut self.groups[cur_group_ind];
 
             if group.trim {
                 group.tokens.trim2();
@@ -2481,7 +2493,7 @@ where
         }
 
         //
-        last.group_len=cur.group_len;
+        last.group_len=cur_group_len;
 
         //
         // if self.debug {
@@ -2490,12 +2502,12 @@ where
 
 
         //clamp groups tokens (for groups that have ended)
-        let mut g=cur.group_ind;
+        let mut g=cur_group_ind;
 
         //
         while g>last.group_ind {
             let group=&mut self.groups[g];
-            group.tokens.truncate2(group.tokens.len2()-cur.tokens.len2());
+            group.tokens.truncate2(group.tokens.len2()-cur_tokens.len2());
             g=group.parent;
         }
 
@@ -2536,16 +2548,20 @@ where
         (new_group_ind,self.groups.len())
     }
 
-    fn update_tokens(&mut self,cur:&Work<'g,P,TS>, set_last_tokens:bool) {
+    fn update_tokens(&mut self,
+        // cur:&Work<'g,P,TS>,
+        tokens:TS,
+        set_last_tokens:bool,
+    ) {
         if self.stk.is_empty() {
-            self.tokens_remaining=cur.tokens.clone();
+            self.tokens_remaining=tokens.clone();
         } else if set_last_tokens {
             let Some(last)=self.stk.last_mut() else {panic!("");};
-            last.tokens=cur.tokens.clone();
+            last.tokens=tokens.clone();
         }
 
-        if cur.tokens.inds2().start > self.tokens_furthest.inds2().start {
-            self.tokens_furthest=cur.tokens.clone();
+        if tokens.inds2().start > self.tokens_furthest.inds2().start {
+            self.tokens_furthest=tokens.clone();
         }
     }
 
