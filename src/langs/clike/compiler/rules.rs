@@ -86,8 +86,13 @@ pub fn get_non_term<'g>(n:& str) -> Option<Rc<GrammarNode<'g,GrammarPrimitive<'g
         //     NonTerm("end"),
         // ].and(),
 
+        "mynum" => Primitive(Int),
+        "start" => [
+            [NonTerm("mynum"),NonTerm("mynum")].and().group("a"),
+            NonTerm("mynum").group("b"),
+        ].or(),
         //
-        "start" => NonTerm("stmts"),
+        "start2" => NonTerm("stmts"),
 
         "stmts" => [
             NonTerm("end").opt(),

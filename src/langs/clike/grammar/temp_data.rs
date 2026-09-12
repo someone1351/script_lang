@@ -73,6 +73,7 @@ where
     pub tokens_start:TS,
     pub group_len:usize,
     pub stow_len:usize,
+    pub trim:bool,
 }
 
 #[derive(Clone, )]
@@ -98,6 +99,7 @@ where
     pub tokens_after:TS,
     pub stow_groups_end:usize,
     pub was:TempStowWas<'g>,
+    pub trim:bool,
 }
 #[derive(Clone,Debug,)]
 pub struct TempStowFail<'g,P>
@@ -145,6 +147,7 @@ where
     pub name:&'g str,
     pub parent:usize, //group
     pub tokens:TS,
+    pub trim:bool, //trim on close, except root (0)
 }
 
 // impl<'t,'g> Debug for  TempGroup<'t,'g> {
@@ -197,5 +200,6 @@ where
     pub expect_new_len2:usize,
     pub expect_len2:usize,
 
+    // pub trim:bool,
 }
 
