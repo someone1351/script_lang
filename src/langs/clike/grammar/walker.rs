@@ -572,6 +572,7 @@ where
             // self.hist_prevs[cur.hist_prevs_ind..].iter().find(|x|x.grammar.eq(g)).is_some()
         {
             // self.stk.truncate(cur.success_len);
+            self.group_set_trim(None, cur.group_ind,cur.tokens.clone());
             self.work_stk_truncate(cur.work_success_len);
 
             //whats to stop a and(X, many(prev(X))) ?
@@ -1507,6 +1508,7 @@ where
 
     fn grammar_always(&mut self,cur :Work<'g,P,TS>,) {
         // self.stk.truncate(cur.success_len);
+        self.group_set_trim(None, cur.group_ind,cur.tokens.clone());
         self.work_stk_truncate(cur.work_success_len);
         // let _hist_news_len=self.hist_news_add(&cur);
         // self.hist_stows_clear(&cur);
@@ -1732,7 +1734,7 @@ where
         // };
 
         if result {
-            self.group_set_trim(&p, cur.group_ind,cur.tokens.clone());
+            self.group_set_trim(Some(&p), cur.group_ind,cur.tokens.clone());
 
             // if is_group_token_start {
             //     let g=&mut self.groups[cur.group_ind];
@@ -2462,16 +2464,21 @@ where
 
     fn group_set_trim(&mut self,
 
-        primitive:&P,
+        primitive:Option<&P>,
         cur_group_ind:usize,
         before_tokens:TS,
     ) {
         // let Some(last)=self.stk.last_mut() else {return;};
 
+        if cur_group_ind==0 {
+            return;
+        }
+
+        //
         let group=&mut self.groups[cur_group_ind];
 
         if group.tokens.inds2().start==before_tokens.inds2().start {
-            group.trim=!primitive.is_trimmable(); //may change multiple times as And's fail
+            group.trim=primitive.map(|p|!p.is_trimmable()).unwrap_or(false); //may change multiple times as And's fail
         }
 
     }
