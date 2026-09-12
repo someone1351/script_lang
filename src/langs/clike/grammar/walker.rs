@@ -1637,22 +1637,26 @@ where
             {true}else{false};
 
         //
-        let cur=Work {
-            group_len:self.groups.len(),
-            // tokens:hist_stow_val.tokens_after,
-            tokens:stow_success.tokens_after.clone(),
-            // was_new_len,
-            // hist_ends_stk_len:todo!(),
-            ..cur.clone()
-        };
+        // let cur=Work {
+        //     group_len:self.groups.len(),
+        //     // tokens:hist_stow_val.tokens_after,
+        //     tokens:stow_success.tokens_after.clone(),
+        //     // was_new_len,
+        //     // hist_ends_stk_len:todo!(),
+        //     ..cur.clone()
+        // };
+        // let cur=0;
 
+
+        let tokens_after=stow_success.tokens_after.clone();
+        let new_group_len=self.groups.len();
         //
 
         self.work_stk_truncate(cur.work_success_len);
-        self.update_tokens(cur.tokens.clone(),true);
-        self.groups_on_success(cur.group_ind,cur.group_len,cur.tokens.clone());
+        self.update_tokens(tokens_after.clone(),true);
+        self.groups_on_success(cur.group_ind,new_group_len,tokens_after.clone());
         self.was_on_success(was_prim); //before hist
-        self.hist_on_success(cur.grammar.clone(),cur.group_len,cur.tokens.clone(),true,); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+        self.hist_on_success(cur.grammar.clone(),new_group_len,tokens_after.clone(),true,); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
         self.expect_on_success2();
         self.expect_on_success1();
 
@@ -1665,7 +1669,7 @@ where
         true
     }
 
-    fn grammar_primitive(&mut self,mut cur:Work<'g,P,TS>,)
+    fn grammar_primitive(&mut self, cur:Work<'g,P,TS>,)
     {
         //
         // let _hist_news_len=self.hist_news_add(&cur);
@@ -1694,7 +1698,8 @@ where
 
         let GrammarNode::Primitive(p)=cur.grammar.as_ref() else {panic!("");};
 
-        let before_tokens=cur.tokens.clone();
+        let mut after_tokens=cur.tokens.clone();
+
 
         if !p.is_trimmable() {
             // if
@@ -1707,12 +1712,12 @@ where
 
                 // cur.trim=true;
 
-            cur.tokens.trim2();
+            after_tokens.trim2();
         }
 
         //
 
-        let result=cur.tokens.pop_primitive(p);
+        let result=after_tokens.pop_primitive(p);
 
         // //
         // let result=match cur.grammar.as_ref() {
@@ -1735,10 +1740,10 @@ where
 
             //
             self.work_stk_truncate(cur.work_success_len);
-            self.update_tokens(cur.tokens.clone(),true);
-            self.groups_on_success(cur.group_ind,cur.group_len,cur.tokens.clone());
+            self.update_tokens(after_tokens.clone(),true);
+            self.groups_on_success(cur.group_ind,cur.group_len,after_tokens.clone());
             self.was_on_success(true); //before hist
-            self.hist_on_success(cur.grammar.clone(),cur.group_len,cur.tokens.clone(),false);
+            self.hist_on_success(cur.grammar.clone(),cur.group_len,after_tokens.clone(),false);
 
             self.expect_on_success2();
             self.expect_on_success1();
@@ -3326,8 +3331,7 @@ where
             // GrammarNode::String|GrammarNode::Identifier|GrammarNode::Int
             // |GrammarNode::Float|GrammarNode::Symbol(..)|GrammarNode::Keyword(..)
             // |GrammarNode::Eol
-            GrammarNode::Primitive(..)
-                => { self.grammar_primitive(cur,); }
+            GrammarNode::Primitive(..)=> { self.grammar_primitive(cur,); }
 
         }
 
