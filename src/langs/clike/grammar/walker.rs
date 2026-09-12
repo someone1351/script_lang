@@ -572,7 +572,7 @@ where
             // self.hist_prevs[cur.hist_prevs_ind..].iter().find(|x|x.grammar.eq(g)).is_some()
         {
             // self.stk.truncate(cur.success_len);
-            self.group_set_trim(None, cur.group_ind,cur.tokens.clone());
+            self.group_set_trim( cur.group_ind,cur.tokens.clone(),false );
             self.work_stk_truncate(cur.work_success_len);
 
             //whats to stop a and(X, many(prev(X))) ?
@@ -1508,7 +1508,7 @@ where
 
     fn grammar_always(&mut self,cur :Work<'g,P,TS>,) {
         // self.stk.truncate(cur.success_len);
-        self.group_set_trim(None, cur.group_ind,cur.tokens.clone());
+        self.group_set_trim(cur.group_ind,cur.tokens.clone(),false);
         self.work_stk_truncate(cur.work_success_len);
         // let _hist_news_len=self.hist_news_add(&cur);
         // self.hist_stows_clear(&cur);
@@ -1654,6 +1654,7 @@ where
         let new_group_len=self.groups.len();
         //
 
+        self.group_set_trim(cur.group_ind,cur.tokens.clone(),stow_success.trim);
         self.work_stk_truncate(cur.work_success_len);
         self.update_tokens(tokens_after.clone(),true);
         self.groups_on_success(cur.group_ind,new_group_len,tokens_after.clone());
@@ -1734,7 +1735,7 @@ where
         // };
 
         if result {
-            self.group_set_trim(Some(&p), cur.group_ind,cur.tokens.clone());
+            self.group_set_trim(cur.group_ind,cur.tokens.clone(),!p.is_trimmable());
 
             // if is_group_token_start {
             //     let g=&mut self.groups[cur.group_ind];
@@ -2464,9 +2465,10 @@ where
 
     fn group_set_trim(&mut self,
 
-        primitive:Option<&P>,
+        // primitive:Option<&P>,
         cur_group_ind:usize,
         before_tokens:TS,
+        trim:bool,
     ) {
         // let Some(last)=self.stk.last_mut() else {return;};
 
@@ -2478,7 +2480,7 @@ where
         let group=&mut self.groups[cur_group_ind];
 
         if group.tokens.inds2().start==before_tokens.inds2().start {
-            group.trim=primitive.map(|p|!p.is_trimmable()).unwrap_or(false); //may change multiple times as And's fail
+            group.trim=trim; //may change multiple times as And's fail
         }
 
     }
