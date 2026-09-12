@@ -2472,16 +2472,22 @@ where
     ) {
         // let Some(last)=self.stk.last_mut() else {return;};
 
-        if cur_group_ind==0 {
-            return;
+        for x in self.stow_news.iter_mut().rev() {
+            if x.tokens_start.inds2().start==before_tokens.inds2().start {
+                x.trim=trim;
+            }
         }
 
         //
-        let group=&mut self.groups[cur_group_ind];
+        if cur_group_ind!=0 {
+            let group=&mut self.groups[cur_group_ind];
 
-        if group.tokens.inds2().start==before_tokens.inds2().start {
-            group.trim=trim; //may change multiple times as And's fail
+            if group.tokens.inds2().start==before_tokens.inds2().start {
+                group.trim=trim; //may change multiple times as And's fail
+            }
+
         }
+
 
     }
 
