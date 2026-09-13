@@ -58,31 +58,31 @@ where
 
     //     // self.group().tokens.trimmed().start_loc()
     // }
-    pub fn between_tokens(&self) -> Vec<TS> {
-        let mut v=Vec::new();
+    // pub fn between_tokens(&self) -> Vec<TS> {
+    //     let mut v=Vec::new();
 
-        // writeln!(f,"{indent}group: {:?}",cur.name(),)?;
-        let mut cur_tokens = self.tokens();
+    //     // writeln!(f,"{indent}group: {:?}",cur.name(),)?;
+    //     let mut cur_tokens = self.tokens();
 
-        for child_group in self.children() {
-            let child_tokens=child_group.tokens();
-            let between_tokens_len=child_tokens.inds2().start-cur_tokens.inds2().start;
+    //     for child_group in self.children() {
+    //         let child_tokens=child_group.tokens();
+    //         let between_tokens_len=child_tokens.inds2().start-cur_tokens.inds2().start;
 
-            // if between_tokens_len!=0 {
-                let mut between_tokens=cur_tokens.clone();
-                between_tokens.truncate2(between_tokens_len);
-                v.push(between_tokens);
-            // }
+    //         // if between_tokens_len!=0 {
+    //             let mut between_tokens=cur_tokens.clone();
+    //             between_tokens.truncate2(between_tokens_len);
+    //             v.push(between_tokens);
+    //         // }
 
-            cur_tokens.eat2(between_tokens_len+child_tokens.len2());
-        }
+    //         cur_tokens.eat2(between_tokens_len+child_tokens.len2());
+    //     }
 
-        // if cur_tokens.len2()!=0 && v.len() {
-            v.push(cur_tokens);
-        // }
+    //     // if cur_tokens.len2()!=0 && v.len() {
+    //         v.push(cur_tokens);
+    //     // }
 
-        v
-    }
+    //     v
+    // }
 }
 
 // impl<'g,TS> std::fmt::Debug for WalkGroupContainer<'g,P,TS>

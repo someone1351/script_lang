@@ -55,6 +55,9 @@ TODO
 
 TODO
 * have option to add groups for tokens that are inbetween sibinling groups
+
+TODO
+* check if "start" nonterm is stored in stow_news, and disallow that if it is
 */
 
 use super::error::*;
@@ -2242,10 +2245,20 @@ where
                     let group_ind_offset=self.groups[drained_stow_new.group_len].parent;
 
                     self.stow_groups.extend(self.groups[drained_stow_new.group_len..cur_group_len].iter().map(|x|TempGroup{
-                        parent: x.parent
-                        -group_ind_offset
+                        parent: x.parent-group_ind_offset
                         , ..x.clone()
                     }));
+
+                    // self.stow_groups.extend(self.groups[drained_stow_new.group_len..cur_group_len].iter().map(|x|{
+                    //     let mut g=TempGroup{
+                    //         parent: x.parent
+                    //         -group_ind_offset
+                    //         , ..x.clone()
+                    //     };
+
+                    //     // if g.trim {g.tokens.trim2();}
+                    //     g
+                    // }));
                 }
 
                 //
@@ -2473,20 +2486,43 @@ where
         // let Some(last)=self.stk.last_mut() else {return;};
 
         for x in self.stow_news.iter_mut().rev() {
-            if x.tokens_start.inds2().start==before_tokens.inds2().start {
+            if x.tokens_start.inds2().start==before_tokens.inds2().start && x.group_len>cur_group_ind {
                 x.trim=trim;
+            } else {
+                break;
             }
         }
 
         //
-        if cur_group_ind!=0 {
-            let group=&mut self.groups[cur_group_ind];
+        if true {
+            if cur_group_ind!=0 {
+                let group=&mut self.groups[cur_group_ind];
 
-            if group.tokens.inds2().start==before_tokens.inds2().start {
-                group.trim=trim; //may change multiple times as And's fail
+                if group.tokens.inds2().start==before_tokens.inds2().start {
+                    group.trim=trim; //may change multiple times as And's fail
+                }
+
             }
+        } else {
+            let mut g=cur_group_ind;
 
+            //
+            while g!=0 {
+                let group=&mut self.groups[g];
+
+                if group.tokens.inds2().start==before_tokens.inds2().start {
+                    group.trim=trim; //may change multiple times as And's fail
+                } else {
+                    break;
+                }
+
+                g=group.parent;
+            }
         }
+
+        //
+
+
 
 
     }
@@ -2520,14 +2556,14 @@ where
         // }
 
         //
-        if cur_group_ind!=last.group_ind { //group close
-            let group=&mut self.groups[cur_group_ind];
+        // if cur_group_ind!=0 && cur_group_ind!=last.group_ind { //on group close
+        //     let group=&mut self.groups[cur_group_ind];
 
-            if group.trim {
-                group.tokens.trim2();
+        //     if group.trim {
+        //         group.tokens.trim2();
 
-            }
-        }
+        //     }
+        // }
 
         //
         last.group_len=cur_group_len;
@@ -2804,18 +2840,18 @@ where
         });
 
         //
-        if self.debug {
-            println!("groups2 {:?}",group_infos2.iter().enumerate().collect::<Vec<_>>());
+        // if self.debug {
+        //     println!("groups2 {:?}",group_infos2.iter().enumerate().collect::<Vec<_>>());
 
-                //
-                for (i,&(g,p,)) in group_infos2.iter().enumerate() {
-                    //
-                    let group_infos=&self.groups;
+        //         //
+        //         for (i,&(g,p,)) in group_infos2.iter().enumerate() {
+        //             //
+        //             let group_infos=&self.groups;
 
-                    //
-                    println!("\t{i}: g{g}, p{p}, {:?}, {:?}, {:?}",group_infos[g].name,group_infos[g].tokens.inds2(),group_infos[g].tokens);
-                }
-        }
+        //             //
+        //             println!("\t{i}: g{g}, p{p}, {:?}, {:?}, {:?}",group_infos[g].name,group_infos[g].tokens.inds2(),group_infos[g].tokens);
+        //         }
+        // }
 
         //
         // let mut csum=1;
@@ -2830,9 +2866,16 @@ where
             let g=&group_infos[gind];
 
             //
+            let mut tokens=g.tokens.clone();
+
+            if g.trim {
+                tokens.trim2();
+            }
+
+            //
             groups_out.push(WalkGroup { name: Some(g.name),
                 children: 0..0, // csum..csum+c
-                tokens: g.tokens.clone(),
+                tokens, //: g.tokens.clone(),
             });
 
             //
@@ -2846,7 +2889,8 @@ where
         }
 
         //insert groups for ungrouped tokens
-        if in_betweens {
+        if in_betweens
+        {
             let mut groups_out2=vec![WalkGroup{
                 name: groups_out[0].name.clone(),
                 children: 0..0,
@@ -2864,6 +2908,8 @@ where
                     // }
 
                     let mut cur_tokens = g.tokens.clone();
+                    println!("\n0gname={:?}",g.name);
+                    println!("\n0cur_tokens={cur_tokens:?}");
 
                     let mut children_new_inds=Vec::new();
 
@@ -2871,6 +2917,10 @@ where
                     {
                         let child_group=&groups_out[cind];
                         let child_tokens=child_group.tokens.clone();
+                        println!("1gind={gind}, cind={cind}, child_tokens={} cur_tokens={} cname={:?}",child_tokens.inds2().start,cur_tokens.inds2().start,child_group.name);
+                        println!("1cur_tokens={cur_tokens:?}");
+                        println!("1child_tokens={child_tokens:?}");
+
                         let between_tokens_len=child_tokens.inds2().start-cur_tokens.inds2().start;
 
                         if between_tokens_len!=0 {
@@ -3116,10 +3166,14 @@ where
                 println!("");
                 println!("=>{c:4}: {grammar:?}, ps={ps:?}, success={success_len}, fail={fail_len}, first={first}",);
 
-                if false {
+                if true {
                     // println!("        and_id={and_id}, groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
                     println!("        groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
 
+                    for (i,g) in self.groups.iter().enumerate() {
+                        println!("            {i}:{:?}, trim={}, tokens={:?}",g.name,g.trim,g.tokens);
+
+                    }
 
                     // println!("        first={is_first}, stow_new_len={stow_new_len}, hist_stows_stk_len={hist_stows_stk_len}:{}, hist_ends_stk_len={hist_ends_stk_len}:{}, ",
                     //     self.hist_stows_stk.last().map(|x|x.elements.len()).unwrap_or_default(),
