@@ -85,10 +85,10 @@ use std::fmt::Debug;
 // use error::*;
 
 
-pub struct GrammarWalker<'g,P,T,TS,G>
+pub struct GrammarWalker<'g,P,TS,G>
 where
     P:Clone+core::hash::Hash+PartialEq+Eq,
-    TS:Iterator<Item=T>+Clone,
+    TS:Clone,
     G: Fn(&str)->Option<Rc<GrammarNode<'g,P>>>,
 {
     non_term_cache:HashMap<&'g str, Rc<GrammarNode<'g,P>>>,
@@ -126,11 +126,10 @@ where
     wases:Vec<TempWas<'g>>,
 }
 
-impl<'g,P,T,TS,G> GrammarWalker<'g,P,T,TS,G>
+impl<'g,P,TS,G> GrammarWalker<'g,P,TS,G>
 where
     P:Clone+core::hash::Hash+PartialEq+Eq+Debug+GrammarPrimitiveTrait,
-    T:Clone,
-    TS: Iterator<Item=T>+Clone+TokenIterTrait+Debug + TokenIterGetTrait<P> ,
+    TS: Clone+TokenIterTrait+Debug + TokenIterGetTrait<P> ,
     G: Fn(&str)->Option<Rc<GrammarNode<'g,P>>>,
 {
 
@@ -2485,40 +2484,39 @@ where
     ) {
         // let Some(last)=self.stk.last_mut() else {return;};
 
-        for x in self.stow_news.iter_mut().rev() {
-            if x.tokens_start.inds2().start==before_tokens.inds2().start && x.group_len>cur_group_ind {
-                x.trim=trim;
+        for stow_new in self.stow_news.iter_mut().rev() {
+            if stow_new.tokens_start.inds2().start==before_tokens.inds2().start && stow_new.group_len>cur_group_ind {
+                stow_new.trim=trim;
             } else {
                 break;
             }
         }
 
         //
-        if true {
-            if cur_group_ind!=0 {
-                let group=&mut self.groups[cur_group_ind];
+        // if true {
+        if cur_group_ind!=0 {
+            let group=&mut self.groups[cur_group_ind];
 
-                if group.tokens.inds2().start==before_tokens.inds2().start {
-                    group.trim=trim; //may change multiple times as And's fail
-                }
-
-            }
-        } else {
-            let mut g=cur_group_ind;
-
-            //
-            while g!=0 {
-                let group=&mut self.groups[g];
-
-                if group.tokens.inds2().start==before_tokens.inds2().start {
-                    group.trim=trim; //may change multiple times as And's fail
-                } else {
-                    break;
-                }
-
-                g=group.parent;
+            if group.tokens.inds2().start==before_tokens.inds2().start {
+                group.trim=trim; //may change multiple times as Ands fail
             }
         }
+        // } else {
+        //     let mut g=cur_group_ind;
+
+        //     //
+        //     while g!=0 {
+        //         let group=&mut self.groups[g];
+
+        //         if group.tokens.inds2().start==before_tokens.inds2().start {
+        //             group.trim=trim; //may change multiple times as And's fail
+        //         } else {
+        //             break;
+        //         }
+
+        //         g=group.parent;
+        //     }
+        // }
 
         //
 

@@ -114,7 +114,7 @@ impl Compiler {
 
         //
         let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
-        walker.set_debug(true);
+        // walker.set_debug(true);
 
         let start_time = std::time::Instant::now();
         let result=walker.run("start") ;
@@ -169,7 +169,7 @@ impl Compiler {
                 // println!("{indent}group: {:?} : [{}]",cur.name2(),xx);
                 if let Some(name)=cur.name2() {
                     // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
-                    println!("{indent}group: {name:?} :: {:?}",cur.tokens());
+                    println!("{indent}group: {name:?}",);
                     stk.extend(cur.children().rev().map(|c|(c,depth+1)));
 
                     if cur.children().len()==0 {
