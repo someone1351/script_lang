@@ -16,7 +16,7 @@ TODO
 #[derive(Clone,Hash,PartialEq,Eq,)]
 pub enum GrammarNode<'g,P>
 where
-    P:Clone+core::hash::Hash+PartialEq+Eq,
+    P:Clone, //+core::hash::Hash+PartialEq+Eq,
 {
     Many(Rc<GrammarNode<'g,P>>),
     And(Box<[Rc<GrammarNode<'g,P>>]>,usize), //stow_first, error_ind
@@ -218,7 +218,7 @@ where
 pub trait GrammarArrayTrait<'g,P>
 
 where
-    P:Clone+core::hash::Hash+PartialEq+Eq,
+    P:Clone, //+core::hash::Hash+PartialEq+Eq,
 {
     fn and(self) -> GrammarNode<'g,P>;
     fn and1(self) -> GrammarNode<'g,P>;
@@ -227,7 +227,7 @@ where
 
 impl<'g,P,const N: usize> GrammarArrayTrait <'g,P> for [GrammarNode<'g,P>; N]
 where
-    P:Clone+core::hash::Hash+PartialEq+Eq,
+    P:Clone, //+core::hash::Hash+PartialEq+Eq,
 {
     fn and(self) -> GrammarNode<'g,P> {
         // GrammarNode::And(self.into())
@@ -243,35 +243,35 @@ where
     }
 }
 
-pub trait GrammarStrTrait<'g,P>
+// pub trait GrammarStrTrait<'g,P>
 
-where
-    P:Clone+core::hash::Hash+PartialEq+Eq,
-{
-    fn non_term(self) -> GrammarNode<'g,P>;
-    // fn symbol(self) -> GrammarNode<'g,P>;
-    // fn keyword(self) -> GrammarNode<'g,P>;
-    // // fn had(self) -> GrammarNode<'g,P>;
-}
+// where
+//     P:Clone+core::hash::Hash+PartialEq+Eq,
+// {
+//     fn non_term(self) -> GrammarNode<'g,P>;
+//     // fn symbol(self) -> GrammarNode<'g,P>;
+//     // fn keyword(self) -> GrammarNode<'g,P>;
+//     // // fn had(self) -> GrammarNode<'g,P>;
+// }
 
-impl<'g,P> GrammarStrTrait <'g,P> for &'g str
+// impl<'g,P> GrammarStrTrait <'g,P> for &'g str
 
-where
-    P:Clone+core::hash::Hash+PartialEq+Eq,
-{
-    fn non_term(self) -> GrammarNode<'g,P> {
-        GrammarNode::NonTerm(self)
-    }
-    // fn symbol(self) -> GrammarNode<'g,P> {
-    //     GrammarNode::Symbol(self)
-    // }
-    // fn keyword(self) -> GrammarNode<'g,P> {
-    //     GrammarNode::Keyword(self)
-    // }
-    // // fn had(self) -> GrammarNode<'g,P> {
-    // //     GrammarNode::Had(self)
-    // // }
-}
+// where
+//     P:Clone+core::hash::Hash+PartialEq+Eq,
+// {
+//     fn non_term(self) -> GrammarNode<'g,P> {
+//         GrammarNode::NonTerm(self)
+//     }
+//     // fn symbol(self) -> GrammarNode<'g,P> {
+//     //     GrammarNode::Symbol(self)
+//     // }
+//     // fn keyword(self) -> GrammarNode<'g,P> {
+//     //     GrammarNode::Keyword(self)
+//     // }
+//     // // fn had(self) -> GrammarNode<'g,P> {
+//     // //     GrammarNode::Had(self)
+//     // // }
+// }
 
 // impl<'a, const N: usize> From<[GrammarItem<'a>; N]> for  GrammarItem<'a> {
 //     fn from(value: [GrammarItem<'a>; N]) -> Self {
@@ -301,7 +301,7 @@ where
 impl<'g,P> Debug for GrammarNode<'g,P>
 
 where
-    P:Clone+core::hash::Hash+PartialEq+Eq+Debug,
+    P:Clone+Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

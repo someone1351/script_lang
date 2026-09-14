@@ -101,7 +101,7 @@ where
     pub was:TempStowWas<'g>,
     pub trim:bool,
 }
-#[derive(Clone,Debug,)]
+#[derive(Clone,)]
 pub struct TempStowFail<'g,P>
 where
     P:Clone+core::hash::Hash+PartialEq+Eq,
