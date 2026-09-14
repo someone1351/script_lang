@@ -13,35 +13,35 @@ use super::node::*;
 
 
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum TempExpectType<'g> {
-    // NoExpect,
-    Expect(&'g str),
-    Int,
-    Float,
-    String,
-    Identifier,
-    Symbol(&'g str),
-    Keyword(&'g str),
-    Eol,
-}
+// #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+// pub enum TempExpectType<'g> {
+//     // NoExpect,
+//     Expect(&'g str),
+//     Int,
+//     Float,
+//     String,
+//     Identifier,
+//     Symbol(&'g str),
+//     Keyword(&'g str),
+//     Eol,
+// }
 
-impl<'g> TempExpectType<'g> {
-    pub fn is_expect(&self) -> bool {
-        if let Self::Expect(..)=self {
-            true
-        } else {
-            false
-        }
-    }
-}
+// impl<'g> TempExpectType<'g> {
+//     pub fn is_expect(&self) -> bool {
+//         if let Self::Expect(..)=self {
+//             true
+//         } else {
+//             false
+//         }
+//     }
+// }
 
 #[derive(Clone, )]
 pub struct TempExpectNew2<'g, TS>
 where
     TS:Clone,
 {
-    pub expect_type:TempExpectType<'g>,
+    pub expect_type:&'g str,
     pub tokens_start:TS,
     pub expect_len:usize,
 }
@@ -51,13 +51,13 @@ pub struct TempExpect2<'g,TS>
 where
     TS:Clone,
 {
-    pub expect_type:TempExpectType<'g>,
+    pub expect_type:&'g str,
     pub tokens_start:TS,
 }
 
 #[derive(Clone,  )]
 pub struct TempExpect1<'g, TS> {
-    pub expect_type:TempExpectType<'g>,
+    pub expect_type:&'g str,
     pub parent:Option<usize>,
     pub tokens_start:TS,
     // pub last:bool,
@@ -194,8 +194,6 @@ where
     pub in_expect:bool,
     // pub no_expect:bool,
 
-    pub expect_ind1:Option<usize>,
-    pub expect_len1:usize,
 
     pub expect_new_len2:usize,
     pub expect_len2:usize,

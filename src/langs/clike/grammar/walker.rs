@@ -98,17 +98,12 @@ where
     top_tokens:TS,
     tokens_remaining: TS,
     tokens_furthest: TS,
-    expected_tokens_remaining1: TS,
     expect_token_start2: TS,
 
     grammar_func:G,
     stk: Vec<Work<'g,P,TS>>,
     step_count:usize,
 
-    use_expect1:bool,
-    use_expect2:bool,
-
-    expects1:Vec<TempExpect1<'g,TS>>,
 
     expect_news2:Vec<TempExpectNew2<'g,TS>>,
     expects2:Vec<TempExpect2<'g,TS>>,
@@ -145,12 +140,6 @@ where
             stk:Default::default(),
             step_count:Default::default(),
 
-            use_expect1:false, //old implementation
-            use_expect2:true, //new implementation
-
-            // expected_loc:Loc::zero(),
-            expected_tokens_remaining1:top_primitives.clone(),
-            expects1:Default::default(),
 
             expect_token_start2:top_primitives.clone(),
             expect_news2:Default::default(),
@@ -202,7 +191,6 @@ where
         //
         self.tokens_remaining=self.top_tokens.clone();
         self.tokens_furthest=self.top_tokens.clone();
-        self.expected_tokens_remaining1=self.top_tokens.clone();
 
         //
         self.stk.push(Work{
@@ -246,8 +234,8 @@ where
 
             in_expect:false,
 
-            expect_ind1:None,
-            expect_len1:0,
+            // expect_ind1:None,
+            // expect_len1:0,
 
             expect_new_len2:0,
             expect_len2:0,
@@ -313,8 +301,8 @@ where
 
             in_expect:false,
 
-            expect_ind1:None,
-            expect_len1:0,
+            // expect_ind1:None,
+            // expect_len1:0,
 
             expect_new_len2:0,
             expect_len2:0,
@@ -382,8 +370,8 @@ where
 
                 in_expect:false,
 
-                expect_ind1:None,
-                expect_len1:0,
+                // expect_ind1:None,
+                // expect_len1:0,
 
                 expect_new_len2:0,
                 expect_len2:0,
@@ -436,9 +424,6 @@ where
 
         //
         self.step_count=0;
-
-        //
-        self.expects1.clear();
 
         self.expect_token_start2=self.top_tokens.clone();
         self.expect_news2.clear();
@@ -534,8 +519,8 @@ where
 
             in_expect:cur.in_expect,
 
-            expect_ind1:cur.expect_ind1,
-            expect_len1:cur.expect_len1,
+            // expect_ind1:cur.expect_ind1,
+            // expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -587,7 +572,7 @@ where
             self.was_on_success(false); //before hist
             self.hist_on_success(cur.grammar.clone(),cur.group_len,cur.tokens.clone(),false,);
             self.expect_on_success2();
-            self.expect_on_success1();
+            // self.expect_on_success1();
         } else {
             // self.stk.truncate(cur.fail_len);
             self.work_stk_truncate(cur.work_fail_len);
@@ -602,7 +587,7 @@ where
 
             // // self.submit_expected_news(&cur);
             self.expect_on_fail2();
-            self.expect_on_fail1();
+            // self.expect_on_fail1();
         }
     }
 
@@ -610,9 +595,9 @@ where
         let GrammarNode::Expect(g,_, )=cur.grammar.as_ref() else{panic!("");};
 
         //
-        // let expected_news_len=self.add_expected_new(&cur);
-        let (expect_ind1,expect_len1)=self.add_expect1(&cur);
-        // let stow_new_len=self.hist_news_add(&cur);
+        // // let expected_news_len=self.add_expected_new(&cur);
+        // let (expect_ind1,expect_len1)=self.add_expect1(&cur);
+        // // let stow_new_len=self.hist_news_add(&cur);
 
         let expect_new_len2=self.add_expect_new2(&cur);
 
@@ -662,8 +647,8 @@ where
 
             in_expect:true,
 
-            expect_ind1,
-            expect_len1,
+            // expect_ind1,
+            // expect_len1,
 
 
 
@@ -738,8 +723,8 @@ where
 
             in_expect:cur.in_expect,
 
-            expect_ind1:cur.expect_ind1,
-            expect_len1:cur.expect_len1,
+            // expect_ind1:cur.expect_ind1,
+            // expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -814,8 +799,8 @@ where
 
             in_expect:cur.in_expect,
 
-            expect_ind1:cur.expect_ind1,
-            expect_len1:cur.expect_len1,
+            // expect_ind1:cur.expect_ind1,
+            // expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -881,8 +866,8 @@ where
 
             in_expect:cur.in_expect,
 
-            expect_ind1:cur.expect_ind1,
-            expect_len1:cur.expect_len1,
+            // expect_ind1:cur.expect_ind1,
+            // expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -949,8 +934,8 @@ where
 
             in_expect:cur.in_expect,
 
-            expect_ind1:cur.expect_ind1,
-            expect_len1:cur.expect_len1,
+            // expect_ind1:cur.expect_ind1,
+            // expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -1032,8 +1017,8 @@ where
 
             in_expect:cur.in_expect,
 
-            expect_ind1:cur.expect_ind1,
-            expect_len1:cur.expect_len1,
+            // expect_ind1:cur.expect_ind1,
+            // expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -1069,7 +1054,7 @@ where
 
         //
         self.expect_on_fail2();
-        self.expect_on_fail1();
+        // self.expect_on_fail1();
 
         // self.expect_on_error2(&cur);
         // self.expect_on_error1(&cur);
@@ -1187,8 +1172,8 @@ where
 
                 in_expect:cur.in_expect,
 
-                expect_ind1:cur.expect_ind1,
-                expect_len1:cur.expect_len1,
+                // expect_ind1:cur.expect_ind1,
+                // expect_len1:cur.expect_len1,
 
                 expect_new_len2:cur.expect_new_len2,
                 expect_len2:cur.expect_len2,
@@ -1252,8 +1237,8 @@ where
 
             in_expect:cur.in_expect,
 
-            expect_ind1:cur.expect_ind1,
-            expect_len1:cur.expect_len1,
+            // expect_ind1:cur.expect_ind1,
+            // expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -1369,8 +1354,8 @@ where
 
                 in_expect:cur.in_expect,
 
-                expect_ind1:cur.expect_ind1,
-                expect_len1:cur.expect_len1,
+                // expect_ind1:cur.expect_ind1,
+                // expect_len1:cur.expect_len1,
 
                 expect_new_len2:cur.expect_new_len2,
                 expect_len2:cur.expect_len2,
@@ -1441,8 +1426,8 @@ where
 
             in_expect:cur.in_expect,
 
-            expect_ind1:cur.expect_ind1,
-            expect_len1:cur.expect_len1,
+            // expect_ind1:cur.expect_ind1,
+            // expect_len1:cur.expect_len1,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -1557,7 +1542,7 @@ where
         self.hist_on_fail();
         self.was_on_fail();
         self.expect_on_fail2();
-        self.expect_on_fail1();
+        // self.expect_on_fail1();
         self.groups_on_fail();
 
         //
@@ -1663,7 +1648,7 @@ where
         self.was_on_success(was_prim); //before hist
         self.hist_on_success(cur.grammar.clone(),new_group_len,tokens_after.clone(),true,); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
         self.expect_on_success2();
-        self.expect_on_success1();
+        // self.expect_on_success1();
 
         //
         if self.debug {
@@ -1752,7 +1737,7 @@ where
             self.hist_on_success(cur.grammar.clone(),cur.group_len,after_tokens.clone(),false);
 
             self.expect_on_success2();
-            self.expect_on_success1();
+            // self.expect_on_success1();
 
         } else {
             // self.stk.truncate(cur.fail_len);
@@ -1766,11 +1751,11 @@ where
             // // self.submit_expected_news(&cur);
 
             self.groups_on_fail();
-            let (_expected_ind,_expecteds_len)=self.add_expect1(&cur);
-            let _expect_new_len2=self.add_expect_new2(&cur);
+            // let (_expected_ind,_expecteds_len)=self.add_expect1(&cur);
+            // let _expect_new_len2=self.add_expect_new2(&cur);
 
             self.expect_on_fail2();
-            self.expect_on_fail1();
+            // self.expect_on_fail1();
 
         }
     }
@@ -1790,41 +1775,9 @@ where
     // }
 
     fn add_expect_new2(&mut self, cur:&Work<'g,P,TS>,) -> usize {
-        if !self.use_expect2 {return cur.expect_new_len2;}
-
-
-        //
-        // println!("----- isp={} e={}, cur.in_expect={}",cur.grammar.is_primtive(), self.expect_news2.is_empty(),cur.in_expect);
-        //don't add primitives if in expect
-        if cur.grammar.is_primtive() //disable primitive expects
-            // && !self.expect_news2.is_empty()
-            // // && cur.in_expect
-        {
-        //     // println!("")
-            return cur.expect_new_len2; //self.expect_news2.len()
-        }
-
-        //do it here or in on fail?
-        // if self.expect_news2.last().map(|x|x.tokens_start.inds2().start)==Some(cur.tokens.inds2().start) {
-        //     return cur.expect_new_len2; //self.expect_news2.len()
-        // }
-
-        //
-        // if cur.grammar.is_expect() && self.expect_news2.last().map(|x|x.expect_type.is_expect()).unwrap_or_default() {
-
-        // }
-
         //
         let expect_type=match cur.grammar.as_ref() {
-            GrammarNode::Expect(_, name) => TempExpectType::Expect(name),
-            // // GrammarNode::Prev(_) => TempExpectedType::Prev,
-            // GrammarNode::String => TempExpectType::String,
-            // GrammarNode::Identifier => TempExpectType::Identifier,
-            // GrammarNode::Int => TempExpectType::Int,
-            // GrammarNode::Float => TempExpectType::Float,
-            // GrammarNode::Symbol(s) => TempExpectType::Symbol(s),
-            // GrammarNode::Keyword(s) => TempExpectType::Keyword(s),
-            // GrammarNode::Eol => TempExpectType::Eol,
+            GrammarNode::Expect(_, name) => name,
            _ => {panic!("");}
         };
 
@@ -1836,37 +1789,22 @@ where
         self.expect_news2.push(TempExpectNew2 {
             expect_type, tokens_start: cur.tokens.clone(), expect_len: cur.expect_len2,
         });
+
         self.expect_news2.len()
     }
 
     fn expect_on_error2(&mut self, ) {
         // println!("here---");
         self.expects2.retain(|x|x.tokens_start.inds2().start==self.expect_token_start2.inds2().start
-           && if let TempExpectType::Expect("")=&x.expect_type {false} else {true}
+        //    && if let TempExpectType::Expect("")=&x.expect_type {false} else {true}
         );
     }
     fn expect_on_success2(&mut self, ) {
-        if !self.use_expect2 {return;}
 
         let Some(last)=self.stk.last_mut() else {return;}; //the func, not run on always... does now
 
 
-        // let drained=self.expect_news2.drain(last.expect_new_len2 ..).collect::<Vec<_>>();
-
         self.expect_news2.truncate(last.expect_new_len2);
-        // self.expects2.truncate(last.expect_len2);
-
-        //
-        // let drained_expects=self.expects2.drain(last.expect_len2 ..)
-        //     // .filter(|x|x.tokens_start.inds2().start>=cur.tokens.inds2().start)
-        //     .filter(|x|x.tokens_start.inds2().start==self.expect_token_start2.inds2().start)
-        //     .collect::<Vec<_>>();
-
-        // println!("----- drained expects2 [{}]",drained_expects.iter().map(|x|format!("t{}:{:?}",x.tokens_start.inds2().start,x.expect_type,)).collect::<Vec<_>>().join(", "));
-        // println!("----- expects2 [{}]",self.expects2.iter().map(|x|format!("t{}:{:?}",x.tokens_start.inds2().start,x.expect_type,)).collect::<Vec<_>>().join(", "));
-        // // drained_expects.retain(|x|x.tokens_start.inds2().start>=cur.tokens.inds2().start); //use >= or just == ?
-
-                // self.expect_token_start2=self.expect_token_start2.max(cur.tokens);
 
 
         //
@@ -1884,7 +1822,6 @@ where
     }
 
     fn expect_on_fail2(&mut self, ) {
-        if !self.use_expect2 {return;}
 
         let Some(last)=self.stk.last_mut() else {return;}; //the func, not run on always
 
@@ -1912,7 +1849,8 @@ where
 
         //
         if let Some(drained)=drained {
-            if let TempExpectType::Expect(_expect_name)=&drained.expect_type {
+            // if let TempExpectType::Expect(_expect_name)=&drained.expect_type {
+
                 if let Some(last_token_ind)= self.expects2
                     .get(drained.expect_len)
                     .map(|x|x.tokens_start.inds2().start)
@@ -1931,11 +1869,11 @@ where
                         self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start.clone() });
                     }
                 }
-            } else {
-                if drained.tokens_start.inds2().start >= self.expect_token_start2.inds2().start {
-                    self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start.clone() });
-                }
-            }
+            // } else {
+            //     if drained.tokens_start.inds2().start >= self.expect_token_start2.inds2().start {
+            //         self.expects2.push(TempExpect2 { expect_type: drained.expect_type, tokens_start: drained.tokens_start.clone() });
+            //     }
+            // }
 
             if drained.tokens_start.inds2().start > self.expect_token_start2.inds2().start {
                 self.expect_token_start2=drained.tokens_start;
@@ -1945,95 +1883,6 @@ where
         //
         last.expect_len2=self.expects2.len();
 
-    }
-
-
-    fn add_expect1(&mut self, cur:&Work<'g,P,TS>,) -> (Option<usize>,usize) {
-        if !self.use_expect1 {return (cur.expect_ind1,cur.expect_len1);}
-
-        // return (cur.expect_ind,cur.expect_len);
-
-        //check if prim and parent pos is same as cur pos
-        //
-
-        let parent_start=cur.expect_ind1.map(|i|self.expects1[i].tokens_start.inds2().start) ;
-
-        if parent_start==Some(cur.tokens.inds2().start) {
-            return (cur.expect_ind1,cur.expect_len1);
-        }
-
-        // if cur.expect_ind.is_some() && cur.grammar.is_primtive() { //(cur.grammar.is_prev() || )
-        //     return (cur.expect_ind,cur.expect_len);
-        // }
-
-        //
-        let expected_type=match cur.grammar.as_ref() {
-            GrammarNode::Expect(_, name) => TempExpectType::Expect(name),
-            // // GrammarNode::Prev(_) => TempExpectedType::Prev,
-            // GrammarNode::String => TempExpectType::String,
-            // GrammarNode::Identifier => TempExpectType::Identifier,
-            // GrammarNode::Int => TempExpectType::Int,
-            // GrammarNode::Float => TempExpectType::Float,
-            // GrammarNode::Symbol(s) => TempExpectType::Symbol(s),
-            // GrammarNode::Keyword(s) => TempExpectType::Keyword(s),
-            // GrammarNode::Eol => TempExpectType::Eol,
-           _ => {panic!("");}
-        };
-
-        //
-        if self.debug {
-            println!("----- expect added  {expected_type:?}");
-        }
-
-        //
-        let expect_ind=self.expects1.len();
-
-        //
-        self.expects1.push(TempExpect1 {
-            expect_type: expected_type,
-            parent: cur.expect_ind1,
-            tokens_start: cur.tokens.clone(),
-            // last:false,
-        });
-
-        //
-        (Some(expect_ind),self.expects1.len())
-    }
-
-
-    fn expect_on_error1(&mut self,  ) {
-        if !self.use_expect1 {return;}
-
-        //
-        let max_token = self.expects1.iter().map(|x|x.tokens_start.clone()).max_by(|x,y|x.inds2().start.cmp(&y.inds2().start)).unwrap_or(self.tokens_remaining.clone());
-
-        self.expected_tokens_remaining1=max_token;
-
-        //
-        let max_token_start_ind=self.expected_tokens_remaining1.inds2().start;
-
-        let parents= self.expects1.iter().filter_map(|x|x.parent).collect::<HashSet<_>>();
-
-        let expecteds=self.expects1.iter().enumerate().rev().filter_map(|(i,x)|(
-            x.tokens_start.inds2().start == max_token_start_ind &&
-            !parents.contains(&i)
-        ).then(||(x.expect_type.clone(),x.clone()))).collect::<BTreeMap<_,_>>();
-
-        self.expects1=expecteds.iter().map(|(_k,v)|v.clone()).collect::<Vec<_>>();
-    }
-
-    fn expect_on_success1(&mut self, ) {
-        if !self.use_expect1 {return;}
-
-        let Some(last)=self.stk.last() else {return;}; //the func, not run on always... does now
-        self.expects1.truncate(last.expect_len1);
-    }
-
-    fn expect_on_fail1(&mut self, ) {
-        if !self.use_expect1 {return;}
-
-        let Some(last)=self.stk.last_mut() else {return;}; //the func, not run on always
-        last.expect_len1=self.expects1.len();
     }
 
 
@@ -2647,160 +2496,44 @@ where
     pub fn last_loc2(&self) -> TS {
 
         //
-        if self.use_expect2 {
-            if self.expects2.is_empty() {
-                // println!("-- here1");
-                let mut t=self.tokens_remaining.clone();
-                t.trim2();
+        if self.expects2.is_empty() {
+            // println!("-- here1");
+            let mut t=self.tokens_remaining.clone();
+            t.trim2();
 
-                if t.is_empty2() {
-                    t
-                } else {
-                    self.tokens_remaining.clone()
-                }
-            } else if self.expect_token_start2.is_empty2() {
-                self.tokens_remaining.clone()
+            if t.is_empty2() {
+                t
             } else {
-                self.expect_token_start2.clone()
-                // self.expect_token_start2.first().ok()
-                //     // .or_else(||self.tokens_remaining.first().ok())
-                //     .and_then(|x|x.prevs().rev().find(|x|!x.is_eol()))
-                //     .map(|x|x.end_loc())
-                //     // .map(|x|x.start_loc())
-                //     .unwrap_or(self.tokens_remaining.start_loc())
-
-
-            }
-        } else if self.use_expect1 {
-            if self.expects1.is_empty() {
                 self.tokens_remaining.clone()
-            } else {
-                self.expected_tokens_remaining1.clone()
             }
-        } else {
+        } else if self.expect_token_start2.is_empty2() {
             self.tokens_remaining.clone()
+        } else {
+            self.expect_token_start2.clone()
+            // self.expect_token_start2.first().ok()
+            //     // .or_else(||self.tokens_remaining.first().ok())
+            //     .and_then(|x|x.prevs().rev().find(|x|!x.is_eol()))
+            //     .map(|x|x.end_loc())
+            //     // .map(|x|x.start_loc())
+            //     .unwrap_or(self.tokens_remaining.start_loc())
+
+
         }
+
 
     }
 
-    // pub fn last_loc(&self) -> Loc {
-    //     // println!("l1 {:?} {:?} || {:?}",self.tokens_remaining.loc(),self.tokens_remaining.last_loc(),self.tokens_remaining);
-    //     // println!("l2 {:?} {:?} || {:?}",self.expected_tokens_remaining.loc(),self.expected_tokens_remaining.last_loc(),self.expected_tokens_remaining);
-    //     // println!("{:?}:{}:{}",self.top_tokens,self.top_tokens.loc(),self.top_tokens.last_loc());
-    //     // println!("{:?}:{}:{}",self.tokens_remaining,self.tokens_remaining.loc(),self.tokens_remaining.last_loc());
-    //     // println!("{:?}:{}:{}",self.expected_tokens_remaining,self.expected_tokens_remaining.loc(),self.expected_tokens_remaining.last_loc());
-
-    //     // for t in self.top_tokens {
-    //     //     println!("t {t:?} :: {} to {}",t.start_loc(),t.end_loc());
-    //     // }
-
-    //     //
-    //     if self.use_expect2 {
-    //         if self.expects2.is_empty() {
-    //             // println!("-- here1");
-    //             let mut t=self.tokens_remaining;
-    //             t.trim2();
-
-    //             t.find(|x|!x.is_eol()) //is_eol
-    //                 .map(|x|x.start_loc())
-    //                 .unwrap_or(self.tokens_remaining.start_loc())
-
-    //             // self.tokens_remaining.loc()
-    //         } else {
-    //             // println!("-- here2");
-    //             self.expect_token_start2.first().ok()
-    //                 // .or_else(||self.tokens_remaining.first().ok())
-    //                 .and_then(|x|x.prevs().rev().find(|x|!x.is_eol()))
-    //                 .map(|x|x.end_loc())
-    //                 // .map(|x|x.start_loc())
-    //                 .unwrap_or(self.tokens_remaining.start_loc())
-
-
-    //             // let x=self.expect_token_start2.first().unwrap().prevs().rev().find(|x|!x.is_eol()).map(|x|x.end_loc());
-
-    //             // x.unwrap_or(self.expect_token_start2.loc())
-    //             // self.expect_token_start2.loc()
-    //             // self.tokens_furthest.last_loc()
-    //             // self.tokens_furthest.first().map(|x|x.end_loc()).unwrap_or(self.tokens_furthest.loc())
-    //             // self.expect_token_start2.last_loc()
-    //         }
-    //     } else if self.use_expect1 {
-    //         if self.expects1.is_empty() {
-    //             self.tokens_remaining.start_loc()
-    //         } else {
-    //             self.expected_tokens_remaining1.start_loc()
-    //         }
-    //     } else {
-    //         self.tokens_remaining.start_loc()
-    //     }
-
-    //     // //
-
-    //     // let out_loc=if self.expects1.is_empty() {
-    //     //     self.tokens_remaining.loc()
-    //     // } else {
-    //     //     if self.use_expect2 {
-    //     //         self.expect_token_start2.loc()
-    //     //     } else if self.use_expect1 {
-    //     //         self.expected_tokens_remaining1.loc()
-    //     //     } else {
-    //     //         self.tokens_remaining.loc()
-    //     //     }
-    //     // };
-
-    //     // // println!("l3 {out_loc:?}");
-
-    //     // out_loc
-    // }
 
     pub fn expects_string(&self) -> String {
-        if self.use_expect2 {
-            self.expecteds_string2()
-        } else if self.use_expect1 {
-            self.expecteds_string1()
-        } else {
-             String::new()
-        }
+
+        self.expecteds_string2()
     }
 
 
     fn expecteds_string2(&self) -> String {
-        if !self.use_expect2 {return String::new();}
-
-        //
-        self.expects2.iter().rev().map(|x|match &x.expect_type {
-            // TempExpectType::NoExpect => "",
-            TempExpectType::Expect(n) => n,
-            TempExpectType::Int => "int",
-            TempExpectType::Float => "float",
-            TempExpectType::String => "string",
-            TempExpectType::Identifier => "identifier",
-            TempExpectType::Symbol(s) => s,
-            TempExpectType::Keyword(s) => s,
-            TempExpectType::Eol => "eol",
-        })
-        // .filter(|x|!x.is_empty())
-        .collect::<Vec<_>>().join(", ")
+        self.expects2.iter().rev().map(|x|x.expect_type.to_string()).collect::<Vec<_>>().join(", ")
     }
 
-    //
-    fn expecteds_string1(&self) -> String {
-        if !self.use_expect1 {return String::new();}
-
-        //
-        self.expects1.iter().rev().map(|x|match &x.expect_type {
-            TempExpectType::Expect(n) => n,
-            TempExpectType::Int => "int",
-            TempExpectType::Float => "float",
-            TempExpectType::String => "string",
-            TempExpectType::Identifier => "identifier",
-            TempExpectType::Symbol(s) => s,
-            TempExpectType::Keyword(s) => s,
-            TempExpectType::Eol => "eol",
-        })
-        // .filter(|x|!x.is_empty())
-        .collect::<Vec<_>>().join(", ")
-    }
 
     //
     // fn trim_groups(&mut self) {
@@ -3037,7 +2770,6 @@ where
         if result.is_err() {
 
             self.expect_on_error2();
-            self.expect_on_error1();
         }
 
         //
@@ -3125,7 +2857,7 @@ where
                     // hist_prevs_len,
                     // expected_news_len,expect_len,
                     in_expect,
-                    expect_ind1,expect_len1,
+                    // expect_ind1,expect_len1,
                     expect_new_len2,expect_len2,
                     // was_start_ind,was_ind,was_len,
                     was_new_len,was_ind,
@@ -3217,31 +2949,7 @@ where
                     );
                 }
 
-                //
-                if true {
-                    println!("        expect_ind1={expect_ind1:?}, expect_len1={expect_len1}, expecteds1.len={}",self.expects1.len());
 
-                     println!("        expecteds1=[{}]",
-                        self.expects1.iter().enumerate()
-                            .map(|(i,x)|format!("e{i}:p{}:t{}:{:?}",
-                                x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
-                                x.tokens_start.inds2().start,
-                                x.expect_type,
-                            ))
-                            .collect::<Vec<_>>().join(", "),
-                    );
-                } else if false {
-                    println!("        expecteds1: ind={expect_ind1:?}, len={expect_len1} ({})",self.expects1.len());
-
-                    for (i,x) in self.expects1.iter().enumerate() {
-                        println!("            e{i}:p{}:t{}: {:?}",
-                            x.parent.map(|q|format!("{q}")).unwrap_or("_".to_string()),
-                            x.tokens_start.inds2().start,
-                            x.expect_type,
-                        );
-                    }
-
-                }
 
                 //
                 if true {
