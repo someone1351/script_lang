@@ -64,12 +64,13 @@ pub struct TempExpect1<'g, TS> {
 }
 
 #[derive(Clone, )]
-pub struct TempStowNew<'g,P,TS>
+pub struct TempStowNew<'g,TS>
 where
-    P:Clone+core::hash::Hash+PartialEq+Eq,
+    // P:Clone+core::hash::Hash+PartialEq+Eq,
     TS:Clone,
 {
-    pub grammar:Rc<GrammarNode<'g,P>>,
+    // pub grammar:Rc<GrammarNode<'g,P>>,
+    pub non_term:&'g str,
     pub tokens_start:TS,
     pub group_len:usize,
     pub stow_len:usize,
@@ -89,24 +90,26 @@ pub enum TempStowWas<'g> {
 }
 
 
-#[derive(Clone,)]
-pub struct TempStowSuccess<'g,P,TS>
+// #[derive(Clone,)]
+pub struct TempStowSuccess<'g,TS>
 where
-    P:Clone+core::hash::Hash+PartialEq+Eq,
+    // P:Clone+core::hash::Hash+PartialEq+Eq,
     TS: Clone,
 {
-    pub grammar: Rc<GrammarNode<'g,P>>,
+    // pub grammar: Rc<GrammarNode<'g,P>>,
+    pub non_term : &'g str,
     pub tokens_after:TS,
     pub stow_groups_end:usize,
     pub was:TempStowWas<'g>,
     pub trim:bool,
 }
-#[derive(Clone,)]
-pub struct TempStowFail<'g,P>
-where
-    P:Clone+core::hash::Hash+PartialEq+Eq,
+// #[derive(Clone,)]
+pub struct TempStowFail<'g>
+// where
+//     P:Clone+core::hash::Hash+PartialEq+Eq,
 {
-    pub grammar:Rc<GrammarNode<'g,P>>,
+    // pub grammar:Rc<GrammarNode<'g,P>>,
+    pub non_term : &'g str,
 }
 
 // #[derive(Clone,Debug,)]
@@ -124,19 +127,19 @@ where
 // }
 
 
-#[derive(Clone,)]
-pub struct TempStow<'g,P,TS>
+// #[derive(Clone,)]
+pub struct TempStow<'g,TS>
 where
 
-    P:Clone+core::hash::Hash+PartialEq+Eq,
+    // P:Clone+core::hash::Hash+PartialEq+Eq,
     TS:Clone,
 {
     pub stow_groups_start:usize,
     // pub val : TempStowVal<'t,'g>,
     pub tokens_start_ind:usize,
 
-    pub success : Option<TempStowSuccess<'g,P,TS>>,
-    pub fail : Option<TempStowFail<'g,P>>,
+    pub success : Option<TempStowSuccess<'g,TS>>,
+    pub fail : Option<TempStowFail<'g,>>,
 }
 
 #[derive(Clone)]

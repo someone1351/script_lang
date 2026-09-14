@@ -13,7 +13,7 @@ TODO
 */
 
 
-#[derive(Clone,PartialEq,Eq,)]
+// #[derive(PartialEq,Eq,)]
 pub enum GrammarNode<'g,P>
 where
     P:Clone, //+core::hash::Hash+PartialEq+Eq,
@@ -51,6 +51,27 @@ where
     // Stow(Rc<GrammarNode<'g,P>>),
 
     // Mark(Rc<GrammarNode<'g,P>>),
+}
+
+impl<'g,P> Clone for GrammarNode<'g,P>
+where
+    P:Clone,
+{
+    fn clone(&self) -> Self {
+        match self {
+            Self::Many(arg0) => Self::Many(arg0.clone()),
+            Self::And(arg0, arg1) => Self::And(arg0.clone(), arg1.clone()),
+            Self::Or(arg0) => Self::Or(arg0.clone()),
+            Self::NonTerm(arg0) => Self::NonTerm(arg0.clone()),
+            Self::Group(arg0, arg1) => Self::Group(arg0.clone(), arg1.clone()),
+            Self::Expect(arg0, arg1) => Self::Expect(arg0.clone(), arg1.clone()),
+            Self::Was(arg0, arg1) => Self::Was(arg0.clone(), arg1.clone()),
+            Self::Had(arg0) => Self::Had(arg0.clone()),
+            Self::Primitive(arg0) => Self::Primitive(arg0.clone()),
+            Self::Always => Self::Always,
+            Self::Error => Self::Error,
+        }
+    }
 }
 
 impl<'g,P> GrammarNode<'g,P>

@@ -113,8 +113,8 @@ where
 
     groups:Vec<TempGroup<'g,TS>>,
 
-    stow_news:Vec<TempStowNew<'g,P,TS>>,
-    stows:Vec<TempStow<'g,P,TS>>,
+    stow_news:Vec<TempStowNew<'g,TS>>,
+    stows:Vec<TempStow<'g,TS>>,
     stow_groups:Vec<TempGroup<'g,TS>>,
 
     was_news:Vec<TempWas<'g>>,
@@ -1512,6 +1512,8 @@ where
     }
 
     fn grammar_try_from_hist_fails(&mut self,cur :&Work<'g,P,TS>) -> bool {
+        let GrammarNode::NonTerm(non_term)=cur.grammar.as_ref() else {return false;};
+
          //
         if !cur.user || !cur.first {return false;} // !(cur.from_user && cur.is_first)
         if cur.stow_len==0 {return false;}
@@ -1533,7 +1535,8 @@ where
         //     // println!("--- checkkk")
         // }
 
-        if stow_fail.grammar!=cur.grammar { return false; }
+        // if stow_fail.grammar!=cur.grammar { return false; }
+        if stow_fail.non_term!=*non_term { return false; }
 
         //
         // self.stk.truncate(cur.fail_len);
@@ -1556,6 +1559,8 @@ where
     }
 
     fn grammar_try_from_hist_stows(&mut self,cur :&Work<'g,P,TS>) -> bool {
+
+        let GrammarNode::NonTerm(non_term)=cur.grammar.as_ref() else {return false;};
         //
         if !cur.user || !cur.first {return false;} // !(cur.from_user && cur.is_first)
         // if cur.hist_stows_stk_len==0 {return false;}
@@ -1583,7 +1588,9 @@ where
         // }
 
         //
-        if stow_success.grammar!=cur.grammar { return false; }
+        // if stow_success.grammar!=cur.grammar { return false; }
+        if stow_success.non_term!=*non_term { return false; }
+
         //
         // self.stk.truncate(cur.success_len);
 
@@ -2006,11 +2013,14 @@ where
                 .find(|x|{
                 // x.is_first &&
                 x.stow_len==last.stow_len
-                && (x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many())
+                // && (x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many())
             }) {
                 // // self.hist_fails[last.hist_fails_len-1].grammar=drained_hist_new.grammar.clone();
                 // hist_stow.fail_val=Some(TempHistFail{grammar:drained_hist_new.grammar.clone()});
-                hist_stow.fail=Some(TempStowFail { grammar: drained_hist_new.grammar.clone() });
+                hist_stow.fail=Some(TempStowFail {
+                    // grammar: drained_hist_new.grammar.clone()
+                    non_term:drained_hist_new.non_term.clone(),
+                });
             }
 
             // self.hist_news.truncate(last.stow_new_len);
@@ -2056,8 +2066,8 @@ where
                 .find(|x|{
 
                 // x.is_first
-                 x.stow_len==last.stow_len &&
-                (x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many())
+                 x.stow_len==last.stow_len
+                //  && (x.grammar.is_non_term() || x.grammar.is_and() || x.grammar.is_many())
 
             });
 
@@ -2068,7 +2078,10 @@ where
 
                 //
                 if self.debug {
-                    println!("------ hist_stows_set {}: {:?}", self.stows.len(), drained_stow_new.grammar, );
+                    println!("------ hist_stows_set {}: {:?}", self.stows.len(),
+                    // drained_stow_new.grammar,
+                    drained_stow_new.non_term,
+                 );
                 }
                 // println!("------ stowed {:?}",drained_hist_new2.grammar.clone());
 
@@ -2127,7 +2140,8 @@ where
                 // });
 
                 hist_stow.success=Some(TempStowSuccess {
-                    grammar: drained_stow_new.grammar.clone(),
+                    // grammar: drained_stow_new.grammar.clone(),
+                    non_term:drained_stow_new.non_term.clone(),
                     tokens_after: cur_tokens.clone(),
                     stow_groups_end: self.stow_groups.len(),
                     // stow_prevs_end: self.hist_stows_prevs.len(),
@@ -2228,6 +2242,7 @@ where
 
 
     fn hist_news_add(&mut self,cur:&Work<'g,P,TS>) -> usize {
+        let GrammarNode::NonTerm(non_term)=cur.grammar.as_ref() else {panic!("");};
         // return self.hist_news.len();
         //
         // let GrammarNode::Stow(g, )=cur.grammar.as_ref() else{panic!("");};
@@ -2246,7 +2261,8 @@ where
         { //ignore grammars added by walker
             // let grammar=if  let GrammarNode::Stow(g, )=cur.grammar.as_ref() {g.clone()}else{cur.grammar.clone()};
             self.stow_news.push(TempStowNew {
-                grammar:cur.grammar.clone(),
+                // grammar:cur.grammar.clone(),
+                non_term:non_term.clone(),
                 tokens_start: cur.tokens.clone(),
                 // group_ind: cur.group_ind,
                 group_len:cur.group_len,
@@ -2995,7 +3011,7 @@ where
                     println!("        hist_news: len={stow_new_len} ({})",self.stow_news.len(),);
 
                     for (i,h) in self.stow_news.iter().enumerate() {
-                        println!("            {i}:t{}: {:?}",h.tokens_start.inds2().start,h.grammar)
+                        println!("            {i}:t{}: {:?}",h.tokens_start.inds2().start,h.non_term)
                     }
 
                     //
@@ -3003,8 +3019,8 @@ where
 
                     for (i,x) in self.stows.iter().enumerate().rev() {
                         println!("            {i}:t{}: s:{} : f:{} ",x.tokens_start_ind,
-                            x.success.as_ref().map(|v|format!("{:?}",v.grammar)).unwrap_or_else(||"_".to_string()),
-                            x.fail.as_ref().map(|v|format!("{:?}",v.grammar)).unwrap_or_else(||"_".to_string()),
+                            x.success.as_ref().map(|v|format!("{:?}",v.non_term)).unwrap_or_else(||"_".to_string()),
+                            x.fail.as_ref().map(|v|format!("{:?}",v.non_term)).unwrap_or_else(||"_".to_string()),
                         );
 
                     }
