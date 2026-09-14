@@ -13,7 +13,7 @@ TODO
 */
 
 
-#[derive(Clone,Hash,PartialEq,Eq,)]
+#[derive(Clone,PartialEq,Eq,)]
 pub enum GrammarNode<'g,P>
 where
     P:Clone, //+core::hash::Hash+PartialEq+Eq,
@@ -55,7 +55,7 @@ where
 
 impl<'g,P> GrammarNode<'g,P>
 where
-    P:Clone+core::hash::Hash+PartialEq+Eq,
+    P:Clone, //+core::hash::Hash+PartialEq+Eq,
 {
     pub fn many0(self) -> GrammarNode<'g,P> {
         Self::Many(self.into())
