@@ -763,7 +763,7 @@ impl<'a> Ast<'a> {
         Ok(())
     }
     pub fn try_call_method(&mut self,name:&'a str,params_num:usize) -> Result<(),AstError> {
-        println!("---- {} < {}",self.last_node().stack_pushed_num , params_num);
+        // println!("---- {} < {}",self.last_node().stack_pushed_num , params_num);
 
         if self.last_node().stack_pushed_num < params_num {
             return Err(AstError::NotEnoughParamsOnStack);
@@ -797,7 +797,7 @@ impl<'a> Ast<'a> {
     // }
     pub fn call_result(&mut self,params_num:usize) -> Result<(),AstError> {
         //uses and pops off params_num amount off stack
-        println!("---- {} < {}",self.last_node().stack_pushed_num , params_num);
+        // println!("---- {} < {}",self.last_node().stack_pushed_num , params_num);
 
         if self.last_node().stack_pushed_num < params_num {
             return Err(AstError::NotEnoughParamsOnStack);

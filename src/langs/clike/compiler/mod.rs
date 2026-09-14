@@ -157,7 +157,7 @@ impl Compiler {
 
         //
         println!("-----------------");
-        {
+        if false {
 
             let walk2=walker.get_walk(true);
 
@@ -188,7 +188,7 @@ impl Compiler {
         let walk=walker.get_walk(false);
 
         println!("===---===");
-        println!("{}",walk.root());
+        // println!("{}",walk.root());
         // {
         //     enum Thing<'g,TS>
         //     where
@@ -227,11 +227,12 @@ impl Compiler {
 
         // return Ok(BuildT::new(Build::default()));
 
+        let start_time = std::time::Instant::now();
         //
         let mut builder = builder::Builder::new();
         // // // // builder.eval(parsed.root_block_primitive().get_block().unwrap().primitives());
         for g in walk.root().children() {
-            println!("={:?}",g.name());
+            // println!("={:?}",g.name());
 
             builder.eval(g);
         }
@@ -271,8 +272,12 @@ impl Compiler {
             return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
         }
 
+        //
+        let time_elapsed=start_time.elapsed().as_secs_f64();
+        println!("Time elapsed2: {time_elapsed:?}" ,);
+        //
         // if print_ast { ast.print(); }
-        ast.print();
+        // ast.print();
 
         //
         let kept_src=if keep_src {Some(src.clone())} else {None};
@@ -290,7 +295,7 @@ impl Compiler {
         top_group:WalkGroupContainer<'g,TokenIterContainer<'t>>,
         next_anon_id:&mut usize,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
-        println!("{:?}:",top_group.name());
+        // println!("{:?}:",top_group.name());
 
         *next_anon_id+=1;
         builder.set_anon_scope(*next_anon_id);

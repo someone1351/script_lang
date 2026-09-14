@@ -64,13 +64,13 @@ pub struct TempExpect1<'g, TS> {
 }
 
 #[derive(Clone, )]
-pub struct TempStowNew<'g,TS>
+pub struct TempStowNew<NT,TS>
 where
     // P:Clone+core::hash::Hash+PartialEq+Eq,
     TS:Clone,
 {
     // pub grammar:Rc<GrammarNode<'g,P>>,
-    pub non_term:&'g str,
+    pub non_term:NT,
     pub tokens_start:TS,
     pub group_len:usize,
     pub stow_len:usize,
@@ -91,25 +91,25 @@ pub enum TempStowWas<'g> {
 
 
 // #[derive(Clone,)]
-pub struct TempStowSuccess<'g,TS>
+pub struct TempStowSuccess<'g,NT,TS>
 where
     // P:Clone+core::hash::Hash+PartialEq+Eq,
     TS: Clone,
 {
     // pub grammar: Rc<GrammarNode<'g,P>>,
-    pub non_term : &'g str,
+    pub non_term : NT,
     pub tokens_after:TS,
     pub stow_groups_end:usize,
     pub was:TempStowWas<'g>,
     pub trim:bool,
 }
 // #[derive(Clone,)]
-pub struct TempStowFail<'g>
+pub struct TempStowFail<NT>
 // where
 //     P:Clone+core::hash::Hash+PartialEq+Eq,
 {
     // pub grammar:Rc<GrammarNode<'g,P>>,
-    pub non_term : &'g str,
+    pub non_term : NT,
 }
 
 // #[derive(Clone,Debug,)]
@@ -128,7 +128,7 @@ pub struct TempStowFail<'g>
 
 
 // #[derive(Clone,)]
-pub struct TempStow<'g,TS>
+pub struct TempStow<'g,NT,TS>
 where
 
     // P:Clone+core::hash::Hash+PartialEq+Eq,
@@ -138,8 +138,8 @@ where
     // pub val : TempStowVal<'t,'g>,
     pub tokens_start_ind:usize,
 
-    pub success : Option<TempStowSuccess<'g,TS>>,
-    pub fail : Option<TempStowFail<'g,>>,
+    pub success : Option<TempStowSuccess<'g,NT,TS>>,
+    pub fail : Option<TempStowFail<NT>>,
 }
 
 #[derive(Clone)]
@@ -165,7 +165,7 @@ where
 // }
 
 #[derive(Clone)]
-pub struct Work<'g,P,TS>
+pub struct Work<'g,NT,P,TS>
 where
 
     P:Clone, //+core::hash::Hash+PartialEq+Eq,
@@ -173,7 +173,7 @@ where
     // I: Iterator<Item=T>+Clone,
     TS:Clone,
 {
-    pub grammar:Rc<GrammarNode<'g,P>>,
+    pub grammar:Rc<GrammarNode<'g,NT,P>>,
     // pub tokens:TokenIterContainer<'t>,
     pub tokens:TS,
 

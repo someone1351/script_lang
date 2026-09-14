@@ -14,25 +14,25 @@ TODO
 
 
 // #[derive(PartialEq,Eq,)]
-pub enum GrammarNode<'g,P>
+pub enum GrammarNode<'g,NT,P>
 where
     P:Clone, //+core::hash::Hash+PartialEq+Eq,
 {
-    Many(Rc<GrammarNode<'g,P>>),
-    And(Box<[Rc<GrammarNode<'g,P>>]>,usize), //stow_first, error_ind
-    Or( Box<[Rc<GrammarNode<'g,P>>]>,), //should store reversed?
-    NonTerm(&'g str),
+    Many(Rc<GrammarNode<'g,NT,P>>),
+    And(Box<[Rc<GrammarNode<'g,NT,P>>]>,usize), //stow_first, error_ind
+    Or( Box<[Rc<GrammarNode<'g,NT,P>>]>,), //should store reversed?
+    NonTerm(NT),
 
-    Group(Rc<GrammarNode<'g,P>>,&'g str,),
-    Expect(Rc<GrammarNode<'g,P>>, &'g str,),
-    // NoExpect(Rc<GrammarNode<'g,P>>, ),
-    // Stow(Rc<GrammarNode<'g,P>>),
+    Group(Rc<GrammarNode<'g,NT,P>>,&'g str,),
+    Expect(Rc<GrammarNode<'g,NT,P>>, &'g str,),
+    // NoExpect(Rc<GrammarNode<'g,NT,P>>, ),
+    // Stow(Rc<GrammarNode<'g,NT,P>>),
 
-    Was(Rc<GrammarNode<'g,P>>, &'g str),
-    // Had(Rc<GrammarNode<'g,P>>, &'g str),
+    Was(Rc<GrammarNode<'g,NT,P>>, &'g str),
+    // Had(Rc<GrammarNode<'g,NT,P>>, &'g str),
     Had(&'g str),
 
-    // Prev(Rc<GrammarNode<'g,P>>),
+    // Prev(Rc<GrammarNode<'g,NT,P>>),
 
     Primitive(P),
     // String,
@@ -48,13 +48,14 @@ where
     Error,
 
 
-    // Stow(Rc<GrammarNode<'g,P>>),
+    // Stow(Rc<GrammarNode<'g,NT,P>>),
 
-    // Mark(Rc<GrammarNode<'g,P>>),
+    // Mark(Rc<GrammarNode<'g,NT,P>>),
 }
 
-impl<'g,P> Clone for GrammarNode<'g,P>
+impl<'g,NT,P> Clone for GrammarNode<'g,NT,P>
 where
+    NT:Clone,
     P:Clone,
 {
     fn clone(&self) -> Self {
@@ -74,30 +75,31 @@ where
     }
 }
 
-impl<'g,P> GrammarNode<'g,P>
+impl<'g,NT,P> GrammarNode<'g,NT,P>
 where
+    NT:Clone,
     P:Clone, //+core::hash::Hash+PartialEq+Eq,
 {
-    pub fn many0(self) -> GrammarNode<'g,P> {
+    pub fn many0(self) -> GrammarNode<'g,NT,P> {
         Self::Many(self.into())
     }
-    pub fn many1(self) -> GrammarNode<'g,P> {
+    pub fn many1(self) -> GrammarNode<'g,NT,P> {
         [self.clone(),self.many0(),].and()
     }
-    pub fn opt(self) -> GrammarNode<'g,P> {
+    pub fn opt(self) -> GrammarNode<'g,NT,P> {
         [self.into(),Self::Always].or()
     }
-    pub fn group(self,name: &'g str) -> GrammarNode<'g,P> {
+    pub fn group(self,name: &'g str) -> GrammarNode<'g,NT,P> {
         Self::Group(self.into(),name)
     }
-    pub fn expect(self,name: &'g str,) -> GrammarNode<'g,P> {
+    pub fn expect(self,name: &'g str,) -> GrammarNode<'g,NT,P> {
         Self::Expect(self.into(),name)
     }
-    pub fn no_expect(self,) -> GrammarNode<'g,P> {
+    pub fn no_expect(self,) -> GrammarNode<'g,NT,P> {
         // Self::NoExpect(self.into(),)
         self.expect("")
     }
-    // pub fn expected(self,) -> GrammarNode<'g,P> {
+    // pub fn expected(self,) -> GrammarNode<'g,NT,P> {
     //     let name = match &self {
     //         GrammarNode::NonTerm(s) => s,
     //         GrammarNode::Had(s) => s,
@@ -122,20 +124,20 @@ where
     //         Self::Expect(self.into(),name)
     //     }
     // }
-    // // pub fn stow(self) -> GrammarNode<'g,P> {
+    // // pub fn stow(self) -> GrammarNode<'g,NT,P> {
     // //     Self::Stow(self.into())
     // // }
-    // // pub fn prev(self) -> GrammarNode<'g,P> {
+    // // pub fn prev(self) -> GrammarNode<'g,NT,P> {
     // //     Self::Prev(self.into())
     // // }
-    pub fn was(self,name: &'g str,) -> GrammarNode<'g,P> {
+    pub fn was(self,name: &'g str,) -> GrammarNode<'g,NT,P> {
         Self::Was(self.into(),name)
     }
-    pub fn had(self,name: &'g str,) -> GrammarNode<'g,P> {
+    pub fn had(self,name: &'g str,) -> GrammarNode<'g,NT,P> {
         // Self::Had(self.into(),name)
         [self.into(),Self::Had(name)].and()
     }
-    // pub fn stow(self) -> GrammarNode<'g,P> {
+    // pub fn stow(self) -> GrammarNode<'g,NT,P> {
     //     Self::Stow(self.into())
     // }
     pub fn is_many(&self) -> bool {
@@ -153,13 +155,13 @@ where
     // pub fn is_eol(&self) -> bool {
     //     if let GrammarNode::Eol=self {true} else {false}
     // }
-    pub fn get_non_term_name(&self) -> Option<&'g str> {
-        if let Self::NonTerm(n)=self {
-            Some(n)
-        } else {
-            None
-        }
-    }
+    // pub fn get_non_term_name(&self) -> Option<&'g str> {
+    //     if let Self::NonTerm(n)=self {
+    //         Some(n)
+    //     } else {
+    //         None
+    //     }
+    // }
     pub fn is_non_term(&self) -> bool {
         if let Self::NonTerm(..)=self {
             true
@@ -236,29 +238,29 @@ where
 }
 
 //todo have array stored in rev for or/and
-pub trait GrammarArrayTrait<'g,P>
+pub trait GrammarArrayTrait<'g,NT,P>
 
 where
     P:Clone, //+core::hash::Hash+PartialEq+Eq,
 {
-    fn and(self) -> GrammarNode<'g,P>;
-    fn and1(self) -> GrammarNode<'g,P>;
-    fn or(self) -> GrammarNode<'g,P>;
+    fn and(self) -> GrammarNode<'g,NT,P>;
+    fn and1(self) -> GrammarNode<'g,NT,P>;
+    fn or(self) -> GrammarNode<'g,NT,P>;
 }
 
-impl<'g,P,const N: usize> GrammarArrayTrait <'g,P> for [GrammarNode<'g,P>; N]
+impl<'g,NT,P,const N: usize> GrammarArrayTrait <'g,NT,P> for [GrammarNode<'g,NT,P>; N]
 where
     P:Clone, //+core::hash::Hash+PartialEq+Eq,
 {
-    fn and(self) -> GrammarNode<'g,P> {
+    fn and(self) -> GrammarNode<'g,NT,P> {
         // GrammarNode::And(self.into())
         GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),0)
     }
-    fn and1(self) -> GrammarNode<'g,P> {
+    fn and1(self) -> GrammarNode<'g,NT,P> {
         // GrammarNode::And(self.into())
         GrammarNode::And(self.into_iter().map(|x|x.into()).collect(),1)
     }
-    fn or(self) -> GrammarNode<'g,P> {
+    fn or(self) -> GrammarNode<'g,NT,P> {
         // GrammarNode::Or(self.into())
         GrammarNode::Or(self.into_iter().map(|x|x.into()).collect(),)
     }
@@ -269,10 +271,10 @@ where
 // where
 //     P:Clone+core::hash::Hash+PartialEq+Eq,
 // {
-//     fn non_term(self) -> GrammarNode<'g,P>;
-//     // fn symbol(self) -> GrammarNode<'g,P>;
-//     // fn keyword(self) -> GrammarNode<'g,P>;
-//     // // fn had(self) -> GrammarNode<'g,P>;
+//     fn non_term(self) -> GrammarNode<'g,NT,P>;
+//     // fn symbol(self) -> GrammarNode<'g,NT,P>;
+//     // fn keyword(self) -> GrammarNode<'g,NT,P>;
+//     // // fn had(self) -> GrammarNode<'g,NT,P>;
 // }
 
 // impl<'g,P> GrammarStrTrait <'g,P> for &'g str
@@ -280,16 +282,16 @@ where
 // where
 //     P:Clone+core::hash::Hash+PartialEq+Eq,
 // {
-//     fn non_term(self) -> GrammarNode<'g,P> {
+//     fn non_term(self) -> GrammarNode<'g,NT,P> {
 //         GrammarNode::NonTerm(self)
 //     }
-//     // fn symbol(self) -> GrammarNode<'g,P> {
+//     // fn symbol(self) -> GrammarNode<'g,NT,P> {
 //     //     GrammarNode::Symbol(self)
 //     // }
-//     // fn keyword(self) -> GrammarNode<'g,P> {
+//     // fn keyword(self) -> GrammarNode<'g,NT,P> {
 //     //     GrammarNode::Keyword(self)
 //     // }
-//     // // fn had(self) -> GrammarNode<'g,P> {
+//     // // fn had(self) -> GrammarNode<'g,NT,P> {
 //     // //     GrammarNode::Had(self)
 //     // // }
 // }
@@ -319,9 +321,10 @@ where
 // }
 
 
-impl<'g,P> Debug for GrammarNode<'g,P>
+impl<'g,NT,P> Debug for GrammarNode<'g,NT,P>
 
 where
+    NT:Debug,
     P:Clone+Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

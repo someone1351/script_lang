@@ -84,7 +84,11 @@ pub fn test_compile<P:AsRef<Path>>(path:P) {
 }
 
 fn main() {
-    test_script("scripts/clike/test18.script",true,false);
+
+    let start_time = std::time::Instant::now();
+    test_script("scripts/clike/test18.script",false,false);
     // test_compile("scripts/clike/test16.script");
     // test_compile("scripts/clike/test17.script");
+    let time_elapsed=start_time.elapsed().as_secs_f64();
+    println!("Time elapsed3: {time_elapsed:?}" ,);
 }

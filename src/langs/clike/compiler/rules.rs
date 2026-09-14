@@ -22,7 +22,7 @@ pub enum GrammarPrimitive<'g> {
 
 
 impl<'g> GrammarPrimitive<'g> {
-    fn to(self) -> GrammarNode<'g,GrammarPrimitive<'g>> {
+    fn to<NT>(self) -> GrammarNode<'g,NT,GrammarPrimitive<'g>> {
         GrammarNode::Primitive(self)
     }
 }
@@ -59,7 +59,7 @@ pub fn is_keyword(n:& str) -> bool {
     }
 }
 
-pub fn get_non_term<'g>(n:& str) -> Option<Rc<GrammarNode<'g,GrammarPrimitive<'g>>>> {
+pub fn get_non_term<'g>(n:& str) -> Option<Rc<GrammarNode<'g,&'g str,GrammarPrimitive<'g>>>> {
     /*
     this:
         if(cond) {1} else {2}
