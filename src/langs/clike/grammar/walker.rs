@@ -87,7 +87,7 @@ use std::fmt::Debug;
 
 pub struct GrammarWalker<'g,P,TS,G>
 where
-    P:Clone+core::hash::Hash+PartialEq+Eq,
+    P:Clone, //+core::hash::Hash+PartialEq+Eq,
     TS:Clone,
     G: Fn(&str)->Option<Rc<GrammarNode<'g,P>>>,
 {
@@ -123,7 +123,7 @@ where
 
 impl<'g,P,TS,G> GrammarWalker<'g,P,TS,G>
 where
-    P:Clone+core::hash::Hash+PartialEq+Eq+Debug+GrammarPrimitiveTrait,
+    P:Clone+Debug+GrammarPrimitiveTrait,
     TS: Clone+TokenIterTrait+Debug + TokenIterGetTrait<P> ,
     G: Fn(&str)->Option<Rc<GrammarNode<'g,P>>>,
 {

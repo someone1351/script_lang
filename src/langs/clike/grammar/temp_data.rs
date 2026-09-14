@@ -168,7 +168,7 @@ where
 pub struct Work<'g,P,TS>
 where
 
-    P:Clone+core::hash::Hash+PartialEq+Eq,
+    P:Clone, //+core::hash::Hash+PartialEq+Eq,
     // T:Clone,
     // I: Iterator<Item=T>+Clone,
     TS:Clone,
