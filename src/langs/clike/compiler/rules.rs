@@ -59,7 +59,69 @@ pub fn is_keyword(n:& str) -> bool {
     }
 }
 
-pub fn get_non_term<'g>(n:& str) -> Option<Rc<GrammarNode<'g,&'g str,GrammarPrimitive<'g>>>> {
+#[derive(Debug,Clone,Copy,Hash,PartialEq, Eq)]
+pub enum MyNonTerm {
+    Start,
+    Stmts,
+    Stmt,
+    Var,
+    VarEntry,
+    Set,
+    SetVar,
+    SetField,
+    SetIndex,
+    Func,
+    Lambda,
+    FuncParams,
+    FuncParams2,
+    FuncVariadic,
+    FuncNotVariadic,
+    Format,
+    Print,
+    Println,
+    FormatParams,
+    If,
+    While,
+    For,
+    Continue,
+    Break,
+    Return,
+    Include,
+    Expr,
+    Or1,
+    Xor,
+    And1,
+    Compare,
+    Factor,
+    Term,
+    Prefixes,
+    Postfixes,
+    Val,
+    Array,
+    Dict,
+    DictVal,
+    Block,
+    FieldIndexCall,
+    Call,
+    Field,
+    Index,
+    Primitive1,
+    End,
+    ForOp,
+    ForToOp,
+    SetOp,
+    SetSubOp,
+    FactorOp,
+    TermOp,
+    LCurly,
+    RCurly,
+    LSquare,
+    RSquare,
+    LParen,
+    RParen,
+}
+
+pub fn get_non_term<'g>(n:MyNonTerm) -> Option<Rc<GrammarNode<'g,MyNonTerm,GrammarPrimitive<'g>>>> {
     /*
     this:
         if(cond) {1} else {2}
@@ -78,307 +140,292 @@ pub fn get_non_term<'g>(n:& str) -> Option<Rc<GrammarNode<'g,&'g str,GrammarPrim
     */
     use GrammarPrimitive::*;
     use GrammarNode::*;
+    use MyNonTerm::*;
 
 
     Some(Rc::new(match n {
         // "start" => [
-        //     NonTerm("val").many0(),
+        //     NonTerm(Val).many0(),
         //     NonTerm("end"),
         // ].and(),
 
-        "mynum" => Primitive(Int).group("n"),
-        "start2" => [
-            [NonTerm("mynum"),NonTerm("mynum")].and().group("a"),
-            NonTerm("mynum").group("b").group("b"),
-        ].or(),
+        // "mynum" => Primitive(Int).group("n"),
+        // "start2" => [
+        //     [NonTerm("mynum"),NonTerm("mynum")].and().group("a"),
+        //     NonTerm("mynum").group("b").group("b"),
+        // ].or(),
         //
-        "start" => NonTerm("stmts"),
+        Start => NonTerm(Stmts),
 
-        "stmts" => [
-            NonTerm("end").opt(),
-            NonTerm("stmt"),
+        Stmts => [
+            NonTerm(End).opt(),
+            NonTerm(Stmt),
             [
-                NonTerm("end"),
-                NonTerm("stmt"),
+                NonTerm(End),
+                NonTerm(Stmt),
             ].and().many0(),
-            NonTerm("end").opt(),
+            NonTerm(End).opt(),
         ].and().opt(),
 
-        "stmt" => [
-            NonTerm("var"),
+        Stmt => [
+            NonTerm(Var),
 
-            NonTerm("for"),
-            NonTerm("while"),
-            NonTerm("func"),
+            NonTerm(For),
+            NonTerm(While),
+            NonTerm(Func),
 
-            NonTerm("break"),
-            NonTerm("continue"),
-            NonTerm("return"),
+            NonTerm(Break),
+            NonTerm(Continue),
+            NonTerm(Return),
 
-            NonTerm("include"),
+            NonTerm(Include),
 
-            NonTerm("format"),
-            NonTerm("print"),
-            NonTerm("println"),
+            NonTerm(Format),
+            NonTerm(Print),
+            NonTerm(Println),
 
-            NonTerm("set"),
-            NonTerm("expr"),
+            NonTerm(Set),
+            NonTerm(Expr),
 
 
-            // NonTerm("val"),
+            // NonTerm(Val),
         ].or() //.expect("stmt")
         ,
 
-        "var" => [
+        Var => [
             Keyword("var").to(),
-            NonTerm("var_entry"),
-            [ Symbol(",").to(), NonTerm("var_entry"), ].and().many0(),
+            NonTerm(VarEntry),
+            [ Symbol(",").to(), NonTerm(VarEntry), ].and().many0(),
             // Symbol(",").opt(),
         ].and(),
 
-        "var_entry" => [
+        VarEntry => [
             Identifier.to().group("name"),
-            [Symbol("=").to(), NonTerm("expr")].and().opt(),
+            [Symbol("=").to(), NonTerm(Expr)].and().opt(),
         ].and().group("var"),
 
-        "set" => [
-            NonTerm("set_var"),
-            NonTerm("set_field"),
-            NonTerm("set_index"),
+        Set => [
+            NonTerm(SetVar),
+            NonTerm(SetField),
+            NonTerm(SetIndex),
         ].or(),
 
-        "set_var" => [
+        SetVar => [
             Identifier.to().group("name"),
-            NonTerm("set_op"),
-            NonTerm("expr"),
+            NonTerm(SetOp),
+            NonTerm(Expr),
         ].and().group("set_var"),
 
-        "set_field" => [
-            NonTerm("postfixes").had("field"),
-            NonTerm("set_op"),
-            NonTerm("expr"),
+        SetField => [
+            NonTerm(Postfixes).had("field"),
+            NonTerm(SetOp),
+            NonTerm(Expr),
         ].and().group("set_field"),
 
-        "set_index" => [
-            NonTerm("postfixes").had("index"),
-            NonTerm("set_op"),
-            NonTerm("expr"),
+        SetIndex => [
+            NonTerm(Postfixes).had("index"),
+            NonTerm(SetOp),
+            NonTerm(Expr),
         ].and().group("set_field"),
 
-        "func" => [
+        Func => [
             Keyword("fn").to(),
             Identifier.to().group("name"),
-            NonTerm("func_params"),
-            NonTerm("block"),
+            NonTerm(FuncParams),
+            NonTerm(Block),
         ].and().group("func"),
 
-        "lambda" => [
+        Lambda => [
             Keyword("fn").to(),
-            NonTerm("func_params"),
-            NonTerm("block"),
+            NonTerm(FuncParams),
+            NonTerm(Block),
         ].and().group("lambda"),
 
-        "func_params" => [
-            NonTerm("lparen"),
+        FuncParams => [
+            NonTerm(LParen),
             [
                 [
-                    [ NonTerm("func_params2"), NonTerm("func_variadic"), ].and(),
-                    [ NonTerm("func_params2"), NonTerm("func_not_variadic"), ].and(),
+                    [ NonTerm(FuncParams2), NonTerm(FuncVariadic), ].and(),
+                    [ NonTerm(FuncParams2), NonTerm(FuncNotVariadic), ].and(),
                     [ Always.group("params"), Always.group("not_variadic"), ].and(),
                 ].or(),
-                NonTerm("rparen"),
+                NonTerm(RParen),
             ].and().expect("closing bracket"),
         ].and(),
 
-        "func_params2" => [
+        FuncParams2 => [
             Identifier.to().group("param").expect("param"),
             [ Symbol(",").to(), Identifier.to().group("param").expect("param"), ].and().many0(),
         ].and().group("params"),
 
-        "func_variadic" => [Symbol(".").to(),Symbol(".").to(),Symbol(".").to(),].and().group("variadic"),
-        "func_not_variadic" => Symbol(",").to().opt().group("not_variadic"),
+        FuncVariadic => [Symbol(".").to(),Symbol(".").to(),Symbol(".").to(),].and().group("variadic"),
+        FuncNotVariadic => Symbol(",").to().opt().group("not_variadic"),
 
         // "ellipsis" => [Symbol("."),Symbol("."),Symbol("."),].and().group("ellipsis"),
 
-        "format" => [Keyword("format").to(),NonTerm("format_params"),].and(),
-        "print" => [Keyword("print").to(),NonTerm("format_params"),].and().group("print"),
-        "println" => [Keyword("println").to(),NonTerm("format_params"),].and().group("println"),
+        Format => [Keyword("format").to(),NonTerm(FormatParams),].and(),
+        Print => [Keyword("print").to(),NonTerm(FormatParams),].and().group("print"),
+        Println => [Keyword("println").to(),NonTerm(FormatParams),].and().group("println"),
 
-        "format_params" => [
-            NonTerm("lparen"),
+        FormatParams => [
+            NonTerm(LParen),
             [
                 [
-                    [String.to().group("string"), NonTerm("expr"),].or(),
-                    [Symbol(",").to(), NonTerm("expr"),].and().many0(),
+                    [String.to().group("string"), NonTerm(Expr),].or(),
+                    [Symbol(",").to(), NonTerm(Expr),].and().many0(),
                     Symbol(",").to().opt(),
                 ].and().opt(),
-                NonTerm("rparen"),
+                NonTerm(RParen),
             ].and().expect("closing bracket"),
         ].and().group("format"),
 
-        "if" => [
-            [Keyword("if").to(), NonTerm("expr"), NonTerm("block"), ].and().group("cond"),
-            [Keyword("elif").to(),NonTerm("expr"), NonTerm("block"), ].and().group("cond").many0(),
-            [Keyword("else").to(),NonTerm("block"),].and().group("else").opt(),
+        If => [
+            [Keyword("if").to(), NonTerm(Expr), NonTerm(Block), ].and().group("cond"),
+            [Keyword("elif").to(),NonTerm(Expr), NonTerm(Block), ].and().group("cond").many0(),
+            [Keyword("else").to(),NonTerm(Block),].and().group("else").opt(),
         ].and().group("if"),
 
-        "while" => [
+        While => [
             Keyword("while").to(),
-            NonTerm("expr"),
-            NonTerm("block"),
+            NonTerm(Expr),
+            NonTerm(Block),
         ].and().group("while"),
 
-        "for" => [
+        For => [
             Keyword("for").to(),
             Identifier.to().group("name"),
             Keyword("in").to(),
-            NonTerm("expr"),
-            NonTerm("for_op"),
-            NonTerm("expr"),
-            NonTerm("block"),
+            NonTerm(Expr),
+            NonTerm(ForOp),
+            NonTerm(Expr),
+            NonTerm(Block),
         ].and().group("for"),
 
-        "continue" => Keyword("continue").to().group("continue"),
-        "break" => Keyword("break").to().group("break"),
-        "return" => [Keyword("return").to(), NonTerm("expr").opt(),].and().group("return"),
+        Continue => Keyword("continue").to().group("continue"),
+        Break => Keyword("break").to().group("break"),
+        Return => [Keyword("return").to(), NonTerm(Expr).opt(),].and().group("return"),
 
-        "include" => [Keyword("include").to(),String.to().group("include"),].and(),
+        Include => [Keyword("include").to(),String.to().group("include"),].and(),
 
-        "expr" => NonTerm("or").group("expr").expect("expr"),
-        // "expr" => NonTerm("prefixes").group("expr").expect("expr"),
+        Expr => NonTerm(Or1).group("expr").expect("expr"),
+        // "expr" => NonTerm(Prefixes).group("expr").expect("expr"),
 
-        "or" => [
+        Or1 => [
             [
-                NonTerm("xor"),
+                NonTerm(Xor),
                 [
                     [Symbol("|").to(),Symbol("|").to().expect("or")].and(),
-                    NonTerm("xor"),
+                    NonTerm(Xor),
                 ].and().many1(),
             ].and().group("or"),
-            NonTerm("xor"),
+            NonTerm(Xor),
         ].or(),
 
-        "xor" => [
+        Xor => [
             [
-                NonTerm("and"),
-                [ Symbol("^").to(), NonTerm("and"), ].and().many1(),
+                NonTerm(And1),
+                [ Symbol("^").to(), NonTerm(And1), ].and().many1(),
             ].and().group("xor"),
-            NonTerm("and"),
+            NonTerm(And1),
         ].or(),
 
-        "and" => [
+        And1 => [
             [
-                NonTerm("compare"),
-                [ Symbol("&").to(),Symbol("&").to().expect("and"), NonTerm("compare"), ].and().many1(),
+                NonTerm(Compare),
+                [ Symbol("&").to(),Symbol("&").to().expect("and"), NonTerm(Compare), ].and().many1(),
             ].and().group("and"),
-            NonTerm("compare"),
+            NonTerm(Compare),
         ].or(),
 
         // "compare" => [
-        //     [ NonTerm("factor"), NonTerm("compare_op"), NonTerm("factor"), ].and().group("compare"),
-        //     NonTerm("factor"),
+        //     [ NonTerm(Factor), NonTerm("compare_op"), NonTerm(Factor), ].and().group("compare"),
+        //     NonTerm(Factor),
         // ].or(),
 
-        "compare" => [
-            [NonTerm("factor"), Symbol("<").to(), NonTerm("factor"),].and().group("lt"),
-            [NonTerm("factor"), Symbol(">").to(), NonTerm("factor"),].and().group("gt"),
-            [NonTerm("factor"), Symbol("<").to(),Symbol("=").to(), NonTerm("factor"),].and().group("le"),
-            [NonTerm("factor"), Symbol(">").to(),Symbol("=").to(), NonTerm("factor"),].and().group("ge"),
-            [NonTerm("factor"), Symbol("=").to(),Symbol("=").to().expect("eq"), NonTerm("factor"),].and().group("eq"),
-            [NonTerm("factor"), Symbol("!").to(),Symbol("=").to().expect("ne"), NonTerm("factor"),].and().group("ne"),
-            NonTerm("factor"),
+        Compare => [
+            [NonTerm(Factor), Symbol("<").to(), NonTerm(Factor),].and().group("lt"),
+            [NonTerm(Factor), Symbol(">").to(), NonTerm(Factor),].and().group("gt"),
+            [NonTerm(Factor), Symbol("<").to(),Symbol("=").to(), NonTerm(Factor),].and().group("le"),
+            [NonTerm(Factor), Symbol(">").to(),Symbol("=").to(), NonTerm(Factor),].and().group("ge"),
+            [NonTerm(Factor), Symbol("=").to(),Symbol("=").to().expect("eq"), NonTerm(Factor),].and().group("eq"),
+            [NonTerm(Factor), Symbol("!").to(),Symbol("=").to().expect("ne"), NonTerm(Factor),].and().group("ne"),
+            NonTerm(Factor),
         ].or(),
 
-        "factor" => [
+        Factor => [
             [
-                NonTerm("term"),
-                [ NonTerm("factor_op"), NonTerm("term"), ].and().many1(),
+                NonTerm(Term),
+                [ NonTerm(FactorOp), NonTerm(Term), ].and().many1(),
             ].and().group("factor"),
-            NonTerm("term"),
+            NonTerm(Term),
         ].or(),
 
-        "term" => [
+        Term => [
             [
-                NonTerm("prefixes"),
-                [NonTerm("term_op"),NonTerm("prefixes"),].and().many1(),
+                NonTerm(Prefixes),
+                [NonTerm(TermOp),NonTerm(Prefixes),].and().many1(),
             ].and().group("term"),
-            NonTerm("prefixes"),
+            NonTerm(Prefixes),
         ].or(),
 
-        // "factor" => [
-        //     NonTerm("term"),
-        //     [
-        //         [ Symbol("+"), NonTerm("term"), ].and().group("add"),
-        //         [ Symbol("-"), NonTerm("term"), ].and().group("sub"),
-        //     ].or().many0()
-        // ].and(),
 
-        // "term" => [
-        //     NonTerm("val"),
-        //     [
-        //         [ Symbol("*"), NonTerm("val"), ].and().group("mul"),
-        //         [ Symbol("/"), NonTerm("val"), ].and().group("div"),
-        //         [ Symbol("%"), NonTerm("val"), ].and().group("mod"),
-        //     ].or().many0()
-        // ].and(),
-
-        "prefixes" => [
+        Prefixes => [
             [
                 [
                     Symbol("+").to(),
                     Symbol("-").to().group("neg"),
                     Symbol("!").to().group("not"),
                 ].or().many1().group("prefixes"),
-                NonTerm("postfixes"),
+                NonTerm(Postfixes),
             ].and().group("prefixes"),
-            NonTerm("postfixes"),
+            NonTerm(Postfixes),
         ].or(),
 
-        "postfixes" => [
+        Postfixes => [
             [
-                NonTerm("val"),
-                NonTerm("field_index_call").many1().group("field_index_calls"),
+                NonTerm(Val),
+                NonTerm(FieldIndexCall).many1().group("field_index_calls"),
             ].and().group("postfixes"),
-            NonTerm("val"),
+            NonTerm(Val),
         ].or(),
 
-        "val" => [
-            [ Identifier.to().group("idn"), NonTerm("call"), ].and().group("call_func"),
+        Val => [
+            [ Identifier.to().group("idn"), NonTerm(Call), ].and().group("call_func"),
 
-            NonTerm("primitive"),
-            NonTerm("array"),
-            NonTerm("dict"),
-            NonTerm("if"),
-            NonTerm("lambda"),
-            NonTerm("block"),
-            [ NonTerm("lparen"), NonTerm("expr"), NonTerm("rparen"), ].and(),
+            NonTerm(Primitive1),
+            NonTerm(Array),
+            NonTerm(Dict),
+            NonTerm(If),
+            NonTerm(Lambda),
+            NonTerm(Block),
+            [ NonTerm(LParen), NonTerm(Expr), NonTerm(RParen), ].and(),
         ].or(),
 
-        "array" => [
-            NonTerm("lsquare"),
+        Array => [
+            NonTerm(LSquare),
             [
                 [
-                    NonTerm("expr"),
-                    [Symbol(",").to(),NonTerm("expr"),].and().many0(),
+                    NonTerm(Expr),
+                    [Symbol(",").to(),NonTerm(Expr),].and().many0(),
                     Symbol(",").to().opt(),
                 ].and().opt(),
-                NonTerm("rsquare"),
+                NonTerm(RSquare),
             ].and().expect("closing square bracket"),
         ].and().group("array"),
 
-        "dict" => [
-            NonTerm("lcurly"),
+        Dict => [
+            NonTerm(LCurly),
             [
                 [
-                    NonTerm("dict_val"),
-                    [Symbol(",").to(),NonTerm("dict_val"),].and().many0(),
+                    NonTerm(DictVal),
+                    [Symbol(",").to(),NonTerm(DictVal),].and().many0(),
                     Symbol(",").to().opt(),
                 ].and().opt(),
-                NonTerm("rcurly"),
+                NonTerm(RCurly),
             ].and().expect("closing brace"),
         ].and().group("dict"),
 
-        "dict_val" => [
+        DictVal => [
             [
                 Identifier.to().group("name"),
 
@@ -391,37 +438,37 @@ pub fn get_non_term<'g>(n:& str) -> Option<Rc<GrammarNode<'g,&'g str,GrammarPrim
 
             ].or().expect("key"),
             Symbol(":").to().expect("colon"),
-            [NonTerm("expr"),Error,].or(), //not needed unlike in val's field_index_calls, because that was optional, this is not
-            // NonTerm("expr"),
+            [NonTerm(Expr),Error,].or(), //not needed unlike in val's field_index_calls, because that was optional, this is not
+            // NonTerm(Expr),
             // [Int,Error,].or(),
             // Int,
         ].and().group("dict_val"),
 
-        "block" => [
-            NonTerm("lcurly").expect("block"),
-            [ NonTerm("stmts"), NonTerm("rcurly"), ].and().expect("closing brace"),
+        Block => [
+            NonTerm(LCurly).expect("block"),
+            [ NonTerm(Stmts), NonTerm(RCurly), ].and().expect("closing brace"),
         ].and().group("block"),
 
-        "field_index_call" => [
-            [NonTerm("field"),NonTerm("call"),].and().group("call_field"),
-            NonTerm("field").group("field"),
-            NonTerm("index").group("index"),
-            NonTerm("call").group("call_val"),
+        FieldIndexCall => [
+            [NonTerm(Field),NonTerm(Call),].and().group("call_field"),
+            NonTerm(Field).group("field"),
+            NonTerm(Index).group("index"),
+            NonTerm(Call).group("call_val"),
         ].or(),
 
-        "call" => [
-            NonTerm("lparen"),
+        Call => [
+            NonTerm(LParen),
             [
                 [
-                    NonTerm("expr"),
-                    [ Symbol(",").to(), NonTerm("expr"), ].and().many0(),
+                    NonTerm(Expr),
+                    [ Symbol(",").to(), NonTerm(Expr), ].and().many0(),
                     Symbol(",").to().opt(),
                 ].and().opt(),
-                NonTerm("rparen"),
+                NonTerm(RParen),
             ].and().expect("closing bracket"),
         ].and().group("params"),
 
-        "field" => [
+        Field => [
             Symbol(".").to(),
             [
                 Int.to().group("field_index"),
@@ -430,13 +477,13 @@ pub fn get_non_term<'g>(n:& str) -> Option<Rc<GrammarNode<'g,&'g str,GrammarPrim
             ].or().expect("field"),
         ].and().was("field"),
 
-        "index" => [
-            NonTerm("lsquare"),
-            NonTerm("expr"),
-            NonTerm("rsquare").expect("closing square bracket"),
+        Index => [
+            NonTerm(LSquare),
+            NonTerm(Expr),
+            NonTerm(RSquare).expect("closing square bracket"),
         ].and().was("index"),
 
-        "primitive" => [
+        Primitive1 => [
             Int.to(),
             Float.to(),
             String.to(),
@@ -447,31 +494,23 @@ pub fn get_non_term<'g>(n:& str) -> Option<Rc<GrammarNode<'g,&'g str,GrammarPrim
             Keyword("false").to(),
         ].or().group("primitive"),
 
-        // "bool" => [
-        //     Keyword("true").group("true"),
-        //     Keyword("false").group("false"),
-        // ].or(),
+        End => [Symbol(";").to(),Eol.to()].or().many1().expect("semicolon"),
 
-        // "nil" => Keyword("nil").group("nil"),
-        // "void" => Keyword("void").group("void"),
-
-        "end" => [Symbol(";").to(),Eol.to()].or().many1().expect("semicolon"),
-
-        "for_op" => [
-            [NonTerm("for_to_op"),Symbol("=").to().opt(),].and().group("to_eq"),
-            NonTerm("for_to_op").group("to"),
+        ForOp => [
+            [NonTerm(ForToOp),Symbol("=").to().opt(),].and().group("to_eq"),
+            NonTerm(ForToOp).group("to"),
         ].or(),
 
-        "for_to_op" => [Symbol(".").to(),Symbol(".").to(),].and(),
+        ForToOp => [Symbol(".").to(),Symbol(".").to(),].and(),
 
         // "var_set_op" => Symbol("="),
 
-        "set_op" => [
+        SetOp => [
             Symbol("=").to().group("eq"),
-            [ NonTerm("set_sub_op"), Symbol("=").to(), ].and(),
+            [ NonTerm(SetSubOp), Symbol("=").to(), ].and(),
         ].or(),
 
-        "set_sub_op" => [
+        SetSubOp => [
             Symbol("+").to().group("add"),
             Symbol("-").to().group("sub"),
             Symbol("*").to().group("mul"),
@@ -483,6 +522,56 @@ pub fn get_non_term<'g>(n:& str) -> Option<Rc<GrammarNode<'g,&'g str,GrammarPrim
 
             Symbol("^").to().group("xor"),
         ].or(),
+
+
+        FactorOp => [
+            Symbol("+").to().group("add"),
+            Symbol("-").to().group("sub"),
+        ].or(),
+
+        TermOp => [
+            Symbol("*").to().group("mul"),
+            Symbol("/").to().group("div"),
+            Symbol("%").to().group("mod"),
+        ].or(),
+
+        LCurly => Symbol("{").to(),
+        RCurly => Symbol("}").to(),
+        LSquare => Symbol("[").to(),
+        RSquare => Symbol("]").to(),
+        LParen => Symbol("(").to(),
+        RParen => Symbol(")").to(),
+
+        _ => {return None;}
+    }))
+}
+
+
+        // "bool" => [
+        //     Keyword("true").group("true"),
+        //     Keyword("false").group("false"),
+        // ].or(),
+
+        // "nil" => Keyword("nil").group("nil"),
+        // "void" => Keyword("void").group("void"),
+
+
+        // "factor" => [
+        //     NonTerm(Term),
+        //     [
+        //         [ Symbol("+"), NonTerm(Term), ].and().group("add"),
+        //         [ Symbol("-"), NonTerm(Term), ].and().group("sub"),
+        //     ].or().many0()
+        // ].and(),
+
+        // "term" => [
+        //     NonTerm(Val),
+        //     [
+        //         [ Symbol("*"), NonTerm(Val), ].and().group("mul"),
+        //         [ Symbol("/"), NonTerm(Val), ].and().group("div"),
+        //         [ Symbol("%"), NonTerm(Val), ].and().group("mod"),
+        //     ].or().many0()
+        // ].and(),
 
         // "prefix_op" => [
         //     Symbol("+"),
@@ -502,30 +591,6 @@ pub fn get_non_term<'g>(n:& str) -> Option<Rc<GrammarNode<'g,&'g str,GrammarPrim
         //     [Symbol("="),Symbol("=")].and().group("eq"),
         //     [Symbol("!"),Symbol("=")].and().group("ne"),
         // ].or(),
-
-        "factor_op" => [
-            Symbol("+").to().group("add"),
-            Symbol("-").to().group("sub"),
-        ].or(),
-
-        "term_op" => [
-            Symbol("*").to().group("mul"),
-            Symbol("/").to().group("div"),
-            Symbol("%").to().group("mod"),
-        ].or(),
-
-        "lcurly" => Symbol("{").to(),
-        "rcurly" => Symbol("}").to(),
-        "lsquare" => Symbol("[").to(),
-        "rsquare" => Symbol("]").to(),
-        "lparen" => Symbol("(").to(),
-        "rparen" => Symbol(")").to(),
-
-        _ => {return None;}
-    }))
-}
-
-
 
 
 impl<'t,'g> std::fmt::Debug for WalkGroupContainer<'g,TokenIterContainer<'t>> {

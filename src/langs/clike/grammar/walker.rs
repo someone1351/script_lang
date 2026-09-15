@@ -3159,11 +3159,11 @@ where
 
 
     fn get_non_term(&mut self,n:NT) -> Result<Rc<GrammarNode<'g,NT,P>>,GrammarWalkError<NT>> {
-        if let Some(g)=self.non_term_cache.get(&n) {
-            Ok(g.clone())
-        } else
+        // if let Some(g)=self.non_term_cache.get(&n) {
+        //     Ok(g.clone())
+        // } else
         if let Some(g)=(self.grammar_func)(n.clone()) {
-            self.non_term_cache.insert(n, g.clone());
+            // self.non_term_cache.insert(n, g.clone());
             Ok(g)
         } else {
             Err(GrammarWalkError::MissingNonTerm(n))

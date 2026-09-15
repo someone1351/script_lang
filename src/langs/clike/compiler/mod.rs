@@ -117,7 +117,7 @@ impl Compiler {
         // walker.set_debug(true);
 
         let start_time = std::time::Instant::now();
-        let result=walker.run("start") ;
+        let result=walker.run(rules::MyNonTerm::Start) ;
 
 
         let time_elapsed=start_time.elapsed().as_secs_f64();
