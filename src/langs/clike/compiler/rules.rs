@@ -155,7 +155,12 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
         //     NonTerm("mynum").group("b").group("b"),
         // ].or(),
         //
-        Start => &NonTerm(Stmts),
+        Start =>
+            // &Expect(
+            &Many(&Expect(&Primitive(Int),"y"),3,3)
+            // ,"x")
+            ,
+        // Start => &NonTerm(Stmts),
 
         Stmts => &Or(&[&And(&[
             &Or(&[&NonTerm(End),&Always]),

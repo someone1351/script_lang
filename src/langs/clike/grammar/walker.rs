@@ -745,7 +745,7 @@ where
     }
 
     fn grammar_many(&mut self,cur :Work<'g,NT,P,TS>,) {
-        let GrammarNode::Many(g, min,max)=cur.grammar else{panic!("");};
+        let GrammarNode::Many(g, min,max)=*cur.grammar else{panic!("");};
 
         //in always/prev they check if their success_ind is a many (which could be a problem if ands/ors were handled more efficiently),
         //  but could store maybe a many_id to check whether to exit? eg if id is eq, and/or tokens.inds.start is eq?
@@ -756,147 +756,183 @@ where
         let was_ind=self.wases.len();
 
         //
-        self.stk.push(Work {
-            // grammar: Rc::new(GrammarNode::Many(g.clone())),
-            grammar:cur.grammar,
-            // grammar_ind:0,
-            work_success_len: cur.work_success_len,
-            work_fail_len: cur.work_fail_len,
-            tokens: cur.tokens.clone(),
-            group_ind: cur.group_ind,
-            group_len: cur.group_len,
-            // visiteds:cur.visiteds.clone(),
-            // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
-            // grammar_debug_len: cur.grammar_debug_len,
-            // and_id:cur.and_id,
+        if max!=0 && cur.grammar_ind+1==max {
 
-            grammar_ind:cur.grammar_ind+1,
-            user:false,
-            first:false, //grmmar in many, after the frist one is parsed are no longer firsts
-            stow:cur.stow,
-
-            // or_id:cur.or_id,
-            // and_first:false,
-            // can_hist_stow:false,
-
-            // stow_new_len,
-            stow_new_len:cur.stow_new_len,
-
-            // hist_stows_stk_len:cur.hist_stows_stk_len,
-            // hist_ends_stk_len:cur.hist_ends_stk_len,
-
-            // hist_stows_ind: cur.hist_stows_ind,
-            stow_len: cur.stow_len,
-
-            // hist_fails_len:cur.hist_fails_len,
-
-            // hist_stows_stk_len:cur.hist_stows_stk_len,
-
-            // hist_prevs_ind: cur.hist_prevs_ind,
-            // hist_prevs_len: cur.hist_prevs_len,
-
-            // expected_news_len:cur.expected_news_len,
-            // expect_len:cur.expect_len,
-
-            in_expect:cur.in_expect,
-
-            // expect_ind1:cur.expect_ind1,
-            // expect_len1:cur.expect_len1,
-
-            expect_new_len2:cur.expect_new_len2,
-            expect_len2:cur.expect_len2,
-
-            // was_start_ind:cur.was_start_ind,
-            // was_ind:cur.was_ind,
-            // was_len:cur.was_len,
-
-            // had_ind:cur.had_ind,
-            // had_len:cur.had_len,
-
-
-            was_new_len:cur.was_new_len,
-            was_ind:cur.was_ind,
-
-            // trim:cur.trim,
-        });
+        }
 
         //
-        let success_len2=self.stk.len();
+        if min!=0 && cur.grammar_ind<min {
+
+        }
 
         //
-        self.stk.push(Work {
-            grammar: &GrammarNode::Always, //self.always.clone(),
-            // grammar_ind:0,
-            work_success_len: cur.work_success_len,
-            work_fail_len: 0, //fail is not used
-            tokens: cur.tokens.clone(),
-            group_ind: cur.group_ind,
-            group_len: cur.group_len,
-            // visiteds:cur.visiteds.clone(),
-            // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
-            // grammar_debug_len: cur.grammar_debug_len,
-            // and_id:cur.and_id,
+        if min==0 || cur.grammar_ind>=min {
 
-            grammar_ind:0,
-            user:false,
-            first:false,
-            stow:cur.stow,
-
-            // or_id:cur.or_id,
-            // and_first:false,
-            // can_hist_stow:false,
-
-            // stow_new_len,
-            stow_new_len:cur.stow_new_len,
-
-            // hist_stows_stk_len:cur.hist_stows_stk_len,
-            // hist_ends_stk_len:cur.hist_ends_stk_len,
-
-            // hist_stows_ind: cur.hist_stows_ind,
-            stow_len: cur.stow_len,
-
-            // hist_fails_len:cur.hist_fails_len,
-
-            // hist_stows_stk_len:cur.hist_stows_stk_len,
-
-            // hist_prevs_ind: cur.hist_prevs_ind,
-            // hist_prevs_len: cur.hist_prevs_len,
-
-            // expected_news_len:cur.expected_news_len,
-            // expect_len:cur.expect_len,
-
-            in_expect:cur.in_expect,
-
-            // expect_ind1:cur.expect_ind1,
-            // expect_len1:cur.expect_len1,
-
-            expect_new_len2:cur.expect_new_len2,
-            expect_len2:cur.expect_len2,
-
-            // was_start_ind:cur.was_start_ind,
-            // was_ind:cur.was_ind,
-            // was_len:cur.was_len,
-
-            // had_ind:cur.had_ind,
-            // had_len:cur.had_len,
+        }
 
 
-            was_new_len:cur.was_new_len,
-            // was_ind:cur.was_ind,
-            was_ind,
 
-            // trim:cur.trim,
-        });
+
+
+        //many
+        if max==0 ||
+            cur.grammar_ind+1<max
+        {
+            self.stk.push(Work {
+                // grammar: Rc::new(GrammarNode::Many(g.clone())),
+                grammar:cur.grammar,
+                // grammar_ind:0,
+                work_success_len: cur.work_success_len,
+                work_fail_len: cur.work_fail_len,
+                tokens: cur.tokens.clone(),
+                group_ind: cur.group_ind,
+                group_len: cur.group_len,
+                // visiteds:cur.visiteds.clone(),
+                // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
+                // grammar_debug_len: cur.grammar_debug_len,
+                // and_id:cur.and_id,
+
+                grammar_ind:cur.grammar_ind+1,
+                user:false,
+                first:false, //grmmar in many, after the frist one is parsed are no longer firsts
+                stow:cur.stow,
+
+                // or_id:cur.or_id,
+                // and_first:false,
+                // can_hist_stow:false,
+
+                // stow_new_len,
+                stow_new_len:cur.stow_new_len,
+
+                // hist_stows_stk_len:cur.hist_stows_stk_len,
+                // hist_ends_stk_len:cur.hist_ends_stk_len,
+
+                // hist_stows_ind: cur.hist_stows_ind,
+                stow_len: cur.stow_len,
+
+                // hist_fails_len:cur.hist_fails_len,
+
+                // hist_stows_stk_len:cur.hist_stows_stk_len,
+
+                // hist_prevs_ind: cur.hist_prevs_ind,
+                // hist_prevs_len: cur.hist_prevs_len,
+
+                // expected_news_len:cur.expected_news_len,
+                // expect_len:cur.expect_len,
+
+                in_expect:cur.in_expect,
+
+                // expect_ind1:cur.expect_ind1,
+                // expect_len1:cur.expect_len1,
+
+                expect_new_len2:cur.expect_new_len2,
+                expect_len2:cur.expect_len2,
+
+                // was_start_ind:cur.was_start_ind,
+                // was_ind:cur.was_ind,
+                // was_len:cur.was_len,
+
+                // had_ind:cur.had_ind,
+                // had_len:cur.had_len,
+
+
+                was_new_len:cur.was_new_len,
+                was_ind:cur.was_ind,
+
+                // trim:cur.trim,
+            });
+        }
 
         //
-        let fail_len=self.stk.len();
+        // let success_len2=self.stk.len();
 
         //
+        let success_len2=if max==0 || cur.grammar_ind+1<max {self.stk.len()}else{cur.work_success_len};
+
+
+        //always
+        if //min==0 ||
+            cur.grammar_ind>=min
+        {
+            self.stk.push(Work {
+                grammar: &GrammarNode::Always, //self.always.clone(),
+                // grammar_ind:0,
+                work_success_len: cur.work_success_len,
+                work_fail_len: 0, //fail is not used
+                tokens: cur.tokens.clone(),
+                group_ind: cur.group_ind,
+                group_len: cur.group_len,
+                // visiteds:cur.visiteds.clone(),
+                // non_term_visiteds_stk_len:cur.non_term_visiteds_stk_len,
+                // grammar_debug_len: cur.grammar_debug_len,
+                // and_id:cur.and_id,
+
+                grammar_ind:0,
+                user:false,
+                first:false,
+                stow:cur.stow,
+
+                // or_id:cur.or_id,
+                // and_first:false,
+                // can_hist_stow:false,
+
+                // stow_new_len,
+                stow_new_len:cur.stow_new_len,
+
+                // hist_stows_stk_len:cur.hist_stows_stk_len,
+                // hist_ends_stk_len:cur.hist_ends_stk_len,
+
+                // hist_stows_ind: cur.hist_stows_ind,
+                stow_len: cur.stow_len,
+
+                // hist_fails_len:cur.hist_fails_len,
+
+                // hist_stows_stk_len:cur.hist_stows_stk_len,
+
+                // hist_prevs_ind: cur.hist_prevs_ind,
+                // hist_prevs_len: cur.hist_prevs_len,
+
+                // expected_news_len:cur.expected_news_len,
+                // expect_len:cur.expect_len,
+
+                in_expect:cur.in_expect,
+
+                // expect_ind1:cur.expect_ind1,
+                // expect_len1:cur.expect_len1,
+
+                expect_new_len2:cur.expect_new_len2,
+                expect_len2:cur.expect_len2,
+
+                // was_start_ind:cur.was_start_ind,
+                // was_ind:cur.was_ind,
+                // was_len:cur.was_len,
+
+                // had_ind:cur.had_ind,
+                // had_len:cur.had_len,
+
+
+                was_new_len:cur.was_new_len,
+                // was_ind:cur.was_ind,
+                was_ind,
+
+                // trim:cur.trim,
+            });
+        }
+
+        //
+        // let fail_len2=self.stk.len();
+
+        //
+
+        let fail_len2=if cur.grammar_ind>=min {self.stk.len()}else{cur.work_fail_len};
+
+
+        //inside
         self.stk.push(Work {
             grammar: g,
             // grammar_ind:0,
             work_success_len: success_len2,
-            work_fail_len: fail_len,
+            work_fail_len: fail_len2,
             tokens: cur.tokens.clone(),
             group_ind: cur.group_ind,
             group_len: cur.group_len,
