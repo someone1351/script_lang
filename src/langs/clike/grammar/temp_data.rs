@@ -173,7 +173,7 @@ where
     // I: Iterator<Item=T>+Clone,
     TS:Clone,
 {
-    pub grammar:Rc<GrammarNode<'g,NT,P>>,
+    pub grammar:&'g GrammarNode<'g,NT,P>,
     // pub tokens:TokenIterContainer<'t>,
     pub tokens:TS,
 

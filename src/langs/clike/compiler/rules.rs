@@ -121,7 +121,7 @@ pub enum MyNonTerm {
     RParen,
 }
 
-pub fn get_non_term<'g>(n:MyNonTerm) -> Option<Rc<GrammarNode<'g,MyNonTerm,GrammarPrimitive<'g>>>> {
+pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,GrammarPrimitive<'g>>> {
     /*
     this:
         if(cond) {1} else {2}
@@ -143,7 +143,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<Rc<GrammarNode<'g,MyNonTerm,Gramm
     use MyNonTerm::*;
 
 
-    Some(Rc::new(match n {
+    Some(match n {
         // "start" => [
         //     NonTerm(Val).many0(),
         //     NonTerm("end"),
@@ -155,442 +155,412 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<Rc<GrammarNode<'g,MyNonTerm,Gramm
         //     NonTerm("mynum").group("b").group("b"),
         // ].or(),
         //
-        Start => NonTerm(Stmts),
+        Start => &NonTerm(Stmts),
 
-        Stmts => [
-            NonTerm(End).opt(),
-            NonTerm(Stmt),
-            [
-                NonTerm(End),
-                NonTerm(Stmt),
-            ].and().many0(),
-            NonTerm(End).opt(),
-        ].and().opt(),
+        Stmts => &Or(&[&And(&[
+            &Or(&[&NonTerm(End),&Always]),
+            &NonTerm(Stmt),
+            &Many(&And(&[
+                &NonTerm(End),
+                &NonTerm(Stmt),
+            ])),
+            &Or(&[&NonTerm(End),&Always]),
+        ]), &Always]),
 
-        Stmt => [
-            NonTerm(Var),
+        Stmt => &Or(&[
+            &NonTerm(Var),
 
-            NonTerm(For),
-            NonTerm(While),
-            NonTerm(Func),
+            &NonTerm(For),
+            &NonTerm(While),
+            &NonTerm(Func),
 
-            NonTerm(Break),
-            NonTerm(Continue),
-            NonTerm(Return),
+            &NonTerm(Break),
+            &NonTerm(Continue),
+            &NonTerm(Return),
 
-            NonTerm(Include),
+            &NonTerm(Include),
 
-            NonTerm(Format),
-            NonTerm(Print),
-            NonTerm(Println),
+            &NonTerm(Format),
+            &NonTerm(Print),
+            &NonTerm(Println),
 
-            NonTerm(Set),
-            NonTerm(Expr),
+            &NonTerm(Set),
+            &NonTerm(Expr),
 
+        ]),
 
-            // NonTerm(Val),
-        ].or() //.expect("stmt")
-        ,
-
-        Var => [
-            Keyword("var").to(),
-            NonTerm(VarEntry),
-            [ Symbol(",").to(), NonTerm(VarEntry), ].and().many0(),
+        Var => &And(&[
+            &Primitive(Keyword("var")),
+            &NonTerm(VarEntry),
+            &Many(&And(&[ &Primitive(Symbol(",")), &NonTerm(VarEntry), ])),
             // Symbol(",").opt(),
-        ].and(),
+        ]),
 
-        VarEntry => [
-            Identifier.to().group("name"),
-            [Symbol("=").to(), NonTerm(Expr)].and().opt(),
-        ].and().group("var"),
+        VarEntry => &Group(&And(&[
+            &Group(&Primitive(Identifier),"name"),
+            &Or(&[&And(&[&Primitive(Symbol("=")), &NonTerm(Expr)]),&Always,]),
+        ]), "var"),
 
-        Set => [
-            NonTerm(SetVar),
-            NonTerm(SetField),
-            NonTerm(SetIndex),
-        ].or(),
+        Set => &Or(&[
+            &NonTerm(SetVar),
+            &NonTerm(SetField),
+            &NonTerm(SetIndex),
+        ]),
 
-        SetVar => [
-            Identifier.to().group("name"),
-            NonTerm(SetOp),
-            NonTerm(Expr),
-        ].and().group("set_var"),
+        SetVar => &Group(&And(&[
+            &Group(&Primitive(Identifier),"name"),
+            &NonTerm(SetOp),
+            &NonTerm(Expr),
+        ]), "set_var"),
 
-        SetField => [
-            NonTerm(Postfixes).had("field"),
-            NonTerm(SetOp),
-            NonTerm(Expr),
-        ].and().group("set_field"),
+        SetField => &Group(&And(&[
+            &NonTerm(Postfixes),
+            &Had("field"),
+            &NonTerm(SetOp),
+            &NonTerm(Expr),
+        ]), "set_field"),
 
-        SetIndex => [
-            NonTerm(Postfixes).had("index"),
-            NonTerm(SetOp),
-            NonTerm(Expr),
-        ].and().group("set_field"),
+        SetIndex => &Group(&And(&[
+            &NonTerm(Postfixes),
+            &Had("index"),
+            &NonTerm(SetOp),
+            &NonTerm(Expr),
+        ]), "set_index"),
 
-        Func => [
-            Keyword("fn").to(),
-            Identifier.to().group("name"),
-            NonTerm(FuncParams),
-            NonTerm(Block),
-        ].and().group("func"),
+        Func => &Group(&And(&[
+            &Primitive(Keyword("fn")),
+            &Group(&Primitive(Identifier), "name"),
+            &NonTerm(FuncParams),
+            &NonTerm(Block),
+        ]),"func"),
 
-        Lambda => [
-            Keyword("fn").to(),
-            NonTerm(FuncParams),
-            NonTerm(Block),
-        ].and().group("lambda"),
+        Lambda => &Group(&And(&[
+            &Primitive(Keyword("fn")),
+            &NonTerm(FuncParams),
+            &NonTerm(Block),
+        ]), "lambda"),
 
-        FuncParams => [
-            NonTerm(LParen),
-            [
-                [
-                    [ NonTerm(FuncParams2), NonTerm(FuncVariadic), ].and(),
-                    [ NonTerm(FuncParams2), NonTerm(FuncNotVariadic), ].and(),
-                    [ Always.group("params"), Always.group("not_variadic"), ].and(),
-                ].or(),
-                NonTerm(RParen),
-            ].and().expect("closing bracket"),
-        ].and(),
+        FuncParams => &And(&[
+            &NonTerm(LParen),
+            &Expect(&And(&[
+                &Or(&[
+                    &And(&[ &NonTerm(FuncParams2), &NonTerm(FuncVariadic), ]),
+                    &And(&[ &NonTerm(FuncParams2), &NonTerm(FuncNotVariadic), ]),
+                    &And(&[ &Group(&Always,"params"), &Group(&Always,"not_variadic"), ]),
+                ]),
+                &NonTerm(RParen),
+            ]), "closing bracket")
+        ]),
 
-        FuncParams2 => [
-            Identifier.to().group("param").expect("param"),
-            [ Symbol(",").to(), Identifier.to().group("param").expect("param"), ].and().many0(),
-        ].and().group("params"),
+        FuncParams2 => &Group(&And(&[
+            &Expect(&Group(&Primitive(Identifier),"param"), "param"),
+            &Many(&And(&[ &Primitive(Symbol(",")), &Expect(&Group(&Primitive(Identifier),"param"), "param"), ])),
+        ]),"params"),
 
-        FuncVariadic => [Symbol(".").to(),Symbol(".").to(),Symbol(".").to(),].and().group("variadic"),
-        FuncNotVariadic => Symbol(",").to().opt().group("not_variadic"),
-
-        // "ellipsis" => [Symbol("."),Symbol("."),Symbol("."),].and().group("ellipsis"),
-
-        Format => [Keyword("format").to(),NonTerm(FormatParams),].and(),
-        Print => [Keyword("print").to(),NonTerm(FormatParams),].and().group("print"),
-        Println => [Keyword("println").to(),NonTerm(FormatParams),].and().group("println"),
-
-        FormatParams => [
-            NonTerm(LParen),
-            [
-                [
-                    [String.to().group("string"), NonTerm(Expr),].or(),
-                    [Symbol(",").to(), NonTerm(Expr),].and().many0(),
-                    Symbol(",").to().opt(),
-                ].and().opt(),
-                NonTerm(RParen),
-            ].and().expect("closing bracket"),
-        ].and().group("format"),
-
-        If => [
-            [Keyword("if").to(), NonTerm(Expr), NonTerm(Block), ].and().group("cond"),
-            [Keyword("elif").to(),NonTerm(Expr), NonTerm(Block), ].and().group("cond").many0(),
-            [Keyword("else").to(),NonTerm(Block),].and().group("else").opt(),
-        ].and().group("if"),
-
-        While => [
-            Keyword("while").to(),
-            NonTerm(Expr),
-            NonTerm(Block),
-        ].and().group("while"),
-
-        For => [
-            Keyword("for").to(),
-            Identifier.to().group("name"),
-            Keyword("in").to(),
-            NonTerm(Expr),
-            NonTerm(ForOp),
-            NonTerm(Expr),
-            NonTerm(Block),
-        ].and().group("for"),
-
-        Continue => Keyword("continue").to().group("continue"),
-        Break => Keyword("break").to().group("break"),
-        Return => [Keyword("return").to(), NonTerm(Expr).opt(),].and().group("return"),
-
-        Include => [Keyword("include").to(),String.to().group("include"),].and(),
-
-        Expr => NonTerm(Or1).group("expr").expect("expr"),
-        // "expr" => NonTerm(Prefixes).group("expr").expect("expr"),
-
-        Or1 => [
-            [
-                NonTerm(Xor),
-                [
-                    [Symbol("|").to(),Symbol("|").to().expect("or")].and(),
-                    NonTerm(Xor),
-                ].and().many1(),
-            ].and().group("or"),
-            NonTerm(Xor),
-        ].or(),
-
-        Xor => [
-            [
-                NonTerm(And1),
-                [ Symbol("^").to(), NonTerm(And1), ].and().many1(),
-            ].and().group("xor"),
-            NonTerm(And1),
-        ].or(),
-
-        And1 => [
-            [
-                NonTerm(Compare),
-                [ Symbol("&").to(),Symbol("&").to().expect("and"), NonTerm(Compare), ].and().many1(),
-            ].and().group("and"),
-            NonTerm(Compare),
-        ].or(),
-
-        // "compare" => [
-        //     [ NonTerm(Factor), NonTerm("compare_op"), NonTerm(Factor), ].and().group("compare"),
-        //     NonTerm(Factor),
-        // ].or(),
-
-        Compare => [
-            [NonTerm(Factor), Symbol("<").to(), NonTerm(Factor),].and().group("lt"),
-            [NonTerm(Factor), Symbol(">").to(), NonTerm(Factor),].and().group("gt"),
-            [NonTerm(Factor), Symbol("<").to(),Symbol("=").to(), NonTerm(Factor),].and().group("le"),
-            [NonTerm(Factor), Symbol(">").to(),Symbol("=").to(), NonTerm(Factor),].and().group("ge"),
-            [NonTerm(Factor), Symbol("=").to(),Symbol("=").to().expect("eq"), NonTerm(Factor),].and().group("eq"),
-            [NonTerm(Factor), Symbol("!").to(),Symbol("=").to().expect("ne"), NonTerm(Factor),].and().group("ne"),
-            NonTerm(Factor),
-        ].or(),
-
-        Factor => [
-            [
-                NonTerm(Term),
-                [ NonTerm(FactorOp), NonTerm(Term), ].and().many1(),
-            ].and().group("factor"),
-            NonTerm(Term),
-        ].or(),
-
-        Term => [
-            [
-                NonTerm(Prefixes),
-                [NonTerm(TermOp),NonTerm(Prefixes),].and().many1(),
-            ].and().group("term"),
-            NonTerm(Prefixes),
-        ].or(),
+        FuncVariadic => &Group(&And(&[&Primitive(Symbol(".")),&Primitive(Symbol(".")),&Primitive(Symbol(".")),]),"variadic"),
+        FuncNotVariadic => &Group(&Or(&[&Primitive(Symbol(",")),&Always]), "not_variadic"),
 
 
-        Prefixes => [
-            [
-                [
-                    Symbol("+").to(),
-                    Symbol("-").to().group("neg"),
-                    Symbol("!").to().group("not"),
-                ].or().many1().group("prefixes"),
-                NonTerm(Postfixes),
-            ].and().group("prefixes"),
-            NonTerm(Postfixes),
-        ].or(),
+        Format => &And(&[&Primitive(Keyword("format")),&NonTerm(FormatParams),]),
+        Print => &Group(&And(&[&Primitive(Keyword("print")),&NonTerm(FormatParams),]), "print"),
+        Println => &Group(&And(&[&Primitive(Keyword("println")),&NonTerm(FormatParams),]), "println"),
 
-        Postfixes => [
-            [
-                NonTerm(Val),
-                NonTerm(FieldIndexCall).many1().group("field_index_calls"),
-            ].and().group("postfixes"),
-            NonTerm(Val),
-        ].or(),
+        FormatParams => &Group(&And(&[
+            &NonTerm(LParen),
+            &Expect(&And(&[
+                &Or(&[&And(&[
+                    &Or(&[&Group(&Primitive(String), "string"), &NonTerm(Expr),]),
+                    &Many(&And(&[&Primitive(Symbol(",")), &NonTerm(Expr),])),
+                    &Or(&[&Primitive(Symbol(",")), &Always]),
+                ]), &Always]),
+                &NonTerm(RParen),
+            ]),"closing bracket"),
+        ]),"format"),
 
-        Val => [
-            [ Identifier.to().group("idn"), NonTerm(Call), ].and().group("call_func"),
+        If => &Group(&And(&[
+            &Group(&And(&[&Primitive(Keyword("if")), &NonTerm(Expr), &NonTerm(Block), ]),"cond"),
+            &Many(&Group(&And(&[&Primitive(Keyword("elif")), &NonTerm(Expr), &NonTerm(Block), ]),"cond")),
+            &Or(&[&Group(&And(&[&Primitive(Keyword("else")),&NonTerm(Block),]),"else"), &Always]),
+        ]),"if"),
 
-            NonTerm(Primitive1),
-            NonTerm(Array),
-            NonTerm(Dict),
-            NonTerm(If),
-            NonTerm(Lambda),
-            NonTerm(Block),
-            [ NonTerm(LParen), NonTerm(Expr), NonTerm(RParen), ].and(),
-        ].or(),
+        While => &Group(&And(&[
+            &Primitive(Keyword("while")),
+            &NonTerm(Expr),
+            &NonTerm(Block),
+        ]),"while"),
 
-        Array => [
-            NonTerm(LSquare),
-            [
-                [
-                    NonTerm(Expr),
-                    [Symbol(",").to(),NonTerm(Expr),].and().many0(),
-                    Symbol(",").to().opt(),
-                ].and().opt(),
-                NonTerm(RSquare),
-            ].and().expect("closing square bracket"),
-        ].and().group("array"),
+        For => &Group(&And(&[
+            &Primitive(Keyword("for")),
+            &Group(&Primitive(Identifier),"name"),
+            &Primitive(Keyword("in")),
+            &NonTerm(Expr),
+            &NonTerm(ForOp),
+            &NonTerm(Expr),
+            &NonTerm(Block),
+        ]),"for"),
 
-        Dict => [
-            NonTerm(LCurly),
-            [
-                [
-                    NonTerm(DictVal),
-                    [Symbol(",").to(),NonTerm(DictVal),].and().many0(),
-                    Symbol(",").to().opt(),
-                ].and().opt(),
-                NonTerm(RCurly),
-            ].and().expect("closing brace"),
-        ].and().group("dict"),
+        Continue => &Group(&Primitive(Keyword("continue")),"continue"),
+        Break => &Group(&Primitive(Keyword("break")),"break"),
+        Return => &Group(&And(&[&Primitive(Keyword("return")), &Or(&[&NonTerm(Expr), &Always]),]),"return"),
 
-        DictVal => [
-            [
-                Identifier.to().group("name"),
+        Include => &And(&[&Primitive(Keyword("include")),&Group(&Primitive(String),"include"),]),
 
-                [
-                    Int.to(), String.to(),
-                    Keyword("nil").to(),
-                    Keyword("true").to(),
-                    Keyword("false").to(),
-                ].or().group("primitive"),
+        Expr => &Expect(&Group(&NonTerm(Or1),"expr"),"expr"),
 
-            ].or().expect("key"),
-            Symbol(":").to().expect("colon"),
-            [NonTerm(Expr),Error,].or(), //not needed unlike in val's field_index_calls, because that was optional, this is not
-            // NonTerm(Expr),
-            // [Int,Error,].or(),
-            // Int,
-        ].and().group("dict_val"),
+        Or1 => &Or(&[
+            &Group(&And(&[
+                &NonTerm(Xor),
+                &And(&[
+                    &And(&[ &And(&[&Primitive(Symbol("|")),&Expect(&Primitive(Symbol("|")),"or")]), &NonTerm(Xor), ]),
+                    &Many(&And(&[ &And(&[&Primitive(Symbol("|")),&Expect(&Primitive(Symbol("|")),"or")]), &NonTerm(Xor), ])),
+                ]),
+            ]), "or"),
+            &NonTerm(Xor),
+        ]),
 
-        Block => [
-            NonTerm(LCurly).expect("block"),
-            [ NonTerm(Stmts), NonTerm(RCurly), ].and().expect("closing brace"),
-        ].and().group("block"),
+        Xor => &Or(&[
+            &Group(&And(&[
+                &NonTerm(And1),
+                &And(&[
+                    &And(&[ &Primitive(Symbol("^")), &NonTerm(And1), ]),
+                    &Many(&And(&[ &Primitive(Symbol("^")), &NonTerm(And1), ])),
+                ]),
+            ]),"xor"),
+            &NonTerm(And1),
+        ]),
 
-        FieldIndexCall => [
-            [NonTerm(Field),NonTerm(Call),].and().group("call_field"),
-            NonTerm(Field).group("field"),
-            NonTerm(Index).group("index"),
-            NonTerm(Call).group("call_val"),
-        ].or(),
+        And1 => &Or(&[
+            &Group(&And(&[
+                &NonTerm(Compare),
+                &And(&[
+                    &And(&[ &Primitive(Symbol("&")),&Expect(&Primitive(Symbol("&")),"and"), &NonTerm(Compare), ]),
+                    &Many(&And(&[ &Primitive(Symbol("&")),&Expect(&Primitive(Symbol("&")),"and"), &NonTerm(Compare), ]))
+                ]),
+            ]),"and"),
+            &NonTerm(Compare),
+        ]),
 
-        Call => [
-            NonTerm(LParen),
-            [
-                [
-                    NonTerm(Expr),
-                    [ Symbol(",").to(), NonTerm(Expr), ].and().many0(),
-                    Symbol(",").to().opt(),
-                ].and().opt(),
-                NonTerm(RParen),
-            ].and().expect("closing bracket"),
-        ].and().group("params"),
 
-        Field => [
-            Symbol(".").to(),
-            [
-                Int.to().group("field_index"),
-                Identifier.to().group("field_name"),
+        Compare => &Or(&[
+            &Group(&And(&[&NonTerm(Factor), &Primitive(Symbol("<")), &NonTerm(Factor),]),"lt"),
+            &Group(&And(&[&NonTerm(Factor), &Primitive(Symbol(">")), &NonTerm(Factor),]),"gt"),
+            &Group(&And(&[&NonTerm(Factor), &Primitive(Symbol("<")),&Primitive(Symbol("=")), &NonTerm(Factor),]),"le"),
+            &Group(&And(&[&NonTerm(Factor), &Primitive(Symbol(">")),&Primitive(Symbol("=")), &NonTerm(Factor),]),"ge"),
+            &Group(&And(&[&NonTerm(Factor), &Primitive(Symbol("=")),&Expect(&Primitive(Symbol("=")),"eq"), &NonTerm(Factor),]),"eq"),
+            &Group(&And(&[&NonTerm(Factor), &Primitive(Symbol("!")),&Expect(&Primitive(Symbol("=")),"ne"), &NonTerm(Factor),]),"ne"),
+            &NonTerm(Factor),
+        ]),
+
+        Factor => &Or(&[
+            &Group(&And(&[
+                &NonTerm(Term),
+                &And(&[
+                    &And(&[ &NonTerm(FactorOp), &NonTerm(Term), ]),
+                    &Many(&And(&[ &NonTerm(FactorOp), &NonTerm(Term), ]))
+                ]),
+            ]),"factor"),
+            &NonTerm(Term),
+        ]),
+
+        Term => &Or(&[
+            &Group(&And(&[
+                &NonTerm(Prefixes),
+                &And(&[
+                    &And(&[&NonTerm(TermOp),&NonTerm(Prefixes),]),
+                    &Many(&And(&[&NonTerm(TermOp),&NonTerm(Prefixes),]))
+                ]),
+            ]),"term"),
+            &NonTerm(Prefixes),
+        ]),
+
+
+        Prefixes => &Or(&[
+            &Group(&And(&[
+                &Group(&And(&[
+                    &Or(&[
+                        &Primitive(Symbol("+")),
+                        &Group(&Primitive(Symbol("-")),"neg"),
+                        &Group(&Primitive(Symbol("!")),"not"),
+                    ]),
+                    &Many(&Or(&[
+                        &Primitive(Symbol("+")),
+                        &Group(&Primitive(Symbol("-")),"neg"),
+                        &Group(&Primitive(Symbol("!")),"not"),
+                    ])),
+                ]),"prefixes"),
+                &NonTerm(Postfixes),
+            ]),"prefixes"),
+            &NonTerm(Postfixes),
+        ]),
+
+        Postfixes => &Or(&[
+            &Group(&And(&[
+                &NonTerm(Val),
+                &Group(&And(&[
+                    &NonTerm(FieldIndexCall),
+                    &Many(&NonTerm(FieldIndexCall)),
+                ]),"field_index_calls"),
+            ]),"postfixes"),
+            &NonTerm(Val),
+        ]),
+
+        Val => &Or(&[
+            &Group(&And(&[ &Group(&Primitive(Identifier),"idn"), &NonTerm(Call), ]),"call_func"),
+
+            &NonTerm(Primitive1),
+            &NonTerm(Array),
+            &NonTerm(Dict),
+            &NonTerm(If),
+            &NonTerm(Lambda),
+            &NonTerm(Block),
+            &And(&[ &NonTerm(LParen), &NonTerm(Expr), &NonTerm(RParen), ]),
+        ]),
+
+        Array => &Group(&And(&[
+            &NonTerm(LSquare),
+            &Expect(&And(&[
+                &Or(&[&And(&[
+                    &NonTerm(Expr),
+                    &Many(&And(&[&Primitive(Symbol(",")),&NonTerm(Expr),])),
+                    &Or(&[&Primitive(Symbol(",")), &Always]),
+                ]), &Always]),
+                &NonTerm(RSquare),
+            ]),"closing square bracket"),
+        ]),"array"),
+
+        Dict => &Group(&And(&[
+            &NonTerm(LCurly),
+            &Expect(&And(&[
+                &Or(&[&And(&[
+                    &NonTerm(DictVal),
+                    &Many(&And(&[&Primitive(Symbol(",")),&NonTerm(DictVal),])),
+                    &Or(&[&Primitive(Symbol(",")), &Always]),
+                ]), &Always]),
+                &NonTerm(RCurly),
+            ]),"closing brace"),
+        ]),"dict"),
+
+        DictVal => &Group(&And(&[
+            &Expect(&Or(&[
+                &Group(&Primitive(Identifier),"name"),
+
+                &Group(&Or(&[
+                    &Primitive(Int), &Primitive(String),
+                    &Primitive(Keyword("nil")),
+                    &Primitive(Keyword("true")),
+                    &Primitive(Keyword("false")),
+                ]),"primitive"),
+
+            ]),"key"),
+            &Expect(&Primitive(Symbol(":")),"colon"),
+            &Or(&[&NonTerm(Expr),&Error,]), //not needed unlike in val's field_index_calls, because that was optional, this is not //needed?
+
+        ]),"dict_val"),
+
+        Block => &Group(&And(&[
+            &Expect(&NonTerm(LCurly),"block"),
+            &Expect(&And(&[ &NonTerm(Stmts), &NonTerm(RCurly), ]),"closing brace"),
+        ]),"block"),
+
+        FieldIndexCall => &Or(&[
+            &Group(&And(&[&NonTerm(Field),&NonTerm(Call),]),"call_field"),
+            &Group(&NonTerm(Field),"field"),
+            &Group(&NonTerm(Index),"index"),
+            &Group(&NonTerm(Call),"call_val"),
+        ]),
+
+        Call => &Group(&And(&[
+            &NonTerm(LParen),
+            &Expect(&And(&[
+                &Or(&[&And(&[
+                    &NonTerm(Expr),
+                    &Many(&And(&[ &Primitive(Symbol(",")), &NonTerm(Expr), ])),
+                    &Or(&[&Primitive(Symbol(",")), &Always]),
+                ]), &Always]),
+                &NonTerm(RParen),
+            ]),"closing bracket"),
+        ]),"params"),
+
+        Field => &Was(&And(&[
+            &Primitive(Symbol(".")),
+            &Expect(&Or(&[
+                &Group(&Primitive(Int),"field_index"),
+                &Group(&Primitive(Identifier),"field_name"),
                 // Error,
-            ].or().expect("field"),
-        ].and().was("field"),
+            ]),"field"),
+        ]),"field"),
 
-        Index => [
-            NonTerm(LSquare),
-            NonTerm(Expr),
-            NonTerm(RSquare).expect("closing square bracket"),
-        ].and().was("index"),
+        Index => &Was(&And(&[
+            &NonTerm(LSquare),
+            &NonTerm(Expr),
+            &Expect(&NonTerm(RSquare),"closing square bracket"),
+        ]),"index"),
 
-        Primitive1 => [
-            Int.to(),
-            Float.to(),
-            String.to(),
-            Identifier.to(),
-            Keyword("nil").to(),
-            Keyword("void").to(),
-            Keyword("true").to(),
-            Keyword("false").to(),
-        ].or().group("primitive"),
+        Primitive1 => &Group(&Or(&[
+            &Primitive(Int),
+            &Primitive(Float),
+            &Primitive(String),
+            &Primitive(Identifier),
+            &Primitive(Keyword("nil")),
+            &Primitive(Keyword("void")),
+            &Primitive(Keyword("true")),
+            &Primitive(Keyword("false")),
+        ]),"primitive"),
 
-        End => [Symbol(";").to(),Eol.to()].or().many1().expect("semicolon"),
+        End => &Expect(&And(&[
+            &Or(&[&Primitive(Symbol(";")),&Primitive(Eol)]),
+            &Many(&Or(&[&Primitive(Symbol(";")),&Primitive(Eol)])),
+        ]),"semicolon"),
 
-        ForOp => [
-            [NonTerm(ForToOp),Symbol("=").to().opt(),].and().group("to_eq"),
-            NonTerm(ForToOp).group("to"),
-        ].or(),
+        ForOp => &Or(&[
+            &Group(&And(&[&NonTerm(ForToOp),&Primitive(Symbol("=")),]),"to_eq"),
+            &Group(&NonTerm(ForToOp),"to"),
+        ]),
 
-        ForToOp => [Symbol(".").to(),Symbol(".").to(),].and(),
+        ForToOp => &And(&[&Primitive(Symbol(".")),&Primitive(Symbol(".")),]),
 
-        // "var_set_op" => Symbol("="),
+        SetOp => &Or(&[
+            &Group(&Primitive(Symbol("=")),"eq"),
+            &And(&[ &NonTerm(SetSubOp), &Primitive(Symbol("=")), ]),
+        ]),
 
-        SetOp => [
-            Symbol("=").to().group("eq"),
-            [ NonTerm(SetSubOp), Symbol("=").to(), ].and(),
-        ].or(),
+        SetSubOp => &Or(&[
+            &Group(&Primitive(Symbol("+")),"add"),
+            &Group(&Primitive(Symbol("-")),"sub"),
+            &Group(&Primitive(Symbol("*")),"mul"),
+            &Group(&Primitive(Symbol("/")),"div"),
+            &Group(&Primitive(Symbol("!")),"not"),
 
-        SetSubOp => [
-            Symbol("+").to().group("add"),
-            Symbol("-").to().group("sub"),
-            Symbol("*").to().group("mul"),
-            Symbol("/").to().group("div"),
-            Symbol("!").to().group("not"),
+            &Group(&And(&[&Primitive(Symbol("&")),&Primitive(Symbol("&")),]),"and"),
+            &Group(&And(&[&Primitive(Symbol("|")),&Primitive(Symbol("|")),]),"or"),
 
-            [Symbol("&").to(),Symbol("&").to(),].and().group("and"),
-            [Symbol("|").to(),Symbol("|").to(),].and().group("or"),
-
-            Symbol("^").to().group("xor"),
-        ].or(),
+            &Group(&Primitive(Symbol("^")),"xor"),
+        ]),
 
 
-        FactorOp => [
-            Symbol("+").to().group("add"),
-            Symbol("-").to().group("sub"),
-        ].or(),
+        FactorOp => &Or(&[
+            &Group(&Primitive(Symbol("+")),"add"),
+            &Group(&Primitive(Symbol("-")),"sub"),
+        ]),
 
-        TermOp => [
-            Symbol("*").to().group("mul"),
-            Symbol("/").to().group("div"),
-            Symbol("%").to().group("mod"),
-        ].or(),
+        TermOp => &Or(&[
+            &Group(&Primitive(Symbol("*")),"mul"),
+            &Group(&Primitive(Symbol("/")),"div"),
+            &Group(&Primitive(Symbol("%")),"mod"),
+        ]),
 
-        LCurly => Symbol("{").to(),
-        RCurly => Symbol("}").to(),
-        LSquare => Symbol("[").to(),
-        RSquare => Symbol("]").to(),
-        LParen => Symbol("(").to(),
-        RParen => Symbol(")").to(),
+        LCurly => &Primitive(Symbol("{")),
+        RCurly => &Primitive(Symbol("}")),
+        LSquare => &Primitive(Symbol("[")),
+        RSquare => &Primitive(Symbol("]")),
+        LParen => &Primitive(Symbol("(")),
+        RParen => &Primitive(Symbol(")")),
 
-        _ => {return None;}
-    }))
+        // _ => {return None;}
+    })
 }
 
 
-        // "bool" => [
-        //     Keyword("true").group("true"),
-        //     Keyword("false").group("false"),
-        // ].or(),
-
-        // "nil" => Keyword("nil").group("nil"),
-        // "void" => Keyword("void").group("void"),
-
-
-        // "factor" => [
-        //     NonTerm(Term),
-        //     [
-        //         [ Symbol("+"), NonTerm(Term), ].and().group("add"),
-        //         [ Symbol("-"), NonTerm(Term), ].and().group("sub"),
-        //     ].or().many0()
-        // ].and(),
-
-        // "term" => [
-        //     NonTerm(Val),
-        //     [
-        //         [ Symbol("*"), NonTerm(Val), ].and().group("mul"),
-        //         [ Symbol("/"), NonTerm(Val), ].and().group("div"),
-        //         [ Symbol("%"), NonTerm(Val), ].and().group("mod"),
-        //     ].or().many0()
-        // ].and(),
-
-        // "prefix_op" => [
-        //     Symbol("+"),
-        //     Symbol("-").group("neg"),
-        //     Symbol("!").group("not"),
-        // ].or(),
-
-        // "xor_op" => Symbol("^"),
-        // "and_op" => [Symbol("&"),Symbol("&"),].and(),
-        // "or_op" => [Symbol("|"),Symbol("|"),].and(),
-
-        // "compare_op" => [
-        //     Symbol("<").group("lt"),
-        //     Symbol(">").group("gt"),
-        //     [Symbol("<"),Symbol("=")].and().group("le"),
-        //     [Symbol(">"),Symbol("=")].and().group("ge"),
-        //     [Symbol("="),Symbol("=")].and().group("eq"),
-        //     [Symbol("!"),Symbol("=")].and().group("ne"),
-        // ].or(),
 
 
 impl<'t,'g> std::fmt::Debug for WalkGroupContainer<'g,TokenIterContainer<'t>> {
