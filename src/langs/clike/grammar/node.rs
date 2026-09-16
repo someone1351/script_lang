@@ -19,7 +19,7 @@ pub enum GrammarNode<'g,NT,P>
 // where
 //     P:Clone, //+core::hash::Hash+PartialEq+Eq,
 {
-    Many(&'g GrammarNode<'g,NT,P>),
+    Many(&'g GrammarNode<'g,NT,P>, usize,usize), //min,max
     And(&'g [&'g GrammarNode<'g,NT,P>],), //stow_first, error_ind
     Or( &'g [&'g GrammarNode<'g,NT,P>],), //should store reversed?
     NonTerm(NT),
@@ -147,7 +147,7 @@ where
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Many(arg0) => f.debug_tuple("Many").field(arg0).finish(),
+            Self::Many(arg0,arg1,arg2) => f.debug_tuple("Many").field(arg0).field(arg1).field(arg2).finish(),
             // Self::And(arg0, arg1, arg2) => {
             //     let x=&arg0[*arg1..];
             //     f.debug_tuple("And").field(&x).field(arg1).field(arg2).finish()

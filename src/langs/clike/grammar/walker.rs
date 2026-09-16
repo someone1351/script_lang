@@ -494,7 +494,7 @@ where
 
         //
         self.stk.push(Work {
-            grammar: g.clone(),
+            grammar: g,
 
             work_success_len: cur.work_success_len,
             work_fail_len: cur.work_fail_len,
@@ -604,7 +604,7 @@ where
 
         //
         self.stk.push(Work {
-            grammar: g.clone(),
+            grammar: g,
             // grammar_ind:0,
             work_success_len: cur.work_success_len,
             work_fail_len: cur.work_fail_len,
@@ -682,7 +682,7 @@ where
 
         //
         self.stk.push(Work {
-            grammar: g.clone(),
+            grammar: g,
             // grammar_ind:0,
             work_success_len: cur.work_success_len,
             work_fail_len: cur.work_fail_len,
@@ -745,7 +745,7 @@ where
     }
 
     fn grammar_many(&mut self,cur :Work<'g,NT,P,TS>,) {
-        let GrammarNode::Many(g)=cur.grammar else{panic!("");};
+        let GrammarNode::Many(g, min,max)=cur.grammar else{panic!("");};
 
         //in always/prev they check if their success_ind is a many (which could be a problem if ands/ors were handled more efficiently),
         //  but could store maybe a many_id to check whether to exit? eg if id is eq, and/or tokens.inds.start is eq?
@@ -893,7 +893,7 @@ where
 
         //
         self.stk.push(Work {
-            grammar: g.clone(),
+            grammar: g,
             // grammar_ind:0,
             work_success_len: success_len2,
             work_fail_len: fail_len,
