@@ -14,7 +14,7 @@ TODO
 
 
 
-// #[derive(PartialEq,Eq,)]
+#[derive(PartialEq,Eq,)]
 pub enum GrammarNode<'g,NT,P>
 // where
 //     P:Clone, //+core::hash::Hash+PartialEq+Eq,
@@ -27,9 +27,9 @@ pub enum GrammarNode<'g,NT,P>
     Group(&'g GrammarNode<'g,NT,P>,&'g str,),
     Expect(&'g GrammarNode<'g,NT,P>, &'g str,),
 
-    Was(&'g GrammarNode<'g,NT,P>, &'g str),
+    Was(&'g GrammarNode<'g,NT,P>),
 
-    Had(&'g str), // Had(&'g GrammarNode<'g,NT,P>, &'g str),
+    Had(&'g GrammarNode<'g,NT,P>), // Had(&'g GrammarNode<'g,NT,P>, &'g str),
     Primitive(P),
 
     Always, //always succeeds
@@ -170,7 +170,7 @@ where
             // Self::Stow(arg0) => f.debug_tuple("Stow").field(arg0).finish(),
 
             // Self::Prev(arg0) => f.debug_tuple("Prev").field(arg0).finish(),
-            Self::Was(arg0, arg1) => f.debug_tuple("Was").field(arg0).field(arg1).finish(),
+            Self::Was(arg0, ) => f.debug_tuple("Was").field(arg0).finish(),
             // Self::Had(arg0, arg1) => f.debug_tuple("Had").field(arg0).field(arg1).finish(),
             Self::Had(arg0) => f.debug_tuple("Had").field(arg0).finish(),
 

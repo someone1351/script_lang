@@ -114,17 +114,17 @@ where
     groups:Vec<TempGroup<'g,TS>>,
 
     stow_news:Vec<TempStowNew<NT,TS>>,
-    stows:Vec<TempStow<'g,NT,TS>>,
+    stows:Vec<TempStow<'g,NT,P,TS>>,
     stow_groups:Vec<TempGroup<'g,TS>>,
 
-    was_news:Vec<TempWas<'g>>,
-    wases:Vec<TempWas<'g>>,
+    was_news:Vec<TempWas<'g,NT,P>>,
+    wases:Vec<TempWas<'g,NT,P>>,
 }
 
 impl<'g,NT,P,TS,G> GrammarWalker<'g,NT,P,TS,G>
 where
     NT:core::hash::Hash+Clone+Eq+PartialEq+Debug,
-    P:Clone+Debug+GrammarPrimitiveTrait,
+    P:Clone+Debug+GrammarPrimitiveTrait+Eq+PartialEq,
     TS: Clone+TokenIterTrait+Debug + TokenIterGetTrait<P> ,
     G: Fn(NT)->Option<&'g GrammarNode<'g,NT,P>>,
 {
@@ -475,7 +475,7 @@ where
     // }
 
     fn grammar_was(&mut self,cur :Work<'g,NT,P,TS>,) {
-        let GrammarNode::Was(g,name, )=cur.grammar else{panic!("");};
+        let GrammarNode::Was(g,  )=cur.grammar else{panic!("");};
 
         //
         // let stow_new_len=self.hist_news_add(&cur);
@@ -488,7 +488,7 @@ where
         // let was_len=cur.was_len+1; //self.wases.len();
 
 
-        self.was_news.push(TempWas{name});
+        self.was_news.push(TempWas{name:g});
         // let was_new_len=cur.was_new_len+1;//self.was_news.len();
         let was_new_len=self.was_news.len();
 
@@ -550,14 +550,16 @@ where
 
         //
         if
-            // self.had.as_ref().map(|x|x.name) == Some(*name)
-            // self.wases[cur.was_ind..].iter().find(|x|x.name==*name).map(|x|x.name)==Some(*name)
-            // self.wases.get(cur.was_ind).map(|x|x.name)==Some(*name)
-            self.wases.last().map(|x|x.name)==Some(*name)
-            // self.hist_ends_stk.last().unwrap().elements
-            //     .iter().find(|x|x.grammar.eq(g)).is_some()
-            //     // .contains_key(&g)
-            // self.hist_prevs[cur.hist_prevs_ind..].iter().find(|x|x.grammar.eq(g)).is_some()
+            // // self.had.as_ref().map(|x|x.name) == Some(*name)
+            // // self.wases[cur.was_ind..].iter().find(|x|x.name==*name).map(|x|x.name)==Some(*name)
+            // // self.wases.get(cur.was_ind).map(|x|x.name)==Some(*name)
+            // self.wases.last().map(|x|x.name)==Some(*name)
+        self.wases.last().map(|x|x.name.eq(name)).unwrap_or_default()
+
+            // // self.hist_ends_stk.last().unwrap().elements
+            // //     .iter().find(|x|x.grammar.eq(g)).is_some()
+            // //     // .contains_key(&g)
+            // // self.hist_prevs[cur.hist_prevs_ind..].iter().find(|x|x.grammar.eq(g)).is_some()
         {
             // self.stk.truncate(cur.success_len);
             self.group_set_trim( cur.group_ind,cur.tokens.clone(),false );

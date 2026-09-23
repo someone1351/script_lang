@@ -78,20 +78,20 @@ where
 }
 
 #[derive(Clone, )]
-pub struct TempWas<'g> {
-    pub name:&'g str,
+pub struct TempWas<'g,NT,P> {
+    pub name:&'g GrammarNode<'g,NT,P>,
 }
 
 #[derive(Clone,)]
-pub enum TempStowWas<'g> {
-    Was(TempWas<'g>),
+pub enum TempStowWas<'g,NT,P> {
+    Was(TempWas<'g,NT,P>),
     Primitive,
     None,
 }
 
 
 // #[derive(Clone,)]
-pub struct TempStowSuccess<'g,NT,TS>
+pub struct TempStowSuccess<'g,NT,P,TS>
 where
     // P:Clone+core::hash::Hash+PartialEq+Eq,
     TS: Clone,
@@ -100,7 +100,7 @@ where
     pub non_term : NT,
     pub tokens_after:TS,
     pub stow_groups_end:usize,
-    pub was:TempStowWas<'g>,
+    pub was:TempStowWas<'g,NT,P>,
     pub trim:bool,
 }
 // #[derive(Clone,)]
@@ -128,7 +128,7 @@ pub struct TempStowFail<NT>
 
 
 // #[derive(Clone,)]
-pub struct TempStow<'g,NT,TS>
+pub struct TempStow<'g,NT,P,TS>
 where
 
     // P:Clone+core::hash::Hash+PartialEq+Eq,
@@ -138,7 +138,7 @@ where
     // pub val : TempStowVal<'t,'g>,
     pub tokens_start_ind:usize,
 
-    pub success : Option<TempStowSuccess<'g,NT,TS>>,
+    pub success : Option<TempStowSuccess<'g,NT,P,TS>>,
     pub fail : Option<TempStowFail<NT>>,
 }
 
