@@ -193,21 +193,21 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
         ]), &Always]),
 
         MyNonTerm::Stmt => &Or(&[
-            &NonTerm(MyNonTerm::Var),
+            // &NonTerm(MyNonTerm::Var),
 
-            &NonTerm(MyNonTerm::For),
-            &NonTerm(MyNonTerm::While),
-            &NonTerm(MyNonTerm::Func),
+            // &NonTerm(MyNonTerm::For),
+            // &NonTerm(MyNonTerm::While),
+            // &NonTerm(MyNonTerm::Func),
 
-            &NonTerm(MyNonTerm::Break),
-            &NonTerm(MyNonTerm::Continue),
-            &NonTerm(MyNonTerm::Return),
+            // &NonTerm(MyNonTerm::Break),
+            // &NonTerm(MyNonTerm::Continue),
+            // &NonTerm(MyNonTerm::Return),
 
-            &NonTerm(MyNonTerm::Include),
+            // &NonTerm(MyNonTerm::Include),
 
-            &NonTerm(MyNonTerm::Format),
-            &NonTerm(MyNonTerm::Print),
-            &NonTerm(MyNonTerm::Println),
+            // &NonTerm(MyNonTerm::Format),
+            // &NonTerm(MyNonTerm::Print),
+            // &NonTerm(MyNonTerm::Println),
 
             &NonTerm(MyNonTerm::Set),
             &NonTerm(MyNonTerm::Expr),
@@ -330,7 +330,8 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
 
         MyNonTerm::Include => &And(&[&Primitive(Keyword("include")),&Group(&Primitive(String),"include"),]),
 
-        MyNonTerm::Expr => &Expect(&Group(&NonTerm(MyNonTerm::Or1),"expr"),"expr"),
+        // MyNonTerm::Expr => &Expect(&Group(&NonTerm(MyNonTerm::Or1),"expr"),"expr"),
+        MyNonTerm::Expr => &Expect(&Group(&NonTerm(MyNonTerm::Term),"expr"),"expr"),
 
         MyNonTerm::Or1 => &Or(&[
             &Group(&And(&[

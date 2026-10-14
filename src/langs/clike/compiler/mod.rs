@@ -114,7 +114,7 @@ impl Compiler {
 
         //
         let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
-        // walker.set_debug(true);
+        walker.set_debug(true);
 
         let start_time = std::time::Instant::now();
         let result=walker.run(rules::MyNonTerm::Start) ;
@@ -157,9 +157,9 @@ impl Compiler {
 
         //
         println!("-----------------");
-        if false {
+        if true {
 
-            let walk2=walker.get_walk(true);
+            let walk2=walker.get_walk(false);
 
             let mut stk=vec![(walk2.root(),0)];
 
@@ -184,11 +184,20 @@ impl Compiler {
 
                 }
             }
-        }
-        let walk=walker.get_walk(false);
 
+            println!("1_____");
+            for (i,g) in walk2.groups.iter().enumerate() {
+                println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
+            }
+        }
+        let walk=walker.get_walk2(false);
+
+            println!("2_____");
+            for (i,g) in walk.groups.iter().enumerate() {
+                println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
+            }
         println!("===---===");
-        // println!("{}",walk.root());
+        println!("{}",walk.root());
         // {
         //     enum Thing<'g,TS>
         //     where
@@ -225,7 +234,7 @@ impl Compiler {
 
         println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
 
-        // return Ok(BuildT::new(Build::default()));
+        return Ok(BuildT::new(Build::default()));
 
         let start_time = std::time::Instant::now();
         //

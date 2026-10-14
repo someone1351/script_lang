@@ -73,8 +73,10 @@ where
     pub non_term:NT,
     pub tokens_start:TS,
     pub group_len:usize,
+    pub group_new_len2:usize,
     pub stow_len:usize,
     pub trim:bool,
+    pub trim2:bool,
 }
 
 #[derive(Clone, )]
@@ -90,7 +92,7 @@ pub enum TempStowWas<'g,NT,P> {
 }
 
 
-// #[derive(Clone,)]
+#[derive(Clone,)]
 pub struct TempStowSuccess<'g,NT,P,TS>
 where
     // P:Clone+core::hash::Hash+PartialEq+Eq,
@@ -101,7 +103,9 @@ where
     pub tokens_after:TS,
     pub stow_groups_end:usize,
     pub was:TempStowWas<'g,NT,P>,
-    pub trim:bool,
+    pub trim1:bool,
+    pub trim2:bool,
+    pub group_len2:usize,
 }
 // #[derive(Clone,)]
 pub struct TempStowFail<NT>
@@ -152,7 +156,28 @@ where
     pub tokens:TS,
     pub trim:bool, //trim on close, except root (0)
 }
-
+#[derive(Clone)]
+pub struct TempGroupNew2<'g,TS>
+where
+    TS:Clone,
+{
+    pub name:&'g str,
+    // pub parent:usize, //group
+    pub tokens:TS,
+    pub trim:bool, //trim on close, except root (0)
+    pub group_len2:usize,
+}
+#[derive(Clone)]
+pub struct TempGroup2<'g,TS>
+where
+    TS:Clone,
+{
+    pub name:&'g str,
+    // pub parent:usize, //group
+    pub tokens:TS,
+    pub trim:bool, //trim on close, except root (0)
+    pub group_len2:usize,
+}
 // impl<'t,'g> Debug for  TempGroup<'t,'g> {
 //     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 //         f.debug_struct("TempGroupInfo")
@@ -187,6 +212,9 @@ where
 
     pub group_ind:usize,
     pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
+
+    pub group_new_len2:usize,
+    pub group_len2:usize,
 
     pub was_new_len:usize,
     pub was_ind:usize, //to have more than one WAS at a time (ie nested ones), need a was_len
