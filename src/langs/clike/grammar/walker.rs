@@ -2188,6 +2188,8 @@ where
 
         let hist_stow=&mut self.stows[cur.stow_len-1];
 
+        self.stow_groups.truncate(hist_stow.stow_groups_start);
+
         hist_stow.success=None;
     }
     fn hist_on_success(&mut self,
@@ -2515,7 +2517,9 @@ where
 
     // }
 
+    fn group_truncate2() {
 
+    }
     fn group_set_trim2(&mut self,
 
         // cur :&Work<'g,NT,P,TS>,
