@@ -2328,6 +2328,20 @@ where
         //
 
         let stow_len=last.stow_len;
+
+        // if let Some(new_last_stow)=self.stows[.. last.stow_len].last() {
+
+        //     //not really necessary, but makes things more clear for debugging
+        //     let groups_len2=if let Some(stow_success)=&hist_stow.success {
+        //         stow_success.group_len2
+        //     } else {
+        //         hist_stow.stow_groups_start
+        //         a
+        //     };
+
+        //     self.groups2.truncate(groups_len2);
+        // }
+
         self.hist_stows_truncate(stow_len);
 
         // //
@@ -3584,8 +3598,8 @@ where
                         ))
                         .collect::<Vec<_>>().join(", ");
 
-                    println!("        hist_news: len={stow_new_len} ({}), {stow_news:?}",self.stow_news.len(),);
-                    println!("        hist_stows {stow_len} ({}), {stows:?}",self.stows.len());
+                    println!("        hist_news: len={stow_new_len} ({}), [{stow_news:?}]",self.stow_news.len(),);
+                    println!("        hist_stows {stow_len} ({}), [{stows:?}]",self.stows.len());
 
                     // for (i,h) in self.stow_news.iter().enumerate() {
                     //     println!("            {i}:t{}: {:?}, gl={}",h.tokens_start.inds2().start,h.non_term,h.group_len)
