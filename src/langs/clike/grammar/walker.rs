@@ -3217,7 +3217,7 @@ where
     }
 
     //
-    pub fn get_walk(&self, in_betweens:bool) -> Walk<'g,TS> {
+    pub fn get_walk1(&self, in_betweens:bool) -> Walk<'g,TS> {
         //
         let mut groups_out: Vec<WalkGroup<'g,TS>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
 

@@ -22,6 +22,9 @@ mod compiler_error;
 pub mod rules;
 mod builder_error;
 
+pub mod tokeniser;
+
+
 use crate::builder::{Builder, BuilderError};
 use crate::clike::compiler::builder_error::BuilderErrorType;
 use crate::clike::compiler::rules::GrammarPrimitive;
@@ -159,7 +162,7 @@ impl Compiler {
         println!("-----------------");
         if true {
 
-            let walk2=walker.get_walk(false);
+            let walk2=walker.get_walk2(false);
 
             let mut stk=vec![(walk2.root(),0)];
 

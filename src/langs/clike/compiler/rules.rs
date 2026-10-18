@@ -21,11 +21,11 @@ pub enum GrammarPrimitive<'g> {
 }
 
 
-impl<'g> GrammarPrimitive<'g> {
-    fn to<NT>(self) -> GrammarNode<'g,NT,GrammarPrimitive<'g>> {
-        GrammarNode::Primitive(self)
-    }
-}
+// impl<'g> GrammarPrimitive<'g> {
+//     fn to<NT>(self) -> GrammarNode<'g,NT,GrammarPrimitive<'g>> {
+//         GrammarNode::Primitive(self)
+//     }
+// }
 
 impl<'g> GrammarPrimitiveTrait for GrammarPrimitive<'g> {
     fn is_trimmable(&self) -> bool {
