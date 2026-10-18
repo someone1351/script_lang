@@ -121,7 +121,7 @@ where
 
     stow_news:Vec<TempStowNew<NT,TS>>,
     stows:Vec<TempStow<'g,NT,P,TS>>,
-    stow_groups:Vec<TempGroup<'g,TS>>,
+    stow_groups1:Vec<TempGroup<'g,TS>>,
 
     was_news:Vec<TempWas<'g,NT,P>>,
     wases:Vec<TempWas<'g,NT,P>>,
@@ -172,7 +172,7 @@ where
 
             // hist_stows_stk:Default::default(),
             stows:Default::default(),
-            stow_groups:Default::default(),
+            stow_groups1:Default::default(),
             // // hist_stows_prevs:Default::default(),
             // // hist_stows_elements: Default::default(),
             // // hist_prevs: Default::default(),
@@ -439,7 +439,7 @@ where
 
         // self.hist_stows_stk.clear();
         self.stows.clear();
-        self.stow_groups.clear();
+        self.stow_groups1.clear();
         // // self.hist_stows_prevs.clear();
 
         // // self.hist_stows_elements.clear();
@@ -609,10 +609,14 @@ where
             //
             // self.hist_news_truncate_to_last(); //why on success??
             self.update_tokens(cur.tokens.clone(),true);
+
+            self.stow_clear(&cur); //before hist
+
+            // self.groups_truncate2(&cur);
             self.groups_on_success(cur.group_ind,cur.group_len,cur.tokens.clone());
             self.groups_on_success2(cur.group_len2,cur.group_new_len2, cur.tokens.clone(),);
             self.was_on_success(false); //before hist
-            self.stow_clear(&cur); //before hist
+
             self.hist_on_success(cur.grammar,cur.group_len,cur.tokens.clone(),false,);
             self.expect_on_success2();
             // self.expect_on_success1();
@@ -1625,10 +1629,13 @@ where
         // self.hist_stows_clear(&cur);
         self.handle_exit_last_many(&cur);
         self.update_tokens(cur.tokens.clone(),true);
+
+        self.stow_clear(&cur); //before hist
+
+        // self.groups_truncate2(&cur);
         self.groups_on_success(cur.group_ind,cur.group_len,cur.tokens.clone()); //here
         self.groups_on_success2(cur.group_len2,cur.group_new_len2, cur.tokens.clone(),);
         self.was_on_success(false); //before hist
-        self.stow_clear(&cur); //before hist
         self.hist_on_success(cur.grammar,cur.group_len,cur.tokens.clone(),false);
 
         //why was this previously commented out?
@@ -1727,7 +1734,7 @@ where
         // let temp_groups_end=hist_stow.success_val.as_ref().map(|x|x.stow_groups_end).unwrap_or(hist_stow.stow_groups_start);
         // let temp_groups_end=*stow_groups_end;
 
-        let stow_groups=&self.stow_groups[hist_stow.stow_groups_start .. stow_success.stow_groups_end];
+        let stow_groups=&self.stow_groups1[hist_stow.stow_groups_start .. stow_success.stow_groups_end];
         // // let stow_prevs=&self.hist_stows_prevs[hist_stow.stow_prevs_start..temp_prevs_end];
 
         // //
@@ -1780,7 +1787,7 @@ where
 
 
         let tokens_after=stow_success.tokens_after.clone();
-        let new_group_len=self.groups.len();
+        let new_group_len1=self.groups.len();
         //
 
         self.group_set_trim2(cur.group_new_len2,cur.tokens.clone(),stow_success.trim2);
@@ -1788,10 +1795,10 @@ where
 
         self.work_stk_truncate(cur.work_success_len);
         self.update_tokens(tokens_after.clone(),true);
-        self.groups_on_success(cur.group_ind,new_group_len,tokens_after.clone());
+        self.groups_on_success(cur.group_ind,new_group_len1,tokens_after.clone());
         self.groups_on_success2(stow_success.group_len2,cur.group_new_len2, tokens_after.clone(),);
         self.was_on_success(was_prim); //before hist
-        self.hist_on_success(cur.grammar,new_group_len,tokens_after.clone(),true,); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
+        self.hist_on_success(cur.grammar,new_group_len1,tokens_after.clone(),true,); //not needed? no.. if And(Z,Or(And(X,Y),X)), then will add that
         self.expect_on_success2();
         // self.expect_on_success1();
 
@@ -1878,10 +1885,14 @@ where
             //
             self.work_stk_truncate(cur.work_success_len);
             self.update_tokens(after_tokens.clone(),true);
+
+            self.stow_clear(&cur); //before hist
+
+            // self.groups_truncate2(&cur);
             self.groups_on_success(cur.group_ind,cur.group_len,after_tokens.clone());
             self.groups_on_success2(cur.group_len2,cur.group_new_len2, after_tokens.clone(),);
             self.was_on_success(true); //before hist
-            self.stow_clear(&cur); //before hist
+
             self.hist_on_success(cur.grammar,cur.group_len,after_tokens.clone(),false); //after group2
 
             self.expect_on_success2();
@@ -2188,10 +2199,19 @@ where
 
         let hist_stow=&mut self.stows[cur.stow_len-1];
 
-        self.stow_groups.truncate(hist_stow.stow_groups_start);
+        self.stow_groups1.truncate(hist_stow.stow_groups_start);
+
+
+        self.groups2.truncate(cur.group_len2);
 
         hist_stow.success=None;
     }
+
+    fn groups_truncate2(&mut self,cur:&Work<'g,NT,P,TS>,) {
+
+        self.groups2.truncate(cur.group_len2);
+    }
+
     fn hist_on_success(&mut self,
         cur_grammar:&GrammarNode<'g,NT,P>,
         cur_group_len:usize,
@@ -2253,7 +2273,7 @@ where
                 // self.hist_stows_prevs.extend(added_hist_prevs.iter().rev().cloned());
 
                 //
-                self.stow_groups.truncate(hist_stow.stow_groups_start);
+                self.stow_groups1.truncate(hist_stow.stow_groups_start);
 
                 //
                 if self.groups.len()!=drained_stow_new.group_len {
@@ -2261,7 +2281,7 @@ where
                     //
                     let group_ind_offset=self.groups[drained_stow_new.group_len].parent;
 
-                    self.stow_groups.extend(self.groups[drained_stow_new.group_len..cur_group_len].iter().map(|x|TempGroup{
+                    self.stow_groups1.extend(self.groups[drained_stow_new.group_len..cur_group_len].iter().map(|x|TempGroup{
                         parent: x.parent-group_ind_offset
                         , ..x.clone()
                     }));
@@ -2299,7 +2319,7 @@ where
                     // grammar: drained_stow_new.grammar.clone(),
                     non_term:drained_stow_new.non_term.clone(),
                     tokens_after: cur_tokens.clone(),
-                    stow_groups_end: self.stow_groups.len(),
+                    stow_groups_end: self.stow_groups1.len(),
                     // stow_prevs_end: self.hist_stows_prevs.len(),
                     // was:self.wases.get(cur.was_ind).cloned(),
                     was: //self.wases[last.was_ind..].last().m
@@ -2391,7 +2411,7 @@ where
 
             //
             self.stows.push(TempStow {
-                stow_groups_start: self.stow_groups.len(),
+                stow_groups_start: self.stow_groups1.len(),
                 // success_val: None,
                 // // stow_prevs_start: self.hist_stows_prevs.len(),
                 // fail_val:None,
@@ -2486,7 +2506,7 @@ where
             //     hist_stow.stow_groups_start
             // };
 
-            self.stow_groups.truncate(groups_len);
+            self.stow_groups1.truncate(groups_len);
             // self.hist_stows_prevs.truncate(prevs_len);
 
             // //not really necessary, but makes things more clear for debugging
@@ -2584,7 +2604,7 @@ where
 
         let drained_group_news=self.group_news2.drain(last.group_new_len2..cur_group_new_len2);
 
-        self.groups2.truncate(cur_group_len2);
+        // self.groups2.truncate(cur_group_len2);
         self.groups2.extend(drained_group_news.rev().map(|x|{
             let mut tokens=x.tokens;
             tokens.truncate2(tokens.len2()-cur_tokens.len2());
@@ -2608,6 +2628,15 @@ where
 
         self.group_news2.truncate(last.group_new_len2);
         // self.groups2.truncate(last.group_len2); //truncated before groups added now
+
+        let stow_group_len=if last.stow_len!=0 {
+            self.stows.get(last.stow_len-1)
+                .and_then(|x|x.success.as_ref())
+                .map(|x|x.group_len2)
+        }else{None};
+
+        self.groups2.truncate(stow_group_len.unwrap_or(last.group_len2));
+
     }
 
 
