@@ -80,20 +80,20 @@ where
 }
 
 #[derive(Clone, )]
-pub struct TempWas<'g,NT,P> {
-    pub name:&'g GrammarNode<'g,NT,P>,
+pub struct TempWas<'g,NT,P,GR> {
+    pub name:&'g GrammarNode<'g,NT,P,GR>,
 }
 
 #[derive(Clone,)]
-pub enum TempStowWas<'g,NT,P> {
-    Was(TempWas<'g,NT,P>),
+pub enum TempStowWas<'g,NT,P,GR> {
+    Was(TempWas<'g,NT,P,GR>),
     Primitive,
     None,
 }
 
 
 #[derive(Clone,)]
-pub struct TempStowSuccess<'g,NT,P,TS>
+pub struct TempStowSuccess<'g,NT,P,GR,TS>
 where
     // P:Clone+core::hash::Hash+PartialEq+Eq,
     TS: Clone,
@@ -102,7 +102,7 @@ where
     pub non_term : NT,
     pub tokens_after:TS,
     pub stow_groups_end:usize,
-    pub was:TempStowWas<'g,NT,P>,
+    pub was:TempStowWas<'g,NT,P,GR>,
     pub trim1:bool,
     pub trim2:bool,
     pub group_len2:usize,
@@ -132,7 +132,7 @@ pub struct TempStowFail<NT>
 
 
 // #[derive(Clone,)]
-pub struct TempStow<'g,NT,P,TS>
+pub struct TempStow<'g,NT,P,GR,TS>
 where
 
     // P:Clone+core::hash::Hash+PartialEq+Eq,
@@ -142,37 +142,38 @@ where
     // pub val : TempStowVal<'t,'g>,
     pub tokens_start_ind:usize,
 
-    pub success : Option<TempStowSuccess<'g,NT,P,TS>>,
+    pub success : Option<TempStowSuccess<'g,NT,P,GR,TS>>,
     pub fail : Option<TempStowFail<NT>>,
 }
 
 #[derive(Clone)]
-pub struct TempGroup<'g,TS>
+pub struct TempGroup<GR,TS>
 where
     TS:Clone,
 {
-    pub name:&'g str,
+    pub name:Option<GR>, //&'g str,
     pub parent:usize, //group
     pub tokens:TS,
     pub trim:bool, //trim on close, except root (0)
 }
 #[derive(Clone)]
-pub struct TempGroupNew2<'g,TS>
+pub struct TempGroupNew2<GR,TS>
 where
     TS:Clone,
+    GR:Clone,
 {
-    pub name:&'g str,
+    pub name:GR,
     // pub parent:usize, //group
     pub tokens:TS,
     pub trim:bool, //trim on close, except root (0)
     pub group_len2:usize,
 }
 #[derive(Clone)]
-pub struct TempGroup2<'g,TS>
+pub struct TempGroup2<GR,TS>
 where
     TS:Clone,
 {
-    pub name:&'g str,
+    pub name:GR,
     // pub parent:usize, //group
     pub tokens:TS,
     pub trim:bool, //trim on close, except root (0)
@@ -190,7 +191,7 @@ where
 // }
 
 #[derive(Clone)]
-pub struct Work<'g,NT,P,TS>
+pub struct Work<'g,NT,P,GR,TS>
 where
 
     P:Clone, //+core::hash::Hash+PartialEq+Eq,
@@ -198,7 +199,7 @@ where
     // I: Iterator<Item=T>+Clone,
     TS:Clone,
 {
-    pub grammar:&'g GrammarNode<'g,NT,P>,
+    pub grammar:&'g GrammarNode<'g,NT,P,GR>,
     // pub tokens:TokenIterContainer<'t>,
     pub tokens:TS,
 

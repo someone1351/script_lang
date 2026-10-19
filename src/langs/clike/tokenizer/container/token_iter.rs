@@ -1,7 +1,7 @@
 // use std::ops::{Bound, Range, RangeBounds};
 use std::ops::Range;
 use crate::build::Loc;
-use crate::clike::compiler::rules::GrammarPrimitive;
+use crate::clike::compiler::rules::MyPrimitive;
 use crate::clike::grammar::{GrammarPrimitiveTrait, TokenIterGetTrait, TokenIterTrait};
 use super::super::super::tokenizer::data::Tokenized;
 
@@ -411,17 +411,17 @@ impl<'t> TokenIterTrait for TokenIterContainer<'t> {
 
 }
 
-impl<'g,'t> TokenIterGetTrait<GrammarPrimitive<'g>> for TokenIterContainer<'t> {
+impl<'g,'t> TokenIterGetTrait<MyPrimitive<'g>> for TokenIterContainer<'t> {
 
-    fn pop_primitive(&mut self, p:&GrammarPrimitive<'g>) -> bool {
+    fn pop_primitive(&mut self, p:&MyPrimitive<'g>) -> bool {
         match p {
-            GrammarPrimitive::String => self.pop_string().is_ok(),
-            GrammarPrimitive::Identifier => self.pop_identifier().is_ok(),
-            GrammarPrimitive::Int => self.pop_int().is_ok(),
-            GrammarPrimitive::Float => self.pop_float().is_ok(),
-            GrammarPrimitive::Symbol(s) => self.pop_with_symbol(s).is_ok(),
-            GrammarPrimitive::Keyword(s) => self.pop_with_keyword(s).is_ok(),
-            GrammarPrimitive::Eol => self.pop_eol().is_ok(),
+            MyPrimitive::String => self.pop_string().is_ok(),
+            MyPrimitive::Identifier => self.pop_identifier().is_ok(),
+            MyPrimitive::Int => self.pop_int().is_ok(),
+            MyPrimitive::Float => self.pop_float().is_ok(),
+            MyPrimitive::Symbol(s) => self.pop_with_symbol(s).is_ok(),
+            MyPrimitive::Keyword(s) => self.pop_with_keyword(s).is_ok(),
+            MyPrimitive::Eol => self.pop_eol().is_ok(),
         }
     }
 }

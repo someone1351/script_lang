@@ -5,28 +5,28 @@ use crate::clike::grammar::TokenIterTrait;
 use super::super::{grammar::container::WalkGroupContainer, tokenizer::TokenIterContainer};
 
 
-pub struct WalkGroup<'g,TS>
+pub struct WalkGroup<GR,TS>
 where
     TS:Clone,
 {
-    pub name:Option<&'g str>,
+    pub name:Option<GR>,
     pub children:Range<usize>,
     pub tokens:TS,
     // pub tokens : Range<usize>,
 }
-pub struct Walk<'g,TS>
+pub struct Walk<GR,TS>
 where
     TS:Clone,
 {
-    pub groups : Vec<WalkGroup<'g,TS>>,
+    pub groups : Vec<WalkGroup<GR,TS>>,
     // pub tokenizer:&'a Tokenizer
 }
 
-impl<'g,TS> Walk<'g,TS>
+impl<'g,GR,TS> Walk<GR,TS>
 where
     TS:Clone+TokenIterTrait,
 {
-    pub fn root(&'g self) -> WalkGroupContainer<'g,TS> {
+    pub fn root(&'g self) -> WalkGroupContainer<'g,GR,TS> {
         WalkGroupContainer { walk: self, group_ind: 0 }
     }
 }

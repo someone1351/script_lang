@@ -5,20 +5,20 @@ use crate::clike::grammar::TokenIterTrait;
 use super::super::super::grammar::{container::WalkGroupContainer, data::Walk};
 
 #[derive(Clone, )]
-pub struct WalkGroupIterContainer<'g,TS>
+pub struct WalkGroupIterContainer<'g,GR,TS>
 where
     TS:Clone,
 {
-    pub walk:&'g Walk<'g,TS>,
+    pub walk:&'g Walk<GR,TS>,
     pub start:usize,
     pub end:usize,
 }
 
-impl<'g,TS> WalkGroupIterContainer<'g,TS>
+impl<'g,GR,TS> WalkGroupIterContainer<'g,GR,TS>
 where
     TS:Clone+TokenIterTrait,
 {
-    pub fn pop_front(&mut self) -> Option<WalkGroupContainer<'g,TS>,> {
+    pub fn pop_front(&mut self) -> Option<WalkGroupContainer<'g,GR,TS>,> {
         if self.start < self.end {
             let group_ind=self.start;
             self.start+=1;
@@ -32,7 +32,7 @@ where
         self.end-self.start
     }
 
-    pub fn get(&self, ind:usize) -> Option<WalkGroupContainer<'g,TS>,> {
+    pub fn get(&self, ind:usize) -> Option<WalkGroupContainer<'g,GR,TS>,> {
         let group_ind= self.start+ind;
 
         if group_ind < self.end {
@@ -42,7 +42,7 @@ where
         }
     }
 
-    pub fn get_range<R:RangeBounds<usize>>(&self,r:R) -> WalkGroupIterContainer<'g,TS> {
+    pub fn get_range<R:RangeBounds<usize>>(&self,r:R) -> WalkGroupIterContainer<'g,GR,TS> {
 
         let range_start=match r.start_bound().cloned() {
             Bound::Included(x)=>x,
@@ -76,12 +76,12 @@ where
         self.start==self.end
     }
 
-    pub fn first(&self) -> Option<WalkGroupContainer<'g,TS>,> {
+    pub fn first(&self) -> Option<WalkGroupContainer<'g,GR,TS>,> {
         self.get(0)
     }
-    pub fn split<F>(&self,f:F) -> Vec<WalkGroupIterContainer<'g,TS>>
+    pub fn split<F>(&self,f:F) -> Vec<WalkGroupIterContainer<'g,GR,TS>>
     where
-        F:Fn(WalkGroupContainer<'g,TS>) -> bool,
+        F:Fn(WalkGroupContainer<'g,GR,TS>) -> bool,
     {
         if self.len()==0 {
             return Vec::new();
@@ -118,9 +118,9 @@ where
 
 
 
-    pub fn split_between<F>(&self,f:F) -> Vec<WalkGroupIterContainer<'g,TS>>
+    pub fn split_between<F>(&self,f:F) -> Vec<WalkGroupIterContainer<'g,GR,TS>>
     where
-        F:Fn(WalkGroupContainer<'g,TS>) -> bool,
+        F:Fn(WalkGroupContainer<'g,GR,TS>) -> bool,
     {
         if self.len()==0 {
             return Vec::new();
@@ -159,11 +159,11 @@ where
 }
 
 
-impl<'g,TS> Iterator for WalkGroupIterContainer<'g,TS>
+impl<'g,GR,TS> Iterator for WalkGroupIterContainer<'g,GR,TS>
 where
     TS:Clone+TokenIterTrait,
 {
-    type Item = WalkGroupContainer<'g,TS>;
+    type Item = WalkGroupContainer<'g,GR,TS>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start < self.end {
@@ -178,11 +178,11 @@ where
     }
 }
 
-impl<'g,TS> DoubleEndedIterator for WalkGroupIterContainer<'g,TS>
+impl<'g,GR,TS> DoubleEndedIterator for WalkGroupIterContainer<'g,GR,TS>
 where
     TS:Clone+TokenIterTrait,
 {
-    fn next_back(&mut self) -> Option<WalkGroupContainer<'g,TS>> {
+    fn next_back(&mut self) -> Option<WalkGroupContainer<'g,GR,TS>> {
         if self.end > self.start {
             self.end-=1;
             let group_ind=self.end;
@@ -194,7 +194,7 @@ where
     }
 }
 
-// impl<'g,TS> std::fmt::Debug for WalkGroupIterContainer<'g,TS> {
+// impl<'g,TS> std::fmt::Debug for WalkGroupIterContainer<'g,GR,TS> {
 //     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 
 //         f.write_fmt(format_args!("[{}]", self.clone().map(|p|format!("{p:?}")).collect::<Vec<String>>().join(", ")))

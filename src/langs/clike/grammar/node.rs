@@ -15,29 +15,31 @@ TODO
 
 
 #[derive(PartialEq,Eq,)]
-pub enum GrammarNode<'g,NT,P>
+pub enum GrammarNode<'g,NT,P,GR>
 // where
 //     P:Clone, //+core::hash::Hash+PartialEq+Eq,
 {
-    Many(&'g GrammarNode<'g,NT,P>, usize,usize), //min,max
-    And(&'g [&'g GrammarNode<'g,NT,P>],), //stow_first, error_ind
-    Or( &'g [&'g GrammarNode<'g,NT,P>],), //should store reversed?
+    Many(&'g GrammarNode<'g,NT,P,GR>, usize,usize), //min,max
+    And(&'g [&'g GrammarNode<'g,NT,P,GR>],), //stow_first, error_ind
+    Or( &'g [&'g GrammarNode<'g,NT,P,GR>],), //should store reversed?
     NonTerm(NT),
 
-    Group(&'g GrammarNode<'g,NT,P>,&'g str,),
-    Expect(&'g GrammarNode<'g,NT,P>, &'g str,),
+    Group(&'g GrammarNode<'g,NT,P,GR>,GR,),
+    Expect(&'g GrammarNode<'g,NT,P,GR>, &'g str,),
 
-    Was(&'g GrammarNode<'g,NT,P>),
+    Not(&'g GrammarNode<'g,NT,P,GR>),
 
-    Had(&'g GrammarNode<'g,NT,P>), // Had(&'g GrammarNode<'g,NT,P>, &'g str),
+    Was(&'g GrammarNode<'g,NT,P,GR>),
+
+    Had(&'g GrammarNode<'g,NT,P,GR>), // Had(&'g GrammarNode<'g,NT,P,GR>, &'g str),
     Primitive(P),
 
     Always, //always succeeds
     Error,
-    // Prev(&'g GrammarNode<'g,NT,P>),
+    // Prev(&'g GrammarNode<'g,NT,P,GR>),
 
-    // NoExpect(&'g GrammarNode<'g,NT,P>, ),
-    // Stow(&'g GrammarNode<'g,NT,P>),
+    // NoExpect(&'g GrammarNode<'g,NT,P,GR>, ),
+    // Stow(&'g GrammarNode<'g,NT,P,GR>),
     // String,
     // Identifier,
     // Int,
@@ -49,21 +51,21 @@ pub enum GrammarNode<'g,NT,P>
     // Error(GrammarWalkError<'g>),
 
 
-    // Stow(&'g GrammarNode<'g,NT,P>),
+    // Stow(&'g GrammarNode<'g,NT,P,GR>),
 
-    // Mark(&'g GrammarNode<'g,NT,P>),
+    // Mark(&'g GrammarNode<'g,NT,P,GR>),
 }
 
 
-// impl<'g,NT,P> GrammarNode<'g,NT,P>
+// impl<'g,NT,P> GrammarNode<'g,NT,P,GR>
 // where
 //     NT:Clone,
 //     P:Clone, //+core::hash::Hash+PartialEq+Eq,
 // {
-//     pub fn many0(&'g self) -> GrammarNode<'g,NT,P> {
+//     pub fn many0(&'g self) -> GrammarNode<'g,NT,P,GR> {
 //         Self::Many(self)
 //     }
-//     pub fn many1(  self,g:&'g GrammarNode<'g,NT,P>) -> GrammarNode<'g,NT,P> {
+//     pub fn many1(  self,g:&'g GrammarNode<'g,NT,P,GR>) -> GrammarNode<'g,NT,P,GR> {
 //         Self::Expect(g, "")
 //         // Self::And(
 //         //     &[
@@ -72,20 +74,20 @@ pub enum GrammarNode<'g,NT,P>
 //         //     ], 0)
 //         // // [self,& Self::Many(self),].and()
 //     }
-//     pub fn opt(&'g self) -> GrammarNode<'g,NT,P> {
+//     pub fn opt(&'g self) -> GrammarNode<'g,NT,P,GR> {
 //         [self,Self::Always].or()
 //     }
-//     pub fn group(self,name: &'g str) -> GrammarNode<'g,NT,P> {
+//     pub fn group(self,name: &'g str) -> GrammarNode<'g,NT,P,GR> {
 //         Self::Group(self,name)
 //     }
-//     pub fn expect(self,name: &'g str,) -> GrammarNode<'g,NT,P> {
+//     pub fn expect(self,name: &'g str,) -> GrammarNode<'g,NT,P,GR> {
 //         Self::Expect(self,name)
 //     }
 
-//     pub fn was(self,name: &'g str,) -> GrammarNode<'g,NT,P> {
+//     pub fn was(self,name: &'g str,) -> GrammarNode<'g,NT,P,GR> {
 //         Self::Was(self,name)
 //     }
-//     pub fn had(self,name: &'g str,) -> GrammarNode<'g,NT,P> {
+//     pub fn had(self,name: &'g str,) -> GrammarNode<'g,NT,P,GR> {
 //         // Self::Had(self,name)
 //         [self,Self::Had(name)].and()
 //     }
@@ -139,10 +141,11 @@ pub enum GrammarNode<'g,NT,P>
 // // }
 
 
-impl<'g,NT,P> Debug for GrammarNode<'g,NT,P>
+impl<'g,NT,P,GR> Debug for GrammarNode<'g,NT,P,GR>
 
 where
     NT:Debug,
+    GR:Debug,
     P:Clone+Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -166,6 +169,9 @@ where
             Self::NonTerm(arg0) => f.debug_tuple("NonTerm").field(arg0).finish(),
             Self::Group(arg0, arg1) => f.debug_tuple("Group").field(arg0).field(arg1).finish(),
             Self::Expect(arg0, arg1) => f.debug_tuple("Expect").field(arg0).field(arg1).finish(),
+
+            Self::Not(arg0, ) => f.debug_tuple("Not").field(arg0).finish(),
+
             // Self::NoExpect(arg0, ) => f.debug_tuple("NoExpect").field(arg0).finish(),
             // Self::Stow(arg0) => f.debug_tuple("Stow").field(arg0).finish(),
 

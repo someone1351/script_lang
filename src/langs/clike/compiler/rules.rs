@@ -9,8 +9,13 @@ TODO
 */
 use super::super::grammar::node::*;
 
+
+#[derive(Copy,Clone,Hash,PartialEq,Eq,Debug)]
+// pub enum MyGroup {}
+pub struct MyGroup<'g>(pub &'g str);
+
 #[derive(Clone,Hash,PartialEq,Eq,Debug)]
-pub enum GrammarPrimitive<'g> {
+pub enum MyPrimitive<'g> {
     String,
     Identifier,
     Int,
@@ -27,10 +32,10 @@ pub enum GrammarPrimitive<'g> {
 //     }
 // }
 
-impl<'g> GrammarPrimitiveTrait for GrammarPrimitive<'g> {
+impl<'g> GrammarPrimitiveTrait for MyPrimitive<'g> {
     fn is_trimmable(&self) -> bool {
         match self {
-            GrammarPrimitive::Eol => true,
+            MyPrimitive::Eol => true,
             _ => false,
         }
     }
@@ -141,7 +146,7 @@ pub enum MyNonTerm {
 //     }
 // }
 
-pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,GrammarPrimitive<'g>>> {
+pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPrimitive<'g>,MyGroup<'g>>> {
     /*
     this:
         if(cond) {1} else {2}
@@ -158,7 +163,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
 
     if traversing same terminal and pos is the same, fail
     */
-    use GrammarPrimitive::*;
+    use MyPrimitive::*;
     use GrammarNode::*;
     // use MyNonTerm::*;
 
@@ -222,9 +227,9 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
         ]),
 
         MyNonTerm::VarEntry => &Group(&And(&[
-            &Group(&Primitive(Identifier),"name"),
+            &Group(&Primitive(Identifier),MyGroup("name")),
             &Or(&[&And(&[&Primitive(Symbol("=")), &NonTerm(MyNonTerm::Expr)]),&Always,]),
-        ]), "var"),
+        ]), MyGroup("var")),
 
         MyNonTerm::Set => &Or(&[
             &NonTerm(MyNonTerm::SetVar),
@@ -233,37 +238,37 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
         ]),
 
         MyNonTerm::SetVar => &Group(&And(&[
-            &Group(&Primitive(Identifier),"name"),
+            &Group(&Primitive(Identifier),MyGroup("name")),
             &NonTerm(MyNonTerm::SetOp),
             &NonTerm(MyNonTerm::Expr),
-        ]), "set_var"),
+        ]), MyGroup("set_var")),
 
         MyNonTerm::SetField => &Group(&And(&[
             &NonTerm(MyNonTerm::Postfixes),
             &Had(&NonTerm(MyNonTerm::Field)),
             &NonTerm(MyNonTerm::SetOp),
             &NonTerm(MyNonTerm::Expr),
-        ]), "set_field"),
+        ]), MyGroup("set_field")),
 
         MyNonTerm::SetIndex => &Group(&And(&[
             &NonTerm(MyNonTerm::Postfixes),
             &Had(&NonTerm(MyNonTerm::Index)),
             &NonTerm(MyNonTerm::SetOp),
             &NonTerm(MyNonTerm::Expr),
-        ]), "set_index"),
+        ]), MyGroup("set_index")),
 
         MyNonTerm::Func => &Group(&And(&[
             &Primitive(Keyword("fn")),
-            &Group(&Primitive(Identifier), "name"),
+            &Group(&Primitive(Identifier), MyGroup("name")),
             &NonTerm(MyNonTerm::FuncParams),
             &NonTerm(MyNonTerm::Block),
-        ]),"func"),
+        ]),MyGroup("func")),
 
         MyNonTerm::Lambda => &Group(&And(&[
             &Primitive(Keyword("fn")),
             &NonTerm(MyNonTerm::FuncParams),
             &NonTerm(MyNonTerm::Block),
-        ]), "lambda"),
+        ]), MyGroup("lambda")),
 
         MyNonTerm::FuncParams => &And(&[
             &NonTerm(MyNonTerm::LParen),
@@ -271,73 +276,73 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
                 &Or(&[
                     &And(&[ &NonTerm(MyNonTerm::FuncParams2), &NonTerm(MyNonTerm::FuncVariadic), ]),
                     &And(&[ &NonTerm(MyNonTerm::FuncParams2), &NonTerm(MyNonTerm::FuncNotVariadic), ]),
-                    &And(&[ &Group(&Always,"params"), &Group(&Always,"not_variadic"), ]),
+                    &And(&[ &Group(&Always,MyGroup("params")), &Group(&Always,MyGroup("not_variadic")), ]),
                 ]),
                 &NonTerm(MyNonTerm::RParen),
             ]), "closing bracket")
         ]),
 
         MyNonTerm::FuncParams2 => &Group(&And(&[
-            &Expect(&Group(&Primitive(Identifier),"param"), "param"),
-            &Many(&And(&[ &Primitive(Symbol(",")), &Expect(&Group(&Primitive(Identifier),"param"), "param"), ]),0,0),
-        ]),"params"),
+            &Expect(&Group(&Primitive(Identifier),MyGroup("param")), "param"),
+            &Many(&And(&[ &Primitive(Symbol(",")), &Expect(&Group(&Primitive(Identifier),MyGroup("param")), "param"), ]),0,0),
+        ]),MyGroup("params")),
 
-        MyNonTerm::FuncVariadic => &Group(&And(&[&Primitive(Symbol(".")),&Primitive(Symbol(".")),&Primitive(Symbol(".")),]),"variadic"),
-        MyNonTerm::FuncNotVariadic => &Group(&Or(&[&Primitive(Symbol(",")),&Always]), "not_variadic"),
+        MyNonTerm::FuncVariadic => &Group(&And(&[&Primitive(Symbol(".")),&Primitive(Symbol(".")),&Primitive(Symbol(".")),]),MyGroup("variadic")),
+        MyNonTerm::FuncNotVariadic => &Group(&Or(&[&Primitive(Symbol(",")),&Always]), MyGroup("not_variadic")),
 
 
         MyNonTerm::Format => &And(&[&Primitive(Keyword("format")),&NonTerm(MyNonTerm::FormatParams),]),
-        MyNonTerm::Print => &Group(&And(&[&Primitive(Keyword("print")),&NonTerm(MyNonTerm::FormatParams),]), "print"),
-        MyNonTerm::Println => &Group(&And(&[&Primitive(Keyword("println")),&NonTerm(MyNonTerm::FormatParams),]), "println"),
+        MyNonTerm::Print => &Group(&And(&[&Primitive(Keyword("print")),&NonTerm(MyNonTerm::FormatParams),]), MyGroup("print")),
+        MyNonTerm::Println => &Group(&And(&[&Primitive(Keyword("println")),&NonTerm(MyNonTerm::FormatParams),]), MyGroup("println")),
 
         MyNonTerm::FormatParams => &Group(&And(&[
             &NonTerm(MyNonTerm::LParen),
             &Expect(&And(&[
                 &Or(&[&And(&[
-                    &Or(&[&Group(&Primitive(String), "string"), &NonTerm(MyNonTerm::Expr),]),
+                    &Or(&[&Group(&Primitive(String), MyGroup("string")), &NonTerm(MyNonTerm::Expr),]),
                     &Many(&And(&[&Primitive(Symbol(",")), &NonTerm(MyNonTerm::Expr),]),0,0),
                     &Or(&[&Primitive(Symbol(",")), &Always]),
                 ]), &Always]),
                 &NonTerm(MyNonTerm::RParen),
             ]),"closing bracket"),
-        ]),"format"),
+        ]),MyGroup("format")),
 
         MyNonTerm::If => &Group(&And(&[
-            &Group(&And(&[&Primitive(Keyword("if")), &NonTerm(MyNonTerm::Expr), &NonTerm(MyNonTerm::Block), ]),"cond"),
-            &Many(&Group(&And(&[&Primitive(Keyword("elif")), &NonTerm(MyNonTerm::Expr), &NonTerm(MyNonTerm::Block), ]),"cond"),0,0),
-            &Or(&[&Group(&And(&[&Primitive(Keyword("else")),&NonTerm(MyNonTerm::Block),]),"else"), &Always]),
-        ]),"if"),
+            &Group(&And(&[&Primitive(Keyword("if")), &NonTerm(MyNonTerm::Expr), &NonTerm(MyNonTerm::Block), ]),MyGroup("cond")),
+            &Many(&Group(&And(&[&Primitive(Keyword("elif")), &NonTerm(MyNonTerm::Expr), &NonTerm(MyNonTerm::Block), ]),MyGroup("cond")),0,0),
+            &Or(&[&Group(&And(&[&Primitive(Keyword("else")),&NonTerm(MyNonTerm::Block),]),MyGroup("else")), &Always]),
+        ]),MyGroup("if")),
 
         MyNonTerm::While => &Group(&And(&[
             &Primitive(Keyword("while")),
             &NonTerm(MyNonTerm::Expr),
             &NonTerm(MyNonTerm::Block),
-        ]),"while"),
+        ]),MyGroup("while")),
 
         MyNonTerm::For => &Group(&And(&[
             &Primitive(Keyword("for")),
-            &Group(&Primitive(Identifier),"name"),
+            &Group(&Primitive(Identifier),MyGroup("name")),
             &Primitive(Keyword("in")),
             &NonTerm(MyNonTerm::Expr),
             &NonTerm(MyNonTerm::ForOp),
             &NonTerm(MyNonTerm::Expr),
             &NonTerm(MyNonTerm::Block),
-        ]),"for"),
+        ]),MyGroup("for")),
 
-        MyNonTerm::Continue => &Group(&Primitive(Keyword("continue")),"continue"),
-        MyNonTerm::Break => &Group(&Primitive(Keyword("break")),"break"),
-        MyNonTerm::Return => &Group(&And(&[&Primitive(Keyword("return")), &Or(&[&NonTerm(MyNonTerm::Expr), &Always]),]),"return"),
+        MyNonTerm::Continue => &Group(&Primitive(Keyword("continue")),MyGroup("continue")),
+        MyNonTerm::Break => &Group(&Primitive(Keyword("break")),MyGroup("break")),
+        MyNonTerm::Return => &Group(&And(&[&Primitive(Keyword("return")), &Or(&[&NonTerm(MyNonTerm::Expr), &Always]),]),MyGroup("return")),
 
-        MyNonTerm::Include => &And(&[&Primitive(Keyword("include")),&Group(&Primitive(String),"include"),]),
+        MyNonTerm::Include => &And(&[&Primitive(Keyword("include")),&Group(&Primitive(String),MyGroup("include")),]),
 
-        MyNonTerm::Expr => &Expect(&Group(&NonTerm(MyNonTerm::Or1),"expr"),"expr"),
+        MyNonTerm::Expr => &Expect(&Group(&NonTerm(MyNonTerm::Or1),MyGroup("expr")),"expr"),
         // MyNonTerm::Expr => &Expect(&Group(&NonTerm(MyNonTerm::Term),"expr"),"expr"),
 
         MyNonTerm::Or1 => &Or(&[
             &Group(&And(&[
                 &NonTerm(MyNonTerm::Xor),
                 &Many(&And(&[ &And(&[&Primitive(Symbol("|")),&Expect(&Primitive(Symbol("|")),"or")]), &NonTerm(MyNonTerm::Xor), ]),1,0),
-            ]), "or"),
+            ]), MyGroup("or")),
             &NonTerm(MyNonTerm::Xor),
         ]),
 
@@ -345,7 +350,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
             &Group(&And(&[
                 &NonTerm(MyNonTerm::And1),
                 &Many(&And(&[ &Primitive(Symbol("^")), &NonTerm(MyNonTerm::And1), ]),1,0),
-            ]),"xor"),
+            ]),MyGroup("xor")),
             &NonTerm(MyNonTerm::And1),
         ]),
 
@@ -353,18 +358,18 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
             &Group(&And(&[
                 &NonTerm(MyNonTerm::Compare),
                 &Many(&And(&[ &Primitive(Symbol("&")),&Expect(&Primitive(Symbol("&")),"and"), &NonTerm(MyNonTerm::Compare), ]),1,0),
-            ]),"and"),
+            ]),MyGroup("and")),
             &NonTerm(MyNonTerm::Compare),
         ]),
 
 
         MyNonTerm::Compare => &Or(&[
-            &Group(&And(&[&NonTerm(MyNonTerm::Factor), &Primitive(Symbol("<")), &NonTerm(MyNonTerm::Factor),]),"lt"),
-            &Group(&And(&[&NonTerm(MyNonTerm::Factor), &Primitive(Symbol(">")), &NonTerm(MyNonTerm::Factor),]),"gt"),
-            &Group(&And(&[&NonTerm(MyNonTerm::Factor), &Primitive(Symbol("<")),&Primitive(Symbol("=")), &NonTerm(MyNonTerm::Factor),]),"le"),
-            &Group(&And(&[&NonTerm(MyNonTerm::Factor), &Primitive(Symbol(">")),&Primitive(Symbol("=")), &NonTerm(MyNonTerm::Factor),]),"ge"),
-            &Group(&And(&[&NonTerm(MyNonTerm::Factor), &Primitive(Symbol("=")),&Expect(&Primitive(Symbol("=")),"eq"), &NonTerm(MyNonTerm::Factor),]),"eq"),
-            &Group(&And(&[&NonTerm(MyNonTerm::Factor), &Primitive(Symbol("!")),&Expect(&Primitive(Symbol("=")),"ne"), &NonTerm(MyNonTerm::Factor),]),"ne"),
+            &Group(&And(&[&NonTerm(MyNonTerm::Factor), &Primitive(Symbol("<")), &NonTerm(MyNonTerm::Factor),]),MyGroup("lt")),
+            &Group(&And(&[&NonTerm(MyNonTerm::Factor), &Primitive(Symbol(">")), &NonTerm(MyNonTerm::Factor),]),MyGroup("gt")),
+            &Group(&And(&[&NonTerm(MyNonTerm::Factor), &Primitive(Symbol("<")),&Primitive(Symbol("=")), &NonTerm(MyNonTerm::Factor),]),MyGroup("le")),
+            &Group(&And(&[&NonTerm(MyNonTerm::Factor), &Primitive(Symbol(">")),&Primitive(Symbol("=")), &NonTerm(MyNonTerm::Factor),]),MyGroup("ge")),
+            &Group(&And(&[&NonTerm(MyNonTerm::Factor), &Primitive(Symbol("=")),&Expect(&Primitive(Symbol("=")),"eq"), &NonTerm(MyNonTerm::Factor),]),MyGroup("eq")),
+            &Group(&And(&[&NonTerm(MyNonTerm::Factor), &Primitive(Symbol("!")),&Expect(&Primitive(Symbol("=")),"ne"), &NonTerm(MyNonTerm::Factor),]),MyGroup("ne")),
             &NonTerm(MyNonTerm::Factor),
         ]),
 
@@ -372,7 +377,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
             &Group(&And(&[
                 &NonTerm(MyNonTerm::Term),
                 &Many(&And(&[ &NonTerm(MyNonTerm::FactorOp), &NonTerm(MyNonTerm::Term), ]),1,0),
-            ]),"factor"),
+            ]),MyGroup("factor")),
             &NonTerm(MyNonTerm::Term),
         ]),
 
@@ -380,7 +385,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
             &Group(&And(&[
                 &NonTerm(MyNonTerm::Prefixes),
                 &Many(&And(&[&NonTerm(MyNonTerm::TermOp),&NonTerm(MyNonTerm::Prefixes),]),1,0),
-            ]),"term"),
+            ]),MyGroup("term")),
             &NonTerm(MyNonTerm::Prefixes),
         ]),
 
@@ -390,24 +395,24 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
                 &Group(
                     &Many(&Or(&[
                         &Primitive(Symbol("+")),
-                        &Group(&Primitive(Symbol("-")),"neg"),
-                        &Group(&Primitive(Symbol("!")),"not"),
-                    ]),1,0),"prefixes"),
+                        &Group(&Primitive(Symbol("-")),MyGroup("neg")),
+                        &Group(&Primitive(Symbol("!")),MyGroup("not")),
+                    ]),1,0),MyGroup("prefixes")),
                 &NonTerm(MyNonTerm::Postfixes),
-            ]),"prefixes"),
+            ]),MyGroup("prefixes")),
             &NonTerm(MyNonTerm::Postfixes),
         ]),
 
         MyNonTerm::Postfixes => &Or(&[
             &Group(&And(&[
                 &NonTerm(MyNonTerm::Val),
-                &Group(&Many(&NonTerm(MyNonTerm::FieldIndexCall),1,0),"field_index_calls"),
-            ]),"postfixes"),
+                &Group(&Many(&NonTerm(MyNonTerm::FieldIndexCall),1,0),MyGroup("field_index_calls")),
+            ]),MyGroup("postfixes")),
             &NonTerm(MyNonTerm::Val),
         ]),
 
         MyNonTerm::Val => &Or(&[
-            &Group(&And(&[ &Group(&Primitive(Identifier),"idn"), &NonTerm(MyNonTerm::Call), ]),"call_func"),
+            &Group(&And(&[ &Group(&Primitive(Identifier),MyGroup("idn")), &NonTerm(MyNonTerm::Call), ]),MyGroup("call_func")),
 
             &NonTerm(MyNonTerm::Primitive1),
             &NonTerm(MyNonTerm::Array),
@@ -428,7 +433,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
                 ]), &Always]),
                 &NonTerm(MyNonTerm::RSquare),
             ]),"closing square bracket"),
-        ]),"array"),
+        ]),MyGroup("array")),
 
         MyNonTerm::Dict => &Group(&And(&[
             &NonTerm(MyNonTerm::LCurly),
@@ -440,35 +445,35 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
                 ]), &Always]),
                 &NonTerm(MyNonTerm::RCurly),
             ]),"closing brace"),
-        ]),"dict"),
+        ]),MyGroup("dict")),
 
         MyNonTerm::DictVal => &Group(&And(&[
             &Expect(&Or(&[
-                &Group(&Primitive(Identifier),"name"),
+                &Group(&Primitive(Identifier),MyGroup("name")),
 
                 &Group(&Or(&[
                     &Primitive(Int), &Primitive(String),
                     &Primitive(Keyword("nil")),
                     &Primitive(Keyword("true")),
                     &Primitive(Keyword("false")),
-                ]),"primitive"),
+                ]),MyGroup("primitive")),
 
             ]),"key"),
             &Expect(&Primitive(Symbol(":")),"colon"),
             &Or(&[&NonTerm(MyNonTerm::Expr),&Error,]), //not needed unlike in val's field_index_calls, because that was optional, this is not //needed?
 
-        ]),"dict_val"),
+        ]),MyGroup("dict_val")),
 
         MyNonTerm::Block => &Group(&And(&[
             &Expect(&NonTerm(MyNonTerm::LCurly),"block"),
             &Expect(&And(&[ &NonTerm(MyNonTerm::Stmts), &NonTerm(MyNonTerm::RCurly), ]),"closing brace"),
-        ]),"block"),
+        ]),MyGroup("block")),
 
         MyNonTerm::FieldIndexCall => &Or(&[
-            &Group(&And(&[&NonTerm(MyNonTerm::Field),&NonTerm(MyNonTerm::Call),]),"call_field"),
-            &Group(&Was(&NonTerm(MyNonTerm::Field)),"field"),
-            &Group(&Was(&NonTerm(MyNonTerm::Index)),"index"),
-            &Group(&NonTerm(MyNonTerm::Call),"call_val"),
+            &Group(&And(&[&NonTerm(MyNonTerm::Field),&NonTerm(MyNonTerm::Call),]),MyGroup("call_field")),
+            &Group(&Was(&NonTerm(MyNonTerm::Field)),MyGroup("field")),
+            &Group(&Was(&NonTerm(MyNonTerm::Index)),MyGroup("index")),
+            &Group(&NonTerm(MyNonTerm::Call),MyGroup("call_val")),
         ]),
 
         MyNonTerm::Call => &Group(&And(&[
@@ -481,13 +486,13 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
                 ]), &Always]),
                 &NonTerm(MyNonTerm::RParen),
             ]),"closing bracket"),
-        ]),"params"),
+        ]),MyGroup("params")),
 
         MyNonTerm::Field => &And(&[
             &Primitive(Symbol(".")),
             &Expect(&Or(&[
-                &Group(&Primitive(Int),"field_index"),
-                &Group(&Primitive(Identifier),"field_name"),
+                &Group(&Primitive(Int),MyGroup("field_index")),
+                &Group(&Primitive(Identifier),MyGroup("field_name")),
                 // Error,
             ]),"field"),
         ]),
@@ -507,45 +512,45 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
             &Primitive(Keyword("void")),
             &Primitive(Keyword("true")),
             &Primitive(Keyword("false")),
-        ]),"primitive"),
+        ]),MyGroup("primitive")),
 
         MyNonTerm::End => &Expect(&Many(&Or(&[&Primitive(Symbol(";")),&Primitive(Eol)]),1,0),"semicolon"),
 
         MyNonTerm::ForOp => &Or(&[
-            &Group(&And(&[&NonTerm(MyNonTerm::ForToOp),&Primitive(Symbol("=")),]),"to_eq"),
-            &Group(&NonTerm(MyNonTerm::ForToOp),"to"),
+            &Group(&And(&[&NonTerm(MyNonTerm::ForToOp),&Primitive(Symbol("=")),]),MyGroup("to_eq")),
+            &Group(&NonTerm(MyNonTerm::ForToOp),MyGroup("to")),
         ]),
 
         MyNonTerm::ForToOp => &And(&[&Primitive(Symbol(".")),&Primitive(Symbol(".")),]),
 
         MyNonTerm::SetOp => &Or(&[
-            &Group(&Primitive(Symbol("=")),"eq"),
+            &Group(&Primitive(Symbol("=")),MyGroup("eq")),
             &And(&[ &NonTerm(MyNonTerm::SetSubOp), &Primitive(Symbol("=")), ]),
         ]),
 
         MyNonTerm::SetSubOp => &Or(&[
-            &Group(&Primitive(Symbol("+")),"add"),
-            &Group(&Primitive(Symbol("-")),"sub"),
-            &Group(&Primitive(Symbol("*")),"mul"),
-            &Group(&Primitive(Symbol("/")),"div"),
-            &Group(&Primitive(Symbol("!")),"not"),
+            &Group(&Primitive(Symbol("+")),MyGroup("add")),
+            &Group(&Primitive(Symbol("-")),MyGroup("sub")),
+            &Group(&Primitive(Symbol("*")),MyGroup("mul")),
+            &Group(&Primitive(Symbol("/")),MyGroup("div")),
+            &Group(&Primitive(Symbol("!")),MyGroup("not")),
 
-            &Group(&And(&[&Primitive(Symbol("&")),&Primitive(Symbol("&")),]),"and"),
-            &Group(&And(&[&Primitive(Symbol("|")),&Primitive(Symbol("|")),]),"or"),
+            &Group(&And(&[&Primitive(Symbol("&")),&Primitive(Symbol("&")),]),MyGroup("and")),
+            &Group(&And(&[&Primitive(Symbol("|")),&Primitive(Symbol("|")),]),MyGroup("or")),
 
-            &Group(&Primitive(Symbol("^")),"xor"),
+            &Group(&Primitive(Symbol("^")),MyGroup("xor")),
         ]),
 
 
         MyNonTerm::FactorOp => &Or(&[
-            &Group(&Primitive(Symbol("+")),"add"),
-            &Group(&Primitive(Symbol("-")),"sub"),
+            &Group(&Primitive(Symbol("+")),MyGroup("add")),
+            &Group(&Primitive(Symbol("-")),MyGroup("sub")),
         ]),
 
         MyNonTerm::TermOp => &Or(&[
-            &Group(&Primitive(Symbol("*")),"mul"),
-            &Group(&Primitive(Symbol("/")),"div"),
-            &Group(&Primitive(Symbol("%")),"mod"),
+            &Group(&Primitive(Symbol("*")),MyGroup("mul")),
+            &Group(&Primitive(Symbol("/")),MyGroup("div")),
+            &Group(&Primitive(Symbol("%")),MyGroup("mod")),
         ]),
 
         MyNonTerm::LCurly => &Primitive(Symbol("{")),
@@ -562,29 +567,29 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,Gram
 
 
 
-impl<'t,'g> std::fmt::Debug for WalkGroupContainer<'g,TokenIterContainer<'t>> {
+impl<'t,'g> std::fmt::Debug for WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}::{:?}", &self.group_ind,&self.name()))
+        f.write_fmt(format_args!("{}::{:?}", &self.group_ind,&self.name2().map(|x|x.0).unwrap_or("")))
     }
 }
 
-impl<'t,'g,> Display for WalkGroupContainer<'g,TokenIterContainer<'t>>
+impl<'t,'g,> Display for WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>>
 
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         enum Thing<'t,'g,> {
             Token(TokenContainer<'t>),
-            Group(WalkGroupContainer<'g,TokenIterContainer<'t>>),
+            Group(WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>>),
         }
 
-        let mut stk = vec![(Thing::Group(*self),0)];
+        let mut stk = vec![(Thing::Group(self.clone()),0)];
 
         while let Some((cur,depth))=stk.pop() {
             let indent="    ".repeat(depth);
 
             match cur {
                 Thing::Group(cur) => {
-                    writeln!(f,"{indent}group: {:?}",cur.name(),)?;
+                    writeln!(f,"{indent}group: {:?}",cur.name2().map(|x|x.0).unwrap_or(""),)?;
                     let mut cur_tokens = cur.tokens();
 
                     for child_group in cur.children().rev() {

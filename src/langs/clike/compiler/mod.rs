@@ -27,7 +27,7 @@ pub mod tokeniser;
 
 use crate::builder::{Builder, BuilderError};
 use crate::clike::compiler::builder_error::BuilderErrorType;
-use crate::clike::compiler::rules::GrammarPrimitive;
+use crate::clike::compiler::rules::{MyGroup, MyPrimitive};
 use crate::clike::grammar::container::{WalkGroupContainer, WalkGroupIterContainer};
 use crate::clike::grammar::walker::GrammarWalker;
 use crate::clike::grammar::{GrammarWalkError, TokenIterTrait};
@@ -67,7 +67,7 @@ pub use compiler_error::*;
     //     next_anon_id:&mut usize,
     // ) -> Result<(),BuilderError<BuilderErrorType>> {
 
-type ClikeBuilder<'a,'t,'g> = Builder<'a,WalkGroupContainer<'g,TokenIterContainer<'t>>,BuilderErrorType>;
+type ClikeBuilder<'a,'t,'g> = Builder<'a,WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>>,BuilderErrorType>;
 type ClikeBuilderResult=Result<(), BuilderError<BuilderErrorType>>;
 
 pub struct Compiler {
@@ -303,17 +303,18 @@ impl Compiler {
 
     pub fn run<'a,'t,'g>(&self,
         // builder:&mut CExprBuilder<'a>,
-        builder:&mut Builder<'a,WalkGroupContainer<'g,TokenIterContainer<'t>>,BuilderErrorType>,
-        top_group:WalkGroupContainer<'g,TokenIterContainer<'t>>,
+        builder:&mut Builder<'a,WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>>,BuilderErrorType>,
+        top_group:WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>>,
         next_anon_id:&mut usize,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
-        // println!("{:?}:",top_group.name());
+        // println!("{:?}:",top_group_name.0);
 
         *next_anon_id+=1;
         builder.set_anon_scope(*next_anon_id);
 
+        let Some(top_group_name)=&top_group.name2() else {panic!("");};
 
-        match top_group.name() {
+        match top_group_name.0 {
             "primitive" => {
                 if let Ok(p)=top_group.tokens().trimmed().first() {
                     builder.loc(p.start_loc());
@@ -336,7 +337,7 @@ impl Compiler {
                 builder.eval(top_group.child(0).unwrap());
             }
             "or"|"and" => {
-                let cond=if top_group.name()=="or" {JmpCond::True}else{JmpCond::False};
+                let cond=if top_group_name.0=="or" {JmpCond::True}else{JmpCond::False};
 
                 builder.block_start(None);
 
@@ -365,7 +366,7 @@ impl Compiler {
                 }
             }
             "lt"|"le"|"gt"|"ge"|"eq"|"ne" => {
-                let func=match top_group.name() {
+                let func=match top_group_name.0 {
                     "lt" => "lt",
                     "gt" => "gt",
                     "le" => "le",
@@ -390,7 +391,7 @@ impl Compiler {
 
                 while !cs.is_empty() {
                     let op=cs.next().unwrap();
-                    let func=match op.name() {
+                    let func=match op.name2().unwrap().0 {
                         "add" => "add",
                         "sub" => "sub",
                         "mul" => "mul",
@@ -411,7 +412,7 @@ impl Compiler {
             }
 
             "neg"|"not" => {
-                let func=match top_group.name() {
+                let func=match top_group_name.0 {
                     "neg" => "neg",
                     "not" => "not",
                     _ => panic!(""),
@@ -428,7 +429,7 @@ impl Compiler {
                 builder.eval(val);
 
                 for p in prefixes.rev() {
-                    let func=match p.name() {
+                    let func=match p.name2().unwrap().0 {
                         "not" => "not",
                         "neg" => "neg",
                         _ => panic!(""),
@@ -454,7 +455,7 @@ impl Compiler {
             "field"|"index" => {
                 let field_inner= top_group.child(0).unwrap(); //field_name|field_index|expr
                 // let is_symbol = field_inner.name()=="field_name";
-                let func = match field_inner.name() {
+                let func = match field_inner.name2().unwrap().0 {
                     "field_name"|"field_index" => "_field",
                     "expr" => "_index",
                     _ => panic!(""),
@@ -481,7 +482,7 @@ impl Compiler {
                 let name= top_group.child(0).unwrap().tokens().trimmed().first().unwrap().get_identifier().unwrap();
                 let val= top_group.child(2).unwrap();
                 let op=top_group.child(1).unwrap();
-                let func=match op.name() {
+                let func=match op.name2().unwrap().0 {
                     "add" => "add",
                     "sub" => "sub",
                     "mul" => "mul",
@@ -521,7 +522,7 @@ impl Compiler {
                 let op = top_group.child(1).unwrap();
                 let expr = top_group.child(2).unwrap();
 
-                let func=match op.name() {
+                let func=match op.name2().unwrap().0 {
                     "add" => "add",
                     "sub" => "sub",
                     "mul" => "mul",
@@ -544,7 +545,7 @@ impl Compiler {
                 //
                 let last_call_ind = (0..fields.children().len()-1).rev().find(|&i|{
                     let c = fields.child(i).unwrap();
-                    c.name()=="call_val" || c.name()=="call_field"
+                    c.name2().unwrap().0=="call_val" || c.name2().unwrap().0=="call_field"
                 }).unwrap_or(0);
 
                 //
@@ -598,7 +599,7 @@ impl Compiler {
                     let field=fields.last().unwrap(); //field|index
                     let field_inner=field.child(0).unwrap(); //field_name|field_index|expr
                     // let is_symbol=field_inner.name()=="field_name";
-                    let func = match field_inner.name() {
+                    let func = match field_inner.name2().unwrap().0 {
                         "field_name"|"field_index" => "_field",
                         "expr" => "_index",
                         _ => panic!(""),
@@ -747,7 +748,7 @@ impl Compiler {
 
                 //
                 for c in top_group.children() {
-                    if c.name()=="cond" {
+                    if c.name2().unwrap().0=="cond" {
                         builder
                             .block_start(None)
                                 .eval(c.child(0).unwrap())
@@ -755,7 +756,7 @@ impl Compiler {
                                 .eval(c.child(1).unwrap())
                                 .to_block_end(JmpCond::None,1)
                             .block_end();
-                    } else if c.name()=="else" {
+                    } else if c.name2().unwrap().0=="else" {
                         builder.eval(c.child(0).unwrap());
                     } else {
                         panic!("");
@@ -766,9 +767,9 @@ impl Compiler {
                 builder.block_end();
             }
             "for" => {
-                let var= top_group.child(0).unwrap().name();
+                let var= top_group.child(0).unwrap().name2().unwrap().0;
                 let from= top_group.child(1).unwrap();
-                let func=match top_group.child(2).unwrap().name() {
+                let func=match top_group.child(2).unwrap().name2().unwrap().0 {
                     "to" => "lt",
                     "to_eq" => "le",
                     _ => panic!(""),
@@ -894,7 +895,7 @@ impl Compiler {
 
                 let params= top_group.child(1).unwrap().children()
                     .map(|x|x.tokens().trimmed().first().unwrap().get_identifier().unwrap().value);
-                let variadic = top_group.child(2).map(|x|x.name()=="variadic").unwrap_or_default();
+                let variadic = top_group.child(2).map(|x|x.name2().unwrap().0=="variadic").unwrap_or_default();
                 let body= top_group.child(3).unwrap();
 
                 builder
@@ -916,7 +917,7 @@ impl Compiler {
 
                 let params= top_group.child(0).unwrap().children()
                     .map(|x|x.tokens().trimmed().first().unwrap().get_identifier().unwrap().value);
-                let variadic = top_group.child(1).map(|x|x.name()=="variadic").unwrap_or_default();
+                let variadic = top_group.child(1).map(|x|x.name2().unwrap().0=="variadic").unwrap_or_default();
                 let body= top_group.child(2).unwrap();
 
                 //
@@ -976,7 +977,7 @@ impl Compiler {
                         .eval(v)
                         .param_push();
 
-                    if k.name()=="name" {
+                    if k.name2().unwrap().0=="name" {
                         builder.result_string(k.tokens().trimmed().first().unwrap().get_identifier().unwrap().value);
                     } else {
                         builder.eval(k);
@@ -1225,7 +1226,7 @@ impl Compiler {
             }
 
             _ => {
-                panic!("{}",top_group.name());
+                panic!("{}",top_group_name.0);
                 // builder.eval(primitive)
                 // top_group.children()
 

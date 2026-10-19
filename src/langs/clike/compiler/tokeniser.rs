@@ -2,6 +2,8 @@ use std::ops::{RangeInclusive};
 
 use crate::clike::grammar::{node::GrammarNode, GrammarPrimitiveTrait};
 
+#[derive(Clone,Hash,PartialEq,Eq,Debug)]
+pub enum MyGroup {}
 
 #[derive(Clone,Hash,PartialEq,Eq,Debug)]
 pub enum MyPrimitive<'g> {
@@ -41,7 +43,7 @@ pub enum MyNonTerm {
 }
 
 
-pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPrimitive<'g>>> {
+pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPrimitive<'g>,MyGroup>> {
 
     // use MyPrimitive::*;
     use GrammarNode::*;

@@ -88,13 +88,14 @@ use std::fmt::Debug;
 // use error::*;
 
 
-pub struct GrammarWalker<'g,NT,P,TS,G>
+pub struct GrammarWalker<'g,NT,P,GR,TS,GF>
 where
     P:Clone, //+core::hash::Hash+PartialEq+Eq,
     TS:Clone,
-    // G: Fn(&str)->Option<&GrammarNode<'g,NT,P>>,
+    GR:Clone,
+    // G: Fn(&str)->Option<&GrammarNode<'g,NT,P,GR>>,
 {
-    non_term_cache:HashMap<NT, &'g GrammarNode<'g,NT,P>>,
+    non_term_cache:HashMap<NT, &'g GrammarNode<'g,NT,P,GR>>,
 
     work_error_len:usize, //what is this?
 
@@ -103,8 +104,8 @@ where
     tokens_furthest: TS,
     expect_token_start2: TS,
 
-    grammar_func:G,
-    stk: Vec<Work<'g,NT,P,TS>>,
+    grammar_func:GF,
+    stk: Vec<Work<'g,NT,P,GR,TS>>,
     step_count:usize,
 
 
@@ -114,28 +115,29 @@ where
 
     debug:bool,
 
-    groups:Vec<TempGroup<'g,TS>>,
+    groups:Vec<TempGroup<GR,TS>>,
 
-    group_news2:Vec<TempGroupNew2<'g,TS>>,
-    groups2:Vec<TempGroup2<'g,TS>>,
+    group_news2:Vec<TempGroupNew2<GR,TS>>,
+    groups2:Vec<TempGroup2<GR,TS>>,
 
     stow_news:Vec<TempStowNew<NT,TS>>,
-    stows:Vec<TempStow<'g,NT,P,TS>>,
-    stow_groups1:Vec<TempGroup<'g,TS>>,
+    stows:Vec<TempStow<'g,NT,P,GR,TS>>,
+    stow_groups1:Vec<TempGroup<GR,TS>>,
 
-    was_news:Vec<TempWas<'g,NT,P>>,
-    wases:Vec<TempWas<'g,NT,P>>,
+    was_news:Vec<TempWas<'g,NT,P,GR>>,
+    wases:Vec<TempWas<'g,NT,P,GR>>,
 }
 
-impl<'g,NT,P,TS,G> GrammarWalker<'g,NT,P,TS,G>
+impl<'g,NT,P,GR,TS,GF> GrammarWalker<'g,NT,P,GR,TS,GF>
 where
     NT:core::hash::Hash+Clone+Eq+PartialEq+Debug,
     P:Clone+Debug+GrammarPrimitiveTrait+Eq+PartialEq,
+    GR:Debug+PartialEq+Eq+Clone,
     TS: Clone+TokenIterTrait+Debug + TokenIterGetTrait<P> ,
-    G: Fn(NT)->Option<&'g GrammarNode<'g,NT,P>>,
+    GF: Fn(NT)->Option<&'g GrammarNode<'g,NT,P,GR>>,
 {
 
-    pub fn new(top_primitives:TS, grammar_func:G,) -> Self {
+    pub fn new(top_primitives:TS, grammar_func:GF,) -> Self {
         Self {
             work_error_len:0,
             // always:&GrammarNode::Always,
@@ -414,7 +416,7 @@ where
 
         //
         self.groups=vec![TempGroup{
-            name: "",
+            name: None,
             parent: 0,
             tokens:self.top_tokens.clone(),
             trim:false,
@@ -468,7 +470,7 @@ where
 
     }
 
-    // fn grammar_stow(&mut self,cur :Work<'g,NT,P,TS>,) {
+    // fn grammar_stow(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
     //     let GrammarNode::Stow(g, )=cur.grammar else{panic!("");};
 
     //     //
@@ -506,8 +508,43 @@ where
     //         was_ind:cur.was_ind,
     //     });
     // }
+    fn grammar_not(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
+        let GrammarNode::Not(g,  )=cur.grammar else{panic!("");};
 
-    fn grammar_was(&mut self,cur :Work<'g,NT,P,TS>,) {
+        //
+        self.stk.push(Work {
+            grammar: g,
+
+            work_success_len: cur.work_fail_len,
+            work_fail_len: cur.work_success_len,
+
+            tokens: cur.tokens.clone(),
+            group_ind: cur.group_ind,
+            group_len: cur.group_len,
+
+            group_new_len2:cur.group_new_len2,
+            group_len2:cur.group_len2,
+
+            grammar_ind:0,
+            user:true,
+            first:cur.first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
+            stow:cur.stow, //if *stow_first {true} else {cur.stow},
+
+            stow_new_len:cur.stow_new_len,
+
+            stow_len: cur.stow_len,
+
+            in_expect:cur.in_expect,
+
+            expect_new_len2:cur.expect_new_len2,
+            expect_len2:cur.expect_len2,
+
+            was_new_len:cur.was_new_len,
+            was_ind:cur.was_ind,
+
+        });
+    }
+    fn grammar_was(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
         let GrammarNode::Was(g,  )=cur.grammar else{panic!("");};
 
         //
@@ -577,7 +614,7 @@ where
         });
     }
 
-    fn grammar_had(&mut self,cur :Work<'g,NT,P,TS>,) {
+    fn grammar_had(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
         let GrammarNode::Had(name,)=cur.grammar else{panic!("");};
 
       //
@@ -639,7 +676,7 @@ where
         }
     }
 
-    fn grammar_expect(&mut self,cur :Work<'g,NT,P,TS>,) {
+    fn grammar_expect(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
         let GrammarNode::Expect(g,_, )=cur.grammar else{panic!("");};
 
         //
@@ -725,7 +762,7 @@ where
         });
     }
 
-    fn grammar_group(&mut self,cur :Work<'g,NT,P,TS>,) {
+    fn grammar_group(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
         let GrammarNode::Group(g,_, )=cur.grammar else{panic!("");};
 
         //
@@ -803,7 +840,7 @@ where
         });
     }
 
-    fn grammar_many(&mut self,cur :Work<'g,NT,P,TS>,) {
+    fn grammar_many(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
         let GrammarNode::Many(g, min,max)=*cur.grammar else{panic!("");};
 
         //in always/prev they check if their success_ind is a many (which could be a problem if ands/ors were handled more efficiently),
@@ -1065,7 +1102,7 @@ where
         });
     }
 
-    fn grammar_non_term(&mut self,cur :Work<'g,NT,P,TS>,) -> Result<(),GrammarWalkError<NT>>{
+    fn grammar_non_term(&mut self,cur :Work<'g,NT,P,GR,TS>,) -> Result<(),GrammarWalkError<NT>>{
         let GrammarNode::NonTerm(t)=cur.grammar else{panic!("");};
 
         //
@@ -1152,7 +1189,7 @@ where
         Ok(())
     }
 
-    fn grammar_error(&mut self,cur :Work<'g,NT,P,TS>,) -> GrammarWalkError<NT> {
+    fn grammar_error(&mut self,cur :Work<'g,NT,P,GR,TS>,) -> GrammarWalkError<NT> {
         let GrammarNode::Error=cur.grammar else{panic!("");};
 
         // if self.debug {
@@ -1180,7 +1217,7 @@ where
         GrammarWalkError::FailedParse
     }
 
-    fn grammar_and(&mut self,cur :Work<'g,NT,P,TS>,) {
+    fn grammar_and(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
         let GrammarNode::And(gs,  )=cur.grammar else{panic!("");};
         //
 
@@ -1377,7 +1414,7 @@ where
         });
     }
 
-    fn grammar_or(&mut self,cur :Work<'g,NT,P,TS>,) {
+    fn grammar_or(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
         let GrammarNode::Or(gs,)=cur.grammar else{panic!("");};
 
         if gs.is_empty() {return;}
@@ -1577,7 +1614,7 @@ where
 
 
 
-    // fn grammar_prev(&mut self,cur :Work<'g,NT,P,TS>,) {
+    // fn grammar_prev(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
     //     let GrammarNode::Prev(g)=cur.grammar else {panic!("");};
     //     //
     //     let _hist_news_len=self.hist_news_add(&cur);
@@ -1619,7 +1656,7 @@ where
     //     }
     // }
 
-    fn grammar_always(&mut self,cur :Work<'g,NT,P,TS>,) {
+    fn grammar_always(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
         // self.stk.truncate(cur.success_len);
         self.group_set_trim(cur.group_ind,cur.tokens.clone(),false);
         self.group_set_trim2(cur.group_new_len2,cur.tokens.clone(),false);
@@ -1644,7 +1681,7 @@ where
         // self.expected2_on_success();
     }
 
-    fn grammar_try_from_hist_fails(&mut self,cur :&Work<'g,NT,P,TS>) -> bool {
+    fn grammar_try_from_hist_fails(&mut self,cur :&Work<'g,NT,P,GR,TS>) -> bool {
         let GrammarNode::NonTerm(non_term)=cur.grammar else {return false;};
 
          //
@@ -1692,7 +1729,7 @@ where
         true
     }
 
-    fn grammar_try_from_hist_stows(&mut self,cur :&Work<'g,NT,P,TS>) -> bool {
+    fn grammar_try_from_hist_stows(&mut self,cur :&Work<'g,NT,P,GR,TS>) -> bool {
 
         let GrammarNode::NonTerm(non_term)=cur.grammar else {return false;};
         //
@@ -1811,7 +1848,7 @@ where
         true
     }
 
-    fn grammar_primitive(&mut self, cur:Work<'g,NT,P,TS>,)
+    fn grammar_primitive(&mut self, cur:Work<'g,NT,P,GR,TS>,)
     {
         //
         // let _hist_news_len=self.hist_news_add(&cur);
@@ -1922,7 +1959,7 @@ where
     }
 
     // fn work_on_success(&mut self,
-    //     cur:&Work<'g,NT,P,TS>,
+    //     cur:&Work<'g,NT,P,GR,TS>,
     // ) {
     //     self.stk.truncate(cur.work_success_len);
     // }
@@ -1931,11 +1968,11 @@ where
         self.stk.truncate(len);
     }
 
-    // fn work_on_fail(&mut self, cur:&Work<'g,NT,P,TS>,) {
+    // fn work_on_fail(&mut self, cur:&Work<'g,NT,P,GR,TS>,) {
     //     self.stk.truncate(cur.work_fail_len);
     // }
 
-    fn add_expect_new2(&mut self, cur:&Work<'g,NT,P,TS>,) -> usize {
+    fn add_expect_new2(&mut self, cur:&Work<'g,NT,P,GR,TS>,) -> usize {
         //
         let expect_type=match cur.grammar {
             GrammarNode::Expect(_, name) => name,
@@ -2048,7 +2085,7 @@ where
 
 
 
-    fn was_on_success(&mut self, //cur:&Work<'g,NT,P,TS>,
+    fn was_on_success(&mut self, //cur:&Work<'g,NT,P,GR,TS>,
         is_prim:bool,
 
     ) {
@@ -2127,7 +2164,7 @@ where
     }
 
     fn hist_on_fail(&mut self,
-        // cur:&Work<'g,NT,P,TS>,
+        // cur:&Work<'g,NT,P,GR,TS>,
     ){
         let Some(last)=self.stk.last_mut() else {return;};
         // self.hist_prevs.truncate(last.hist_prevs_len);
@@ -2191,7 +2228,7 @@ where
 
     }
 
-    fn stow_clear(&mut self,cur:&Work<'g,NT,P,TS>,) {
+    fn stow_clear(&mut self,cur:&Work<'g,NT,P,GR,TS>,) {
         if !cur.first || cur.stow_len==0 {
             return;
         }
@@ -2207,16 +2244,16 @@ where
         hist_stow.success=None;
     }
 
-    fn groups_truncate2(&mut self,cur:&Work<'g,NT,P,TS>,) {
+    fn groups_truncate2(&mut self,cur:&Work<'g,NT,P,GR,TS>,) {
 
         self.groups2.truncate(cur.group_len2);
     }
 
     fn hist_on_success(&mut self,
-        cur_grammar:&GrammarNode<'g,NT,P>,
+        cur_grammar:&GrammarNode<'g,NT,P,GR>,
         cur_group_len:usize,
         cur_tokens:TS,
-        // cur:&Work<'g,NT,P,TS>,
+        // cur:&Work<'g,NT,P,GR,TS>,
         //what was this for again? something to do with not adding cur grammar to hist_stows?
         //  it was for not adding cur grammar to hist_new?
         // cur_first:bool,
@@ -2372,7 +2409,7 @@ where
 
     }
 
-    // fn hist_fails_push(&mut self,cur:&Work<'g,NT,P,TS>) -> usize {
+    // fn hist_fails_push(&mut self,cur:&Work<'g,NT,P,GR,TS>) -> usize {
     //     if cur.from_user
     //         && ( !cur.first || cur.hist_fails_len==0
     //     ) {
@@ -2396,7 +2433,7 @@ where
     //     //
 
     // }
-    fn hist_stows_push(&mut self,cur:&Work<'g,NT,P,TS>) -> usize {
+    fn hist_stows_push(&mut self,cur:&Work<'g,NT,P,GR,TS>) -> usize {
         if cur.user //so not an added OR for rest,
             && ( !cur.first || //not part of current OR, eg: or(A, and(B,or(C,D))) A in dif OR stk than C,D
             // self.hist_stows_stk.is_empty()
@@ -2433,7 +2470,7 @@ where
     }
 
 
-    fn hist_news_add(&mut self,cur:&Work<'g,NT,P,TS>) -> usize {
+    fn hist_news_add(&mut self,cur:&Work<'g,NT,P,GR,TS>) -> usize {
         let GrammarNode::NonTerm(non_term)=cur.grammar else {panic!("");};
         // return self.hist_news.len();
         //
@@ -2521,7 +2558,7 @@ where
         }
     }
 
-    // fn step_truncates(&mut self,cur :&Work<'g,NT,P,TS>) {
+    // fn step_truncates(&mut self,cur :&Work<'g,NT,P,GR,TS>) {
     //     //should move all these to run on success/fails of prims/prev/always/take
 
     //     // self.groups.truncate(cur.group_len);
@@ -2542,7 +2579,7 @@ where
     }
     fn group_set_trim2(&mut self,
 
-        // cur :&Work<'g,NT,P,TS>,
+        // cur :&Work<'g,NT,P,GR,TS>,
         cur_group_new_len2 : usize,
 
         // cur_group_ind:usize,
@@ -2592,7 +2629,7 @@ where
     fn groups_on_success2(&mut self,
         // cur_group_ind:usize,
         // cur_group_len:usize,
-        // cur :&Work<'g,NT,P,TS>,
+        // cur :&Work<'g,NT,P,GR,TS>,
         cur_group_len2:usize,
         cur_group_new_len2:usize,
         cur_tokens:TS,
@@ -2763,7 +2800,7 @@ where
         cur_group_ind:usize,
         cur_group_len:usize,
         cur_tokens:TS,
-        // cur :&Work<'g,NT,P,TS>,
+        // cur :&Work<'g,NT,P,GR,TS>,
         // before_tokens : Option<TS>,
         // cur_group_ind:usize,
         // cur_primitives:TokenIterContainer<'t>,
@@ -2849,26 +2886,26 @@ where
     //     Ok(visiteds)
     // }
 
-    fn new_group2(&mut self,cur:&Work<'g,NT,P,TS>) -> usize {
+    fn new_group2(&mut self,cur:&Work<'g,NT,P,GR,TS>) -> usize {
         let GrammarNode::Group(_,name)=cur.grammar else {panic!("");};
         let tokens=cur.tokens.clone();
 
-        self.group_news2.push(TempGroupNew2 { name, tokens, trim:false, group_len2: cur.group_len2 });
+        self.group_news2.push(TempGroupNew2 { name:name.clone(), tokens, trim:false, group_len2: cur.group_len2 });
 
         self.group_news2.len()
     }
-    fn new_group(&mut self,cur:&Work<'g,NT,P,TS>) -> (usize,usize) {
+    fn new_group(&mut self,cur:&Work<'g,NT,P,GR,TS>) -> (usize,usize) {
         let GrammarNode::Group(_,name)=cur.grammar else {panic!("");};
         let parent=cur.group_ind;
         let tokens=cur.tokens.clone();
 
         let new_group_ind=self.groups.len();
-        self.groups.push(TempGroup { name, parent, tokens, trim:false,});
+        self.groups.push(TempGroup { name:Some(name.clone()), parent, tokens, trim:false,});
         (new_group_ind,self.groups.len())
     }
 
     fn update_tokens(&mut self,
-        // cur:&Work<'g,NT,P,TS>,
+        // cur:&Work<'g,NT,P,GR,TS>,
         tokens:TS,
         set_last_tokens:bool,
     ) {
@@ -2884,7 +2921,7 @@ where
         }
     }
 
-    fn handle_exit_last_many(&mut self,cur:&Work<'g,NT,P,TS>) { //if not parsing anything, exit the many
+    fn handle_exit_last_many(&mut self,cur:&Work<'g,NT,P,GR,TS>) { //if not parsing anything, exit the many
         let Some(last)=self.stk.last_mut() else {return;};
         if let GrammarNode::Many(..)=last.grammar {} else {return;}
 
@@ -2954,7 +2991,7 @@ where
     // }
 
 
-    fn get_walk_in_betweens(&self, groups_out:Vec<WalkGroup<'g,TS>>) -> Vec<WalkGroup<'g,TS>> {
+    fn get_walk_in_betweens(&self, groups_out:Vec<WalkGroup<GR,TS>>) -> Vec<WalkGroup<GR,TS>> {
 
         let mut groups_out2=vec![WalkGroup{
             name: groups_out[0].name.clone(),
@@ -2997,7 +3034,7 @@ where
                     children_new_inds.push((cind,groups_out2.len()));
 
                     groups_out2.push(WalkGroup {
-                        name: child_group.name,
+                        name: child_group.name.clone(),
                         children: 0..0,
                         tokens: child_group.tokens.clone(),
                     });
@@ -3025,9 +3062,9 @@ where
         groups_out2
     }
     //
-    pub fn get_walk2(&self, in_betweens:bool) -> Walk<'g,TS> {
+    pub fn get_walk2(&self, in_betweens:bool) -> Walk<GR,TS> {
         //
-        let mut groups_out: Vec<WalkGroup<'g,TS>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
+        let mut groups_out: Vec<WalkGroup<GR,TS>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
 
         //
         let mut parent_stk: Vec<(usize, usize)>= Vec::new();
@@ -3179,7 +3216,7 @@ where
                 let gg=&self.groups2[g];
                 let mut tokens=gg.tokens.clone();
                 if gg.trim {tokens.trim2();}
-                (tokens,Some(gg.name))
+                (tokens,Some(gg.name.clone()))
             };
 
             //
@@ -3217,9 +3254,9 @@ where
     }
 
     //
-    pub fn get_walk1(&self, in_betweens:bool) -> Walk<'g,TS> {
+    pub fn get_walk1(&self, in_betweens:bool) -> Walk<GR,TS> {
         //
-        let mut groups_out: Vec<WalkGroup<'g,TS>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
+        let mut groups_out: Vec<WalkGroup<GR,TS>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
 
 
         //
@@ -3272,7 +3309,7 @@ where
             }
 
             //
-            groups_out.push(WalkGroup { name: Some(g.name),
+            groups_out.push(WalkGroup { name: g.name.clone(),
                 children: 0..0, // csum..csum+c
                 tokens, //: g.tokens.clone(),
             });
@@ -3417,7 +3454,7 @@ where
         result
     }
 
-    fn step(&mut self,cur:Work<'g,NT,P,TS>) -> Result<(),GrammarWalkError<NT>> {
+    fn step(&mut self,cur:Work<'g,NT,P,GR,TS>) -> Result<(),GrammarWalkError<NT>> {
         //
         // if self.debug {
         //     if self.groups.len() != cur.group_len {
@@ -3469,17 +3506,17 @@ where
 
                 //
                 let ps=tokens.inds2();
-                let all_groups1=self.groups.iter().enumerate().map(|(i,x)|format!("g{i}:p{}:{}",x.parent,x.name)).collect::<Vec<_>>();
+                let all_groups1=self.groups.iter().enumerate().map(|(i,x)|format!("g{i}:p{}:{:?}",x.parent,x.name)).collect::<Vec<_>>();
                 let all_groups_len1=self.groups.len();
 
 
                 let all_groups2_len=self.groups2.len();
                 let all_group_news2_len=self.group_news2.len();
                 let all_groups2=self.groups2.iter().enumerate()
-                    .map(|(i,x)|format!("g{i}:pgl:{}:{}",x.group_len2,x.name))
+                    .map(|(i,x)|format!("g{i}:pgl:{}:{:?}",x.group_len2,x.name))
                     .collect::<Vec<_>>();
                 let all_group_news2=self.group_news2.iter().enumerate().rev()
-                    .map(|(i,x)|format!("g{i}:pgl:{}:{}",x.group_len2,x.name)).rev()
+                    .map(|(i,x)|format!("g{i}:pgl:{}:{:?}",x.group_len2,x.name)).rev()
                     .collect::<Vec<_>>();
 
                 // let grammar2= match grammar.as_ref() {
@@ -3749,6 +3786,7 @@ where
         match cur.grammar {
             GrammarNode::Expect(..) => {self.grammar_expect(cur);}
             // GrammarNode::Stow(..) => {self.grammar_stow(cur);}
+            GrammarNode::Not(..) => {self.grammar_not(cur);}
             GrammarNode::Was(..) => {self.grammar_was(cur);}
             GrammarNode::Had(..) => {self.grammar_had(cur);}
 
@@ -3782,7 +3820,7 @@ where
     // }
 
 
-    fn get_non_term(&mut self,n:NT) -> Result<&'g GrammarNode<'g,NT,P>,GrammarWalkError<NT>> {
+    fn get_non_term(&mut self,n:NT) -> Result<&'g GrammarNode<'g,NT,P,GR>,GrammarWalkError<NT>> {
         // if let Some(g)=self.non_term_cache.get(&n) {
         //     Ok(g.clone())
         // } else

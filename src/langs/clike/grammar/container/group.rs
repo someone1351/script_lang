@@ -5,32 +5,33 @@ use crate::{clike::grammar::TokenIterTrait, Loc};
 use super::super::super::{grammar::{container::WalkGroupIterContainer, data::{Walk, WalkGroup}}, tokenizer::{TokenContainer, TokenIterContainer}};
 
 #[derive(Clone, Copy)]
-pub struct WalkGroupContainer<'g,TS>
+pub struct WalkGroupContainer<'g,GR,TS>
 where
     TS:Clone+TokenIterTrait,
 {
-    pub walk:&'g Walk<'g,TS>,
+    pub walk:&'g Walk<GR,TS>,
     pub group_ind:usize,
 }
 
-impl<'g,TS> WalkGroupContainer<'g,TS>
+impl<'g,GR,TS> WalkGroupContainer<'g,GR,TS>
 where
+    GR: Clone,
     TS:Clone+TokenIterTrait,
 {
-    fn group(&self) -> &WalkGroup<'g,TS> {
+    fn group(&self) -> &WalkGroup<GR,TS> {
         &self.walk.groups[self.group_ind]
     }
-    pub fn name(&self) -> &'g str {
-        self.group().name.unwrap_or("")
+    // pub fn name(&self) -> GR {
+    //     self.group().name.unwrap_or("")
+    // }
+    pub fn name2(&self) -> Option<GR> {
+        self.group().name.clone()
     }
-    pub fn name2(&self) -> Option<&'g str> {
-        self.group().name
-    }
-    pub fn children(&self) -> WalkGroupIterContainer<'g,TS> {
+    pub fn children(&self) -> WalkGroupIterContainer<'g,GR,TS> {
         let group=self.group();
         WalkGroupIterContainer{ walk: self.walk, start: group.children.start, end: group.children.end }
     }
-    pub fn child(&self,ind:usize) -> Option<WalkGroupContainer<'g,TS>> {
+    pub fn child(&self,ind:usize) -> Option<WalkGroupContainer<'g,GR,TS>> {
         let group=self.group();
 
         if ind < group.children.len() {
@@ -39,10 +40,10 @@ where
             None
         }
     }
-    pub fn first(&self) -> Option<WalkGroupContainer<'g,TS>> {
+    pub fn first(&self) -> Option<WalkGroupContainer<'g,GR,TS>> {
         self.child(0)
     }
-    pub fn last(&self) -> Option<WalkGroupContainer<'g,TS>> {
+    pub fn last(&self) -> Option<WalkGroupContainer<'g,GR,TS>> {
         if self.children().is_empty() {
             None
         } else {
