@@ -3525,7 +3525,11 @@ where
 
                 //
                 let ps=tokens.inds2();
-                let all_groups1=self.groups.iter().enumerate().map(|(i,x)|format!("g{i}:p{}:{:?}",x.parent,x.name)).collect::<Vec<_>>();
+                let all_groups1=self.groups.iter().enumerate()
+                    .map(|(i,x)|format!("g{i}:p{}:{}",x.parent,
+                        x.name.as_ref().map(|x|format!("{x:?}")).unwrap_or_else(||"".to_string())
+                    ))
+                    .collect::<Vec<_>>().join(", ");
                 let all_groups_len1=self.groups.len();
 
 
@@ -3533,10 +3537,10 @@ where
                 let all_group_news2_len=self.group_news2.len();
                 let all_groups2=self.groups2.iter().enumerate()
                     .map(|(i,x)|format!("g{i}:pgl:{}:{:?}",x.group_len2,x.name))
-                    .collect::<Vec<_>>();
+                    .collect::<Vec<_>>().join(", ");
                 let all_group_news2=self.group_news2.iter().enumerate().rev()
                     .map(|(i,x)|format!("g{i}:pgl:{}:{:?}",x.group_len2,x.name)).rev()
-                    .collect::<Vec<_>>();
+                    .collect::<Vec<_>>().join(", ");
 
                 // let grammar2= match grammar.as_ref() {
                 //     GrammarNode::And(gs) => {
@@ -3569,7 +3573,7 @@ where
 
                 if true {
                     println!("        groups2.len={all_groups2_len}, group_news2.len={all_group_news2_len}, group_len2={group_len2}, group_new_len2={group_new_len2}, ",);
-                    println!("        gs2={all_group_news2:?} :: {all_groups2:?}");
+                    println!("        gs2=[{all_group_news2}] :: [{all_groups2}]");
 
 
                     // for (i,g) in self.groups2.iter().enumerate() {
@@ -3582,7 +3586,7 @@ where
                 if true {
                     // println!("        and_id={and_id}, groups.len={groups_len2}, group_ind={group_ind}, group_len={group_len}, gs={temp_groups:?}",);
                     println!("        groups.len={all_groups_len1}, group_ind={group_ind}, group_len={group_len},",);
-                    println!("        gs1={all_groups1:?}");
+                    println!("        gs1=[{all_groups1}]");
 
                     // for (i,g) in self.groups.iter().enumerate() {
                     //     println!("            {i}:{:?}, trim={}, tokens={:?}",g.name,g.trim,g.tokens);
