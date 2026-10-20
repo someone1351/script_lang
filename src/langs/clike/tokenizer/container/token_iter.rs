@@ -2,7 +2,7 @@
 use std::ops::Range;
 use crate::build::Loc;
 use crate::clike::compiler::rules::MyPrimitive;
-use crate::clike::grammar::{GrammarPrimitiveTrait, TokenIterGetTrait, TokenIterTrait};
+use crate::clike::grammar::TokensTrait;
 use super::super::super::tokenizer::data::Tokenized;
 
 use super::*;
@@ -56,22 +56,22 @@ impl<'t> TokenIterContainer<'t> {
             Err(self.last_loc)
         }
     }
-    pub fn pop_back(&mut self) -> Result<TokenContainer<'t>,Loc> {
-        if self.start < self.end {
-            self.end-=1;
-            let primitive_ind=self.end;
+    // pub fn pop_back(&mut self) -> Result<TokenContainer<'t>,Loc> {
+    //     if self.start < self.end {
+    //         self.end-=1;
+    //         let primitive_ind=self.end;
 
-            // let last_loc=if self.start==self.end {
-            //     self.last_loc
-            // } else {
-            //     self.parsed.primitives[self.end-1].end_loc
-            // };
+    //         // let last_loc=if self.start==self.end {
+    //         //     self.last_loc
+    //         // } else {
+    //         //     self.parsed.primitives[self.end-1].end_loc
+    //         // };
 
-            Ok(TokenContainer { parsed: self.parsed, token_ind: primitive_ind,}) //last_loc
-        } else {
-            Err(self.last_loc)
-        }
-    }
+    //         Ok(TokenContainer { parsed: self.parsed, token_ind: primitive_ind,}) //last_loc
+    //     } else {
+    //         Err(self.last_loc)
+    //     }
+    // }
 
     pub fn pop_front_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'t>> {
         if self.start+amount > self.end { //|| amount==0
@@ -85,29 +85,29 @@ impl<'t> TokenIterContainer<'t> {
             Some(TokenIterContainer{last_loc:self.last_loc, start: start2, end: end2, parsed: self.parsed })
         }
     }
-    pub fn pop_back_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'t>> {
-        if self.start+amount > self.end
-        // || amount==0
-        {
-            println!("{}+{} > {}", self.start,amount,self.end);
+    // pub fn pop_back_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'t>> {
+    //     if self.start+amount > self.end
+    //     // || amount==0
+    //     {
+    //         println!("{}+{} > {}", self.start,amount,self.end);
 
-            None
-        } else {
-            let end2=self.end;
-            self.end-=amount;
-            let start2=self.end;
+    //         None
+    //     } else {
+    //         let end2=self.end;
+    //         self.end-=amount;
+    //         let start2=self.end;
 
-            // let last_loc=if self.start==self.end {
-            //     self.last_loc
-            // } else {
-            //     self.parsed.primitives[self.end-1].start_loc
-            // };
+    //         // let last_loc=if self.start==self.end {
+    //         //     self.last_loc
+    //         // } else {
+    //         //     self.parsed.primitives[self.end-1].start_loc
+    //         // };
 
-            let last_loc=self.last_loc;
+    //         let last_loc=self.last_loc;
 
-            Some(TokenIterContainer{last_loc, start: start2, end: end2, parsed: self.parsed })
-        }
-    }
+    //         Some(TokenIterContainer{last_loc, start: start2, end: end2, parsed: self.parsed })
+    //     }
+    // }
 
     pub fn len(&self) -> usize {
         self.end-self.start
@@ -329,24 +329,24 @@ impl<'t> Iterator for TokenIterContainer<'t> {
     }
 }
 
-impl<'t> DoubleEndedIterator for TokenIterContainer<'t> {
-    fn next_back(&mut self) -> Option<TokenContainer<'t>> {
-        if self.end > self.start {
-            self.end-=1;
-            let primitive_ind=self.end;
+// impl<'t> DoubleEndedIterator for TokenIterContainer<'t> {
+//     fn next_back(&mut self) -> Option<TokenContainer<'t>> {
+//         if self.end > self.start {
+//             self.end-=1;
+//             let primitive_ind=self.end;
 
-            // let last_loc=if self.len()==1 {
-            //     self.last_loc
-            // } else {
-            //     self.parsed.primitives[primitive_ind-1].end_loc
-            // };
+//             // let last_loc=if self.len()==1 {
+//             //     self.last_loc
+//             // } else {
+//             //     self.parsed.primitives[primitive_ind-1].end_loc
+//             // };
 
-            Some(TokenContainer {token_ind: primitive_ind,parsed: self.parsed,}) //last_loc
-        } else {
-            None
-        }
-    }
-}
+//             Some(TokenContainer {token_ind: primitive_ind,parsed: self.parsed,}) //last_loc
+//         } else {
+//             None
+//         }
+//     }
+// }
 
 impl<'t> std::fmt::Debug for TokenIterContainer<'t> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -356,11 +356,11 @@ impl<'t> std::fmt::Debug for TokenIterContainer<'t> {
     }
 }
 
-impl<'t> TokenIterTrait for TokenIterContainer<'t> {
-    fn is_trimmable(&self) -> bool {
-        false
+impl<'t,'g> TokensTrait<MyPrimitive<'g>> for TokenIterContainer<'t> {
+    // fn is_trimmable(&self) -> bool {
+    //     false
 
-    }
+    // }
     // fn get<F:Fn(GrammarPrimitive<'g>)->Option<TokenContainer<'t>>>(&self, func:F) -> Option<TokenContainer<'t>> {
     //     None
     // }
@@ -407,12 +407,6 @@ impl<'t> TokenIterTrait for TokenIterContainer<'t> {
 
 
 
-
-
-}
-
-impl<'g,'t> TokenIterGetTrait<MyPrimitive<'g>> for TokenIterContainer<'t> {
-
     fn pop_primitive(&mut self, p:&MyPrimitive<'g>) -> bool {
         match p {
             MyPrimitive::String => self.pop_string().is_ok(),
@@ -424,4 +418,6 @@ impl<'g,'t> TokenIterGetTrait<MyPrimitive<'g>> for TokenIterContainer<'t> {
             MyPrimitive::Eol => self.pop_eol().is_ok(),
         }
     }
+
+
 }

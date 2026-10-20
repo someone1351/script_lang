@@ -1,13 +1,13 @@
-use std::{fmt::Display, marker::PhantomData};
+// use std::{fmt::Display, marker::PhantomData};
 
-use crate::{clike::grammar::TokenIterTrait, Loc};
+// use crate::{clike::grammar::TokensTrait, Loc};
 
 use super::super::super::{grammar::{container::WalkGroupIterContainer, data::{Walk, WalkGroup}}, tokenizer::{TokenContainer, TokenIterContainer}};
 
 #[derive(Clone, Copy)]
 pub struct WalkGroupContainer<'g,GR,TS>
 where
-    TS:Clone+TokenIterTrait,
+    TS:Clone,
 {
     pub walk:&'g Walk<GR,TS>,
     pub group_ind:usize,
@@ -16,7 +16,7 @@ where
 impl<'g,GR,TS> WalkGroupContainer<'g,GR,TS>
 where
     GR: Clone,
-    TS:Clone+TokenIterTrait,
+    TS:Clone,
 {
     fn group(&self) -> &WalkGroup<GR,TS> {
         &self.walk.groups[self.group_ind]

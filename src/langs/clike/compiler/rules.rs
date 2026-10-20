@@ -1,5 +1,5 @@
 use std::{fmt::Display, ops::Deref, rc::Rc};
-use crate::clike::{grammar::{container::WalkGroupContainer, GrammarPrimitiveTrait}, tokenizer::{TokenContainer, TokenIterContainer}};
+use crate::clike::{grammar::{container::WalkGroupContainer, PrimitiveTrait}, tokenizer::{TokenContainer, TokenIterContainer}};
 
 /*
 TODO
@@ -32,7 +32,7 @@ pub enum MyPrimitive<'g> {
 //     }
 // }
 
-impl<'g> GrammarPrimitiveTrait for MyPrimitive<'g> {
+impl<'g> PrimitiveTrait for MyPrimitive<'g> {
     fn is_trimmable(&self) -> bool {
         match self {
             MyPrimitive::Eol => true,
@@ -567,50 +567,50 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
 
 
 
-impl<'t,'g> std::fmt::Debug for WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}::{:?}", &self.group_ind,&self.name2().map(|x|x.0).unwrap_or("")))
-    }
-}
+// impl<'t,'g> std::fmt::Debug for WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>> {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         f.write_fmt(format_args!("{}::{:?}", &self.group_ind,&self.name2().map(|x|x.0).unwrap_or("")))
+//     }
+// }
 
-impl<'t,'g,> Display for WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>>
+// impl<'t,'g,> Display for WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>>
 
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        enum Thing<'t,'g,> {
-            Token(TokenContainer<'t>),
-            Group(WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>>),
-        }
+// {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         enum Thing<'t,'g,> {
+//             Token(TokenContainer<'t>),
+//             Group(WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>>),
+//         }
 
-        let mut stk = vec![(Thing::Group(self.clone()),0)];
+//         let mut stk = vec![(Thing::Group(self.clone()),0)];
 
-        while let Some((cur,depth))=stk.pop() {
-            let indent="    ".repeat(depth);
+//         while let Some((cur,depth))=stk.pop() {
+//             let indent="    ".repeat(depth);
 
-            match cur {
-                Thing::Group(cur) => {
-                    writeln!(f,"{indent}group: {:?}",cur.name2().map(|x|x.0).unwrap_or(""),)?;
-                    let mut cur_tokens = cur.tokens();
+//             match cur {
+//                 Thing::Group(cur) => {
+//                     writeln!(f,"{indent}group: {:?}",cur.name2().map(|x|x.0).unwrap_or(""),)?;
+//                     let mut cur_tokens = cur.tokens();
 
-                    for child_group in cur.children().rev() {
-                        let child_tokens=child_group.tokens();
-                        let ps_len=cur_tokens.end-child_tokens.end;
-                        let ps=cur_tokens.pop_back_amount(ps_len).unwrap();
+//                     for child_group in cur.children().rev() {
+//                         let child_tokens=child_group.tokens();
+//                         let ps_len=cur_tokens.end-child_tokens.end;
+//                         let ps=cur_tokens.pop_back_amount(ps_len).unwrap();
 
-                        stk.extend(ps.map(|t|(Thing::Token(t),depth+1)).rev());
-                        stk.push((Thing::Group(child_group),depth+1));
-                        cur_tokens.pop_back_amount(child_tokens.len()).unwrap();
-                    }
+//                         stk.extend(ps.map(|t|(Thing::Token(t),depth+1)).rev());
+//                         stk.push((Thing::Group(child_group),depth+1));
+//                         cur_tokens.pop_back_amount(child_tokens.len()).unwrap();
+//                     }
 
-                    //
-                    stk.extend(cur_tokens.map(|t|(Thing::Token(t),depth+1)).rev());
-                }
-                Thing::Token(cur) => {
-                    writeln!(f,"{indent}{cur:?}")?;
-                }
-            }
-        }
+//                     //
+//                     stk.extend(cur_tokens.map(|t|(Thing::Token(t),depth+1)).rev());
+//                 }
+//                 Thing::Token(cur) => {
+//                     writeln!(f,"{indent}{cur:?}")?;
+//                 }
+//             }
+//         }
 
-        Ok(())
-    }
-}
+//         Ok(())
+//     }
+// }

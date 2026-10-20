@@ -1,6 +1,6 @@
-use std::ops::{RangeInclusive};
+use std::ops::{Range, RangeInclusive};
 
-use crate::clike::grammar::{node::GrammarNode, GrammarPrimitiveTrait};
+use crate::clike::grammar::{node::GrammarNode, walker::GrammarWalker, GrammarWalkError, PrimitiveTrait, TokensTrait };
 
 #[derive(Clone,Hash,PartialEq,Eq,Debug)]
 pub enum MyGroup {}
@@ -17,7 +17,7 @@ pub enum MyPrimitive<'g> {
 }
 
 
-impl<'g> GrammarPrimitiveTrait for MyPrimitive<'g> {
+impl<'g> PrimitiveTrait for MyPrimitive<'g> {
     fn is_trimmable(&self) -> bool {
         false
     }
@@ -166,32 +166,173 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
     })
 }
 
-/*
 
-int => '1' .. '9' ('0' .. '9')*
+pub struct Input {
 
-float => int '.' int*
+}
 
-escape => '\' ('s' | 't' | 'r' | 'n' | quote)
-quote => '"'
-string => quote (escape | !quote)* quote
+pub struct Tokens {
 
-symbol => '|' | '&' | '>' | '<' | '/' | '*' | '+' | '-' | ',' | '.' | '(' | ')' | '[' | ']' | '{' | '}' | ';' | '^' | '%' | '=' | '!' | '~'
-
-identifier => '_'* ('a'..'z' | 'A' .. 'Z') ('a'..'z' | 'A' .. 'Z' | '0' .. '9' | '_')
-
-keyword => "for" | "in" | "while" | "continue" | "break" | "goto" | "label" | "include" | "true" | "false" | "nil" | "void" | "print" | "println" | "format" | "var" | "fn" | "return" | "if" | "elif" | "else"
-
-cmnt => '/' '/' !eol*
-mcmnt_end => '*' '/'
-mcmnt => '/' '*'  !mcmnt_end* mcmnt_end.expect("closing comment")
-
-eol => '\r'? \n'
-spc => (' ' | '\t')+
-ws => (cmnt | mcmnt | spc | eol)*
-
-token => string | float | int | identifier | symbol
-start => token? (ws token)* ws?
+}
+// // impl<'a> std::fmt::Debug for TokenContainer<'a> {
+// //     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+// //         f.write_fmt(format_args!("{}::{:?}", &self.token_ind,&self.token_type()))
+// //     }
+// // }
 
 
-*/
+// impl<'t,'g> TokensTrait<MyPrimitive<'g>> for TokenIterContainer<'t> {
+//     // fn is_trimmable(&self) -> bool {
+//     //     false
+
+//     // }
+//     // fn get<F:Fn(GrammarPrimitive<'g>)->Option<TokenContainer<'t>>>(&self, func:F) -> Option<TokenContainer<'t>> {
+//     //     None
+//     // }
+
+//     // fn index(&self) -> usize {
+//     //     self.inds().start
+
+//     // }
+
+
+//     fn trim2(&mut self) {
+//         self.trim();
+//     }
+
+//     fn truncate2(&mut self,size:usize,) {
+//         let end2=self.start+size;
+
+//         if self.end > end2 {
+//             self.end=end2;
+//         }
+//     }
+
+//     fn eat2(&mut self,size:usize,) {
+//         // if self.len()>=size {
+
+//         // }
+//         // self.take(size);
+
+//         for _ in 0..size.min(self.len()) {
+//             self.next().unwrap();
+//         }
+//     }
+//     fn len2(&self) -> usize {
+//         self.len()
+//     }
+
+//     fn is_empty2(&self) -> bool {
+//         self.is_empty()
+//     }
+
+//     fn inds2(&self) -> Range<usize> {
+//         self.inds()
+//     }
+
+
+
+//     fn pop_primitive(&mut self, p:&MyPrimitive<'g>) -> bool {
+//         match p {
+//             MyPrimitive::String => self.pop_string().is_ok(),
+//             MyPrimitive::Identifier => self.pop_identifier().is_ok(),
+//             MyPrimitive::Int => self.pop_int().is_ok(),
+//             MyPrimitive::Float => self.pop_float().is_ok(),
+//             MyPrimitive::Symbol(s) => self.pop_with_symbol(s).is_ok(),
+//             MyPrimitive::Keyword(s) => self.pop_with_keyword(s).is_ok(),
+//             MyPrimitive::Eol => self.pop_eol().is_ok(),
+//         }
+//     }
+
+
+// }
+
+// pub fn tokenise(src:&str,) {
+
+//         //
+//         let mut walker=GrammarWalker::new(tokens, get_non_term,);
+//         walker.set_debug(true);
+
+//         let start_time = std::time::Instant::now();
+//         let result=walker.run(MyNonTerm::Start) ;
+
+
+//         let time_elapsed=start_time.elapsed().as_secs_f64();
+//         //
+//         if let Err(e)=result {
+
+
+//             println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
+
+//             match e {
+//                 GrammarWalkError::FailedParse => {
+//                     let expecteds=walker.expects_string();
+
+//                     let error_type= if expecteds.is_empty() {
+//                         CompileErrorType::ParserUnexpected
+//                     } else {
+//                         CompileErrorType::ParserExpected(expecteds)
+//                     };
+//                     // let error_type=CompileErrorType::ParserExpected(expecteds);
+
+//                     return Err(CompileError{path:pathbuf,src,loc:
+//                         // walker.last_loc()
+//                         walker.last_loc2().start_loc()
+//                         ,error_type});
+
+//                     // return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expects_string())});
+//                 }
+//                 // GrammarWalkError::Unfinished => todo!(),
+//                 // GrammarWalkError::RecursiveNonTerm(_) => todo!(),
+//                 // GrammarWalkError::MissingNonTerm(_) => todo!(),
+//                 _ => {
+//                     // println!("{:?} {:?}",walker.expecteds_string(),walker.last_loc());
+//                     panic!("{e:?}");
+//                 }
+//             }
+//         }
+
+//         //
+//         println!("-----------------");
+//         if true {
+
+//             let walk2=walker.get_walk2(false);
+
+//             let mut stk=vec![(walk2.root(),0)];
+
+//             while let Some((cur,depth))=stk.pop() {
+//                 let indent="    ".repeat(depth);
+//                 // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
+//                 // println!("{indent}group: {:?} : [{}]",cur.name2(),xx);
+//                 if let Some(name)=cur.name2() {
+//                     // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
+//                     println!("{indent}group: {name:?}",);
+//                     stk.extend(cur.children().rev().map(|c|(c,depth+1)));
+
+//                     if cur.children().len()==0 {
+//                         for t in cur.tokens() {
+//                             println!("{indent}    {t:?}");
+//                         }
+//                     }
+//                 } else  {
+//                     for t in cur.tokens() {
+//                         println!("{indent}{t:?}");
+//                     }
+
+//                 }
+//             }
+
+//             println!("1_____");
+//             for (i,g) in walk2.groups.iter().enumerate() {
+//                 println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
+//             }
+//         }
+
+//         let walk=walker.get_walk2(false);
+
+//             println!("2_____");
+//             for (i,g) in walk.groups.iter().enumerate() {
+//                 println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
+//             }
+//         println!("===---===");
+// }

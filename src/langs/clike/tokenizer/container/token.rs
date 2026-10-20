@@ -1,7 +1,7 @@
 
 use crate::build::Loc;
 use crate::clike::compiler::rules::MyPrimitive;
-use crate::clike::grammar::TokenTrait;
+// use crate::clike::grammar::TokenTrait;
 use super::super::super::tokenizer::data::{Tokenized, Token, TokenType};
 
 use super::*;
@@ -243,8 +243,8 @@ impl<'a> std::fmt::Debug for TokenContainer<'a> {
     }
 }
 
-impl<'t,'g> TokenTrait<MyPrimitive<'g>> for TokenContainer<'t> {
-    fn index(&self) -> usize {
-        self.ind()
-    }
-}
+// impl<'t,'g> TokenTrait<MyPrimitive<'g>> for TokenContainer<'t> {
+//     fn index(&self) -> usize {
+//         self.ind()
+//     }
+// }

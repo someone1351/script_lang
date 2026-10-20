@@ -74,9 +74,9 @@ use std::rc::Rc;
 
 use crate::build::Loc;
 use crate::clike::grammar;
-use crate::clike::grammar::GrammarPrimitiveTrait;
-use crate::clike::grammar::TokenIterGetTrait;
-use crate::clike::grammar::TokenIterTrait;
+use crate::clike::grammar::PrimitiveTrait;
+// use crate::clike::grammar::TokensGetTrait;
+use crate::clike::grammar::TokensTrait;
 // use crate::clike::tokenizer::TokenContainer;
 use super::super::grammar::data::{Walk,WalkGroup};
 use super::super::tokenizer::{TokenIterContainer, ValueContainer};
@@ -131,9 +131,9 @@ where
 impl<'g,NT,P,GR,TS,GF> GrammarWalker<'g,NT,P,GR,TS,GF>
 where
     NT:core::hash::Hash+Clone+Eq+PartialEq+Debug,
-    P:Clone+Debug+GrammarPrimitiveTrait+Eq+PartialEq,
+    P:Clone+Debug+PrimitiveTrait+Eq+PartialEq,
     GR:Debug+PartialEq+Eq+Clone,
-    TS: Clone+TokenIterTrait+Debug + TokenIterGetTrait<P> ,
+    TS: Clone+TokensTrait<P>+Debug ,
     GF: Fn(NT)->Option<&'g GrammarNode<'g,NT,P,GR>>,
 {
 

@@ -1,8 +1,8 @@
 use std::ops::Range;
 
-use crate::clike::grammar::TokenIterTrait;
+// use crate::clike::grammar::TokensTrait;
 
-use super::super::{grammar::container::WalkGroupContainer, tokenizer::TokenIterContainer};
+use super::super::grammar::container::WalkGroupContainer;
 
 
 pub struct WalkGroup<GR,TS>
@@ -24,7 +24,7 @@ where
 
 impl<'g,GR,TS> Walk<GR,TS>
 where
-    TS:Clone+TokenIterTrait,
+    TS:Clone,
 {
     pub fn root(&'g self) -> WalkGroupContainer<'g,GR,TS> {
         WalkGroupContainer { walk: self, group_ind: 0 }

@@ -107,17 +107,17 @@ NOTE
 
 */
 
-pub trait GrammarPrimitiveTrait {
+pub trait PrimitiveTrait {
     fn is_trimmable(&self) -> bool;
 }
 
 
-pub trait TokenTrait<P> {
-    fn index(&self) -> usize;
-}
+// pub trait TokenTrait<P> {
+//     fn index(&self) -> usize;
+// }
 
-pub trait TokenIterTrait {
-    fn is_trimmable(&self) -> bool;
+pub trait TokensTrait<P> {
+    // fn is_trimmable(&self) -> bool;
     // fn index(&self) -> usize;
     fn inds2(&self) -> Range<usize>;
     fn trim2(&mut self);
@@ -127,9 +127,12 @@ pub trait TokenIterTrait {
     fn is_empty2(&self) -> bool;
     // fn first(&self) -> Option<T>;
     // fn pop_primitive(&mut self, p:&P) -> bool;
-}
 
-pub trait TokenIterGetTrait<P> {
     // // fn get<F:Fn(P)->Option<T>>(&self, func:F) -> Option<T>;
     fn pop_primitive(&mut self, p:&P) -> bool;
 }
+
+// pub trait TokensGetTrait<P> {
+//     // // fn get<F:Fn(P)->Option<T>>(&self, func:F) -> Option<T>;
+//     fn pop_primitive(&mut self, p:&P) -> bool;
+// }

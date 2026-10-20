@@ -30,7 +30,7 @@ use crate::clike::compiler::builder_error::BuilderErrorType;
 use crate::clike::compiler::rules::{MyGroup, MyPrimitive};
 use crate::clike::grammar::container::{WalkGroupContainer, WalkGroupIterContainer};
 use crate::clike::grammar::walker::GrammarWalker;
-use crate::clike::grammar::{GrammarWalkError, TokenIterTrait};
+use crate::clike::grammar::GrammarWalkError;
 use crate::clike::tokenizer::input::Input;
 // use crate::ccexpr_compiler::grammar::grammar_run;
 // use std::path::PathBuf;
@@ -193,6 +193,7 @@ impl Compiler {
                 println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
             }
         }
+
         let walk=walker.get_walk2(false);
 
             println!("2_____");
@@ -200,7 +201,7 @@ impl Compiler {
                 println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
             }
         println!("===---===");
-        println!("{}",walk.root());
+        // println!("{}",walk.root());
         // {
         //     enum Thing<'g,TS>
         //     where
