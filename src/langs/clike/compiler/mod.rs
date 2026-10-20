@@ -29,6 +29,7 @@ use crate::builder::{Builder, BuilderError};
 use crate::clike::compiler::builder_error::BuilderErrorType;
 use crate::clike::compiler::rules::{MyGroup, MyPrimitive};
 use crate::clike::grammar::container::{WalkGroupContainer, WalkGroupIterContainer};
+use crate::clike::grammar::utils::groups_debug_print;
 use crate::clike::grammar::walker::GrammarWalker;
 use crate::clike::grammar::GrammarWalkError;
 use crate::clike::tokenizer::input::Input;
@@ -160,48 +161,58 @@ impl Compiler {
 
         //
         println!("-----------------");
-        if true {
+        // if true {
 
-            let walk2=walker.get_walk2(false);
+        //     let walk2=walker.get_walk1(false);
 
-            let mut stk=vec![(walk2.root(),0)];
+        //     let mut stk: Vec<(WalkGroupContainer<'_, MyGroup<'_>, TokenIterContainer<'_>>, usize)>=vec![(walk2.root(),0)];
 
-            while let Some((cur,depth))=stk.pop() {
-                let indent="    ".repeat(depth);
-                // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
-                // println!("{indent}group: {:?} : [{}]",cur.name2(),xx);
-                if let Some(name)=cur.name2() {
-                    // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
-                    println!("{indent}group: {name:?}",);
-                    stk.extend(cur.children().rev().map(|c|(c,depth+1)));
+        //     while let Some((cur,depth))=stk.pop() {
+        //         let indent="    ".repeat(depth);
+        //         // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
+        //         // println!("{indent}group: {:?} : [{}]",cur.name2(),xx);
+        //         if let Some(name)=cur.name2() {
+        //             // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
+        //             println!("{indent}group: {name:?}",);
+        //             stk.extend(cur.children().rev().map(|c|(c,depth+1)));
 
-                    if cur.children().len()==0 {
-                        for t in cur.tokens() {
-                            println!("{indent}    {t:?}");
-                        }
-                    }
-                } else  {
-                    for t in cur.tokens() {
-                        println!("{indent}{t:?}");
-                    }
+        //             if cur.children().len()==0 {
+        //                 for t in cur.tokens() {
+        //                     println!("{indent}    {t:?}");
+        //                 }
+        //             }
+        //         } else  {
+        //             for t in cur.tokens() {
+        //                 println!("{indent}{t:?}");
+        //             }
 
-                }
-            }
+        //         }
+        //     }
 
-            println!("1_____");
-            for (i,g) in walk2.groups.iter().enumerate() {
-                println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
-            }
+        //     println!("1_____");
+        //     for (i,g) in walk2.groups.iter().enumerate() {
+        //         println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
+        //     }
+        // }
+
+        let walk=walker.get_walk1(false);
+
+        //     println!("2_____");
+        //     for (i,g) in walk.groups.iter().enumerate() {
+        //         println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
+        //     }
+        println!("===---===0");
+        println!("{}",walk.root());
+        println!("===---===1");
+        groups_debug_print(walk.root());
+
+
+        println!("===---===2");
+        {
+            let walk=walker.get_walk2(false);
+            groups_debug_print(walk.root());
+
         }
-
-        let walk=walker.get_walk2(false);
-
-            println!("2_____");
-            for (i,g) in walk.groups.iter().enumerate() {
-                println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
-            }
-        println!("===---===");
-        // println!("{}",walk.root());
         // {
         //     enum Thing<'g,TS>
         //     where

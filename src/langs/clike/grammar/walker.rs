@@ -2645,6 +2645,12 @@ where
         self.groups2.extend(drained_group_news.rev().map(|x|{
             let mut tokens=x.tokens;
             tokens.truncate2(tokens.len2()-cur_tokens.len2());
+
+            // // tokens=0..10, len=10
+            // // cur_tokens=6..10, len=4
+            // // group_tokens=0..6, len=6
+
+            // let tokens=x.tokens.clone().take2(x.tokens.len2()-cur_tokens.len2()).unwrap(); //truncate2
             // println!("===gooo {:?} :: {:?} :: {tokens:?} :: {}, {}",x.name,x.tokens,tokens.len2(),cur_tokens.len2());
             // group.tokens.truncate2(group.tokens.len2()-cur_tokens.len2());
 
@@ -2849,7 +2855,11 @@ where
         //
         while g>last.group_ind {
             let group=&mut self.groups[g];
+
             group.tokens.truncate2(group.tokens.len2()-cur_tokens.len2());
+
+            // group.tokens=group.tokens.clone().take2(group.tokens.len2()-cur_tokens.len2()).unwrap();
+
             g=group.parent;
         }
 
@@ -2940,7 +2950,10 @@ where
             let mut t=self.tokens_remaining.clone();
             t.trim2();
 
-            if t.is_empty2() {
+            if
+                //t.len2()==0
+                t.is_empty2()
+            {
                 t
             } else {
                 self.tokens_remaining.clone()
@@ -3028,6 +3041,8 @@ where
                     if between_tokens_len!=0 {
                         let mut between_tokens=cur_tokens.clone();
                         between_tokens.truncate2(between_tokens_len);
+
+                        // let between_tokens=cur_tokens.clone().take2(between_tokens_len).unwrap();
                         groups_out2.push(WalkGroup { name: None, children: 0..0, tokens: between_tokens });
                     }
 
@@ -3039,9 +3054,10 @@ where
                         tokens: child_group.tokens.clone(),
                     });
 
-                    // cur_tokens.take2(between_tokens_len+child_tokens.len2());
+                    // // cur_tokens.take2(between_tokens_len+child_tokens.len2());
                     cur_tokens.eat2(child_tokens.inds2().end-cur_tokens.clone().inds2().start);
-                    // cur_tokens.take(n)
+                    // // cur_tokens.take(n)
+                    // cur_tokens.take2(child_tokens.inds2().end-cur_tokens.clone().inds2().start).unwrap();
                 }
 
                 if cur_tokens.len2()!=0 &&g.children.len()!=0 {
@@ -3385,7 +3401,10 @@ where
         self.tokens_remaining.trim2();
 
         //
-        if !result.is_err() && !self.tokens_remaining.is_empty2() {
+        if !result.is_err() &&
+            !self.tokens_remaining.is_empty2()
+            // self.tokens_remaining.len2()!=0
+        {
             if self.debug {
                 // // println!("error, failed to parse all tokens {:?}",self.primitives_remaining);
                 // println!("error, failed to parse all tokens, at {}",self.last_loc());

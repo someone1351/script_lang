@@ -23,7 +23,7 @@ pub mod error;
 pub mod data;
 
 mod temp_data;
-mod utils;
+pub mod utils;
 
 
 use std::ops::Range;
@@ -116,15 +116,20 @@ pub trait PrimitiveTrait {
 //     fn index(&self) -> usize;
 // }
 
-pub trait TokensTrait<P> {
+pub trait TokensTrait<P>
+where
+    Self:Sized,
+{
     // fn is_trimmable(&self) -> bool;
     // fn index(&self) -> usize;
     fn inds2(&self) -> Range<usize>;
     fn trim2(&mut self);
     fn truncate2(&mut self,size:usize,);
+    fn take2(&mut self,size:usize,) -> Option<Self>;
     fn eat2(&mut self,size:usize,);
     fn len2(&self) -> usize;
     fn is_empty2(&self) -> bool;
+
     // fn first(&self) -> Option<T>;
     // fn pop_primitive(&mut self, p:&P) -> bool;
 

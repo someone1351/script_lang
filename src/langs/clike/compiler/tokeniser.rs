@@ -1,6 +1,6 @@
-use std::ops::{Range, RangeInclusive};
+use std::{ops::{Range, RangeInclusive}, str::CharIndices};
 
-use crate::clike::grammar::{node::GrammarNode, walker::GrammarWalker, GrammarWalkError, PrimitiveTrait, TokensTrait };
+use crate::{clike::grammar::{node::GrammarNode, walker::GrammarWalker, GrammarWalkError, PrimitiveTrait, TokensTrait }, Loc};
 
 #[derive(Clone,Hash,PartialEq,Eq,Debug)]
 pub enum MyGroup {}
@@ -167,12 +167,14 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
 }
 
 
-pub struct Input {
+// pub struct Input<'a> {
+//     chars : CharIndices<'a>,
 
-}
+// }
 
-pub struct Tokens {
-
+pub struct Tokens<'a> {
+    chars : CharIndices<'a>,
+    loc:Loc,
 }
 // // impl<'a> std::fmt::Debug for TokenContainer<'a> {
 // //     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -181,24 +183,10 @@ pub struct Tokens {
 // // }
 
 
-// impl<'t,'g> TokensTrait<MyPrimitive<'g>> for TokenIterContainer<'t> {
-//     // fn is_trimmable(&self) -> bool {
-//     //     false
-
-//     // }
-//     // fn get<F:Fn(GrammarPrimitive<'g>)->Option<TokenContainer<'t>>>(&self, func:F) -> Option<TokenContainer<'t>> {
-//     //     None
-//     // }
-
-//     // fn index(&self) -> usize {
-//     //     self.inds().start
-
-//     // }
+// impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Tokens<'t> {
 
 
-//     fn trim2(&mut self) {
-//         self.trim();
-//     }
+//     fn trim2(&mut self) { }
 
 //     fn truncate2(&mut self,size:usize,) {
 //         let end2=self.start+size;
