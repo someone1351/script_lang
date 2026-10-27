@@ -74,7 +74,7 @@ impl<'t> TokenIterContainer<'t> {
     // }
 
     pub fn pop_front_amount(&mut self,amount:usize) -> Option<TokenIterContainer<'t>> {
-            println!("front: {}+{} > {}",self.start,amount, self.end);
+            // println!("front: {}+{} > {}",self.start,amount, self.end);
         if self.start+amount > self.end { //|| amount==0
             // println!("{}+{} > {}", self.start,amount,self.end);
             None
@@ -378,34 +378,37 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for TokenIterContainer<'t> {
 
 
     fn take2(&mut self,size:usize,) -> Option<TokenIterContainer<'t>> {
-        self.pop_back_amount(size)
+        self.pop_front_amount(size)
     }
+    // fn take_end2(&mut self,size:usize,) -> Option<TokenIterContainer<'t>> {
+    //     self.pop_back_amount(size)
+    // }
 
-    fn truncate2(&mut self,size:usize,) {
-        let end2=self.start+size;
+    // fn truncate2(&mut self,size:usize,) {
+    //     let end2=self.start+size;
 
-        if self.end > end2 {
-            self.end=end2;
-        }
-    }
-    fn eat2(&mut self,size:usize,) {
-        // if self.len()>=size {
+    //     if self.end > end2 {
+    //         self.end=end2;
+    //     }
+    // }
+    // fn eat2(&mut self,size:usize,) {
+    //     // if self.len()>=size {
 
-        // }
-        // self.take(size);
+    //     // }
+    //     // self.take(size);
 
-        for _ in 0..size.min(self.len()) {
-            self.next().unwrap();
-        }
-    }
+    //     for _ in 0..size.min(self.len()) {
+    //         self.next().unwrap();
+    //     }
+    // }
 
     fn len2(&self) -> usize {
         self.len()
     }
 
-    fn is_empty2(&self) -> bool {
-        self.is_empty()
-    }
+    // fn is_empty2(&self) -> bool {
+    //     self.is_empty()
+    // }
 
     fn inds2(&self) -> Range<usize> {
         self.inds()
@@ -413,7 +416,7 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for TokenIterContainer<'t> {
 
 
 
-    fn pop_primitive(&mut self, p:&MyPrimitive<'g>) -> bool {
+    fn pop2(&mut self, p:&MyPrimitive<'g>) -> bool {
         match p {
             MyPrimitive::String => self.pop_string().is_ok(),
             MyPrimitive::Identifier => self.pop_identifier().is_ok(),

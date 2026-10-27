@@ -124,17 +124,18 @@ where
     // fn index(&self) -> usize;
     fn inds2(&self) -> Range<usize>;
     fn trim2(&mut self);
-    fn truncate2(&mut self,size:usize,);
+    // fn truncate2(&mut self,size:usize,);
+    // fn take_end2(&mut self,size:usize,) -> Option<Self>;
     fn take2(&mut self,size:usize,) -> Option<Self>;
-    fn eat2(&mut self,size:usize,);
+    // fn eat2(&mut self,size:usize,);
     fn len2(&self) -> usize;
-    fn is_empty2(&self) -> bool;
+    // fn is_empty2(&self) -> bool;
 
     // fn first(&self) -> Option<T>;
     // fn pop_primitive(&mut self, p:&P) -> bool;
 
     // // fn get<F:Fn(P)->Option<T>>(&self, func:F) -> Option<T>;
-    fn pop_primitive(&mut self, p:&P) -> bool;
+    fn pop2(&mut self, p:&P) -> bool;
 }
 
 // pub trait TokensGetTrait<P> {

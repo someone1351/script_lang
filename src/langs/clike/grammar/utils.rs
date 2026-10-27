@@ -66,11 +66,26 @@ where
                 for child_group in cur.children().rev() {
                     let child_tokens=child_group.tokens();
                     let ps_len=cur_tokens.inds2().end-child_tokens.inds2().end;
-                    let ps=cur_tokens.take2(ps_len).unwrap();
+                    // let ps=cur_tokens.take_end2(ps_len).unwrap();
+
+                    // let mut ps=cur_tokens.clone();
+                    // ps.eat2(cur_tokens.len2()-ps_len);
+
+                    let ps={
+                        let x=cur_tokens.take2(cur_tokens.len2()-ps_len).unwrap();
+                        let ps=cur_tokens;
+                        cur_tokens=x;
+                        ps
+                    };
+
+                    // let ps = cur_tokens.clone().take_start2(cur_tokens.len2()-ps_len).unwrap();
 
                     stk.extend(ps.map(|t|(Thing::Token(t),depth+1)).rev());
                     stk.push((Thing::Group(child_group),depth+1));
-                    cur_tokens.take2(child_tokens.len2()).unwrap();
+
+                    // cur_tokens.take_end2(child_tokens.len2()).unwrap();
+                    cur_tokens=cur_tokens.clone().take2(cur_tokens.len2()-child_tokens.len2()).unwrap();
+
                 }
 
                 //

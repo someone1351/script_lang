@@ -201,8 +201,8 @@ impl Compiler {
         //     for (i,g) in walk.groups.iter().enumerate() {
         //         println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
         //     }
-        println!("===---===2a");
-        println!("{}",walk.root());
+        // println!("===---===2a");
+        // println!("{}",walk.root());
         println!("===---===2b");
         groups_debug_print(walk.root());
 
