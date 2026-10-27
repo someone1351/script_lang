@@ -176,11 +176,11 @@ pub struct Tokens<'a> {
     chars : CharIndices<'a>,
     loc:Loc,
 }
-// // impl<'a> std::fmt::Debug for TokenContainer<'a> {
-// //     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-// //         f.write_fmt(format_args!("{}::{:?}", &self.token_ind,&self.token_type()))
-// //     }
-// // }
+// impl<'a> std::fmt::Debug for TokenContainer<'a> {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         f.write_fmt(format_args!("{}::{:?}", &self.token_ind,&self.token_type()))
+//     }
+// }
 
 
 // impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Tokens<'t> {
