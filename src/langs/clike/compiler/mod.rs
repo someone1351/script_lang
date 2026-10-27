@@ -118,7 +118,7 @@ impl Compiler {
 
         //
         let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
-        walker.set_debug(true);
+        // walker.set_debug(true);
 
         let start_time = std::time::Instant::now();
         let result=walker.run(rules::MyNonTerm::Start) ;
@@ -195,21 +195,21 @@ impl Compiler {
         //     }
         // }
 
-        let walk=walker.get_walk1(false);
+        let walk=walker.get_walk2(true);
 
         //     println!("2_____");
         //     for (i,g) in walk.groups.iter().enumerate() {
         //         println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
         //     }
-        println!("===---===0");
+        println!("===---===2a");
         println!("{}",walk.root());
-        println!("===---===1");
+        println!("===---===2b");
         groups_debug_print(walk.root());
 
 
-        println!("===---===2");
+        println!("===---===1");
         {
-            let walk=walker.get_walk2(false);
+            let walk=walker.get_walk1(false);
             groups_debug_print(walk.root());
 
         }

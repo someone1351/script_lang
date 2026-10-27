@@ -61,6 +61,14 @@ TODO
 
 WANTED TO
 * allow multiple wases instead of just storing a single one, but couldn't think how to know how
+
+TODO
+* test NOT
+* save what NOT parses
+** when saving it's groups in self.groups2, and on success,
+*** need to temporarily pop the NOTs groups and
+*** and then move self.group_news2 to self.groups2,
+*** before adding the NOTs groups back
 */
 
 use super::error::*;
@@ -635,6 +643,12 @@ where
             // //     // .contains_key(&g)
             // // self.hist_prevs[cur.hist_prevs_ind..].iter().find(|x|x.grammar.eq(g)).is_some()
         {
+
+            //
+            if self.debug {
+                println!("-------- had success");
+            }
+
             // self.stk.truncate(cur.success_len);
             self.group_set_trim(cur.group_ind,cur.tokens.clone(),false );
             self.group_set_trim2(cur.group_new_len2,cur.tokens.clone(),false);
@@ -658,6 +672,12 @@ where
             self.expect_on_success2();
             // self.expect_on_success1();
         } else {
+            //
+            if self.debug {
+                println!("-------- had fail");
+            }
+
+            //
             // self.stk.truncate(cur.fail_len);
             self.work_stk_truncate(cur.work_fail_len);
             self.update_tokens(cur.tokens.clone(),false);
@@ -1657,6 +1677,12 @@ where
     // }
 
     fn grammar_always(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
+        //
+        if self.debug {
+            println!("-------- always success");
+        }
+
+        //
         // self.stk.truncate(cur.success_len);
         self.group_set_trim(cur.group_ind,cur.tokens.clone(),false);
         self.group_set_trim2(cur.group_new_len2,cur.tokens.clone(),false);
@@ -1821,8 +1847,12 @@ where
         //     ..cur.clone()
         // };
         // let cur=0;
+        //
+        if self.debug {
+            println!("-------- try success");
+        }
 
-
+        //
         let tokens_after=stow_success.tokens_after.clone();
         let new_group_len1=self.groups.len();
         //
@@ -1911,6 +1941,12 @@ where
         // };
 
         if result {
+            //
+            if self.debug {
+                println!("-------- primitive success");
+            }
+
+            //
             self.group_set_trim(cur.group_ind,cur.tokens.clone(),!p.is_trimmable());
             self.group_set_trim2(cur.group_new_len2,cur.tokens.clone(),!p.is_trimmable());
 
@@ -1936,6 +1972,12 @@ where
             // self.expect_on_success1();
 
         } else {
+            //
+            if self.debug {
+                println!("-------- primitive fail");
+            }
+
+            //
             // self.stk.truncate(cur.fail_len);
             self.work_stk_truncate(cur.work_fail_len);
             self.update_tokens(cur.tokens.clone(),false);
@@ -2239,15 +2281,25 @@ where
         self.stow_groups1.truncate(hist_stow.stow_groups_start);
 
 
+        if self.debug {
+            let all_groups2a=self.groups2[0 .. cur.group_len2].iter().enumerate()
+                    .map(|(i,x)|format!("g{i}:pgl:{}:{:?}",x.group_len2,x.name))
+                    .collect::<Vec<_>>().join(", ");
+            let all_groups2b=self.groups2[cur.group_len2 ..].iter().enumerate()
+                    .map(|(i,x)|format!("g{i}:pgl:{}:{:?}",x.group_len2,x.name))
+                    .collect::<Vec<_>>().join(", ");
+            println!("-------- groups_truncate_stow_clear [{all_groups2a}] :: [{all_groups2b}]");
+        }
+
         self.groups2.truncate(cur.group_len2);
 
         hist_stow.success=None;
     }
 
-    fn groups_truncate2(&mut self,cur:&Work<'g,NT,P,GR,TS>,) {
+    // fn groups_truncate2(&mut self,cur:&Work<'g,NT,P,GR,TS>,) {
 
-        self.groups2.truncate(cur.group_len2);
-    }
+    //     self.groups2.truncate(cur.group_len2);
+    // }
 
     fn hist_on_success(&mut self,
         cur_grammar:&GrammarNode<'g,NT,P,GR>,
@@ -2678,7 +2730,35 @@ where
                 .map(|x|x.group_len2)
         }else{None};
 
-        self.groups2.truncate(stow_group_len.unwrap_or(last.group_len2));
+
+        //
+        // let new_group_len2= if last.first {
+        //     last.group_len2
+        // } else {
+        //     let new_group_len2=stow_group_len.unwrap_or(last.group_len2);
+        //     let new_group_len2=new_group_len2.max(last.group_len2);
+        //     new_group_len2
+        // };
+
+        //
+        let new_group_len2=stow_group_len.unwrap_or(last.group_len2);
+        let new_group_len2=new_group_len2.max(last.group_len2);
+
+        //
+        if self.debug {
+
+            let all_groups2a=self.groups2[0 .. new_group_len2].iter().enumerate()
+                    .map(|(i,x)|format!("g{i}:pgl:{}:{:?}",x.group_len2,x.name))
+                    .collect::<Vec<_>>().join(", ");
+            let all_groups2b=self.groups2[new_group_len2 ..].iter().enumerate()
+                    .map(|(i,x)|format!("g{i}:pgl:{}:{:?}",x.group_len2,x.name))
+                    .collect::<Vec<_>>().join(", ");
+            println!("-------- groups_truncate_fail [{all_groups2a}] :: [{all_groups2b}]");
+        }
+
+        self.groups2.truncate(new_group_len2);
+
+        // self.groups2.truncate(last.group_len2);
 
     }
 
@@ -3537,10 +3617,33 @@ where
                 let all_group_news2_len=self.group_news2.len();
                 let all_groups2=self.groups2.iter().enumerate()
                     .map(|(i,x)|format!("g{i}:pgl:{}:{:?}",x.group_len2,x.name))
-                    .collect::<Vec<_>>().join(", ");
+                    .collect::<Vec<_>>();//.join(", ");
+
                 let all_group_news2=self.group_news2.iter().enumerate().rev()
                     .map(|(i,x)|format!("g{i}:pgl:{}:{:?}",x.group_len2,x.name)).rev()
                     .collect::<Vec<_>>().join(", ");
+
+                let stow_group_lens2=self.stows.iter().map(|s|s.success.as_ref().map(|ss|ss.group_len2)).collect::<Vec<_>>();
+
+                let all_groups2b={
+                    let mut all_groups3 = Vec::new();
+
+                    let mut last_glen2=0;
+
+                    for &glen2 in &stow_group_lens2 {
+                        if let Some(glen2)=glen2 {
+                            all_groups3.push(format!("[{}]",all_groups2[last_glen2..glen2].to_vec().join(", ")));
+                            last_glen2=glen2;
+                        } else {
+                            all_groups3.push("[]".to_string());
+                        }
+                    }
+                    all_groups3.join(", ")
+                };
+
+                let all_groups2=all_groups2.join(", ");
+
+                let all_stow_group_lens2=self.stows.iter().map(|x|x.success.as_ref().map(|y|y.group_len2.to_string()).unwrap_or("_".to_string())).collect::<Vec<_>>().join(", ");
 
                 // let grammar2= match grammar.as_ref() {
                 //     GrammarNode::And(gs) => {
@@ -3568,12 +3671,37 @@ where
                 };
 
                 //
+                // if self.groups.len()+self.stow_groups1.len()!= 1 + self.groups2.len()+self.group_news2.len() {
+                //     println!("-------- here2");
+                // } else if self.groups.len()!= 1 + self.groups2.len()+self.group_news2.len() {
+                //     println!("-------- here1");
+                // }
+
+                // let last_stow_groups_len=self.stows.last().and_then(|x|x.success.as_ref().map(|y|(x.stow_groups_start,y.stow_groups_end))).map(|z|z.1-z.0).unwrap_or(0);
+                if
+                    //self.groups.len()
+                    *group_len
+                    // +last_stow_groups_len
+                    != 1 +
+                    // self.groups2.len()
+                    *group_len2
+                    +
+                    // self.group_news2.len()
+                    *group_new_len2
+                    {
+                    println!("-------- here3");
+                }
+
+                //
                 println!("");
                 println!("=>{c:4}: {grammar}, ps={ps:?}, success={success_len}, fail={fail_len}, first={first}",);
 
                 if true {
-                    println!("        groups2.len={all_groups2_len}, group_news2.len={all_group_news2_len}, group_len2={group_len2}, group_new_len2={group_new_len2}, ",);
-                    println!("        gs2=[{all_group_news2}] :: [{all_groups2}]");
+                    println!("        all_groups2.len={all_groups2_len}, group_len2={group_len2}, all_group_news2.len={all_group_news2_len}, group_new_len2={group_new_len2}, ",);
+                    println!("        gs2=[{all_groups2}]");
+                    println!("        gsn2=[{all_group_news2}]");
+                    println!("        gs2b=[{all_groups2b}]");
+                    println!("        sgsl2=[{all_stow_group_lens2}]");
 
 
                     // for (i,g) in self.groups2.iter().enumerate() {
@@ -3616,7 +3744,7 @@ where
                 }
 
                 //
-                if true {
+                if false {
                     println!("        expect2_new_len={expect_new_len2:?} ({}), expect_len2={expect_len2} ({})",self.expect_news2.len(),self.expects2.len(),);
                     println!("        in_expect={in_expect}");
                     println!("        expect_news2=[{}]",
@@ -3640,7 +3768,7 @@ where
 
 
                 //
-                if true {
+                if false {
                     //
 
                      println!("        was_news: len={was_new_len} ({})",self.was_news.len());
@@ -3678,7 +3806,7 @@ where
                 // }
 
                 //
-                if true {
+                if false {
                     //
                     let stow_news=self.stow_news.iter().enumerate().rev()
                         .map(|(i,h)|format!("{i}:gl:{}:t{}: {:?}",h.tokens_start.inds2().start,h.group_len,h.non_term,))
@@ -3691,8 +3819,26 @@ where
                         ))
                         .collect::<Vec<_>>().join(", ");
 
+                    let stow_groups1=self.stows.iter().map(|s|{
+                        let x=s.success.as_ref().map(|s2|{
+                            self.stow_groups1[s.stow_groups_start..s2.stow_groups_end].iter().enumerate()
+                                .map(|(i,x)|format!("g{i}:p{}:{}",x.parent,
+                                    x.name.as_ref().map(|x|format!("{x:?}")).unwrap_or_else(||"".to_string())
+                                ))
+                                .collect::<Vec<_>>().join(", ")
+                            });
+
+                        if let Some(x)=x {format!("[{x}]")}else{"[]".to_string()}
+                    }).collect::<Vec<_>>().join(",");
+                    // let stow_groups1=self.stow_groups1.iter().enumerate()
+                    //     .map(|(i,x)|format!("g{i}:p{}:{}",x.parent,
+                    //         x.name.as_ref().map(|x|format!("{x:?}")).unwrap_or_else(||"".to_string())
+                    //     ))
+                    //     .collect::<Vec<_>>().join(", ");
+
                     println!("        hist_news: len={stow_new_len} ({}), [{stow_news:?}]",self.stow_news.len(),);
                     println!("        hist_stows {stow_len} ({}), [{stows:?}]",self.stows.len());
+                    println!("        hist_stow_groups1 [{stow_groups1}]");
 
                     // for (i,h) in self.stow_news.iter().enumerate() {
                     //     println!("            {i}:t{}: {:?}, gl={}",h.tokens_start.inds2().start,h.non_term,h.group_len)
