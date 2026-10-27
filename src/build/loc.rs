@@ -1,3 +1,5 @@
+use std::str::Chars;
+
 
 #[derive(Default,Debug,Copy,Clone, Hash,Eq,Ord)]
 pub struct Loc {
@@ -18,6 +20,20 @@ impl Loc {
     pub fn is_zero(&self) -> bool {
         self.pos==0
     }
+    pub fn calc(&mut self, s:&str) {
+        self.byte_pos+=s.len();
+
+        for c in s.chars() {
+            self.pos+=1;
+
+            if c=='\n' {
+                self.row+=1;
+                self.col=1; //starts at 1, not 0
+            } else if c!='\r' {
+                self.col+=1;
+            }
+        }
+    }
 }
 
 impl PartialEq for Loc {
@@ -37,3 +53,9 @@ impl std::fmt::Display for Loc {
         write!(f,"line {}, column {}, position {}",self.row,self.col,self.pos)
     }
 }
+
+// impl<'a> From<&'a str> for Loc {
+//     fn from(value: &'a str) -> Self {
+//         todo!()
+//     }
+// }

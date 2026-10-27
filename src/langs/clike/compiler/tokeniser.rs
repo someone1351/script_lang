@@ -1,4 +1,4 @@
-use std::{ops::{Range, RangeInclusive}, str::CharIndices};
+use std::{ops::{Range, RangeInclusive}, str::{CharIndices, Chars}};
 
 use crate::{clike::grammar::{node::GrammarNode, walker::GrammarWalker, GrammarWalkError, PrimitiveTrait, TokensTrait }, Loc};
 
@@ -172,8 +172,11 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
 
 // }
 
+#[derive(Clone)]
 pub struct Tokens<'a> {
-    chars : CharIndices<'a>,
+    chars : Chars<'a>,
+    start : usize,
+    end : usize,
     loc:Loc,
 }
 // impl<'a> std::fmt::Debug for TokenContainer<'a> {
@@ -183,57 +186,127 @@ pub struct Tokens<'a> {
 // }
 
 
-// impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Tokens<'t> {
+impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Tokens<'t> {
 
 
-//     fn trim2(&mut self) { }
+    fn trim2(&mut self) { }
 
-//     fn truncate2(&mut self,size:usize,) {
-//         let end2=self.start+size;
-
-//         if self.end > end2 {
-//             self.end=end2;
-//         }
-//     }
-
-//     fn eat2(&mut self,size:usize,) {
-//         // if self.len()>=size {
-
-//         // }
-//         // self.take(size);
-
-//         for _ in 0..size.min(self.len()) {
-//             self.next().unwrap();
-//         }
-//     }
-//     fn len2(&self) -> usize {
-//         self.len()
-//     }
-
-//     fn is_empty2(&self) -> bool {
-//         self.is_empty()
-//     }
-
-//     fn inds2(&self) -> Range<usize> {
-//         self.inds()
-//     }
+    fn len2(&self) -> usize {
+        self.end-self.start
+    }
 
 
-
-//     fn pop_primitive(&mut self, p:&MyPrimitive<'g>) -> bool {
-//         match p {
-//             MyPrimitive::String => self.pop_string().is_ok(),
-//             MyPrimitive::Identifier => self.pop_identifier().is_ok(),
-//             MyPrimitive::Int => self.pop_int().is_ok(),
-//             MyPrimitive::Float => self.pop_float().is_ok(),
-//             MyPrimitive::Symbol(s) => self.pop_with_symbol(s).is_ok(),
-//             MyPrimitive::Keyword(s) => self.pop_with_keyword(s).is_ok(),
-//             MyPrimitive::Eol => self.pop_eol().is_ok(),
-//         }
-//     }
+    fn inds2(&self) -> Range<usize> {
+        self.start..self.end
+    }
 
 
-// }
+    fn take2(&mut self,size:usize,) -> Option<Self> {
+         // println!("front: {}+{} > {}",self.start,amount, self.end);
+        if self.start+size > self.end { //|| amount==0
+            None
+        } else if size==0 {
+            return Some(Tokens {
+                chars: "".chars(),
+                start:self.start,
+                end: self.start,
+                loc: self.loc,
+            })
+        } else {
+            let start2=self.start;
+            let end2=self.start+size;
+            self.start=end2;
+
+            let byte_end = self.chars.as_str().char_indices().nth(size).map(|x|x.0).unwrap();
+            let taken=&self.chars.as_str()[..byte_end];
+
+            self.loc.calc(taken);
+
+            let chars2=taken.chars();
+
+
+            for _ in 0..size {
+                self.chars.next().unwrap();
+            }
+
+            Some(Tokens{
+                loc:self.loc,
+                start: start2,
+                end: end2,
+                chars: chars2,
+            })
+        }
+    }
+
+    fn pop2(&mut self, p:&MyPrimitive<'g>) -> bool {
+        match p {
+            MyPrimitive::Range(r) => {
+                let mut cs=self.chars.clone();
+                let Some(c)=cs.next() else {return false};
+                if !r.contains(&c) {return false;}
+                let c_len=self.chars.as_str().len()-cs.as_str().len();
+                self.chars=cs;
+                self.loc.calc(&self.chars.as_str()[..c_len]);
+                return true;
+            }
+            MyPrimitive::Char(cc) => {
+                let mut cs=self.chars.clone();
+                let Some(c)=cs.next() else {return false};
+                if *cc!=c {return false;}
+                let c_len=self.chars.as_str().len()-cs.as_str().len();
+                self.chars=cs;
+                self.loc.calc(&self.chars.as_str()[..c_len]);
+                return true;
+            }
+            MyPrimitive::String(s) => {
+                if !self.chars.as_str().starts_with(s) {
+                    return false;
+                }
+
+                for _ in 0 .. s.chars().count() {
+                    self.chars.next().unwrap();
+                }
+
+                self.loc.calc(s);
+
+                return true;
+            }
+            MyPrimitive::NotChar(cc) => {
+                let mut cs=self.chars.clone();
+                let Some(c)=cs.next() else {return false};
+                if *cc==c {return false;}
+                let c_len=self.chars.as_str().len()-cs.as_str().len();
+                self.chars=cs;
+                self.loc.calc(&self.chars.as_str()[..c_len]);
+                return true;
+            }
+            MyPrimitive::NotString(_) => {
+                return true;
+            }
+            MyPrimitive::Chars(ccs) => {
+                let mut cs=self.chars.clone();
+                let Some(c)=cs.next() else {return false};
+                let c_len=self.chars.as_str().len()-cs.as_str().len();
+
+                for cc in ccs.iter() {
+                    if *cc!=c {continue;}
+                    self.chars=cs;
+                    self.loc.calc(&self.chars.as_str()[..c_len]);
+                    return true;
+                }
+
+                return false;
+            }
+            MyPrimitive::Strings(items) => {
+                return true;
+            }
+        }
+    }
+
+
+
+
+}
 
 // pub fn tokenise(src:&str,) {
 
