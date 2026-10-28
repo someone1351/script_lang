@@ -29,12 +29,13 @@ pub enum GrammarNode<'g,NT,P,GR>
 
     Not(&'g GrammarNode<'g,NT,P,GR>),
 
-    Was(&'g GrammarNode<'g,NT,P,GR>),
+    Has(&'g GrammarNode<'g,NT,P,GR>),
 
     Had(&'g GrammarNode<'g,NT,P,GR>), // Had(&'g GrammarNode<'g,NT,P,GR>, &'g str),
     Primitive(P),
 
     Always, //always succeeds
+    Never,
     Error,
     // Prev(&'g GrammarNode<'g,NT,P,GR>),
 
@@ -176,7 +177,7 @@ where
             // Self::Stow(arg0) => f.debug_tuple("Stow").field(arg0).finish(),
 
             // Self::Prev(arg0) => f.debug_tuple("Prev").field(arg0).finish(),
-            Self::Was(arg0, ) => f.debug_tuple("Was").field(arg0).finish(),
+            Self::Has(arg0, ) => f.debug_tuple("Was").field(arg0).finish(),
             // Self::Had(arg0, arg1) => f.debug_tuple("Had").field(arg0).field(arg1).finish(),
             Self::Had(arg0) => f.debug_tuple("Had").field(arg0).finish(),
 
@@ -189,6 +190,7 @@ where
             // Self::Keyword(arg0) => f.debug_tuple("Keyword").field(arg0).finish(),
             // Self::Eol => write!(f, "Eol"),
             Self::Always => write!(f, "Always"),
+            Self::Never => write!(f, "Never"),
             // Self::Error(arg0) => f.debug_tuple("Error").field(arg0).finish(),
             Self::Error => f.debug_tuple("Error").finish(),
         }

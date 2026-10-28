@@ -472,8 +472,8 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
 
         MyNonTerm::FieldIndexCall => &Or(&[
             &Group(&And(&[&NonTerm(MyNonTerm::Field),&NonTerm(MyNonTerm::Call),]),MyGroup("call_field")),
-            &Group(&Was(&NonTerm(MyNonTerm::Field)),MyGroup("field")),
-            &Group(&Was(&NonTerm(MyNonTerm::Index)),MyGroup("index")),
+            &Group(&Has(&NonTerm(MyNonTerm::Field)),MyGroup("field")),
+            &Group(&Has(&NonTerm(MyNonTerm::Index)),MyGroup("index")),
             &Group(&NonTerm(MyNonTerm::Call),MyGroup("call_val")),
         ]),
 

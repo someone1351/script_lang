@@ -520,11 +520,75 @@ where
         let GrammarNode::Not(g,  )=cur.grammar else{panic!("");};
 
         //
+        let work_always_len2=self.stk.len();
+
+        //
+        self.stk.push(Work {
+            grammar: &GrammarNode::Always,
+
+            work_success_len: cur.work_success_len,
+            work_fail_len: cur.work_fail_len, //not used
+            tokens: cur.tokens.clone(),
+            group_ind: cur.group_ind,
+            group_len: cur.group_len,
+
+            group_new_len2:cur.group_new_len2,
+            group_len2:cur.group_len2,
+
+            grammar_ind:0,
+            user:false,
+            first:false, //should set?
+
+            stow_new_len:cur.stow_new_len,
+            stow_len: cur.stow_len,
+
+            expect_new_len2:cur.expect_new_len2,
+            expect_len2:cur.expect_len2,
+
+
+            was_new_len:cur.was_new_len,
+            was_ind:cur.was_ind,
+
+        });
+
+        //
+        let work_never_len2=self.stk.len();
+
+        //
+        self.stk.push(Work {
+            grammar: &GrammarNode::Never,
+
+            work_success_len: cur.work_success_len, //not used
+            work_fail_len: cur.work_fail_len,
+            tokens: cur.tokens.clone(),
+            group_ind: cur.group_ind,
+            group_len: cur.group_len,
+
+            group_new_len2:cur.group_new_len2,
+            group_len2:cur.group_len2,
+
+            grammar_ind:0,
+            user:false,
+            first:false, //should set?
+
+            stow_new_len:cur.stow_new_len,
+            stow_len: cur.stow_len,
+
+            expect_new_len2:cur.expect_new_len2,
+            expect_len2:cur.expect_len2,
+
+
+            was_new_len:cur.was_new_len,
+            was_ind:cur.was_ind,
+
+        });
+
+        //
         self.stk.push(Work {
             grammar: g,
 
-            work_success_len: cur.work_fail_len,
-            work_fail_len: cur.work_success_len,
+            work_success_len: work_never_len2,
+            work_fail_len: work_always_len2,
 
             tokens: cur.tokens.clone(),
             group_ind: cur.group_ind,
@@ -553,7 +617,7 @@ where
         });
     }
     fn grammar_was(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
-        let GrammarNode::Was(g,  )=cur.grammar else{panic!("");};
+        let GrammarNode::Has(g,  )=cur.grammar else{panic!("");};
 
         //
         // let stow_new_len=self.hist_news_add(&cur);
@@ -869,7 +933,7 @@ where
         // let stow_new_len=self.hist_news_add(&cur);
 
 
-        let was_ind=self.wases.len();
+        let was_ind=self.wases.len(); //why not use cur.was_ind?
 
         //
         if max!=0 && cur.grammar_ind+1==max {
@@ -1707,6 +1771,23 @@ where
         // self.expected2_on_success();
     }
 
+    fn grammar_never(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
+        //
+        if self.debug {
+            println!("-------- never fail");
+        }
+
+        //
+        self.work_stk_truncate(cur.work_fail_len);
+        self.update_tokens(cur.tokens.clone(),false);
+        self.hist_on_fail();
+        self.was_on_fail();
+        self.expect_on_fail2();
+        // self.expect_on_fail1();
+        self.groups_on_fail();
+        self.groups_on_fail2();
+
+    }
     fn grammar_try_from_hist_fails(&mut self,cur :&Work<'g,NT,P,GR,TS>) -> bool {
         let GrammarNode::NonTerm(non_term)=cur.grammar else {return false;};
 
@@ -3956,7 +4037,7 @@ where
             GrammarNode::Expect(..) => {self.grammar_expect(cur);}
             // GrammarNode::Stow(..) => {self.grammar_stow(cur);}
             GrammarNode::Not(..) => {self.grammar_not(cur);}
-            GrammarNode::Was(..) => {self.grammar_was(cur);}
+            GrammarNode::Has(..) => {self.grammar_was(cur);}
             GrammarNode::Had(..) => {self.grammar_had(cur);}
 
             // GrammarNode::Prev(..) => {self.grammar_prev(cur);}
@@ -3967,6 +4048,7 @@ where
             GrammarNode::NonTerm(..) => {self.grammar_non_term(cur)?;}
             GrammarNode::Error => {return Err(self.grammar_error(cur));}
             GrammarNode::Always => {self.grammar_always(cur);}
+            GrammarNode::Never => {self.grammar_never(cur);}
 
             // GrammarNode::String|GrammarNode::Identifier|GrammarNode::Int
             // |GrammarNode::Float|GrammarNode::Symbol(..)|GrammarNode::Keyword(..)
