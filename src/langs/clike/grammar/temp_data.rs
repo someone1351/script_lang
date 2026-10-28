@@ -206,7 +206,7 @@ where
     pub grammar_ind:usize,
     pub user:bool, //gramamr added by input grammar, not walker //used to know whether to push hist_begins stk or not //used with and/or/many
     pub first:bool, //used to know whether to store a HistStow
-    pub stow:bool,
+    // pub stow:bool,
 
     pub work_success_len:usize,
     pub work_fail_len:usize,
@@ -223,8 +223,8 @@ where
     pub stow_new_len:usize,
     pub stow_len:usize,
 
-    pub in_expect:bool,
-    // pub no_expect:bool,
+    // pub in_expect:bool,
+    // // pub no_expect:bool,
 
 
     pub expect_new_len2:usize,

@@ -232,7 +232,7 @@ where
             grammar_ind:0,
             user:false,
             first:false,
-            stow:false,
+            // stow:false,
             // or_id:0,
             // and_first:false,
 
@@ -256,7 +256,7 @@ where
             // hist_prevs_len: 0,
 
 
-            in_expect:false,
+            // in_expect:false,
 
             // expect_ind1:None,
             // expect_len1:0,
@@ -305,7 +305,7 @@ where
             grammar_ind:0,
             user:true,
             first:false,
-            stow:false,
+            // stow:false,
             // or_id:0,
             // and_first:false,
 
@@ -328,7 +328,7 @@ where
             // hist_prevs_ind: 0,
             // hist_prevs_len: 0,
 
-            in_expect:false,
+            // in_expect:false,
 
             // expect_ind1:None,
             // expect_len1:0,
@@ -380,7 +380,7 @@ where
                 grammar_ind:0,
                 user:true,
                 first:false,
-                stow:false,
+                // stow:false,
                 // or_id:0,
                 // and_first:false,
 
@@ -401,7 +401,7 @@ where
                 // hist_prevs_ind: 0,
                 // hist_prevs_len: 0,
 
-                in_expect:false,
+                // in_expect:false,
 
                 // expect_ind1:None,
                 // expect_len1:0,
@@ -536,13 +536,13 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
-            stow:cur.stow, //if *stow_first {true} else {cur.stow},
+            // stow:cur.stow, //if *stow_first {true} else {cur.stow},
 
             stow_new_len:cur.stow_new_len,
 
             stow_len: cur.stow_len,
 
-            in_expect:cur.in_expect,
+            // in_expect:cur.in_expect,
 
             expect_new_len2:cur.expect_new_len2,
             expect_len2:cur.expect_len2,
@@ -587,7 +587,7 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first,
-            stow:cur.stow,
+            // stow:cur.stow,
             // or_id:cur.or_id,
 
             // stow_new_len,
@@ -600,7 +600,7 @@ where
             // hist_prevs_ind: cur.hist_prevs_ind,
             // hist_prevs_len: cur.hist_prevs_len,
 
-            in_expect:cur.in_expect,
+            // in_expect:cur.in_expect,
 
             // expect_ind1:cur.expect_ind1,
             // expect_len1:cur.expect_len1,
@@ -728,7 +728,7 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first,
-            stow:cur.stow,
+            // stow:cur.stow,
 
             // or_id:cur.or_id,
             // and_first:cur.and_first,
@@ -755,7 +755,7 @@ where
             // // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            in_expect:true,
+            // in_expect:true,
 
             // expect_ind1,
             // expect_len1,
@@ -813,7 +813,7 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first,
-            stow:cur.stow,
+            // stow:cur.stow,
 
             // or_id:cur.or_id,
             // and_first:cur.and_first,
@@ -838,7 +838,7 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            in_expect:cur.in_expect,
+            // in_expect:cur.in_expect,
 
             // expect_ind1:cur.expect_ind1,
             // expect_len1:cur.expect_len1,
@@ -916,7 +916,7 @@ where
                 grammar_ind:cur.grammar_ind+1,
                 user:false,
                 first:false, //grmmar in many, after the frist one is parsed are no longer firsts
-                stow:cur.stow,
+                // stow:cur.stow,
 
                 // or_id:cur.or_id,
                 // and_first:false,
@@ -941,7 +941,7 @@ where
                 // expected_news_len:cur.expected_news_len,
                 // expect_len:cur.expect_len,
 
-                in_expect:cur.in_expect,
+                // in_expect:cur.in_expect,
 
                 // expect_ind1:cur.expect_ind1,
                 // expect_len1:cur.expect_len1,
@@ -995,7 +995,7 @@ where
                 grammar_ind:0,
                 user:false,
                 first:false,
-                stow:cur.stow,
+                // stow:cur.stow,
 
                 // or_id:cur.or_id,
                 // and_first:false,
@@ -1020,7 +1020,7 @@ where
                 // expected_news_len:cur.expected_news_len,
                 // expect_len:cur.expect_len,
 
-                in_expect:cur.in_expect,
+                // in_expect:cur.in_expect,
 
                 // expect_ind1:cur.expect_ind1,
                 // expect_len1:cur.expect_len1,
@@ -1073,7 +1073,7 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first,
-            stow:cur.stow,
+            // stow:cur.stow,
 
             // or_id:cur.or_id,
             // and_first:cur.and_first,
@@ -1098,7 +1098,7 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            in_expect:cur.in_expect,
+            // in_expect:cur.in_expect,
 
             // expect_ind1:cur.expect_ind1,
             // expect_len1:cur.expect_len1,
@@ -1158,7 +1158,7 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first,
-            stow:cur.stow,
+            // stow:cur.stow,
 
             // or_id:cur.or_id,
             // and_first:cur.and_first,
@@ -1184,7 +1184,7 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            in_expect:cur.in_expect,
+            // in_expect:cur.in_expect,
 
             // expect_ind1:cur.expect_ind1,
             // expect_len1:cur.expect_len1,
@@ -1337,12 +1337,12 @@ where
                 grammar_ind:cur.grammar_ind+1,
                 user:false,
                 first:false,
-                stow:false,
+                // stow:false,
 
                 stow_new_len:cur.stow_new_len,
                 stow_len: cur.stow_len,
 
-                in_expect:cur.in_expect,
+                // in_expect:cur.in_expect,
 
                 // expect_ind1:cur.expect_ind1,
                 // expect_len1:cur.expect_len1,
@@ -1387,7 +1387,7 @@ where
             grammar_ind:0,
             user:true,
             first:cur.first, //cur.from_user &&  //only want to know about grammars added by user, not the walker, could check from_user elsewhere,
-            stow:cur.stow, //if *stow_first {true} else {cur.stow},
+            // stow:cur.stow, //if *stow_first {true} else {cur.stow},
             // or_id:cur.or_id,
             // and_first:true,
 
@@ -1412,7 +1412,7 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            in_expect:cur.in_expect,
+            // in_expect:cur.in_expect,
 
             // expect_ind1:cur.expect_ind1,
             // expect_len1:cur.expect_len1,
@@ -1505,7 +1505,7 @@ where
                 grammar_ind:cur.grammar_ind+1,
                 user:false,
                 first:cur.first,
-                stow:cur.stow,
+                // stow:cur.stow,
 
                 // or_id:cur.or_id,
                 // and_first:cur.and_first,
@@ -1532,7 +1532,7 @@ where
                 // expected_news_len:cur.expected_news_len,
                 // expect_len:cur.expect_len,
 
-                in_expect:cur.in_expect,
+                // in_expect:cur.in_expect,
 
                 // expect_ind1:cur.expect_ind1,
                 // expect_len1:cur.expect_len1,
@@ -1583,7 +1583,7 @@ where
             grammar_ind:0,
             user:true,
             first:true,
-            stow:cur.stow,
+            // stow:cur.stow,
 
             // or_id:cur.or_id,
             // and_first:cur.and_first,
@@ -1607,7 +1607,7 @@ where
             // expected_news_len:cur.expected_news_len,
             // expect_len:cur.expect_len,
 
-            in_expect:cur.in_expect,
+            // in_expect:cur.in_expect,
 
             // expect_ind1:cur.expect_ind1,
             // expect_len1:cur.expect_len1,
@@ -3595,7 +3595,7 @@ where
                     // hist_prevs_ind,
                     // hist_prevs_len,
                     // expected_news_len,expect_len,
-                    in_expect,
+                    // in_expect,
                     // expect_ind1,expect_len1,
                     expect_new_len2,expect_len2,
                     // was_start_ind,was_ind,was_len,
@@ -3746,7 +3746,7 @@ where
                 //
                 if false {
                     println!("        expect2_new_len={expect_new_len2:?} ({}), expect_len2={expect_len2} ({})",self.expect_news2.len(),self.expects2.len(),);
-                    println!("        in_expect={in_expect}");
+                    // println!("        in_expect={in_expect}");
                     println!("        expect_news2=[{}]",
                         self.expect_news2.iter().enumerate()
                             .map(|(i,x)|format!("e{i}:t{}:{:?}",
