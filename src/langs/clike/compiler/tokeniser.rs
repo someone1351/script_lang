@@ -230,12 +230,12 @@ impl<'t> Iterator for Input<'t> {
             let orig_len=self.chars.as_str().len();
 
             let x=self.chars.next().unwrap();
-            self.start+=1;
 
             let taken_len=orig_len-self.chars.as_str().len();
             let taken=&self.chars.as_str()[0..taken_len];
             self.loc.calc(taken);
 
+            self.start+=1;
             Some(x)
         } else {
             None
@@ -390,9 +390,26 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
 
 }
 
-pub struct Output {
 
+pub struct Output<'a> {
+    out_tokens:Vec<OutputToken<'a>>,
 }
+
+enum OutputTokenType<'a> {
+    Identifier(&'a str),
+    Keyword(&'a str),
+    Symbol(&'a str),
+    String(&'a str),
+    Int(i64),
+    Float(f64),
+    Eol,
+}
+struct OutputToken<'a> {
+    start_loc:Loc,
+    end_loc:Loc,
+    output_token_type:OutputTokenType<'a>,
+}
+
 pub fn tokenise(src:&str,) -> Result<Output, Loc> {
 
     let input=Input::new(src);
@@ -426,7 +443,37 @@ pub fn tokenise(src:&str,) -> Result<Output, Loc> {
 
     let walk2=walker.get_walk2(false);
     groups_debug_print(walk2.root());
-    let mut output = Output {};
 
-    Ok(output)
+
+    let mut qs: Vec<OutputToken<'_>>=Vec::new();
+    for x in walk2.root().children() {
+        let ts=x.tokens();
+        let s=ts.chars.as_str();
+
+        let q_type=match x.name2().unwrap() {
+            MyGroup::Identifier => OutputTokenType::Identifier(s),
+            MyGroup::String => OutputTokenType::String(s),
+            MyGroup::Symbol => OutputTokenType::Symbol(s),
+            MyGroup::Keyword => OutputTokenType::Keyword(s),
+            MyGroup::Int => OutputTokenType::Int(s.parse::<i64>().unwrap()),
+            MyGroup::Float => OutputTokenType::Float(s.parse::<f64>().unwrap()),
+            MyGroup::Eol => OutputTokenType::Eol,
+        };
+
+        if let Some(q)=qs.last_mut().and_then(|q|if let OutputTokenType::Eol=q.output_token_type{Some(q)}else{None}) {
+            q.end_loc.calc(x.tokens().chars.as_str());
+        } else {
+            let start_loc= x.tokens().loc;
+            let mut end_loc=start_loc;
+            end_loc.calc(x.tokens().chars.as_str());
+
+            qs.push(OutputToken{
+                start_loc,
+                end_loc,
+                output_token_type: q_type,
+            });
+        }
+    }
+
+    Ok(Output {out_tokens:qs})
 }
