@@ -1,6 +1,6 @@
 use std::{ops::{Range, RangeInclusive}, str::{CharIndices, Chars}};
 
-use crate::{clike::grammar::{node::GrammarNode, walker::GrammarWalker, GrammarWalkError, PrimitiveTrait, TokensTrait }, Loc};
+use crate::{clike::grammar::{node::GrammarNode, utils::groups_debug_print, walker::GrammarWalker, GrammarWalkError, PrimitiveTrait, TokensTrait }, Loc};
 
 #[derive(Clone,Hash,PartialEq,Eq,Debug)]
 pub enum MyGroup {
@@ -221,6 +221,28 @@ impl<'t> std::fmt::Debug for Input<'t> {
         write!(f,"{}",self.chars.as_str())
     }
 }
+
+impl<'t> Iterator for Input<'t> {
+    type Item = char;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.start < self.end {
+            let orig_len=self.chars.as_str().len();
+
+            let x=self.chars.next().unwrap();
+            self.start+=1;
+
+            let taken_len=orig_len-self.chars.as_str().len();
+            let taken=&self.chars.as_str()[0..taken_len];
+            self.loc.calc(taken);
+
+            Some(x)
+        } else {
+            None
+        }
+    }
+}
+
 impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
 
 
@@ -252,23 +274,24 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
             let end2=self.start+size;
             self.start=end2;
 
-            let byte_end = self.chars.as_str().char_indices().nth(size).map(|x|x.0).unwrap();
-            let taken=&self.chars.as_str()[..byte_end];
-
-            self.loc.calc(taken);
-
-            let chars2=taken.chars();
-
+            let orig_len=self.chars.as_str().len();
 
             for _ in 0..size {
                 self.chars.next().unwrap();
             }
 
+            let taken_len=orig_len-self.chars.as_str().len();
+            let taken=&self.chars.as_str()[0..taken_len];
+            let taken_chars=taken.chars();
+
+            self.loc.calc(taken);
+
+
             Some(Input{
                 loc:self.loc,
                 start: start2,
                 end: end2,
-                chars: chars2,
+                chars: taken_chars,
             })
         }
     }
@@ -367,93 +390,43 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
 
 }
 
-pub fn tokenise(src:&str,) {
+pub struct Output {
 
-        let input=Input::new(src);
-        //
-        let mut walker=GrammarWalker::new(input, get_non_term,);
-        walker.set_debug(true);
+}
+pub fn tokenise(src:&str,) -> Result<Output, Loc> {
 
-        // let start_time = std::time::Instant::now();
-        // let result=walker.run(MyNonTerm::Start) ;
+    let input=Input::new(src);
+    //
+    let mut walker=GrammarWalker::new(input, get_non_term,);
+    walker.set_debug(true);
 
-
-        // let time_elapsed=start_time.elapsed().as_secs_f64();
-        // //
-        // if let Err(e)=result {
+    let start_time = std::time::Instant::now();
+    let result=walker.run(MyNonTerm::Start) ;
 
 
-        //     println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
+    let time_elapsed=start_time.elapsed().as_secs_f64();
+    //
+    if let Err(e)=result {
 
-        //     match e {
-        //         GrammarWalkError::FailedParse => {
-        //             let expecteds=walker.expects_string();
 
-        //             let error_type= if expecteds.is_empty() {
-        //                 CompileErrorType::ParserUnexpected
-        //             } else {
-        //                 CompileErrorType::ParserExpected(expecteds)
-        //             };
-        //             // let error_type=CompileErrorType::ParserExpected(expecteds);
+        println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
 
-        //             return Err(CompileError{path:pathbuf,src,loc:
-        //                 // walker.last_loc()
-        //                 walker.last_loc2().start_loc()
-        //                 ,error_type});
+        match e {
+            GrammarWalkError::FailedParse => {
+                return Err(walker.tokens().loc);
+            }
+            _ => {
+                panic!("{e:?}");
+            }
+        }
+    }
 
-        //             // return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expects_string())});
-        //         }
-        //         // GrammarWalkError::Unfinished => todo!(),
-        //         // GrammarWalkError::RecursiveNonTerm(_) => todo!(),
-        //         // GrammarWalkError::MissingNonTerm(_) => todo!(),
-        //         _ => {
-        //             // println!("{:?} {:?}",walker.expecteds_string(),walker.last_loc());
-        //             panic!("{e:?}");
-        //         }
-        //     }
-        // }
+    //
+    println!("-----------------");
 
-        // //
-        // println!("-----------------");
-        // if true {
+    let walk2=walker.get_walk2(false);
+    groups_debug_print(walk2.root());
+    let mut output = Output {};
 
-        //     let walk2=walker.get_walk2(false);
-
-        //     let mut stk=vec![(walk2.root(),0)];
-
-        //     while let Some((cur,depth))=stk.pop() {
-        //         let indent="    ".repeat(depth);
-        //         // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
-        //         // println!("{indent}group: {:?} : [{}]",cur.name2(),xx);
-        //         if let Some(name)=cur.name2() {
-        //             // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
-        //             println!("{indent}group: {name:?}",);
-        //             stk.extend(cur.children().rev().map(|c|(c,depth+1)));
-
-        //             if cur.children().len()==0 {
-        //                 for t in cur.tokens() {
-        //                     println!("{indent}    {t:?}");
-        //                 }
-        //             }
-        //         } else  {
-        //             for t in cur.tokens() {
-        //                 println!("{indent}{t:?}");
-        //             }
-
-        //         }
-        //     }
-
-        //     println!("1_____");
-        //     for (i,g) in walk2.groups.iter().enumerate() {
-        //         println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
-        //     }
-        // }
-
-        // let walk=walker.get_walk2(false);
-
-        //     println!("2_____");
-        //     for (i,g) in walk.groups.iter().enumerate() {
-        //         println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
-        //     }
-        // println!("===---===");
+    Ok(output)
 }

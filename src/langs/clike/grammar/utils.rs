@@ -37,7 +37,7 @@ use crate::clike::grammar::{container::WalkGroupContainer, TokensTrait};
 
 pub fn groups_debug_print<'g, GR, P, TS>(root:WalkGroupContainer<'g, GR, TS>)
 where
-    TS:Clone+Iterator+TokensTrait<P>+DoubleEndedIterator,
+    TS:Clone+TokensTrait<P>+Iterator,
     GR:Clone+Debug,
     <TS as Iterator>::Item: Debug,
 {
@@ -78,9 +78,16 @@ where
                         ps
                     };
 
-                    // let ps = cur_tokens.clone().take_start2(cur_tokens.len2()-ps_len).unwrap();
+                    // // let ps = cur_tokens.clone().take_start2(cur_tokens.len2()-ps_len).unwrap();
 
-                    stk.extend(ps.map(|t|(Thing::Token(t),depth+1)).rev());
+                    // stk.extend(ps.map(|t|(Thing::Token(t),depth+1)).rev());
+
+                    {
+                        let stk_len=stk.len();
+                        stk.extend(ps.map(|t|(Thing::Token(t),depth+1)));
+                        stk[stk_len ..].reverse();
+                    }
+
                     stk.push((Thing::Group(child_group),depth+1));
 
                     // cur_tokens.take_end2(child_tokens.len2()).unwrap();
@@ -89,7 +96,13 @@ where
                 }
 
                 //
-                stk.extend(cur_tokens.map(|t|(Thing::Token(t),depth+1)).rev());
+                // stk.extend(cur_tokens.map(|t|(Thing::Token(t),depth+1)).rev());
+                {
+                    let stk_len=stk.len();
+                    stk.extend(cur_tokens.map(|t|(Thing::Token(t),depth+1)));
+                    stk[stk_len ..].reverse();
+                }
+
             }
             Thing::Token(cur) => {
                 println!("{indent}{cur:?}");

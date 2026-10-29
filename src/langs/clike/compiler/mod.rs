@@ -144,7 +144,7 @@ impl Compiler {
 
                     return Err(CompileError{path:pathbuf,src,loc:
                         // walker.last_loc()
-                        walker.last_loc2().start_loc()
+                        walker.tokens().start_loc()
                         ,error_type});
 
                     // return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expects_string())});

@@ -3103,7 +3103,7 @@ where
     }
 
 
-    pub fn last_loc2(&self) -> TS {
+    pub fn tokens(&self) -> TS {
 
         //
         if self.expects2.is_empty() {
