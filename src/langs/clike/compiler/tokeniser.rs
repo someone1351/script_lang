@@ -248,7 +248,9 @@ impl<'t> Iterator for Input<'t> {
 impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
 
 
-    fn trim2(&mut self) { }
+    fn trim2(&mut self) {
+
+     }
 
     fn len2(&self) -> usize {
         self.end-self.start
@@ -468,9 +470,9 @@ pub fn tokenise(src:&str,) -> Result<Output, Loc> {
         if let Some(q)=qs.last_mut().and_then(|q|if let OutputTokenType::Eol=q.output_token_type{Some(q)}else{None}) {
             q.end_loc.calc(x.tokens().chars.as_str());
         } else {
-            let start_loc= x.tokens().start_loc;
-            let mut end_loc=start_loc;
-            end_loc.calc(x.tokens().chars.as_str());
+            // let start_loc= x.tokens().start_loc;
+            // let mut end_loc=start_loc;
+            // end_loc.calc(x.tokens().chars.as_str());
 
             qs.push(OutputToken{
                 start_loc:x.tokens().start_loc,
