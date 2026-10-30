@@ -193,7 +193,8 @@ pub struct Input<'a> {
     chars : Chars<'a>,
     start : usize,
     end : usize,
-    loc:Loc,
+    start_loc:Loc,
+    end_loc:Loc,
 }
 // impl<'a> std::fmt::Debug for TokenContainer<'a> {
 //     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -211,7 +212,8 @@ impl<'t> Input<'t> {
             chars,
             start: 0,
             end,
-            loc: Loc::zero(),
+            start_loc: Loc::one(),
+            end_loc: Loc::zero(), //uninit
         }
     }
 }
@@ -233,7 +235,7 @@ impl<'t> Iterator for Input<'t> {
 
             let taken_len=orig_len-self.chars.as_str().len();
             let taken=&self.chars.as_str()[0..taken_len];
-            self.loc.calc(taken);
+            self.start_loc.calc(taken);
 
             self.start+=1;
             Some(x)
@@ -267,7 +269,8 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
                 chars: "".chars(),
                 start:self.start,
                 end: self.start,
-                loc: self.loc,
+                start_loc: self.start_loc,
+                end_loc: self.start_loc,
             })
         } else {
             let start2=self.start;
@@ -284,11 +287,13 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
             let taken=&self.chars.as_str()[0..taken_len];
             let taken_chars=taken.chars();
 
-            self.loc.calc(taken);
+            let loc_start2=self.start_loc;
+            self.start_loc.calc(taken);
 
 
             Some(Input{
-                loc:self.loc,
+                start_loc:loc_start2,
+                end_loc:self.start_loc,
                 start: start2,
                 end: end2,
                 chars: taken_chars,
@@ -304,7 +309,7 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
                 if !r.contains(&c) {return false;}
                 let c_len=self.chars.as_str().len()-cs.as_str().len();
                 self.chars=cs;
-                self.loc.calc(&self.chars.as_str()[..c_len]);
+                self.start_loc.calc(&self.chars.as_str()[..c_len]);
                 return true;
             }
             MyPrimitive::Any => {
@@ -312,7 +317,7 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
                 if cs.next().is_none() {return false};
                 let c_len=self.chars.as_str().len()-cs.as_str().len();
                 self.chars=cs;
-                self.loc.calc(&self.chars.as_str()[..c_len]);
+                self.start_loc.calc(&self.chars.as_str()[..c_len]);
                 return true;
             }
             MyPrimitive::Char(cc) => {
@@ -321,7 +326,7 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
                 if *cc!=c {return false;}
                 let c_len=self.chars.as_str().len()-cs.as_str().len();
 
-                self.loc.calc(&self.chars.as_str()[..c_len]);
+                self.start_loc.calc(&self.chars.as_str()[..c_len]);
                 self.chars=cs;
                 return true;
             }
@@ -334,7 +339,7 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
                     self.chars.next().unwrap();
                 }
 
-                self.loc.calc(s);
+                self.start_loc.calc(s);
 
                 return true;
             }
@@ -358,7 +363,7 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
                 for cc in ccs.iter() {
                     if *cc!=c {continue;}
                     self.chars=cs;
-                    self.loc.calc(&self.chars.as_str()[..c_len]);
+                    self.start_loc.calc(&self.chars.as_str()[..c_len]);
                     return true;
                 }
 
@@ -374,7 +379,7 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
                         self.chars.next().unwrap();
                     }
 
-                    self.loc.calc(s);
+                    self.start_loc.calc(s);
                     return true;
                 }
 
@@ -430,7 +435,7 @@ pub fn tokenise(src:&str,) -> Result<Output, Loc> {
 
         match e {
             GrammarWalkError::FailedParse => {
-                return Err(walker.tokens().loc);
+                return Err(walker.tokens().start_loc);
             }
             _ => {
                 panic!("{e:?}");
@@ -463,13 +468,13 @@ pub fn tokenise(src:&str,) -> Result<Output, Loc> {
         if let Some(q)=qs.last_mut().and_then(|q|if let OutputTokenType::Eol=q.output_token_type{Some(q)}else{None}) {
             q.end_loc.calc(x.tokens().chars.as_str());
         } else {
-            let start_loc= x.tokens().loc;
+            let start_loc= x.tokens().start_loc;
             let mut end_loc=start_loc;
             end_loc.calc(x.tokens().chars.as_str());
 
             qs.push(OutputToken{
-                start_loc,
-                end_loc,
+                start_loc:x.tokens().start_loc,
+                end_loc:x.tokens().end_loc,
                 output_token_type: q_type,
             });
         }
