@@ -398,26 +398,38 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
 }
 
 
-pub struct Output<'a> {
-    out_tokens:Vec<OutputToken<'a>>,
+pub struct Tokens<'a> {
+    tokens:Vec<Token<'a>>,
 }
 
-enum OutputTokenType<'a> {
+#[derive(Copy,Clone,Debug)]
+pub enum Keyword {
+    For,In, //To,
+    While,Continue,Break,
+    Goto,Label,
+    Include,
+    True,False,Nil,Void,
+    Print,Println,Format,
+    Var,Fn,Return,
+    If,Elif,Else,
+}
+
+enum TokenType<'a> {
     Identifier(&'a str),
-    Keyword(&'a str),
-    Symbol(&'a str),
+    Keyword(Keyword),
+    Symbol(char),
     String(&'a str),
     Int(i64),
     Float(f64),
     Eol,
 }
-struct OutputToken<'a> {
+struct Token<'a> {
     start_loc:Loc,
     end_loc:Loc,
-    output_token_type:OutputTokenType<'a>,
+    output_token_type:TokenType<'a>,
 }
 
-pub fn tokenise(src:&str,) -> Result<Output, Loc> {
+pub fn tokenise(src:&str,) -> Result<Tokens, Loc> {
 
     let input=Input::new(src);
     //
@@ -452,29 +464,52 @@ pub fn tokenise(src:&str,) -> Result<Output, Loc> {
     groups_debug_print(walk2.root());
 
 
-    let mut qs: Vec<OutputToken<'_>>=Vec::new();
+    let mut qs: Vec<Token<'_>>=Vec::new();
     for x in walk2.root().children() {
         let ts=x.tokens();
         let s=ts.chars.as_str();
 
         let q_type=match x.name2().unwrap() {
-            MyGroup::Identifier => OutputTokenType::Identifier(s),
-            MyGroup::String => OutputTokenType::String(s),
-            MyGroup::Symbol => OutputTokenType::Symbol(s),
-            MyGroup::Keyword => OutputTokenType::Keyword(s),
-            MyGroup::Int => OutputTokenType::Int(s.parse::<i64>().unwrap()),
-            MyGroup::Float => OutputTokenType::Float(s.parse::<f64>().unwrap()),
-            MyGroup::Eol => OutputTokenType::Eol,
+            MyGroup::Identifier => TokenType::Identifier(s),
+            MyGroup::String => TokenType::String(s),
+            MyGroup::Symbol => TokenType::Symbol(s.chars().next().unwrap()),
+            MyGroup::Keyword => TokenType::Keyword(match s {
+                "for" => Keyword::For,
+                "in" => Keyword::In,
+                "while" => Keyword::While,
+                "continue" => Keyword::Continue,
+                "break" => Keyword::Break,
+                "goto" => Keyword::Goto,
+                "label" => Keyword::Label,
+                "include" => Keyword::Include,
+                "true" => Keyword::True,
+                "false" => Keyword::False,
+                "nil" => Keyword::Nil,
+                "void" => Keyword::Void,
+                "print" => Keyword::Print,
+                "println" => Keyword::Println,
+                "format" => Keyword::Format,
+                "var" => Keyword::Var,
+                "fn" => Keyword::Fn,
+                "return" => Keyword::Return,
+                "if" => Keyword::If,
+                "elif" => Keyword::Elif,
+                "else" => Keyword::Else,
+                _ => {panic!("");}
+            }),
+            MyGroup::Int => TokenType::Int(s.parse::<i64>().unwrap()),
+            MyGroup::Float => TokenType::Float(s.parse::<f64>().unwrap()),
+            MyGroup::Eol => TokenType::Eol,
         };
 
-        if let Some(q)=qs.last_mut().and_then(|q|if let OutputTokenType::Eol=q.output_token_type{Some(q)}else{None}) {
+        if let Some(q)=qs.last_mut().and_then(|q|if let TokenType::Eol=q.output_token_type{Some(q)}else{None}) {
             q.end_loc.calc(x.tokens().chars.as_str());
         } else {
             // let start_loc= x.tokens().start_loc;
             // let mut end_loc=start_loc;
             // end_loc.calc(x.tokens().chars.as_str());
 
-            qs.push(OutputToken{
+            qs.push(Token{
                 start_loc:x.tokens().start_loc,
                 end_loc:x.tokens().end_loc,
                 output_token_type: q_type,
@@ -482,5 +517,5 @@ pub fn tokenise(src:&str,) -> Result<Output, Loc> {
         }
     }
 
-    Ok(Output {out_tokens:qs})
+    Ok(Tokens {tokens:qs})
 }
