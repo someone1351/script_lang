@@ -36,7 +36,7 @@ pub enum GrammarNode<'g,NT,P,GR>
 
     Always, //always succeeds
     Never,
-    Error,
+    Error(&'g str),
     // Prev(&'g GrammarNode<'g,NT,P,GR>),
 
     // NoExpect(&'g GrammarNode<'g,NT,P,GR>, ),
@@ -192,7 +192,7 @@ where
             Self::Always => write!(f, "Always"),
             Self::Never => write!(f, "Never"),
             // Self::Error(arg0) => f.debug_tuple("Error").field(arg0).finish(),
-            Self::Error => f.debug_tuple("Error").finish(),
+            Self::Error(arg0) => f.debug_tuple("Error").field(arg0).finish(),
         }
     }
 }

@@ -203,7 +203,7 @@ where
     //     self.non_term_recursive_check=non_term_recursive_check;
     // }
 
-    fn init(&mut self,start_non_term:NT,) -> Result<(),GrammarWalkError<NT>> {
+    fn init(&mut self,start_non_term:NT,) -> Result<(),GrammarWalkError<'g,NT>> {
         self.non_term_cache.clear(); //not necessary ...
 
         self.stk.clear();
@@ -215,7 +215,7 @@ where
         //
         self.stk.push(Work{
             // grammar:Rc::new(GrammarNode::Error(GrammarWalkError::FailedParse)),
-            grammar:&GrammarNode::Error,
+            grammar:&GrammarNode::Error(""),
             // grammar_ind:0,
             work_success_len:0,work_fail_len:0,
             tokens:self.top_tokens.clone(),
@@ -1186,7 +1186,7 @@ where
         });
     }
 
-    fn grammar_non_term(&mut self,cur :Work<'g,NT,P,GR,TS>,) -> Result<(),GrammarWalkError<NT>>{
+    fn grammar_non_term(&mut self,cur :Work<'g,NT,P,GR,TS>,) -> Result<(),GrammarWalkError<'g,NT>>{
         let GrammarNode::NonTerm(t)=cur.grammar else{panic!("");};
 
         //
@@ -1273,8 +1273,8 @@ where
         Ok(())
     }
 
-    fn grammar_error(&mut self,cur :Work<'g,NT,P,GR,TS>,) -> GrammarWalkError<NT> {
-        let GrammarNode::Error=cur.grammar else{panic!("");};
+    fn grammar_error(&mut self,cur :Work<'g,NT,P,GR,TS>,) -> GrammarWalkError<'g,NT> {
+        let GrammarNode::Error(e)=cur.grammar else{panic!("");};
 
         // if self.debug {
         //     println!("====error {:?} ",self.expected_loc,); //self.expecteds,
@@ -1298,7 +1298,7 @@ where
 
         //
         // return e.clone();
-        GrammarWalkError::FailedParse
+        GrammarWalkError::Error(e)
     }
 
     fn grammar_and(&mut self,cur :Work<'g,NT,P,GR,TS>,) {
@@ -3039,7 +3039,7 @@ where
     //     t:&'g str,
     //     cur_primitives:TokenIterContainer<'t>,
     //     cur_visiteds: HashSet<(&'g str, usize)>,
-    // ) -> Result<HashSet<(&'g str, usize)>,GrammarWalkError<NT>> {
+    // ) -> Result<HashSet<(&'g str, usize)>,GrammarWalkError<'g,NT>> {
     //     //
     //     if !self.non_term_recursive_check { return  Ok(Default::default()); }
 
@@ -3515,12 +3515,12 @@ where
     }
 
     //
-    pub fn run(&mut self,start_non_term:NT,) -> Result<(),GrammarWalkError<NT>> {
+    pub fn run(&mut self,start_non_term:NT,) -> Result<(),GrammarWalkError<'g,NT>> {
         //
         self.init(start_non_term)?;
 
         //
-        let mut result: Result<(), GrammarWalkError<NT>>=Ok(());
+        let mut result: Result<(), GrammarWalkError<'g,NT>>=Ok(());
 
         //
         while let Some(cur)=self.stk.pop() {
@@ -3634,7 +3634,7 @@ where
         result
     }
 
-    fn step(&mut self,cur:Work<'g,NT,P,GR,TS>) -> Result<(),GrammarWalkError<NT>> {
+    fn step(&mut self,cur:Work<'g,NT,P,GR,TS>) -> Result<(),GrammarWalkError<'g,NT>> {
         //
         // if self.debug {
         //     if self.groups.len() != cur.group_len {
@@ -4046,7 +4046,7 @@ where
             GrammarNode::Or(..) => {self.grammar_or(cur);}
             GrammarNode::Many(..) => {self.grammar_many(cur);}
             GrammarNode::NonTerm(..) => {self.grammar_non_term(cur)?;}
-            GrammarNode::Error => {return Err(self.grammar_error(cur));}
+            GrammarNode::Error(_) => {return Err(self.grammar_error(cur));}
             GrammarNode::Always => {self.grammar_always(cur);}
             GrammarNode::Never => {self.grammar_never(cur);}
 
@@ -4071,7 +4071,7 @@ where
     // }
 
 
-    fn get_non_term(&mut self,n:NT) -> Result<&'g GrammarNode<'g,NT,P,GR>,GrammarWalkError<NT>> {
+    fn get_non_term(&mut self,n:NT) -> Result<&'g GrammarNode<'g,NT,P,GR>,GrammarWalkError<'g,NT>> {
         // if let Some(g)=self.non_term_cache.get(&n) {
         //     Ok(g.clone())
         // } else

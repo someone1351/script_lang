@@ -8,9 +8,11 @@ pub enum MyGroup {
     Int,
     Float,
     String,
+    Escaped,
     Symbol,
     Keyword,
     Eol,
+
 }
 
 #[derive(Clone,Hash,PartialEq,Eq,Debug)]
@@ -104,18 +106,22 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
         //'\' ('s' | 't' | 'r' | 'n' | quote | '\')
         MyNonTerm::Escaped => &And(&[
             &Primitive(MyPrimitive::Char('\\')),
-            &Primitive(MyPrimitive::Chars(&['s','t','r','n', '"','\\'])),
+            &Group(&Or(&[
+                &Primitive(MyPrimitive::Chars(&['s','t','r','n', '"','\\'])),
+                &NonTerm(MyNonTerm::Eol),
+                &Always,
+            ]),MyGroup::Escaped),
         ]),
 
         //quote (escaped | !quote)* quote
-        MyNonTerm::String => &Group(&And(&[
+        MyNonTerm::String => &And(&[
             &Primitive(MyPrimitive::Char('"')),
-            &Many(&Or(&[
+            &Group(&Many(&Or(&[
                 &NonTerm(MyNonTerm::Escaped),
                 &And(&[&Not(&Primitive(MyPrimitive::Char('"'))), &Primitive(MyPrimitive::Any)]),
-            ]), 0,0),
+            ]), 0,0),MyGroup::String),
             &Primitive(MyPrimitive::Char('"')),
-        ]),MyGroup::String),
+        ]),
 
         //
         MyNonTerm::Symbol => &Group(&Primitive(MyPrimitive::Chars(&['&','|','<','>','+','-','*','/','(',')','[',']','{','}','.',',',';','^','%','=','!','~'])),MyGroup::Symbol),
@@ -167,6 +173,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
         MyNonTerm::Eol => &Group(&Or(&[
             &Primitive(MyPrimitive::Char('\n')),
             &Primitive(MyPrimitive::String("\r\n")),
+            &And(&[&Primitive(MyPrimitive::Char('\r')),&Error("lone carriage return")]), //don't allow by itself
         ]),MyGroup::Eol),
 
         //(' ' | '\t')+
@@ -471,7 +478,10 @@ pub fn tokenise(src:&str,) -> Result<Tokens, Loc> {
 
         let q_type=match x.name2().unwrap() {
             MyGroup::Identifier => TokenType::Identifier(s),
-            MyGroup::String => TokenType::String(s),
+            MyGroup::Escaped => {panic!("");},
+            MyGroup::String => {
+                TokenType::String(s)
+            },
             MyGroup::Symbol => TokenType::Symbol(s.chars().next().unwrap()),
             MyGroup::Keyword => TokenType::Keyword(match s {
                 "for" => Keyword::For,

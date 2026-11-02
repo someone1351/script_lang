@@ -461,7 +461,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
 
             ]),"key"),
             &Expect(&Primitive(Symbol(":")),"colon"),
-            &Or(&[&NonTerm(MyNonTerm::Expr),&Error,]), //not needed unlike in val's field_index_calls, because that was optional, this is not //needed?
+            &Or(&[&NonTerm(MyNonTerm::Expr),&Error(""),]), //not needed unlike in val's field_index_calls, because that was optional, this is not //needed?
 
         ]),MyGroup("dict_val")),
 
