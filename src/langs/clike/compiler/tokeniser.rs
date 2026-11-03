@@ -430,13 +430,13 @@ enum TokenType<'a> {
     Float(f64),
     Eol,
 }
-struct Token<'a> {
+struct Token<'t> {
     start_loc:Loc,
     end_loc:Loc,
-    output_token_type:TokenType<'a>,
+    output_token_type:TokenType<'t>,
 }
 
-pub fn tokenise(src:&str,) -> Result<Tokens, Loc> {
+pub fn tokenise<'t,'g>(src:&'t str,) -> Result<Tokens<'t>, (Loc,&'g str)> {
 
     let input=Input::new(src);
     //
@@ -456,7 +456,10 @@ pub fn tokenise(src:&str,) -> Result<Tokens, Loc> {
 
         match e {
             GrammarWalkError::FailedParse => {
-                return Err(walker.tokens().start_loc);
+                return Err((walker.tokens().start_loc,""));
+            }
+            GrammarWalkError::Error(e) => {
+                return Err((walker.tokens().start_loc,e));
             }
             _ => {
                 panic!("{e:?}");
@@ -471,7 +474,7 @@ pub fn tokenise(src:&str,) -> Result<Tokens, Loc> {
     groups_debug_print(walk2.root());
 
 
-    let mut qs: Vec<Token<'_>>=Vec::new();
+    let mut qs: Vec<Token<'t>>=Vec::new();
     for x in walk2.root().children() {
         let ts=x.tokens();
         let s=ts.chars.as_str();
