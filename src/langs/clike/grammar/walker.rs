@@ -3166,89 +3166,91 @@ where
     // }
 
 
-    fn get_walk_in_betweens(&self, groups_out:Vec<WalkGroup<GR,TS>>) -> Vec<WalkGroup<GR,TS>> {
+    // fn get_walk_in_betweens(&self, groups_out:Vec<WalkGroup<GR,TS>>) -> Vec<WalkGroup<GR,TS>> {
 
-        let mut groups_out2=vec![WalkGroup{
-            name: groups_out[0].name.clone(),
-            children: 0..0,
-            tokens: groups_out[0].tokens.clone(),
-            // parent:None,
-        }];
+    //     let mut groups_out2=vec![WalkGroup{
+    //         name: groups_out[0].name.clone(),
+    //         children: 0..0,
+    //         tokens: groups_out[0].tokens.clone(),
+    //         // parent:None,
+    //     }];
 
-        {
-            let mut stk=vec![(0,0)]; //old_group_ind, new_group_ind
+    //     {
+    //         let mut stk=vec![(0,0)]; //old_group_ind, new_group_ind
 
-            while let Some((gind,gind_new))=stk.pop() {
-                let g=&groups_out[gind];
-                let group_outs2_start=groups_out2.len();
-                // for cind in g.children.clone() {
+    //         while let Some((gind,gind_new))=stk.pop() {
+    //             let g=&groups_out[gind];
+    //             let group_outs2_start=groups_out2.len();
+    //             // for cind in g.children.clone() {
 
-                // }
+    //             // }
 
-                let mut cur_tokens = g.tokens.clone();
-                // println!("\n0gname={:?}",g.name);
-                // println!("\n0cur_tokens={cur_tokens:?}");
+    //             let mut cur_tokens = g.tokens.clone();
+    //             // println!("\n0gname={:?}",g.name);
+    //             // println!("\n0cur_tokens={cur_tokens:?}");
 
-                let mut children_new_inds=Vec::new();
+    //             let mut children_new_inds=Vec::new();
 
-                for cind in g.children.clone()
-                {
-                    let child_group=&groups_out[cind];
-                    let child_tokens=child_group.tokens.clone();
-                    // println!("1gind={gind}, cind={cind}, child_tokens={} cur_tokens={} cname={:?}",child_tokens.inds2().start,cur_tokens.inds2().start,child_group.name);
-                    // println!("1cur_tokens={cur_tokens:?}");
-                    // println!("1child_tokens={child_tokens:?}");
+    //             for cind in g.children.clone()
+    //             {
+    //                 let child_group=&groups_out[cind];
+    //                 let child_tokens=child_group.tokens.clone();
+    //                 // println!("1gind={gind}, cind={cind}, child_tokens={} cur_tokens={} cname={:?}",child_tokens.inds2().start,cur_tokens.inds2().start,child_group.name);
+    //                 // println!("1cur_tokens={cur_tokens:?}");
+    //                 // println!("1child_tokens={child_tokens:?}");
 
-                    let between_tokens_len=child_tokens.inds2().start-cur_tokens.inds2().start;
+    //                 let between_tokens_len=child_tokens.inds2().start-cur_tokens.inds2().start;
 
-                    if between_tokens_len!=0 {
-                        // let mut between_tokens=cur_tokens.clone();
-                        // between_tokens.truncate2(between_tokens_len);
+    //                 if between_tokens_len!=0 {
+    //                     // let mut between_tokens=cur_tokens.clone();
+    //                     // between_tokens.truncate2(between_tokens_len);
 
-                        let between_tokens=cur_tokens.clone().take2(between_tokens_len).unwrap();
-                        groups_out2.push(WalkGroup {
-                            name: None, children: 0..0, tokens: between_tokens,
-                            // parent: Some(gind_new),
-                        });
-                    }
+    //                     let between_tokens=cur_tokens.clone().take2(between_tokens_len).unwrap();
+    //                     groups_out2.push(WalkGroup {
+    //                         name: None, children: 0..0, tokens: between_tokens,
+    //                         // parent: Some(gind_new),
+    //                     });
+    //                 }
 
-                    children_new_inds.push((cind,groups_out2.len()));
+    //                 children_new_inds.push((cind,groups_out2.len()));
 
-                    groups_out2.push(WalkGroup {
-                        name: child_group.name.clone(),
-                        children: 0..0,
-                        tokens: child_group.tokens.clone(),
-                        // parent: Some(gind_new),
-                    });
+    //                 groups_out2.push(WalkGroup {
+    //                     name: child_group.name.clone(),
+    //                     children: 0..0,
+    //                     tokens: child_group.tokens.clone(),
+    //                     // parent: Some(gind_new),
+    //                 });
 
-                    // // cur_tokens.take2(between_tokens_len+child_tokens.len2());
-                    // cur_tokens.eat2(child_tokens.inds2().end-cur_tokens.clone().inds2().start);
-                    // // cur_tokens.take(n)
-                    cur_tokens.take2(child_tokens.inds2().end-cur_tokens.clone().inds2().start).unwrap();
-                }
+    //                 // // cur_tokens.take2(between_tokens_len+child_tokens.len2());
+    //                 // cur_tokens.eat2(child_tokens.inds2().end-cur_tokens.clone().inds2().start);
+    //                 // // cur_tokens.take(n)
+    //                 cur_tokens.take2(child_tokens.inds2().end-cur_tokens.clone().inds2().start).unwrap();
+    //             }
 
-                if cur_tokens.len2()!=0 &&g.children.len()!=0 {
-                    groups_out2.push(WalkGroup {
-                        name: None, children: 0..0, tokens: cur_tokens,
-                        // parent: Some(gind_new),
-                    });
-                }
+    //             if cur_tokens.len2()!=0 &&g.children.len()!=0 {
+    //                 groups_out2.push(WalkGroup {
+    //                     name: None, children: 0..0, tokens: cur_tokens,
+    //                     // parent: Some(gind_new),
+    //                 });
+    //             }
 
 
-                stk.extend(children_new_inds.into_iter().rev());
-                {
-                    let group_outs2_end=groups_out2.len();
-                    let gnew=&mut groups_out2[gind_new];
-                    gnew.children=group_outs2_start..group_outs2_end;
+    //             stk.extend(children_new_inds.into_iter().rev());
+    //             {
+    //                 let group_outs2_end=groups_out2.len();
+    //                 let gnew=&mut groups_out2[gind_new];
+    //                 gnew.children=group_outs2_start..group_outs2_end;
 
-                }
-            }
-        }
+    //             }
+    //         }
+    //     }
 
-        groups_out2
-    }
+    //     groups_out2
+    // }
     //
-    pub fn get_walk2(&self, in_betweens:bool) -> Walk<GR,TS> {
+    pub fn get_walk2(&self,
+            // in_betweens:bool
+        ) -> Walk<GR,TS> {
         //
         let mut groups_out: Vec<WalkGroup<GR,TS>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
 
@@ -3432,12 +3434,12 @@ where
             c.end=c.end.max(j+1);
         }
 
-        //insert groups for ungrouped tokens
-        let groups_out = if in_betweens {
-            self.get_walk_in_betweens(groups_out)
-        } else {
-            groups_out
-        };
+        // //insert groups for ungrouped tokens
+        // let groups_out = if in_betweens {
+        //     self.get_walk_in_betweens(groups_out)
+        // } else {
+        //     groups_out
+        // };
 
         //
         Walk{ groups: groups_out }
@@ -3445,7 +3447,9 @@ where
     }
 
     //
-    pub fn get_walk1(&self, in_betweens:bool) -> Walk<GR,TS> {
+    pub fn get_walk1(&self,
+        // in_betweens:bool
+    ) -> Walk<GR,TS> {
         //
         let mut groups_out: Vec<WalkGroup<GR,TS>>=Vec::new();//vec![WalkGroup{ name: "", children: 0..0, tokens: todo!() }];
 
@@ -3521,12 +3525,12 @@ where
 
 
 
-        //insert groups for ungrouped tokens
-        let groups_out = if in_betweens {
-            self.get_walk_in_betweens(groups_out)
-        } else {
-            groups_out
-        };
+        // //insert groups for ungrouped tokens
+        // let groups_out = if in_betweens {
+        //     self.get_walk_in_betweens(groups_out)
+        // } else {
+        //     groups_out
+        // };
 
         //
         Walk{ groups: groups_out }

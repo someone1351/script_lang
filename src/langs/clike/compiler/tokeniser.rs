@@ -472,8 +472,8 @@ pub fn tokenise<'t,'g>(src:&'t str,) -> Result<Tokens<'t>, (Loc,&'g str)> {
     //
     println!("-----------------");
 
-    let walk2=walker.get_walk2(false);
-    groups_debug_print(walk2.root());
+    let walk2=walker.get_walk2();
+    groups_debug_print(walk2.root(),false);
 
 
     let mut qs: Vec<Token<'t>>=Vec::new();
@@ -485,6 +485,15 @@ pub fn tokenise<'t,'g>(src:&'t str,) -> Result<Tokens<'t>, (Loc,&'g str)> {
             MyGroup::Identifier => TokenType::Identifier(s),
             MyGroup::Escaped => {panic!("");},
             MyGroup::String => {
+                // for child_ind in 0..x.child_num()+1 {
+                //     if let Some(child_group)=x.child(child_ind) {
+
+                //     }
+
+                //     if let Some(between_tokens) = x.between_tokens(child_ind) {
+
+                //     }
+                // }
                 for y in x.children() {
 
                 }

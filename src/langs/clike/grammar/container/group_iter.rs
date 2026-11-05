@@ -12,11 +12,13 @@ where
     pub walk:&'g Walk<GR,TS>,
 
     //if between mul 2 and add 1
+
+    //start is now init 0, end is len
     pub start:usize,
     pub end:usize,
 
-    // pub betweens:bool,
-    // pub parent : usize, //no iterator for root ever given, so no need for Option<>
+    pub betweens:bool,
+    pub parent_ind : usize, //no iterator for root ever given, so no need for Option<>
 }
 
 // impl<'g,GR,TS> WalkGroupIterContainer<'g,GR,TS>
@@ -168,15 +170,26 @@ where
 
 impl<'g,GR,TS> Iterator for WalkGroupIterContainer<'g,GR,TS>
 where
-    TS:Clone,
+    // TS:Clone,
+    TS:Clone+TokensTrait,
+    GR:Clone,
 {
     type Item = WalkGroupContainer<'g,GR,TS>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.start < self.end {
+        // if self.start < self.end {
 
 
-            let x=WalkGroupContainer {group_ind: self.start,walk: self.walk,};
+        //     let x=WalkGroupContainer {group_ind: self.start,walk: self.walk,};
+        //     self.start+=1;
+
+        //     Some(x)
+        // } else {
+        //     None
+        // }
+
+        while self.start < self.end {
+
 
             // 9 = 0 [1] 2 [3] 4 [5] 6 [7] 8
             // 5 = 0 2 4 6 8
@@ -190,50 +203,80 @@ where
             // 3 = 0 [1] 2
             // 2 = 0 2
 
-            // let x = if self.betweens {
-            //     if self.start%2 == 0 {
-            //         WalkGroupContainer::Between {between_ind: self.start/2+1,walk: self.walk,parent_ind:self.parent,}
-            //     } else {
-            //         WalkGroupContainer::Group {group_ind: (self.start-1)/2,walk: self.walk,}
-            //     }
-            // } else {
-            //     WalkGroupContainer::Group {group_ind: self.start,walk: self.walk,}
-            // };
+            let x = if self.betweens {
+                if self.start%2 == 0 {
+                    let child_ind=self.start/2;
+                    WalkGroupContainer {group_ind:self.parent_ind, between_ind: Some(child_ind),walk: self.walk,}
+                } else {
+                    let group=&self.walk.groups[self.parent_ind];
+                    let child_ind=self.start/2; //(self.start-1)/2;
+                    let group_ind=group.children.start+child_ind;
+                    WalkGroupContainer {between_ind:None,group_ind,walk: self.walk,}
+                }
+            } else {
+                let group=&self.walk.groups[self.parent_ind];
+                let child_ind=self.start;
+                let group_ind=group.children.start+child_ind;
+
+                WalkGroupContainer {between_ind:None,group_ind,walk: self.walk,}
+            };
 
             self.start+=1;
 
-            Some(x)
-        } else {
-            None
+            if !x.tokens().is_empty2() {
+                return Some(x);
+            }
         }
+
+        None
+
     }
 }
 
 impl<'g,GR,TS> DoubleEndedIterator for WalkGroupIterContainer<'g,GR,TS>
 where
-    TS:Clone,
+    // TS:Clone,
+    TS:Clone+TokensTrait,
+    GR:Clone,
 {
     fn next_back(&mut self) -> Option<WalkGroupContainer<'g,GR,TS>> {
-        if self.end > self.start {
+    //    if self.end > self.start {
+    //         self.end-=1;
+
+    //         let group_ind=self.end;
+    //         Some(WalkGroupContainer {group_ind,walk: self.walk,}) //last_loc
+    //     } else {
+    //         None
+    //     }
+
+
+        while self.end > self.start {
             self.end-=1;
 
-            let group_ind=self.end;
-            Some(WalkGroupContainer {group_ind,walk: self.walk,}) //last_loc
+            let x = if self.betweens {
+                if self.end%2 == 0 {
+                    let child_ind=self.end/2;
+                    WalkGroupContainer {group_ind:self.parent_ind,between_ind: Some(child_ind),walk: self.walk, }
+                } else {
+                    let group=&self.walk.groups[self.parent_ind];
+                    let child_ind=self.end/2; //(self.end-1)/2;
+                    let group_ind=group.children.start+child_ind;
 
-            // let x = if self.betweens {
-            //     if self.end%2 == 0 {
-            //         WalkGroupContainer::Between {between_ind: self.end/2+1,walk: self.walk,parent_ind:self.parent,}
-            //     } else {
-            //         WalkGroupContainer::Group {group_ind: (self.end-1)/2,walk: self.walk,}
-            //     }
-            // } else {
-            //     WalkGroupContainer::Group {group_ind: self.end,walk: self.walk,}
-            // };
+                    WalkGroupContainer {between_ind:None,group_ind,walk: self.walk,}
+                }
+            } else {
+                let group=&self.walk.groups[self.parent_ind];
+                let child_ind=self.end;
+                let group_ind=group.children.start+child_ind;
+                WalkGroupContainer {between_ind:None,group_ind,walk: self.walk,}
+            };
 
-            // Some(x)
-        } else {
-            None
+            if !x.tokens().is_empty2() {
+                return Some(x);
+            }
         }
+
+        None
     }
 }
 
@@ -247,9 +290,13 @@ where
 impl<'g,GR,TS> ExactSizeIterator for WalkGroupIterContainer<'g,GR,TS>
 where
     TS:Clone,
+    Self:Iterator+Clone,
+
 {
     fn len(&self) -> usize {
-        self.end-self.start
+        // self.end-self.start
+
+        self.clone().count()
     }
 
     // fn is_empty(&self) -> bool {

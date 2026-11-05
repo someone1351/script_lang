@@ -35,7 +35,7 @@ use crate::clike::grammar::{container::WalkGroupContainer, TokensTrait};
 // }
 
 
-pub fn groups_debug_print<'g, GR, TS>(root:WalkGroupContainer<'g, GR, TS>)
+pub fn groups_debug_print<'g, GR, TS>(root:WalkGroupContainer<'g, GR, TS>,betweens:bool,)
 where
     TS:Clone+TokensTrait+Iterator,
     GR:Clone+Debug,
@@ -47,8 +47,9 @@ where
         // T:Debug,
     {
         Tokens(TS),
+        // Token(T),
         Group(WalkGroupContainer<'g,GR,TS>),
-        Between(TS),
+        // Between(TS),
     }
 
     let mut stk = vec![(Thing::Group(root),0)];
@@ -58,23 +59,41 @@ where
 
         match cur {
             Thing::Group(cur) => {
-                println!("{indent}group: {}",
-                    cur.name2().map(|x|format!("{x:?}")).unwrap_or_else(||"_".to_string()),
-                );
+                let b=betweens || cur.name2().is_some() || depth==0;
+
+                // let b = (!betweens || cur.name2().is_some())
+                if b {
+
+                    println!("{indent}group: {}",
+                        cur.name2().map(|x|format!("{x:?}")).unwrap_or_else(||"_".to_string()),
+                    );
+                }
+
+                let depth2=depth+b.then_some(1).unwrap_or(0);
 
                 if cur.child_num()==0 {
-                    stk.push((Thing::Tokens(cur.tokens()),depth+1));
+                    stk.push((Thing::Tokens(cur.tokens()),depth2));
                 } else {
-                    for child_ind in (0..cur.child_num()+1).rev() {
-                        if let Some(child_group)=cur.child(child_ind) {
-                            stk.push((Thing::Group(child_group),depth+1));
-                        }
+                    for child_group in cur.children_ext(true).rev() {
+                        // if child_group.name2().is_none() && depth!=0 {
+                        //     stk.push((Thing::Between(child_group.tokens()),depth+1));
 
-                        if let Some(tokens) = cur.between_tokens(child_ind) {
-                            // println!("==={:?}",tokens.len2());
-                            stk.push((Thing::Between(tokens),depth+1));
-                        }
+                        // } else {
+                            stk.push((Thing::Group(child_group),depth2));
+
+                        // }
                     }
+
+                    // for child_ind in (0..cur.child_num()+1).rev() {
+                    //     if let Some(child_group)=cur.child(child_ind) {
+                    //         stk.push((Thing::Group(child_group),depth+1));
+                    //     }
+
+                    //     if let Some(tokens) = cur.between_tokens(child_ind) {
+                    //         // println!("==={:?}",tokens.len2());
+                    //         stk.push((Thing::Between(tokens),depth+1));
+                    //     }
+                    // }
                 }
 
 
@@ -121,10 +140,14 @@ where
                 // }
 
             }
-            Thing::Between(tokens) => {
-                println!("{indent}between",);
-                stk.push((Thing::Tokens(tokens),depth+1));
-            }
+            // Thing::Between(tokens) => {
+            //     if betweens {
+            //         println!("{indent}between",);
+            //         stk.push((Thing::Tokens(tokens),depth+1));
+            //     } else {
+            //         stk.push((Thing::Tokens(tokens),depth));
+            //     }
+            // }
             Thing::Tokens(tokens) => {
                 for t in tokens {
                     println!("{indent}{t:?}");

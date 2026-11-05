@@ -28,6 +28,6 @@ where
     TS:Clone,
 {
     pub fn root(&'g self) -> WalkGroupContainer<'g,GR,TS> {
-        WalkGroupContainer { walk: self, group_ind: 0 }
+        WalkGroupContainer { walk: self, group_ind: 0,between_ind:None, }
     }
 }

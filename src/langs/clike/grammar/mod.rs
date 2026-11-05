@@ -129,7 +129,9 @@ where
     fn take2(&mut self,size:usize,) -> Option<Self>;
     // fn eat2(&mut self,size:usize,);
     fn len2(&self) -> usize;
-    // fn is_empty2(&self) -> bool;
+    fn is_empty2(&self) -> bool {
+        self.len2()==0
+    }
 
     // fn first(&self) -> Option<T>;
     // fn pop_primitive(&mut self, p:&P) -> bool;

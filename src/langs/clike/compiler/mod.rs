@@ -195,7 +195,7 @@ impl Compiler {
         //     }
         // }
 
-        let walk=walker.get_walk2(true);
+        let walk=walker.get_walk2();
 
         //     println!("2_____");
         //     for (i,g) in walk.groups.iter().enumerate() {
@@ -204,13 +204,13 @@ impl Compiler {
         // println!("===---===2a");
         // println!("{}",walk.root());
         println!("===---===2b");
-        groups_debug_print(walk.root());
+        groups_debug_print(walk.root(),true);
 
 
         println!("===---===1");
         {
-            let walk=walker.get_walk1(false);
-            groups_debug_print(walk.root());
+            let walk=walker.get_walk1();
+            groups_debug_print(walk.root(),false);
 
         }
         // {
@@ -1022,6 +1022,7 @@ impl Compiler {
 
             }
             "println" => {
+                // top_group.children().is_empty();
                 builder
                     .eval(top_group.child(0).unwrap())
                     .param_push()
