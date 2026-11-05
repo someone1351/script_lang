@@ -176,7 +176,7 @@ impl Compiler {
         //             println!("{indent}group: {name:?}",);
         //             stk.extend(cur.children().rev().map(|c|(c,depth+1)));
 
-        //             if cur.children().len()==0 {
+        //             if cur.child_num()==0 {
         //                 for t in cur.tokens() {
         //                     println!("{indent}    {t:?}");
         //                 }
@@ -367,10 +367,10 @@ impl Compiler {
 
                 builder.eval(cs.next().unwrap());
 
-                while !cs.is_empty() {
+                while let Some(c)=cs.next() {
                     builder
                         .param_push()
-                        .eval(cs.next().unwrap())
+                        .eval(c)
                         .param_push()
                         .swap()
                         .call_method("xor", 2)
@@ -401,8 +401,8 @@ impl Compiler {
                     .eval(cs.next().unwrap())
                     ;
 
-                while !cs.is_empty() {
-                    let op=cs.next().unwrap();
+                while let  Some(op)= cs.next() {
+                    // let op=cs.next().unwrap();
                     let func=match op.name2().unwrap().0 {
                         "add" => "add",
                         "sub" => "sub",
@@ -555,15 +555,15 @@ impl Compiler {
                 builder.eval(var); //self
 
                 //
-                let last_call_ind = (0..fields.children().len()-1).rev().find(|&i|{
+                let last_call_ind = (0..fields.child_num()-1).rev().find(|&i|{
                     let c = fields.child(i).unwrap();
                     c.name2().unwrap().0=="call_val" || c.name2().unwrap().0=="call_field"
                 }).unwrap_or(0);
 
                 //
-                if fields.children().len() != 1 {
+                if fields.child_num() != 1 {
                     //get field(s), index(s), call(s)
-                    for i in last_call_ind..fields.children().len()-1 {
+                    for i in last_call_ind..fields.child_num()-1 {
                         let field=fields.child(i).unwrap();
 
                         builder
@@ -631,7 +631,7 @@ impl Compiler {
                 }
 
                 //set remaing fields chain
-                for i in (0..fields.children().len()-1).rev() {
+                for i in (0..fields.child_num()-1).rev() {
                     let field=fields.child(i).unwrap();  //field|index
                     let field_inner=field.child(0).unwrap(); //field_name|field_index|expr
                     // let is_symbol=field_inner.name()=="field_name";
@@ -674,7 +674,7 @@ impl Compiler {
 
                         //
                         .loc(top_group.tokens().start_loc())
-                        .call_result(params.children().len(),)
+                        .call_result(params.child_num(),)
 
                     .block_end() //todo remove
                     ;
@@ -702,8 +702,8 @@ impl Compiler {
 
                             //
                             .loc(top_group.tokens().start_loc())
-                            // .call_field(params.children().len(),)
-                            .try_call_method(field_name, params.children().len()+1)
+                            // .call_field(params.child_num(),)
+                            .try_call_method(field_name, params.child_num()+1)
 
 
                             .to_block_end(JmpCond::NotUndefined, 0,)
@@ -717,10 +717,10 @@ impl Compiler {
                             .loc(top_group.tokens().start_loc())
                             .call_method("_field",2)
 
-                            .call_result(params.children().len()+1)
+                            .call_result(params.child_num()+1)
                             // .to_block_end(JmpCond::None, 1)
                         .block_end()
-                            // .pop_params(params.children().len()+1)
+                            // .pop_params(params.child_num()+1)
                         // .block_end()
 
                         // .call_method(name, params_num)
@@ -736,7 +736,7 @@ impl Compiler {
                 builder
                     .eval(params)
                     .loc(name.token.start_loc())
-                    .call(name.value, params.children().len());
+                    .call(name.value, params.child_num());
             }
             "params" => {
                 for p in top_group.children().rev() {
@@ -872,7 +872,7 @@ impl Compiler {
                 builder.to_block_end_label(JmpCond::None,"loop",skip,Some(e));
             }
             "return" => {
-                if top_group.children().len()==1 {
+                if top_group.child_num()==1 {
                     builder.eval(top_group.child(0).unwrap());
                 } else {
                     builder.result_void();
@@ -1031,7 +1031,7 @@ impl Compiler {
 
             "format" => {
 
-                if top_group.children().is_empty() {
+                if top_group.child_num()==0 {
                     builder.result_string("");
                     return Ok(());
                 }
@@ -1207,7 +1207,7 @@ impl Compiler {
                 }
 
                 //
-                for k in j .. top_group.children().len() {
+                for k in j .. top_group.child_num() {
                     if k>0 {
                         builder
                             .result_string(" ")

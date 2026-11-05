@@ -19,151 +19,151 @@ where
     // pub parent : usize, //no iterator for root ever given, so no need for Option<>
 }
 
-impl<'g,GR,TS> WalkGroupIterContainer<'g,GR,TS>
-where
-    TS:Clone,
-{
-    // pub fn pop_front(&mut self) -> Option<WalkGroupContainer<'g,GR,TS>,> {
-    //     if self.start < self.end {
-    //         let group_ind=self.start;
-    //         self.start+=1;
-    //         Some(WalkGroupContainer { walk: self.walk, group_ind }) //last_loc:self.last_loc,
-    //     } else {
-    //         None
-    //     }
-    // }
+// impl<'g,GR,TS> WalkGroupIterContainer<'g,GR,TS>
+// where
+//     TS:Clone,
+// {
+//     // pub fn pop_front(&mut self) -> Option<WalkGroupContainer<'g,GR,TS>,> {
+//     //     if self.start < self.end {
+//     //         let group_ind=self.start;
+//     //         self.start+=1;
+//     //         Some(WalkGroupContainer { walk: self.walk, group_ind }) //last_loc:self.last_loc,
+//     //     } else {
+//     //         None
+//     //     }
+//     // }
 
-    pub fn len(&self) -> usize {
-        self.end-self.start
-    }
+//     // pub fn len(&self) -> usize {
+//     //     self.end-self.start
+//     // }
 
-    // pub fn get(&self, ind:usize) -> Option<WalkGroupContainer<'g,GR,TS>,> {
-    //     let group_ind= self.start+ind;
+//     // pub fn get(&self, ind:usize) -> Option<WalkGroupContainer<'g,GR,TS>,> {
+//     //     let group_ind= self.start+ind;
 
-    //     if group_ind < self.end {
-    //         Some(WalkGroupContainer { walk: self.walk, group_ind,})
-    //     } else {
-    //         None
-    //     }
-    // }
+//     //     if group_ind < self.end {
+//     //         Some(WalkGroupContainer { walk: self.walk, group_ind,})
+//     //     } else {
+//     //         None
+//     //     }
+//     // }
 
-    // pub fn get_range<R:RangeBounds<usize>>(&self,r:R) -> WalkGroupIterContainer<'g,GR,TS> {
+//     // pub fn get_range<R:RangeBounds<usize>>(&self,r:R) -> WalkGroupIterContainer<'g,GR,TS> {
 
-    //     let range_start=match r.start_bound().cloned() {
-    //         Bound::Included(x)=>x,
-    //         Bound::Excluded(_)=>panic!(""),
-    //         Bound::Unbounded=>0,
-    //     };
+//     //     let range_start=match r.start_bound().cloned() {
+//     //         Bound::Included(x)=>x,
+//     //         Bound::Excluded(_)=>panic!(""),
+//     //         Bound::Unbounded=>0,
+//     //     };
 
-    //     let range_end=match r.end_bound().cloned() {
-    //         Bound::Included(x)=>x+1,
-    //         Bound::Excluded(x)=>x,
-    //         Bound::Unbounded=>self.len(),
-    //     };
+//     //     let range_end=match r.end_bound().cloned() {
+//     //         Bound::Included(x)=>x+1,
+//     //         Bound::Excluded(x)=>x,
+//     //         Bound::Unbounded=>self.len(),
+//     //     };
 
-    //     if range_start>range_end { //if range start==end is same as empty iter
-    //         return WalkGroupIterContainer {start: 0, end: 0, walk: self.walk, between:None,};
-    //     }
+//     //     if range_start>range_end { //if range start==end is same as empty iter
+//     //         return WalkGroupIterContainer {start: 0, end: 0, walk: self.walk, between:None,};
+//     //     }
 
-    //     let x_len=range_end-range_start;
+//     //     let x_len=range_end-range_start;
 
-    //     if x_len>self.len() {
-    //         return WalkGroupIterContainer {start: 0, end: 0, walk: self.walk, between:None};
-    //     }
+//     //     if x_len>self.len() {
+//     //         return WalkGroupIterContainer {start: 0, end: 0, walk: self.walk, between:None};
+//     //     }
 
-    //     let x_start=self.start+range_start;
-    //     let x_end = x_start+x_len;
+//     //     let x_start=self.start+range_start;
+//     //     let x_end = x_start+x_len;
 
-    //     WalkGroupIterContainer {start: x_start, end: x_end, walk: self.walk}
-    // }
+//     //     WalkGroupIterContainer {start: x_start, end: x_end, walk: self.walk}
+//     // }
 
-    pub fn is_empty(&self) -> bool {
-        self.start==self.end
-    }
+//     // pub fn is_empty(&self) -> bool {
+//     //     self.start==self.end
+//     // }
 
-    // pub fn first(&self) -> Option<WalkGroupContainer<'g,GR,TS>,> {
-    //     self.get(0)
-    // }
-    // pub fn split<F>(&self,f:F) -> Vec<WalkGroupIterContainer<'g,GR,TS>>
-    // where
-    //     F:Fn(WalkGroupContainer<'g,GR,TS>) -> bool,
-    // {
-    //     if self.len()==0 {
-    //         return Vec::new();
-    //     }
+//     // pub fn first(&self) -> Option<WalkGroupContainer<'g,GR,TS>,> {
+//     //     self.get(0)
+//     // }
+//     // pub fn split<F>(&self,f:F) -> Vec<WalkGroupIterContainer<'g,GR,TS>>
+//     // where
+//     //     F:Fn(WalkGroupContainer<'g,GR,TS>) -> bool,
+//     // {
+//     //     if self.len()==0 {
+//     //         return Vec::new();
+//     //     }
 
-    //     //
-    //     let mut v=Vec::new();
-    //     let mut x=self.start;
+//     //     //
+//     //     let mut v=Vec::new();
+//     //     let mut x=self.start;
 
-    //     // print!("!!!!");
-    //     // print!("gs is {self:?}");
-    //     for i in self.start ..self.end {
-    //         let g=self.get(i-self.start).unwrap();
+//     //     // print!("!!!!");
+//     //     // print!("gs is {self:?}");
+//     //     for i in self.start ..self.end {
+//     //         let g=self.get(i-self.start).unwrap();
 
-    //         if f(g) {
-    //             if x!=i {
-    //                 v.push(WalkGroupIterContainer{
-    //                     walk: self.walk, start: x, end: i
-    //                 });
-    //             }
+//     //         if f(g) {
+//     //             if x!=i {
+//     //                 v.push(WalkGroupIterContainer{
+//     //                     walk: self.walk, start: x, end: i
+//     //                 });
+//     //             }
 
-    //             x=i+1;
-    //         }
-    //     }
+//     //             x=i+1;
+//     //         }
+//     //     }
 
-    //     // if x==self.start {
-    //     //     return vec![self.clone()];
-    //     // }
+//     //     // if x==self.start {
+//     //     //     return vec![self.clone()];
+//     //     // }
 
-    //     if x!=self.end {
-    //         v.push(WalkGroupIterContainer{ walk: self.walk, start: x, end: self.end });
-    //     }
+//     //     if x!=self.end {
+//     //         v.push(WalkGroupIterContainer{ walk: self.walk, start: x, end: self.end });
+//     //     }
 
-    //     v
-    // }
+//     //     v
+//     // }
 
 
 
-    // pub fn split_between<F>(&self,f:F) -> Vec<WalkGroupIterContainer<'g,GR,TS>>
-    // where
-    //     F:Fn(WalkGroupContainer<'g,GR,TS>) -> bool,
-    // {
-    //     if self.len()==0 {
-    //         return Vec::new();
-    //     }
+//     // pub fn split_between<F>(&self,f:F) -> Vec<WalkGroupIterContainer<'g,GR,TS>>
+//     // where
+//     //     F:Fn(WalkGroupContainer<'g,GR,TS>) -> bool,
+//     // {
+//     //     if self.len()==0 {
+//     //         return Vec::new();
+//     //     }
 
-    //     //
-    //     let mut v=Vec::new();
-    //     let mut x=self.start;
+//     //     //
+//     //     let mut v=Vec::new();
+//     //     let mut x=self.start;
 
-    //     for i in self.start ..self.end {
-    //         let g=self.get(i-self.start).unwrap();
+//     //     for i in self.start ..self.end {
+//     //         let g=self.get(i-self.start).unwrap();
 
-    //         let fg=f(g);
-    //         // println!("f(g)={fg}",);
-    //         if fg {
-    //             if x!=i {
-    //                 v.push(WalkGroupIterContainer{ walk: self.walk, start: x, end: i });
-    //             }
+//     //         let fg=f(g);
+//     //         // println!("f(g)={fg}",);
+//     //         if fg {
+//     //             if x!=i {
+//     //                 v.push(WalkGroupIterContainer{ walk: self.walk, start: x, end: i });
+//     //             }
 
-    //             v.push(WalkGroupIterContainer{ walk: self.walk, start: i, end: i+1 });
+//     //             v.push(WalkGroupIterContainer{ walk: self.walk, start: i, end: i+1 });
 
-    //             x=i+1;
-    //         }
-    //     }
+//     //             x=i+1;
+//     //         }
+//     //     }
 
-    //     // if x==self.start {
-    //     //     return vec![self.clone()];
-    //     // }
+//     //     // if x==self.start {
+//     //     //     return vec![self.clone()];
+//     //     // }
 
-    //     if x!=self.end {
-    //         v.push(WalkGroupIterContainer{ walk: self.walk, start: x, end: self.end });
-    //     }
+//     //     if x!=self.end {
+//     //         v.push(WalkGroupIterContainer{ walk: self.walk, start: x, end: self.end });
+//     //     }
 
-    //     v
-    // }
-}
+//     //     v
+//     // }
+// }
 
 
 impl<'g,GR,TS> Iterator for WalkGroupIterContainer<'g,GR,TS>
@@ -244,3 +244,15 @@ where
 
 //     }
 // }
+impl<'g,GR,TS> ExactSizeIterator for WalkGroupIterContainer<'g,GR,TS>
+where
+    TS:Clone,
+{
+    fn len(&self) -> usize {
+        self.end-self.start
+    }
+
+    // fn is_empty(&self) -> bool {
+    //     self.start==self.end
+    // }
+}

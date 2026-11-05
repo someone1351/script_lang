@@ -48,6 +48,7 @@ where
     {
         Token(T),
         Group(WalkGroupContainer<'g,GR,TS>),
+        Between(TS),
     }
 
     let mut stk = vec![(Thing::Group(root),0)];
@@ -63,7 +64,7 @@ where
 
                 let mut cur_tokens = cur.tokens();
 
-                for child_group in cur.children().rev() {
+                for (child_ind,child_group) in cur.children().enumerate().rev() {
                     let child_tokens=child_group.tokens();
                     let ps_len=cur_tokens.inds2().end-child_tokens.inds2().end;
                     // let ps=cur_tokens.take_end2(ps_len).unwrap();
@@ -103,6 +104,13 @@ where
                     stk[stk_len ..].reverse();
                 }
 
+            }
+            Thing::Between(tokens) => {
+                println!("{indent}between",);
+
+                let stk_len=stk.len();
+                stk.extend(tokens.map(|t|(Thing::Token(t),depth+1)));
+                stk[stk_len ..].reverse();
             }
             Thing::Token(cur) => {
                 println!("{indent}{cur:?}");
