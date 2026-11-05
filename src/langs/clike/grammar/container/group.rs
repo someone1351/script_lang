@@ -2,9 +2,19 @@
 
 // use crate::{clike::grammar::TokensTrait, Loc};
 
+use crate::clike::grammar::TokensTrait;
+
 use super::super::super::{grammar::{container::WalkGroupIterContainer, data::{Walk, WalkGroup}}, tokenizer::{TokenContainer, TokenIterContainer}};
 
 #[derive(Clone, Copy)]
+
+// pub enum WalkGroupContainer<'g,GR,TS>
+// where
+//     TS:Clone,
+// {
+//     Group{  walk:&'g Walk<GR,TS>,  group_ind:usize,},
+//     Between {  walk:&'g Walk<GR,TS>,  parent_ind:usize, between_ind:usize,},
+// }
 pub struct WalkGroupContainer<'g,GR,TS>
 where
     TS:Clone,
@@ -16,29 +26,135 @@ where
 impl<'g,GR,TS> WalkGroupContainer<'g,GR,TS>
 where
     GR: Clone,
-    TS:Clone,
+    TS:Clone+TokensTrait, //+Iterator,
 {
     fn group(&self) -> &WalkGroup<GR,TS> {
+        // let Self::Group { walk, group_ind } = self.clone() else {panic!("");};
         &self.walk.groups[self.group_ind]
+    }
+
+    pub fn between_tokens(&self,between_ind:usize,) -> Option<TS> {
+        //between_ind is ind between  child groups
+        //  eg
+        //    0 = before child_group_ind0,
+        //    1 = between child_group_ind0 and child_group_ind1
+        //    n = after child_group_ind_last
+        // let Self::Group { walk, group_ind } = self.clone() else {panic!("");};
+
+        // let mut cur_tokens=self.group().tokens.clone();
+
+        let x = self.tokens().inds2().start;
+
+        if self.child_num()==0 || between_ind > self.child_num()  { //out of bounds
+            None
+        } else if between_ind==0 { //before start
+            // let n=self.first().unwrap().tokens().inds2().start - self.tokens().inds2().start;
+            let a= self.first().unwrap().tokens().inds2().start;
+
+            if a!=x {
+                Some(self.tokens().take2(a-x).unwrap())
+            } else {
+                None
+            }
+        } else if between_ind == self.child_num() { //afters end
+            // let n=self.tokens().inds2().end - self.last().unwrap().tokens().inds2().end;
+
+            let a=self.last().unwrap().tokens().inds2().end;
+
+            let mut ts = self.tokens();
+            ts.take2(a-x).unwrap();
+
+            if a!=x {
+                Some(ts)
+            } else {
+                None
+            }
+        } else { //in between
+            let a=self.child(between_ind-1).unwrap().tokens().inds2().end;
+            let b=self.child(between_ind).unwrap().tokens().inds2().start;
+
+            let mut ts = self.tokens();
+            ts.take2(a-x).unwrap();
+
+            if b!=a {
+                Some(ts.take2(b-a).unwrap())
+            } else {
+                None
+            }
+        }
+
     }
     // pub fn name(&self) -> GR {
     //     self.group().name.unwrap_or("")
     // }
     pub fn name2(&self) -> Option<GR> {
-        self.group().name.clone()
+        // match self.clone() {
+        //     WalkGroupContainer::Group { .. } => {
+                self.group().name.clone()
+        //     }
+        //     WalkGroupContainer::Between { .. } => {
+        //         None
+        //     }
+        // }
     }
     pub fn children(&self) -> WalkGroupIterContainer<'g,GR,TS> {
-        let group=self.group();
-        WalkGroupIterContainer{ walk: self.walk, start: group.children.start, end: group.children.end }
+        // match self.clone() {
+            // WalkGroupContainer::Group { walk, group_ind } => {
+                let group=self.group();
+                WalkGroupIterContainer{
+                    walk:self.walk, start: group.children.start, end: group.children.end,
+                    // betweens:false,parent:group_ind,
+                }
+            // }
+        //     WalkGroupContainer::Between { walk,.. } => {
+        //         WalkGroupIterContainer{ walk, start: 0, end: 0,betweens:false,parent:0, }
+        //     }
+        // }
     }
-    pub fn child(&self,ind:usize) -> Option<WalkGroupContainer<'g,GR,TS>> {
-        let group=self.group();
+    // pub fn children_ext(&self,betweens:bool,) -> WalkGroupIterContainer<'g,GR,TS> {
+    //     match self.clone() {
+    //         WalkGroupContainer::Group { walk, group_ind } => {
+    //             let group=self.group();
+    //             let (start,end) = if betweens {
+    //                 (group.children.start*2+1, group.children.end*2+1)
 
-        if ind < group.children.len() {
-            Some(WalkGroupContainer{ walk: self.walk, group_ind: group.children.start+ind })
-        } else {
-            None
-        }
+    //             } else {
+    //                 (group.children.start, group.children.end)
+    //             };
+
+    //             WalkGroupIterContainer{ walk, start, end, betweens, parent:group_ind, }
+    //         }
+    //         WalkGroupContainer::Between { walk,.. } => {
+    //             WalkGroupIterContainer{ walk, start: 0, end: 0,betweens:false,parent:0, }
+    //         }
+    //     }
+    // }
+    pub fn child(&self,ind:usize) -> Option<WalkGroupContainer<'g,GR,TS>> {
+        // match self.clone() {
+        //     WalkGroupContainer::Group { walk, .. } => {
+                let group=self.group();
+
+                if ind < group.children.len() {
+                    Some(WalkGroupContainer{ walk:self.walk, group_ind: group.children.start+ind })
+                } else {
+                    None
+                }
+            // }
+        //     WalkGroupContainer::Between { .. } => {
+        //        None
+        //     }
+        // }
+    }
+    pub fn child_num(&self) -> usize {
+        // match self.clone() {
+        //     WalkGroupContainer::Group {  .. } => {
+                let group=self.group();
+                group.children.len()
+        //     }
+        //     WalkGroupContainer::Between { .. } => {
+        //         0
+        //     }
+        // }
     }
     pub fn first(&self) -> Option<WalkGroupContainer<'g,GR,TS>> {
         self.child(0)
@@ -52,7 +168,40 @@ where
     }
 
     pub fn tokens(&self) -> TS {
-        self.group().tokens.clone()
+
+
+        // match self.clone() {
+        //     WalkGroupContainer::Group { .. } => {
+                self.group().tokens.clone()
+            // }
+            // WalkGroupContainer::Between { walk, parent_ind, between_ind } => {
+            //     let parent_group1=&walk.groups[parent_ind];
+            //     let parent_group2=WalkGroupContainer::Group { walk, group_ind: parent_ind, };
+            //     let all_ind=between_ind*2;
+
+            //     let sibling_all_range=(parent_group1.children.start*2+1) .. (parent_group1.children.end*2+1);
+
+            //     let mut tokens = parent_group2.tokens();
+
+            //     if all_ind + 1 == sibling_all_range.start { //first between
+            //         let sibling0=parent_group2.first().unwrap();
+            //         let n=sibling0.tokens().inds2().start-parent_group2.tokens().inds2().start;
+            //         let x=tokens.clone().take2(n);
+
+            //     } else if all_ind == sibling_all_range.end + 1 { //last between
+
+            //     } else if sibling_all_range.contains(&all_ind) { //in between
+
+            //     } else {
+            //         panic!("{all_ind}, {sibling_all_range:?}");
+            //     }
+
+            //     // 0 1 2 => 0 [1] 2 [3] 4
+            //     // 0 1   => 0 [1] 2
+
+            //     tokens
+            // }
+        // }
     }
     // pub fn start_loc(&self) -> Loc {
     //     let mut t=self.group().tokens.clone();

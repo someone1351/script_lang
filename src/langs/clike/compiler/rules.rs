@@ -571,6 +571,16 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
 impl<'t,'g> std::fmt::Debug for WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!("{}::{:?}", &self.group_ind,&self.name2().map(|x|x.0).unwrap_or("")))
+
+        // match self {
+        //     WalkGroupContainer::Group { walk, group_ind } => {
+        //         f.write_fmt(format_args!("g{}::{:?}", &group_ind,&self.name2().map(|x|x.0).unwrap_or("")))
+        //     }
+        //     WalkGroupContainer::Between { walk, parent_ind, between_ind } => {
+        //         f.write_fmt(format_args!("b{between_ind}::p{parent_ind}", ))
+
+        //     }
+        // }
     }
 }
 

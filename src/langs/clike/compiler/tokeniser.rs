@@ -1,6 +1,6 @@
 use std::{ops::{Range, RangeInclusive}, str::{CharIndices, Chars}};
 
-use crate::{clike::grammar::{node::GrammarNode, utils::groups_debug_print, walker::GrammarWalker, GrammarWalkError, PrimitiveTrait, TokensTrait }, Loc};
+use crate::{clike::grammar::{node::GrammarNode, utils::groups_debug_print, walker::GrammarWalker, GrammarWalkError, PrimitiveTrait, TokensPrimitiveTrait, TokensTrait }, Loc};
 
 #[derive(Clone,Hash,PartialEq,Eq,Debug)]
 pub enum MyGroup {
@@ -252,7 +252,7 @@ impl<'t> Iterator for Input<'t> {
     }
 }
 
-impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
+impl<'t> TokensTrait for Input<'t> {
 
 
     fn trim2(&mut self) {
@@ -309,7 +309,9 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for Input<'t> {
             })
         }
     }
+}
 
+impl<'t,'g> TokensPrimitiveTrait<MyPrimitive<'g>> for Input<'t> {
     fn pop2(&mut self, p:&MyPrimitive<'g>) -> bool {
         match p {
             MyPrimitive::Range(r) => {
@@ -483,6 +485,9 @@ pub fn tokenise<'t,'g>(src:&'t str,) -> Result<Tokens<'t>, (Loc,&'g str)> {
             MyGroup::Identifier => TokenType::Identifier(s),
             MyGroup::Escaped => {panic!("");},
             MyGroup::String => {
+                for y in x.children() {
+
+                }
                 TokenType::String(s)
             },
             MyGroup::Symbol => TokenType::Symbol(s.chars().next().unwrap()),

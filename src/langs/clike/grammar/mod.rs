@@ -116,7 +116,7 @@ pub trait PrimitiveTrait {
 //     fn index(&self) -> usize;
 // }
 
-pub trait TokensTrait<P>
+pub trait TokensTrait //<P>
 where
     Self:Sized,
 {
@@ -135,9 +135,15 @@ where
     // fn pop_primitive(&mut self, p:&P) -> bool;
 
     // // fn get<F:Fn(P)->Option<T>>(&self, func:F) -> Option<T>;
-    fn pop2(&mut self, p:&P) -> bool;
+    // fn pop2(&mut self, p:&P) -> bool;
 }
 
+pub trait TokensPrimitiveTrait<P>
+// where
+//     Self:Sized,
+{
+    fn pop2(&mut self, p:&P) -> bool;
+}
 // pub trait TokensGetTrait<P> {
 //     // // fn get<F:Fn(P)->Option<T>>(&self, func:F) -> Option<T>;
 //     fn pop_primitive(&mut self, p:&P) -> bool;

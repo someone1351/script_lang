@@ -35,9 +35,9 @@ use crate::clike::grammar::{container::WalkGroupContainer, TokensTrait};
 // }
 
 
-pub fn groups_debug_print<'g, GR, P, TS>(root:WalkGroupContainer<'g, GR, TS>)
+pub fn groups_debug_print<'g, GR, TS>(root:WalkGroupContainer<'g, GR, TS>)
 where
-    TS:Clone+TokensTrait<P>+Iterator,
+    TS:Clone+TokensTrait+Iterator,
     GR:Clone+Debug,
     <TS as Iterator>::Item: Debug,
 {

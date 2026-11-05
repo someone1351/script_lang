@@ -2,7 +2,7 @@
 use std::ops::Range;
 use crate::build::Loc;
 use crate::clike::compiler::rules::MyPrimitive;
-use crate::clike::grammar::TokensTrait;
+use crate::clike::grammar::{TokensPrimitiveTrait, TokensTrait};
 use super::super::super::tokenizer::data::Tokenized;
 
 use super::*;
@@ -357,7 +357,7 @@ impl<'t> std::fmt::Debug for TokenIterContainer<'t> {
     }
 }
 
-impl<'t,'g> TokensTrait<MyPrimitive<'g>> for TokenIterContainer<'t> {
+impl<'t,'g> TokensTrait for TokenIterContainer<'t> {
     // fn is_trimmable(&self) -> bool {
     //     false
 
@@ -416,6 +416,12 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for TokenIterContainer<'t> {
 
 
 
+
+
+}
+
+impl<'t,'g> TokensPrimitiveTrait<MyPrimitive<'g>> for TokenIterContainer<'t> {
+
     fn pop2(&mut self, p:&MyPrimitive<'g>) -> bool {
         match p {
             MyPrimitive::String => self.pop_string().is_ok(),
@@ -427,6 +433,4 @@ impl<'t,'g> TokensTrait<MyPrimitive<'g>> for TokenIterContainer<'t> {
             MyPrimitive::Eol => self.pop_eol().is_ok(),
         }
     }
-
-
 }

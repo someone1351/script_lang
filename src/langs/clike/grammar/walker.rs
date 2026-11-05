@@ -83,6 +83,7 @@ use std::rc::Rc;
 use crate::build::Loc;
 use crate::clike::grammar;
 use crate::clike::grammar::PrimitiveTrait;
+use crate::clike::grammar::TokensPrimitiveTrait;
 // use crate::clike::grammar::TokensGetTrait;
 use crate::clike::grammar::TokensTrait;
 // use crate::clike::tokenizer::TokenContainer;
@@ -141,7 +142,7 @@ where
     NT:core::hash::Hash+Clone+Eq+PartialEq+Debug,
     P:Clone+Debug+PrimitiveTrait+Eq+PartialEq,
     GR:Debug+PartialEq+Eq+Clone,
-    TS: Clone+TokensTrait<P>+Debug ,
+    TS: Clone+TokensTrait+TokensPrimitiveTrait<P>+Debug ,
     GF: Fn(NT)->Option<&'g GrammarNode<'g,NT,P,GR>>,
 {
 
@@ -3171,6 +3172,7 @@ where
             name: groups_out[0].name.clone(),
             children: 0..0,
             tokens: groups_out[0].tokens.clone(),
+            // parent:None,
         }];
 
         {
@@ -3204,7 +3206,10 @@ where
                         // between_tokens.truncate2(between_tokens_len);
 
                         let between_tokens=cur_tokens.clone().take2(between_tokens_len).unwrap();
-                        groups_out2.push(WalkGroup { name: None, children: 0..0, tokens: between_tokens });
+                        groups_out2.push(WalkGroup {
+                            name: None, children: 0..0, tokens: between_tokens,
+                            // parent: Some(gind_new),
+                        });
                     }
 
                     children_new_inds.push((cind,groups_out2.len()));
@@ -3213,6 +3218,7 @@ where
                         name: child_group.name.clone(),
                         children: 0..0,
                         tokens: child_group.tokens.clone(),
+                        // parent: Some(gind_new),
                     });
 
                     // // cur_tokens.take2(between_tokens_len+child_tokens.len2());
@@ -3222,7 +3228,10 @@ where
                 }
 
                 if cur_tokens.len2()!=0 &&g.children.len()!=0 {
-                    groups_out2.push(WalkGroup { name: None, children: 0..0, tokens: cur_tokens });
+                    groups_out2.push(WalkGroup {
+                        name: None, children: 0..0, tokens: cur_tokens,
+                        // parent: Some(gind_new),
+                    });
                 }
 
 
@@ -3383,6 +3392,7 @@ where
             name: None,
             children: 0..0, //if self.groups2.is_empty(){0..0}else{1..self.groups2.len()},
             tokens:self.top_tokens.clone(),
+            // parent:None,
         });
 
         //
@@ -3396,8 +3406,6 @@ where
                 (tokens,Some(gg.name.clone()))
             };
 
-            //
-            groups_out.push(WalkGroup { name, tokens, children: 0..0, });
 
             //
             let pg=parents[g];
@@ -3406,6 +3414,12 @@ where
                 let pi=ind_map.get(pg).cloned().unwrap();
                 pi+1
             };
+
+            //
+            groups_out.push(WalkGroup {
+                name, tokens, children: 0..0,
+                // parent:Some(pj),
+            });
 
             //
             let j=i+1;
@@ -3486,15 +3500,19 @@ where
             }
 
             //
+            let pind=ind_map.get(&p).cloned();
+
+            //
             groups_out.push(WalkGroup { name: g.name.clone(),
                 children: 0..0, // csum..csum+c
                 tokens, //: g.tokens.clone(),
+                // parent:pind,
             });
 
             //
             if i!=0 { //as root's parent is 0, ie itself, which is incorrect
-                let ind=ind_map.get(&p).cloned().unwrap();
-                let c= &mut groups_out[ind].children;
+                let pind=ind_map.get(&p).cloned().unwrap();
+                let c= &mut groups_out[pind].children;
                 if c.start==0 {c.start=i;}
                 c.start=c.start.min(i);
                 c.end=c.end.max(i+1);
