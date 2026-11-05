@@ -584,7 +584,7 @@ impl Compiler {
                 //
                 if !func.is_empty() {
                     builder
-                        .eval(fields.last().unwrap()) //evals field|index
+                        .eval(fields.child(fields.child_num()-1).unwrap()) //evals field|index
                         .param_push() //prev_val
                         ;
                 }
@@ -608,7 +608,7 @@ impl Compiler {
 
                 //
                 {
-                    let field=fields.last().unwrap(); //field|index
+                    let field=fields.child(fields.child_num()-1).unwrap(); //field|index
                     let field_inner=field.child(0).unwrap(); //field_name|field_index|expr
                     // let is_symbol=field_inner.name()=="field_name";
                     let func = match field_inner.name2().unwrap().0 {

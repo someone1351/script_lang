@@ -49,7 +49,7 @@ where
             None
         } else if between_ind==0 { //before start
             // let n=self.first().unwrap().tokens().inds2().start - self.tokens().inds2().start;
-            let a= self.first().unwrap().tokens().inds2().start;
+            let a= self.child(0).unwrap().tokens().inds2().start;
 
             if a!=x {
                 Some(self.tokens().take2(a-x).unwrap())
@@ -59,7 +59,7 @@ where
         } else if between_ind == self.child_num() { //afters end
             // let n=self.tokens().inds2().end - self.last().unwrap().tokens().inds2().end;
 
-            let a=self.last().unwrap().tokens().inds2().end;
+            let a=self.child(self.child_num()-1).unwrap().tokens().inds2().end;
 
             let mut ts = self.tokens();
             ts.take2(a-x).unwrap();
@@ -156,16 +156,16 @@ where
         //     }
         // }
     }
-    pub fn first(&self) -> Option<WalkGroupContainer<'g,GR,TS>> {
-        self.child(0)
-    }
-    pub fn last(&self) -> Option<WalkGroupContainer<'g,GR,TS>> {
-        if self.children().is_empty() {
-            None
-        } else {
-            self.child(self.children().len()-1)
-        }
-    }
+    // pub fn first(&self) -> Option<WalkGroupContainer<'g,GR,TS>> {
+    //     self.child(0)
+    // }
+    // pub fn last(&self) -> Option<WalkGroupContainer<'g,GR,TS>> {
+    //     if self.children().is_empty() {
+    //         None
+    //     } else {
+    //         self.child(self.children().len()-1)
+    //     }
+    // }
 
     pub fn tokens(&self) -> TS {
 
