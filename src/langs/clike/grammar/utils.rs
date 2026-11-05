@@ -41,12 +41,12 @@ where
     GR:Clone+Debug,
     <TS as Iterator>::Item: Debug,
 {
-    enum Thing<'g,GR,TS,T>
+    enum Thing<'g,GR,TS,>
     where
         TS:Clone,
-        T:Debug,
+        // T:Debug,
     {
-        Token(T),
+        Tokens(TS),
         Group(WalkGroupContainer<'g,GR,TS>),
         Between(TS),
     }
@@ -62,58 +62,73 @@ where
                     cur.name2().map(|x|format!("{x:?}")).unwrap_or_else(||"_".to_string()),
                 );
 
-                let mut cur_tokens = cur.tokens();
+                if cur.child_num()==0 {
+                    stk.push((Thing::Tokens(cur.tokens()),depth+1));
+                } else {
+                    for child_ind in (0..cur.child_num()+1).rev() {
+                        if let Some(child_group)=cur.child(child_ind) {
+                            stk.push((Thing::Group(child_group),depth+1));
+                        }
 
-                for (child_ind,child_group) in cur.children().enumerate().rev() {
-                    let child_tokens=child_group.tokens();
-                    let ps_len=cur_tokens.inds2().end-child_tokens.inds2().end;
-                    // let ps=cur_tokens.take_end2(ps_len).unwrap();
-
-                    // let mut ps=cur_tokens.clone();
-                    // ps.eat2(cur_tokens.len2()-ps_len);
-
-                    let ps={
-                        let x=cur_tokens.take2(cur_tokens.len2()-ps_len).unwrap();
-                        let ps=cur_tokens;
-                        cur_tokens=x;
-                        ps
-                    };
-
-                    // // let ps = cur_tokens.clone().take_start2(cur_tokens.len2()-ps_len).unwrap();
-
-                    // stk.extend(ps.map(|t|(Thing::Token(t),depth+1)).rev());
-
-                    {
-                        let stk_len=stk.len();
-                        stk.extend(ps.map(|t|(Thing::Token(t),depth+1)));
-                        stk[stk_len ..].reverse();
+                        if let Some(tokens) = cur.between_tokens(child_ind) {
+                            // println!("==={:?}",tokens.len2());
+                            stk.push((Thing::Between(tokens),depth+1));
+                        }
                     }
-
-                    stk.push((Thing::Group(child_group),depth+1));
-
-                    // cur_tokens.take_end2(child_tokens.len2()).unwrap();
-                    cur_tokens=cur_tokens.clone().take2(cur_tokens.len2()-child_tokens.len2()).unwrap();
-
                 }
 
-                //
-                // stk.extend(cur_tokens.map(|t|(Thing::Token(t),depth+1)).rev());
-                {
-                    let stk_len=stk.len();
-                    stk.extend(cur_tokens.map(|t|(Thing::Token(t),depth+1)));
-                    stk[stk_len ..].reverse();
-                }
+
+                // let mut cur_tokens = cur.tokens();
+
+                // for (child_ind,child_group) in cur.children().enumerate().rev() {
+                //     let child_tokens=child_group.tokens();
+                //     let ps_len=cur_tokens.inds2().end-child_tokens.inds2().end;
+                //     // let ps=cur_tokens.take_end2(ps_len).unwrap();
+
+                //     // let mut ps=cur_tokens.clone();
+                //     // ps.eat2(cur_tokens.len2()-ps_len);
+
+                //     let ps={
+                //         let x=cur_tokens.take2(cur_tokens.len2()-ps_len).unwrap();
+                //         let ps=cur_tokens;
+                //         cur_tokens=x;
+                //         ps
+                //     };
+
+                //     // // let ps = cur_tokens.clone().take_start2(cur_tokens.len2()-ps_len).unwrap();
+
+                //     // stk.extend(ps.map(|t|(Thing::Token(t),depth+1)).rev());
+
+                //     {
+                //         let stk_len=stk.len();
+                //         stk.extend(ps.map(|t|(Thing::Token(t),depth+1)));
+                //         stk[stk_len ..].reverse();
+                //     }
+
+                //     stk.push((Thing::Group(child_group),depth+1));
+
+                //     // cur_tokens.take_end2(child_tokens.len2()).unwrap();
+                //     cur_tokens=cur_tokens.clone().take2(cur_tokens.len2()-child_tokens.len2()).unwrap();
+
+                // }
+
+                // //
+                // // stk.extend(cur_tokens.map(|t|(Thing::Token(t),depth+1)).rev());
+                // {
+                //     let stk_len=stk.len();
+                //     stk.extend(cur_tokens.map(|t|(Thing::Token(t),depth+1)));
+                //     stk[stk_len ..].reverse();
+                // }
 
             }
             Thing::Between(tokens) => {
                 println!("{indent}between",);
-
-                let stk_len=stk.len();
-                stk.extend(tokens.map(|t|(Thing::Token(t),depth+1)));
-                stk[stk_len ..].reverse();
+                stk.push((Thing::Tokens(tokens),depth+1));
             }
-            Thing::Token(cur) => {
-                println!("{indent}{cur:?}");
+            Thing::Tokens(tokens) => {
+                for t in tokens {
+                    println!("{indent}{t:?}");
+                }
             }
         }
     }

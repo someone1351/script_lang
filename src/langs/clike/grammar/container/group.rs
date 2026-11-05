@@ -50,12 +50,10 @@ where
         } else if between_ind==0 { //before start
             // let n=self.first().unwrap().tokens().inds2().start - self.tokens().inds2().start;
             let a= self.child(0).unwrap().tokens().inds2().start;
+            let ts=self.tokens().take2(a-x).unwrap();
 
-            if a!=x {
-                Some(self.tokens().take2(a-x).unwrap())
-            } else {
-                None
-            }
+            (ts.len2()!=0).then_some(ts)
+
         } else if between_ind == self.child_num() { //afters end
             // let n=self.tokens().inds2().end - self.last().unwrap().tokens().inds2().end;
 
@@ -64,23 +62,16 @@ where
             let mut ts = self.tokens();
             ts.take2(a-x).unwrap();
 
-            if a!=x {
-                Some(ts)
-            } else {
-                None
-            }
+            (ts.len2()!=0).then_some(ts)
         } else { //in between
             let a=self.child(between_ind-1).unwrap().tokens().inds2().end;
             let b=self.child(between_ind).unwrap().tokens().inds2().start;
 
             let mut ts = self.tokens();
             ts.take2(a-x).unwrap();
+            let ts=ts.take2(b-a).unwrap();
 
-            if b!=a {
-                Some(ts.take2(b-a).unwrap())
-            } else {
-                None
-            }
+            (ts.len2()!=0).then_some(ts)
         }
 
     }
