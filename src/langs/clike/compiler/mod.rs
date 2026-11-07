@@ -17,17 +17,20 @@ todo:
 */
 // // #![allow(unused_variables)]
 // #![allow(unused)]
-mod compiler_error;
+// mod compiler_error;
 // mod cmds;
 pub mod rules;
-mod builder_error;
+pub mod error;
+
+// mod builder_error;
 
 pub mod tokeniser;
 
 
 use crate::builder::{Builder, BuilderError};
-use crate::clike::compiler::builder_error::BuilderErrorType;
+// use crate::clike::compiler::builder_error::BuilderErrorType;
 use crate::clike::compiler::rules::{MyGroup, MyPrimitive};
+use crate::clike::compiler::tokeniser::tokenise;
 use crate::clike::grammar::container::{WalkGroupContainer, WalkGroupIterContainer};
 use crate::clike::grammar::utils::groups_debug_print;
 use crate::clike::grammar::walker::GrammarWalker;
@@ -47,7 +50,7 @@ use std::path::Path;
 use crate::compiler::ast;
 
 
-pub use compiler_error::*;
+pub use error::*;
 
 // use super::super::builder::*;
 
@@ -91,225 +94,228 @@ impl Compiler {
 
 
 
-    pub fn compile(&self,src : &str, version:usize, path : Option<&Path>, keep_src : bool, ) -> Result<BuildT,CompileError> {
+    pub fn compile<'p,'t,>(&self,src : &'t str, version:usize, path : Option<&'p Path>, keep_src : bool, ) -> Result<BuildT,CompileError<'p,'t>> {
         let mut next_anon_id=1;
 
-        let src= StringVal::new(src);
-        let pathbuf=path.map(|x|x.to_path_buf());
+        // let src= StringVal::new(src);
+        // let pathbuf=path.map(|x|x.to_path_buf());
 
 
-        //
-        let tokenized=tokenize(src.as_str(), rules::is_keyword );
-
-        //
-        let Ok(tokenized)=tokenized else {
-            let e=tokenized.err().unwrap();
-
-            match e.error_type {
-                TokenizerErrorType::Unexpected => {
-                    panic!("TokenizerErrorType::Unexpected");
-                }
-                _ => {
-                    // return Err(ParserError { loc: e.loc, error_type: ParserErrorType::Tokenizer(e.error_type) });
-                    return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Tokenizer(e.error_type)});
-                }
-            }
-        };
-
-        //
-        let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
-        // walker.set_debug(true);
-
-        let start_time = std::time::Instant::now();
-        let result=walker.run(rules::MyNonTerm::Start) ;
-
-
-        let time_elapsed=start_time.elapsed().as_secs_f64();
-        //
-        if let Err(e)=result {
-
-
-            println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
-
-            match e {
-                GrammarWalkError::FailedParse => {
-                    let expecteds=walker.expects_string();
-
-                    let error_type= if expecteds.is_empty() {
-                        CompileErrorType::ParserUnexpected
-                    } else {
-                        CompileErrorType::ParserExpected(expecteds)
-                    };
-                    // let error_type=CompileErrorType::ParserExpected(expecteds);
-
-                    return Err(CompileError{path:pathbuf,src,loc:
-                        // walker.last_loc()
-                        walker.tokens().start_loc()
-                        ,error_type});
-
-                    // return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expects_string())});
-                }
-                // GrammarWalkError::Unfinished => todo!(),
-                // GrammarWalkError::RecursiveNonTerm(_) => todo!(),
-                // GrammarWalkError::MissingNonTerm(_) => todo!(),
-                _ => {
-                    // println!("{:?} {:?}",walker.expecteds_string(),walker.last_loc());
-                    panic!("{e:?}");
-                }
-            }
-        }
-
-        //
-        println!("-----------------");
-        // if true {
-
-        //     let walk2=walker.get_walk1(false);
-
-        //     let mut stk: Vec<(WalkGroupContainer<'_, MyGroup<'_>, TokenIterContainer<'_>>, usize)>=vec![(walk2.root(),0)];
-
-        //     while let Some((cur,depth))=stk.pop() {
-        //         let indent="    ".repeat(depth);
-        //         // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
-        //         // println!("{indent}group: {:?} : [{}]",cur.name2(),xx);
-        //         if let Some(name)=cur.name2() {
-        //             // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
-        //             println!("{indent}group: {name:?}",);
-        //             stk.extend(cur.children().rev().map(|c|(c,depth+1)));
-
-        //             if cur.child_num()==0 {
-        //                 for t in cur.tokens() {
-        //                     println!("{indent}    {t:?}");
-        //                 }
-        //             }
-        //         } else  {
-        //             for t in cur.tokens() {
-        //                 println!("{indent}{t:?}");
-        //             }
-
-        //         }
-        //     }
-
-        //     println!("1_____");
-        //     for (i,g) in walk2.groups.iter().enumerate() {
-        //         println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
-        //     }
-        // }
-
-        let walk=walker.get_walk2();
-
-        //     println!("2_____");
-        //     for (i,g) in walk.groups.iter().enumerate() {
-        //         println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
-        //     }
-        // println!("===---===2a");
-        // println!("{}",walk.root());
-        println!("===---===2b");
-        groups_debug_print(walk.root(),true);
-
-
-        println!("===---===1");
-        {
-            let walk=walker.get_walk1();
-            groups_debug_print(walk.root(),false);
-
-        }
-        // {
-        //     enum Thing<'g,TS>
-        //     where
-        //         TS:Clone+TokenIterTrait,
-        //     {
-        //         Tokens(TS),
-        //         Group(WalkGroupContainer<'g,TS>),
-        //     }
-        //     let mut stk= vec![(Thing::Group(walk.root()),0)];
-
-        //     while let Some((cur,depth))=stk.pop() {
-        //         let indent="    ".repeat(depth);
-
-        //         // println!()
-
-        //         match cur {
-        //             Thing::Tokens(_) => {
-
-        //             }
-        //             Thing::Group(group) => {
-        //                 if !group.children().is_empty() {
-        //                     let betweens=group.between_tokens();
-
-        //                     // for i in 0..betweens.len
-        //                 }
-
-        //                 stk.extend(group.children().map(|g|(Thing::Group(g),depth+1)));
-
-        //             }
-        //         }
-
-        //     }
-        // }
-
-        println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
+        let tokens= tokenise(src,path)?;
 
         return Ok(BuildT::new(Build::default()));
-
-        let start_time = std::time::Instant::now();
         //
-        let mut builder = builder::Builder::new();
-        // // // // builder.eval(parsed.root_block_primitive().get_block().unwrap().primitives());
-        for g in walk.root().children() {
-            // println!("={:?}",g.name());
-
-            builder.eval(g);
-        }
+        // let tokenized=tokenize(src.as_str(), rules::is_keyword );
 
         //
-        builder.end_stack_check();
+        // let Ok(tokenized)=tokenized else {
+        //     let e=tokenized.err().unwrap();
 
-        // builder
-        //     .block_start(None)
-        //     .result_int(4)
-        //     .param_push()
-        //     .param_push()
-        //     .param_push()
-        //     .to_block_end(JmpCond::Nil, 0)
-        //     .param_push()
-        //     .block_end()
-        //     // .result_nil()
-        //     .param_push()
-        //     ;
+        //     match e.error_type {
+        //         TokenizerErrorType::Unexpected => {
+        //             panic!("TokenizerErrorType::Unexpected");
+        //         }
+        //         _ => {
+        //             // return Err(ParserError { loc: e.loc, error_type: ParserErrorType::Tokenizer(e.error_type) });
+        //             return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Tokenizer(e.error_type)});
+        //         }
+        //     }
+        // };
 
-        //builder needs to be passed a primitive_iter instead of primitive?
+        // //
+        // let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
+        // // walker.set_debug(true);
 
-        //
-        let mut ast = ast::Ast::new(false,true);
+        // let start_time = std::time::Instant::now();
+        // let result=walker.run(rules::MyNonTerm::Start) ;
 
-        if let Err(e)=builder.generate_ast(&mut ast,|builder,group|{
-            self.run(builder, group,&mut next_anon_id)
-        }) {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Builder(e.error_type)});
-        }
 
-        if let Err(e)=ast.calc_vars(false) {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
-        }
+        // let time_elapsed=start_time.elapsed().as_secs_f64();
+        // //
+        // if let Err(e)=result {
 
-        if let Err(e)=ast.calc_labels_gotos() {
-            return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
-        }
 
-        //
-        let time_elapsed=start_time.elapsed().as_secs_f64();
-        println!("Time elapsed2: {time_elapsed:?}" ,);
-        //
-        // if print_ast { ast.print(); }
-        // ast.print();
+        //     println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
 
-        //
-        let kept_src=if keep_src {Some(src.clone())} else {None};
-        let build = ast.compile(version, path, kept_src,true,true);
-        Ok(BuildT::new(build))
+        //     match e {
+        //         GrammarWalkError::FailedParse => {
+        //             let expecteds=walker.expects_string();
 
-        //
-        // Ok(BuildT::new(Build::default()))
+        //             let error_type= if expecteds.is_empty() {
+        //                 CompileErrorType::ParserUnexpected
+        //             } else {
+        //                 CompileErrorType::ParserExpected(expecteds)
+        //             };
+        //             // let error_type=CompileErrorType::ParserExpected(expecteds);
+
+        //             return Err(CompileError{path:pathbuf,src,loc:
+        //                 // walker.last_loc()
+        //                 walker.remaining_tokens().start_loc()
+        //                 ,error_type});
+
+        //             // return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expects_string())});
+        //         }
+        //         // GrammarWalkError::Unfinished => todo!(),
+        //         // GrammarWalkError::RecursiveNonTerm(_) => todo!(),
+        //         // GrammarWalkError::MissingNonTerm(_) => todo!(),
+        //         _ => {
+        //             // println!("{:?} {:?}",walker.expecteds_string(),walker.last_loc());
+        //             panic!("{e:?}");
+        //         }
+        //     }
+        // }
+
+        // //
+        // println!("-----------------");
+        // // if true {
+
+        // //     let walk2=walker.get_walk1(false);
+
+        // //     let mut stk: Vec<(WalkGroupContainer<'_, MyGroup<'_>, TokenIterContainer<'_>>, usize)>=vec![(walk2.root(),0)];
+
+        // //     while let Some((cur,depth))=stk.pop() {
+        // //         let indent="    ".repeat(depth);
+        // //         // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
+        // //         // println!("{indent}group: {:?} : [{}]",cur.name2(),xx);
+        // //         if let Some(name)=cur.name2() {
+        // //             // let xx= cur.tokens().map(|x|format!("{x:?}")).collect::<Vec<_>>().join(", ");
+        // //             println!("{indent}group: {name:?}",);
+        // //             stk.extend(cur.children().rev().map(|c|(c,depth+1)));
+
+        // //             if cur.child_num()==0 {
+        // //                 for t in cur.tokens() {
+        // //                     println!("{indent}    {t:?}");
+        // //                 }
+        // //             }
+        // //         } else  {
+        // //             for t in cur.tokens() {
+        // //                 println!("{indent}{t:?}");
+        // //             }
+
+        // //         }
+        // //     }
+
+        // //     println!("1_____");
+        // //     for (i,g) in walk2.groups.iter().enumerate() {
+        // //         println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
+        // //     }
+        // // }
+
+        // let walk=walker.get_walk2();
+
+        // //     println!("2_____");
+        // //     for (i,g) in walk.groups.iter().enumerate() {
+        // //         println!("{i}: {:?} : {:?} : {:?}",g.name,g.children,g.tokens);
+        // //     }
+        // // println!("===---===2a");
+        // // println!("{}",walk.root());
+        // println!("===---===2b");
+        // groups_debug_print(walk.root(),true);
+
+
+        // println!("===---===1");
+        // {
+        //     let walk=walker.get_walk1();
+        //     groups_debug_print(walk.root(),false);
+
+        // }
+        // // {
+        // //     enum Thing<'g,TS>
+        // //     where
+        // //         TS:Clone+TokenIterTrait,
+        // //     {
+        // //         Tokens(TS),
+        // //         Group(WalkGroupContainer<'g,TS>),
+        // //     }
+        // //     let mut stk= vec![(Thing::Group(walk.root()),0)];
+
+        // //     while let Some((cur,depth))=stk.pop() {
+        // //         let indent="    ".repeat(depth);
+
+        // //         // println!()
+
+        // //         match cur {
+        // //             Thing::Tokens(_) => {
+
+        // //             }
+        // //             Thing::Group(group) => {
+        // //                 if !group.children().is_empty() {
+        // //                     let betweens=group.between_tokens();
+
+        // //                     // for i in 0..betweens.len
+        // //                 }
+
+        // //                 stk.extend(group.children().map(|g|(Thing::Group(g),depth+1)));
+
+        // //             }
+        // //         }
+
+        // //     }
+        // // }
+
+        // println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
+
+        // return Ok(BuildT::new(Build::default()));
+
+        // let start_time = std::time::Instant::now();
+        // //
+        // let mut builder = builder::Builder::new();
+        // // // // // builder.eval(parsed.root_block_primitive().get_block().unwrap().primitives());
+        // for g in walk.root().children() {
+        //     // println!("={:?}",g.name());
+
+        //     builder.eval(g);
+        // }
+
+        // //
+        // builder.end_stack_check();
+
+        // // builder
+        // //     .block_start(None)
+        // //     .result_int(4)
+        // //     .param_push()
+        // //     .param_push()
+        // //     .param_push()
+        // //     .to_block_end(JmpCond::Nil, 0)
+        // //     .param_push()
+        // //     .block_end()
+        // //     // .result_nil()
+        // //     .param_push()
+        // //     ;
+
+        // //builder needs to be passed a primitive_iter instead of primitive?
+
+        // //
+        // let mut ast = ast::Ast::new(false,true);
+
+        // if let Err(e)=builder.generate_ast(&mut ast,|builder,group|{
+        //     self.run(builder, group,&mut next_anon_id)
+        // }) {
+        //     return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Builder(e.error_type)});
+        // }
+
+        // if let Err(e)=ast.calc_vars(false) {
+        //     return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
+        // }
+
+        // if let Err(e)=ast.calc_labels_gotos() {
+        //     return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
+        // }
+
+        // //
+        // let time_elapsed=start_time.elapsed().as_secs_f64();
+        // println!("Time elapsed2: {time_elapsed:?}" ,);
+        // //
+        // // if print_ast { ast.print(); }
+        // // ast.print();
+
+        // //
+        // let kept_src=if keep_src {Some(src.clone())} else {None};
+        // let build = ast.compile(version, path, kept_src,true,true);
+        // Ok(BuildT::new(build))
+
+        // //
+        // // Ok(BuildT::new(Build::default()))
     }
 
 

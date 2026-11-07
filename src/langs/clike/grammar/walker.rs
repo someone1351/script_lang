@@ -3104,7 +3104,7 @@ where
     }
 
 
-    pub fn tokens(&self) -> TS {
+    pub fn remaining_tokens(&self) -> TS {
 
         //
         if self.expects2.is_empty() {
@@ -3548,7 +3548,7 @@ where
         while let Some(cur)=self.stk.pop() {
 
            if let Err(e)=self.step(cur) {
-
+            println!("eee1 {e:?}");
 
                 //
                 if self.debug {
@@ -3570,6 +3570,7 @@ where
                 }
 
                 result=Err(e);
+                println!("bbbbb {result:?}");
                 break;
            } else {
            }
@@ -3600,6 +3601,7 @@ where
             // } else
             {
                 result=Err(GrammarWalkError::FailedParse);
+                println!("ccccc {result:?} {:?} {:?}",self.tokens_remaining,self.tokens_remaining.len2());
             }
 
             //need to store grammar that was traversed ...
@@ -3652,6 +3654,7 @@ where
         //     println!("top_primitives={:?}", self.top_tokens );
         // }
 
+            println!("aaaaaa {result:?}");
         //
         result
     }
