@@ -1,4 +1,4 @@
-use std::{ops::{Range, RangeInclusive}, path::Path, str::{CharIndices, Chars}};
+use std::{fmt::Debug, ops::{Range, RangeInclusive}, path::Path, str::{CharIndices, Chars}};
 
 use crate::{clike::{compiler::{error::CompileError, TokeniserErrorType}, grammar::{node::GrammarNode, utils::groups_debug_print, walker::GrammarWalker, GrammarWalkError, PrimitiveTrait, TokensPrimitiveTrait, TokensTrait }}, Loc};
 
@@ -73,10 +73,10 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
 
         //(ws? token)* ws?
         MyNonTerm::Start => &And(&[
-            &And(&[
+            &Many(&And(&[
                 &Or(&[&NonTerm(MyNonTerm::Ws),&Always]),
                 &NonTerm(MyNonTerm::Token),
-            ]),
+            ]), 0,0),
             &Or(&[&NonTerm(MyNonTerm::Ws),&Always]),
         ]),
 
@@ -128,17 +128,18 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
 
         //'_'* ('a'..'z' | 'A' .. 'Z') ('a'..'z' | 'A' .. 'Z' | '0' .. '9' | '_')
         MyNonTerm::Identifier => &Group(&And(&[
-            &Primitive(MyPrimitive::Char('_')),
+
             &Or(&[
                 &Primitive(MyPrimitive::Range('a'..='z')),
                 &Primitive(MyPrimitive::Range('A'..='Z')),
+                &Primitive(MyPrimitive::Char('_')),
             ]),
-            &Or(&[
+            &Many(&Or(&[
                 &Primitive(MyPrimitive::Range('a'..='z')),
                 &Primitive(MyPrimitive::Range('A'..='Z')),
                 &Primitive(MyPrimitive::Range('0'..='9')),
                 &Primitive(MyPrimitive::Char('_')),
-            ]),
+            ]), 0,0),
         ]),MyGroup::Identifier),
 
         //
@@ -264,7 +265,7 @@ impl<'t> TokensTrait for Input<'t> {
 
     fn trim2(&mut self) {
 
-     }
+    }
 
     fn len2(&self) -> usize {
         // println!("{} {}",self.end,self.start);
@@ -302,7 +303,7 @@ impl<'t> TokensTrait for Input<'t> {
             }
 
             let taken_len=orig_len-self.chars.as_str().len();
-            println!("takenlen={taken_len}");
+            // println!("takenlen={taken_len}");
 
             let taken=&orig_chars[0..taken_len];
             let taken_chars=taken.chars();
@@ -404,6 +405,7 @@ pub enum Keyword {
     If,Elif,Else,
 }
 
+#[derive(Debug)]
 enum TokenType<'a> {
     Identifier(&'a str),
     Keyword(Keyword),
@@ -413,12 +415,18 @@ enum TokenType<'a> {
     Float(f64),
     Eol,
 }
+
 pub struct Token<'t> {
     pub start_loc:Loc,
     pub end_loc:Loc,
     pub token_type:TokenType<'t>,
 }
 
+impl<'t> Debug for Token<'t> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.token_type.fmt(f)
+    }
+}
 pub fn tokenise<'p,'t,'g>(
     src:&'t str,
     path:Option<&'p Path>,
@@ -435,20 +443,22 @@ pub fn tokenise<'p,'t,'g>(
 
 
     let time_elapsed=start_time.elapsed().as_secs_f64();
+
+    println!("tokeniser Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
+
     //
     if let Err(e)=result {
 
 
-        println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
         let loc=walker.remaining_tokens().start_loc;
 
         match e {
             GrammarWalkError::FailedParse => {
-                println!("---111");
+                // println!("---111");
                 return Err(CompileError{ src:Some(src), path, error_type: crate::clike::compiler::CompileErrorType::Tokeniser(""), loc, });
             }
             GrammarWalkError::Error(e) => {
-                println!("---222");
+                // println!("---222");
                 return Err(CompileError{ src:Some(src), path, error_type: crate::clike::compiler::CompileErrorType::Tokeniser(e), loc, });
             }
             _ => {
@@ -461,7 +471,7 @@ pub fn tokenise<'p,'t,'g>(
     println!("-----------------");
 
     let walk2=walker.get_walk2();
-    groups_debug_print(walk2.root(),false);
+    groups_debug_print(walk2.root(),true);
 
 
     let mut out_tokens: Vec<Token<'t>>=Vec::new();
@@ -526,19 +536,21 @@ pub fn tokenise<'p,'t,'g>(
             MyGroup::Eol => TokenType::Eol,
         };
 
-        if let Some(q)=out_tokens.last_mut().and_then(|q|if let TokenType::Eol=q.token_type{Some(q)}else{None}) {
-            q.end_loc.calc(x.tokens().chars.as_str());
-        } else {
-            // let start_loc= x.tokens().start_loc;
-            // let mut end_loc=start_loc;
-            // end_loc.calc(x.tokens().chars.as_str());
+        if let TokenType::Eol = &token_type {
 
-            out_tokens.push(Token{
-                start_loc:x.tokens().start_loc,
-                end_loc:x.tokens().end_loc,
-                token_type,
-            });
+            if let Some(last_token)=out_tokens.last_mut() {
+                if let TokenType::Eol=&last_token.token_type {
+                    last_token.end_loc.calc(x.tokens().chars.as_str());
+                    continue;
+                }
+            }
         }
+
+        out_tokens.push(Token{
+            start_loc:x.tokens().start_loc,
+            end_loc:x.tokens().end_loc,
+            token_type,
+        });
     }
 
     Ok(out_tokens)

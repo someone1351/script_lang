@@ -37,7 +37,7 @@ use crate::clike::grammar::{container::WalkGroupContainer, TokensTrait};
 
 pub fn groups_debug_print<'g, GR, TS>(root:WalkGroupContainer<'g, GR, TS>,betweens:bool,)
 where
-    TS:Clone+TokensTrait+Iterator,
+    TS:Clone+TokensTrait+Iterator, //+Debug,
     GR:Clone+Debug,
     <TS as Iterator>::Item: Debug,
 {
@@ -73,6 +73,10 @@ where
 
                 if cur.child_num()==0 {
                     stk.push((Thing::Tokens(cur.tokens()),depth2));
+
+                    if cur.tokens().len2()==0 {
+                        println!("gempty:{:?}",cur.name2());
+                    }
                 } else {
                     for child_group in cur.children_ext(true).rev() {
                         // if child_group.name2().is_none() && depth!=0 {
@@ -149,6 +153,8 @@ where
             //     }
             // }
             Thing::Tokens(tokens) => {
+
+                    // println!("{indent}{tokens:?} : {}",tokens.len2());
                 for t in tokens {
                     println!("{indent}{t:?}");
                 }

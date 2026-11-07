@@ -102,11 +102,19 @@ impl Compiler {
 
 
         let tokens= tokenise(src,path)?;
-
-        return Ok(BuildT::new(Build::default()));
+        println!("tokens1={tokens:?}");
         //
-        // let tokenized=tokenize(src.as_str(), rules::is_keyword );
 
+    let start_time = std::time::Instant::now();
+
+
+    let time_elapsed=start_time.elapsed().as_secs_f64();
+
+        let tokenized=tokenize(src, rules::is_keyword );
+
+    println!("tokenizer Time elapsed: {time_elapsed:?} " ,);
+        println!("tokens2={:?}",tokenized.as_ref().map(|x|x.tokens()));
+        return Ok(BuildT::new(Build::default()));
         //
         // let Ok(tokenized)=tokenized else {
         //     let e=tokenized.err().unwrap();
