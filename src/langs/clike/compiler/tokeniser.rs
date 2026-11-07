@@ -21,10 +21,10 @@ pub enum MyPrimitive<'g> {
     Any,
     Char(char),
     String(&'g str),
-    // NotChar(char),
-    // NotString(&'g str),
-    Chars(&'g [char]),
-    Strings(&'g [&'g str]),
+    // // NotChar(char),
+    // // NotString(&'g str),
+    // Chars(&'g [char]),
+    // Strings(&'g [&'g str]),
 }
 
 
@@ -100,14 +100,21 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
         MyNonTerm::Float => &Group(&And(&[
             &NonTerm(MyNonTerm::Int),
             &Primitive(MyPrimitive::Char('.')),
-            &NonTerm(MyNonTerm::Int),
+            // &NonTerm(MyNonTerm::Int),
+            &Many(&Primitive(MyPrimitive::Range('0' ..= '9')), 1,0),
         ]),MyGroup::Float),
 
         //'\' ('s' | 't' | 'r' | 'n' | quote | '\')
         MyNonTerm::Escaped => &And(&[
             &Primitive(MyPrimitive::Char('\\')),
             &Group(&Or(&[
-                &Primitive(MyPrimitive::Chars(&['s','t','r','n', '"','\\'])),
+                // &Primitive(MyPrimitive::Chars(&['s','t','r','n', '"','\\'])),
+                &Primitive(MyPrimitive::Char('s')),
+                &Primitive(MyPrimitive::Char('t')),
+                &Primitive(MyPrimitive::Char('r')),
+                &Primitive(MyPrimitive::Char('n')),
+                &Primitive(MyPrimitive::Char('"')),
+                &Primitive(MyPrimitive::Char('\\')),
                 &NonTerm(MyNonTerm::Eol),
                 // &Always,
             ]),MyGroup::Escaped),
@@ -124,7 +131,32 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
         ]),
 
         //
-        MyNonTerm::Symbol => &Group(&Primitive(MyPrimitive::Chars(&['&','|','<','>','+','-','*','/','(',')','[',']','{','}','.',',',';','^','%','=','!','~'])),MyGroup::Symbol),
+        // MyNonTerm::Symbol => &Group(&Primitive(MyPrimitive::Chars(&['&','|','<','>','+','-','*','/','(',')','[',']','{','}','.',',',';','^','%','=','!','~'])),MyGroup::Symbol),
+        MyNonTerm::Symbol => &Group(
+            &Or(&[
+                &Primitive(MyPrimitive::Char('&')),
+                &Primitive(MyPrimitive::Char('|')),
+                &Primitive(MyPrimitive::Char('<')),
+                &Primitive(MyPrimitive::Char('>')),
+                &Primitive(MyPrimitive::Char('+')),
+                &Primitive(MyPrimitive::Char('-')),
+                &Primitive(MyPrimitive::Char('*')),
+                &Primitive(MyPrimitive::Char('/')),
+                &Primitive(MyPrimitive::Char('(')),
+                &Primitive(MyPrimitive::Char(')')),
+                &Primitive(MyPrimitive::Char('[')),
+                &Primitive(MyPrimitive::Char(']')),
+                &Primitive(MyPrimitive::Char('{')),
+                &Primitive(MyPrimitive::Char('}')),
+                &Primitive(MyPrimitive::Char('.')),
+                &Primitive(MyPrimitive::Char(',')),
+                &Primitive(MyPrimitive::Char(';')),
+                &Primitive(MyPrimitive::Char('^')),
+                &Primitive(MyPrimitive::Char('%')),
+                &Primitive(MyPrimitive::Char('=')),
+                &Primitive(MyPrimitive::Char('!')),
+                &Primitive(MyPrimitive::Char('~')),
+            ]),MyGroup::Symbol),
 
         //'_'* ('a'..'z' | 'A' .. 'Z') ('a'..'z' | 'A' .. 'Z' | '0' .. '9' | '_')
         MyNonTerm::Identifier => &Group(&And(&[
@@ -143,7 +175,37 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
         ]),MyGroup::Identifier),
 
         //
-        MyNonTerm::Keyword => &Group(&Primitive(MyPrimitive::Strings(&["for","in","while","continue","break","goto","label","include","true","false","nil","void","print","println","format","var","fn","return","if","elif","else"])),MyGroup::Keyword),
+        // MyNonTerm::Keyword => &Group(&Primitive(MyPrimitive::Strings(&["for","in","while","continue","break","goto","label","include","true","false","nil","void","print","println","format","var","fn","return","if","elif","else"])),MyGroup::Keyword),
+
+        MyNonTerm::Keyword => &Group(&And(&[
+            &Or(&[
+                &Primitive(MyPrimitive::String("for")),
+                &Primitive(MyPrimitive::String("in")),
+                &Primitive(MyPrimitive::String("while")),
+                &Primitive(MyPrimitive::String("continue")),
+                &Primitive(MyPrimitive::String("break")),
+                &Primitive(MyPrimitive::String("goto")),
+                &Primitive(MyPrimitive::String("label")),
+                &Primitive(MyPrimitive::String("include")),
+                &Primitive(MyPrimitive::String("true")),
+                &Primitive(MyPrimitive::String("false")),
+                &Primitive(MyPrimitive::String("nil")),
+                &Primitive(MyPrimitive::String("println")),
+                &Primitive(MyPrimitive::String("print")),
+                &Primitive(MyPrimitive::String("format")),
+                &Primitive(MyPrimitive::String("fn")),
+                &Primitive(MyPrimitive::String("return")),
+                &Primitive(MyPrimitive::String("if")),
+                &Primitive(MyPrimitive::String("elif")),
+                &Primitive(MyPrimitive::String("else")),
+            ]),
+            &Not(&Or(&[
+                &Primitive(MyPrimitive::Range('a'..='z')),
+                &Primitive(MyPrimitive::Range('A'..='Z')),
+                &Primitive(MyPrimitive::Range('0'..='9')),
+                &Primitive(MyPrimitive::Char('_')),
+            ]))
+        ]),MyGroup::Keyword),
 
         //'/' '/' !eol*
         MyNonTerm::Cmnt => &And(&[
@@ -182,7 +244,11 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
         ]),MyGroup::Eol),
 
         //(' ' | '\t')+
-        MyNonTerm::Spc => &Many(&Primitive(MyPrimitive::Chars(&[' ','\t'])), 1,0),
+        // MyNonTerm::Spc => &Many(&Primitive(MyPrimitive::Chars(&[' ','\t'])), 1,0),
+        MyNonTerm::Spc => &Many(&Or(&[
+            &Primitive(MyPrimitive::Char(' ')),
+            &Primitive(MyPrimitive::Char('\t')),
+        ]), 1,0),
 
         //(cmnt | mcmnt | spc | eol)+
         MyNonTerm::Ws => &Many(&Or(&[
@@ -352,34 +418,34 @@ impl<'t,'g> TokensPrimitiveTrait<MyPrimitive<'g>> for Input<'t> {
                 return true;
             }
 
-            MyPrimitive::Chars(xs) => {
-                let Some(c)=self.clone().next() else {return false};
+            // MyPrimitive::Chars(xs) => {
+            //     let Some(c)=self.clone().next() else {return false};
 
-                for &x in xs.iter() {
-                    if x!=c {continue;}
-                    self.next().unwrap();
-                    return true;
-                }
+            //     for &x in xs.iter() {
+            //         if x!=c {continue;}
+            //         self.next().unwrap();
+            //         return true;
+            //     }
 
-                return false;
-            }
-            MyPrimitive::Strings(xs) => {
-                for x in xs.iter() {
-                    if !self.chars.as_str().starts_with(x) {
-                        continue;
-                    }
+            //     return false;
+            // }
+            // MyPrimitive::Strings(xs) => {
+            //     for x in xs.iter() {
+            //         if !self.chars.as_str().starts_with(x) {
+            //             continue;
+            //         }
 
-                    for _ in 0 .. x.chars().count() {
-                        self.next().unwrap();
-                    }
+            //         for _ in 0 .. x.chars().count() {
+            //             self.next().unwrap();
+            //         }
 
-                    return true;
-                }
+            //         return true;
+            //     }
 
-                return false;
+            //     return false;
 
 
-            }
+            // }
         }
     }
 
@@ -436,7 +502,7 @@ pub fn tokenise<'p,'t,'g>(
     let input=Input::new(src);
     //
     let mut walker=GrammarWalker::new(input, get_non_term,);
-    walker.set_debug(true);
+    // walker.set_debug(true);
 
     let start_time = std::time::Instant::now();
     let result=walker.run(MyNonTerm::Start) ;
@@ -471,7 +537,7 @@ pub fn tokenise<'p,'t,'g>(
     println!("-----------------");
 
     let walk2=walker.get_walk2();
-    groups_debug_print(walk2.root(),true);
+    // groups_debug_print(walk2.root(),true);
 
 
     let mut out_tokens: Vec<Token<'t>>=Vec::new();

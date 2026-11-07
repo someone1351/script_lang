@@ -72,10 +72,10 @@ where
     // pub grammar:Rc<GrammarNode<'g,P>>,
     pub non_term:NT,
     pub tokens_start:TS,
-    pub group_len:usize,
+    // pub group_len:usize,
     pub group_new_len2:usize,
     pub stow_len:usize,
-    pub trim:bool,
+    // pub trim:bool,
     pub trim2:bool,
 }
 
@@ -101,9 +101,9 @@ where
     // pub grammar: Rc<GrammarNode<'g,P>>,
     pub non_term : NT,
     pub tokens_after:TS,
-    pub stow_groups_end:usize,
+    // pub stow_groups_end:usize,
     pub was:TempStowWas<'g,NT,P,GR>,
-    pub trim1:bool,
+    // pub trim1:bool,
     pub trim2:bool,
     pub group_len2:usize,
 }
@@ -138,7 +138,7 @@ where
     // P:Clone+core::hash::Hash+PartialEq+Eq,
     TS:Clone,
 {
-    pub stow_groups_start:usize,
+    // pub stow_groups_start:usize,
     // pub val : TempStowVal<'t,'g>,
     pub tokens_start_ind:usize,
 
@@ -146,16 +146,16 @@ where
     pub fail : Option<TempStowFail<NT>>,
 }
 
-#[derive(Clone)]
-pub struct TempGroup<GR,TS>
-where
-    TS:Clone,
-{
-    pub name:Option<GR>, //&'g str,
-    pub parent:usize, //group
-    pub tokens:TS,
-    pub trim:bool, //trim on close, except root (0)
-}
+// #[derive(Clone)]
+// pub struct TempGroup<GR,TS>
+// where
+//     TS:Clone,
+// {
+//     pub name:Option<GR>, //&'g str,
+//     pub parent:usize, //group
+//     pub tokens:TS,
+//     pub trim:bool, //trim on close, except root (0)
+// }
 #[derive(Clone)]
 pub struct TempGroupNew2<GR,TS>
 where
@@ -211,8 +211,8 @@ where
     pub work_success_len:usize,
     pub work_fail_len:usize,
 
-    pub group_ind:usize,
-    pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
+    // pub group_ind:usize,
+    // pub group_len:usize, //only used for removing unused groups ... but even then it is not required, mainly used for debugging
 
     pub group_new_len2:usize,
     pub group_len2:usize,
