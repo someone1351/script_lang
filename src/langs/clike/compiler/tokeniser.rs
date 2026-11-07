@@ -198,6 +198,8 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
                 &Primitive(MyPrimitive::String("if")),
                 &Primitive(MyPrimitive::String("elif")),
                 &Primitive(MyPrimitive::String("else")),
+                &Primitive(MyPrimitive::String("void")),
+                &Primitive(MyPrimitive::String("var")),
             ]),
             &Not(&Or(&[
                 &Primitive(MyPrimitive::Range('a'..='z')),
@@ -267,8 +269,9 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
 // }
 
 #[derive(Clone)]
-pub struct Input<'a> {
-    chars : Chars<'a>,
+pub struct Input<'t> {
+    // chars : Chars<'t>,
+    chars:&'t str,
     start : usize,
     end : usize,
     start_loc:Loc,
@@ -283,8 +286,11 @@ pub struct Input<'a> {
 
 impl<'t> Input<'t> {
     pub fn new(src:&'t str) -> Self {
-        let chars=src.chars();
-        let end=chars.clone().count();
+        // let chars=src.chars();
+        // let end=chars.clone().count();
+
+        let chars=src;
+        let end=src.len();
 
         Self {
             chars,
@@ -299,32 +305,32 @@ impl<'t> Input<'t> {
 impl<'t> std::fmt::Debug for Input<'t> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // write!(f,"{}",self.chars.clone().map(|c|format!("{c:?}")).collect::<Vec<String>>().join(", "))
-        write!(f,"{:?}",self.chars.as_str())
+        write!(f,"{:?}",self.chars)
     }
 }
 
-impl<'t> Iterator for Input<'t> {
-    type Item = char;
+// impl<'t> Iterator for Input<'t> {
+//     type Item = char;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.start < self.end {
-            let orig_len=self.chars.as_str().len();
-            let orig_chars=self.chars.as_str();
+//     fn next(&mut self) -> Option<Self::Item> {
+//         if self.start < self.end {
+//             let orig_len=self.chars.as_str().len();
+//             let orig_chars=self.chars.as_str();
 
-            let x=self.chars.next().unwrap();
+//             let x=self.chars.next().unwrap();
 
-            let taken_len=orig_len-self.chars.as_str().len();
-            let taken=&orig_chars[..taken_len];
+//             let taken_len=orig_len-self.chars.as_str().len();
+//             let taken=&orig_chars[..taken_len];
 
-            self.start_loc.calc(taken);
+//             self.start_loc.calc(taken);
 
-            self.start+=1;
-            Some(x)
-        } else {
-            None
-        }
-    }
-}
+//             self.start+=1;
+//             Some(x)
+//         } else {
+//             None
+//         }
+//     }
+// }
 
 impl<'t> TokensTrait for Input<'t> {
 
@@ -350,7 +356,7 @@ impl<'t> TokensTrait for Input<'t> {
             None
         } else if size==0 {
             return Some(Input {
-                chars: "".chars(),
+                chars: "",
                 start:self.start,
                 end: self.start,
                 start_loc: self.start_loc,
@@ -361,18 +367,22 @@ impl<'t> TokensTrait for Input<'t> {
             let end2=self.start+size;
             self.start=end2;
 
-            let orig_len=self.chars.as_str().len();
-            let orig_chars=self.chars.as_str();
+            // let orig_len=self.chars.len();
+            // let orig_chars=self.chars;
 
-            for _ in 0..size {
-                self.chars.next().unwrap();
-            }
+            // for _ in 0..size {
+            //     self.chars.next().unwrap();
+            // }
 
-            let taken_len=orig_len-self.chars.as_str().len();
+
+            // let taken_len=orig_len-self.chars.len();
             // println!("takenlen={taken_len}");
 
-            let taken=&orig_chars[0..taken_len];
-            let taken_chars=taken.chars();
+            let taken=&self.chars[0..size];
+            // let taken_chars=taken.chars();
+
+            self.chars=&self.chars[size ..];
+            // self.start+=size;
 
             let loc_start2=self.start_loc;
             self.start_loc.calc(taken);
@@ -384,7 +394,7 @@ impl<'t> TokensTrait for Input<'t> {
                 end_loc:self.start_loc,
                 start: start2,
                 end: end2,
-                chars: taken_chars,
+                chars: taken,
             })
         }
     }
@@ -394,26 +404,45 @@ impl<'t,'g> TokensPrimitiveTrait<MyPrimitive<'g>> for Input<'t> {
     fn pop2(&mut self, p:&MyPrimitive<'g>) -> bool {
         match p {
             MyPrimitive::Range(x) => {
-                let Some(c)=self.clone().next() else {return false};
+                let mut cs=self.chars.chars();
+                let Some(c)=cs.next() else {return false};
                 if !x.contains(&c) {return false;}
-                self.next().unwrap();
+
+                let char_len=self.chars.len()-cs.as_str().len();
+                self.start_loc.calc(&self.chars[..char_len]);
+                self.start+=char_len;
+                self.chars=cs.as_str();
                 return true;
             }
             MyPrimitive::Any => {
-                return self.next().is_some();
+                let mut cs=self.chars.chars();
+                let Some(_)=cs.next() else {return false};
+
+
+                let char_len=self.chars.len()-cs.as_str().len();
+                self.start_loc.calc(&self.chars[..char_len]);
+                self.start+=char_len;
+                self.chars=cs.as_str();
+                return true;
             }
             MyPrimitive::Char(x) => {
-                let Some(c)=self.clone().next() else {return false};
+                let mut cs=self.chars.chars();
+                let Some(c)=cs.next() else {return false};
                 if *x!=c {return false;}
-                self.next().unwrap();
+
+                let char_len=self.chars.len()-cs.as_str().len();
+                self.start_loc.calc(&self.chars[..char_len]);
+                self.start+=char_len;
+                self.chars=cs.as_str();
+
                 return true;
             }
             MyPrimitive::String(s) => {
-                if !self.chars.as_str().starts_with(s) { return false; }
+                if !self.chars.starts_with(s) { return false; }
 
-                for _ in 0 .. s.chars().count() {
-                    self.next().unwrap();
-                }
+                self.start_loc.calc(s);
+                self.start+=s.len();
+                self.chars=&self.chars[s.len()..];
 
                 return true;
             }
@@ -543,7 +572,7 @@ pub fn tokenise<'p,'t,'g>(
     let mut out_tokens: Vec<Token<'t>>=Vec::new();
     for x in walk2.root().children() {
         let ts=x.tokens();
-        let s=ts.chars.as_str();
+        let s=ts.chars;
 
         let token_type=match x.name2().unwrap() {
             MyGroup::Identifier => TokenType::Identifier(s),
@@ -554,7 +583,7 @@ pub fn tokenise<'p,'t,'g>(
                 for y in x.children_ext(true) {
                     match y.name2() {
                         Some(MyGroup::Escaped) => {
-                            ss.push(match y.tokens().chars.as_str() {
+                            ss.push(match y.tokens().chars {
                                 "s" => ' ',
                                 "t" => '\t',
                                 "r" => '\r',
@@ -565,7 +594,7 @@ pub fn tokenise<'p,'t,'g>(
                             });
                         }
                         None => {
-                            ss.push_str(y.tokens().chars.as_str());
+                            ss.push_str(y.tokens().chars);
                         }
                         _ => {panic!("");}
                     }
@@ -606,7 +635,7 @@ pub fn tokenise<'p,'t,'g>(
 
             if let Some(last_token)=out_tokens.last_mut() {
                 if let TokenType::Eol=&last_token.token_type {
-                    last_token.end_loc.calc(x.tokens().chars.as_str());
+                    last_token.end_loc.calc(x.tokens().chars);
                     continue;
                 }
             }

@@ -965,20 +965,20 @@ where
 
         let was_ind=self.wases.len(); //why not use cur.was_ind?
 
-        //
-        if max!=0 && cur.grammar_ind+1==max {
+        // //
+        // if max!=0 && cur.grammar_ind+1==max {
 
-        }
+        // }
 
-        //
-        if min!=0 && cur.grammar_ind<min {
+        // //
+        // if min!=0 && cur.grammar_ind<min {
 
-        }
+        // }
 
-        //
-        if min==0 || cur.grammar_ind>=min {
+        // //
+        // if min==0 || cur.grammar_ind>=min {
 
-        }
+        // }
 
 
 
@@ -1404,7 +1404,13 @@ where
 
         //
 
-        if cur.grammar_ind!=gs.len()
+        // let not_end= gs.len() > 1;
+        let not_end= cur.grammar_ind+1 != gs.len();
+        //
+
+        if //cur.grammar_ind+1!=gs.len()
+            //cur.grammar_ind+1<gs.len()
+            not_end
         // if let Some(rest)=gs.get(1..).and_then(|r|(!r.is_empty()).then_some(r.clone()))
         {
 
@@ -1452,8 +1458,6 @@ where
         }
 
         //
-        // let not_end= gs.len() > 1;
-        let not_end= cur.grammar_ind+1 != gs.len();
         let success_len=if not_end {self.stk.len()}else{cur.work_success_len};
 
         //
