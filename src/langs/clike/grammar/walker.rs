@@ -135,6 +135,8 @@ where
 
     was_news:Vec<TempWas<'g,NT,P,GR>>,
     wases:Vec<TempWas<'g,NT,P,GR>>,
+
+    stow_disable:bool,
 }
 
 impl<'g,NT,P,GR,TS,GF> GrammarWalker<'g,NT,P,GR,TS,GF>
@@ -147,86 +149,63 @@ where
 {
 
     pub fn new(top_primitives:TS, grammar_func:GF,) -> Self {
-        // Self {
-        //     work_error_len:0,
-        //     // always:&GrammarNode::Always,
-        //     // non_term_cache:Default::default(),
-        //     // // prev_non_term_only:true,
-        //     // // stow_non_term_only:true,
-        //     // hist_non_term_only:false,
-
-        //     stk:Default::default(),
-        //     step_count:Default::default(),
-
-
-        //     expect_token_start2:top_primitives.clone(),
-        //     expect_news2:Default::default(),
-        //     expects2:Default::default(),
-        //     expects_temp2:Default::default(),
-
-        //     grammar_func,
-        //     tokens_remaining:top_primitives.clone(),
-
-        //     tokens_furthest:top_primitives.clone(),
-        //     top_tokens: top_primitives,
-        //     debug:false,
-        //     // non_term_recursive_check:true,
-        //     // non_term_visiteds_stk:Default::default(),
-        //     // recurse_num:0,
-
-        //     // groups:Default::default(),
-
-        //     group_news2:Default::default(),
-        //     groups2:Default::default(),
-
-        //     stow_news: Default::default(),
-
-        //     // hist_stows_stk:Default::default(),
-        //     stows:Default::default(),
-        //     // stow_groups1:Default::default(),
-        //     // // hist_stows_prevs:Default::default(),
-        //     // // hist_stows_elements: Default::default(),
-        //     // // hist_prevs: Default::default(),
-        //     // hist_fails:Default::default(),
-
-        //     // // hist_stows_stk: Default::default(),
-        //     // // hist_ends_stk: Default::default(),
-
-        //     was_news:Default::default(),
-        //     wases:Default::default(),
-        //     // wases:vec![None],
-        //     // hads:Default::default(),
-        //     // had:None,
-        // }
-
-                const INITIAL_CAP: usize = 5000;
+        const INITIAL_CAP: usize = 5000;
 
         Self {
-            work_error_len: 0,
+            work_error_len:0,
+            // always:&GrammarNode::Always,
+            // non_term_cache:Default::default(),
+            // // prev_non_term_only:true,
+            // // stow_non_term_only:true,
+            // hist_non_term_only:false,
 
-            stk: Vec::with_capacity(INITIAL_CAP),
-            step_count: 0,
+            stk:Vec::with_capacity(INITIAL_CAP),
+            step_count:0,
 
-            expect_token_start2: top_primitives.clone(),
-            expect_news2: Vec::with_capacity(INITIAL_CAP),
-            expects2: Vec::with_capacity(INITIAL_CAP),
-            expects_temp2: Vec::with_capacity(INITIAL_CAP),
+
+            expect_token_start2:top_primitives.clone(),
+            expect_news2:Vec::with_capacity(INITIAL_CAP),
+            expects2:Vec::with_capacity(INITIAL_CAP),
+            expects_temp2:Vec::with_capacity(INITIAL_CAP),
 
             grammar_func,
-            tokens_remaining: top_primitives.clone(),
-            tokens_furthest: top_primitives.clone(),
-            top_tokens: top_primitives,
-            debug: false,
+            tokens_remaining:top_primitives.clone(),
 
-            group_news2: Vec::with_capacity(INITIAL_CAP),
-            groups2: Vec::with_capacity(INITIAL_CAP),
+            tokens_furthest:top_primitives.clone(),
+            top_tokens: top_primitives,
+            debug:false,
+            // non_term_recursive_check:true,
+            // non_term_visiteds_stk:Default::default(),
+            // recurse_num:0,
+
+            // groups:Default::default(),
+
+            group_news2:Vec::with_capacity(INITIAL_CAP),
+            groups2:Vec::with_capacity(INITIAL_CAP),
 
             stow_news: Vec::with_capacity(INITIAL_CAP),
-            stows: Vec::with_capacity(INITIAL_CAP),
 
-            was_news: Vec::with_capacity(INITIAL_CAP),
-            wases: Vec::with_capacity(INITIAL_CAP),
+            // hist_stows_stk:Default::default(),
+            stows:Vec::with_capacity(INITIAL_CAP),
+            // stow_groups1:Default::default(),
+            // // hist_stows_prevs:Default::default(),
+            // // hist_stows_elements: Default::default(),
+            // // hist_prevs: Default::default(),
+            // hist_fails:Default::default(),
+
+            // // hist_stows_stk: Default::default(),
+            // // hist_ends_stk: Default::default(),
+
+            was_news:Vec::with_capacity(INITIAL_CAP),
+            wases:Vec::with_capacity(INITIAL_CAP),
+            // wases:vec![None],
+            // hads:Default::default(),
+            // had:None,
+
+            stow_disable:false,
         }
+
+
     }
 
     // pub fn set_non_term_recursive_check(&mut self,non_term_recursive_check:bool) {
@@ -1823,6 +1802,7 @@ where
 
     }
     fn grammar_try_from_hist_fails(&mut self,cur :&Work<'g,NT,P,GR,TS>) -> bool {
+        if self.stow_disable {return  false;}
         let GrammarNode::NonTerm(non_term)=cur.grammar else {return false;};
 
          //
@@ -1871,7 +1851,7 @@ where
     }
 
     fn grammar_try_from_hist_stows(&mut self,cur :&Work<'g,NT,P,GR,TS>) -> bool {
-
+        if self.stow_disable {return  false;}
         let GrammarNode::NonTerm(non_term)=cur.grammar else {return false;};
         //
         if !cur.user || !cur.first {return false;} // !(cur.from_user && cur.is_first)
@@ -2323,6 +2303,7 @@ where
     fn hist_on_fail(&mut self,
         // cur:&Work<'g,NT,P,GR,TS>,
     ){
+        if self.stow_disable {return;}
         let Some(last)=self.stk.last_mut() else {return;};
         // self.hist_prevs.truncate(last.hist_prevs_len);
 
@@ -2386,6 +2367,7 @@ where
     }
 
     fn stow_clear(&mut self,cur:&Work<'g,NT,P,GR,TS>,) {
+        if self.stow_disable {return;}
         if !cur.first || cur.stow_len==0 {
             return;
         }
@@ -2427,7 +2409,7 @@ where
         gotten:bool,
         // _hist_ends_remove_previous:bool,
     ) {
-
+        if self.stow_disable {return;}
         //TODO: dont convert drained drained_hist_news to vec, copy straight to
 
         //should always be some (due to init), use panic instead of ret? no, it will end on an always if successful
@@ -2601,6 +2583,7 @@ where
 
     // }
     fn hist_stows_push(&mut self,cur:&Work<'g,NT,P,GR,TS>) -> usize {
+        if self.stow_disable {return 0;}
         if cur.user //so not an added OR for rest,
             && ( !cur.first || //not part of current OR, eg: or(A, and(B,or(C,D))) A in dif OR stk than C,D
             // self.hist_stows_stk.is_empty()
@@ -2638,6 +2621,7 @@ where
 
 
     fn hist_news_add(&mut self,cur:&Work<'g,NT,P,GR,TS>) -> usize {
+        if self.stow_disable {return 0;}
         let GrammarNode::NonTerm(non_term)=cur.grammar else {panic!("");};
         // return self.hist_news.len();
         //
@@ -2681,7 +2665,7 @@ where
     }
 
     fn hist_stows_truncate(&mut self,stow_len:usize) {
-
+        if self.stow_disable {return;}
         //
         if self.debug {
             if self.stows.len() != stow_len {
@@ -2741,9 +2725,6 @@ where
 
     // }
 
-    fn group_truncate2() {
-
-    }
     fn group_set_trim2(&mut self,
 
         // cur :&Work<'g,NT,P,GR,TS>,
