@@ -32,6 +32,7 @@ use crate::builder::{Builder, BuilderError};
 // use crate::clike::compiler::builder_error::BuilderErrorType;
 use crate::clike::compiler::rules::{MyGroup, MyPrimitive};
 use crate::clike::compiler::tokeniser::tokenise;
+use crate::clike::compiler::tokeniser2::tokenise2;
 use crate::clike::grammar::container::{WalkGroupContainer, WalkGroupIterContainer};
 use crate::clike::grammar::utils::groups_debug_print;
 use crate::clike::grammar::walker::GrammarWalker;
@@ -103,6 +104,11 @@ impl Compiler {
 
 
         let tokens= tokenise(src,path)?;
+
+        let start_time = std::time::Instant::now();
+        let tokens= tokenise2(src,path)?;
+        let time_elapsed=start_time.elapsed().as_secs_f64();
+        println!("tokeniser2 Time elapsed: {time_elapsed:?} " ,);
         // println!("tokens1={tokens:?}");
         //
 
