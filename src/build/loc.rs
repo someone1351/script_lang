@@ -21,6 +21,7 @@ impl Loc {
         self.pos==0
     }
     pub fn calc(&mut self, s:&str) {
+        // return;
         self.byte_pos+=s.len();
 
         for c in s.chars() {

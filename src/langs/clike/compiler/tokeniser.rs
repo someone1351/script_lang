@@ -268,6 +268,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
 
 // }
 
+
 #[derive(Clone)]
 pub struct Input<'t> {
     // chars : Chars<'t>,
@@ -308,7 +309,81 @@ impl<'t> std::fmt::Debug for Input<'t> {
         write!(f,"{:?}",self.chars)
     }
 }
+impl<'t> Input<'t> {
+    pub fn len3(&self) -> usize {
+        self.end-self.start
+    }
 
+    fn inds3(&self) -> Range<usize> {
+        self.start..self.end
+    }
+    fn eat3(&mut self,size:usize,) -> bool {
+        let pos2 = self.start+size;
+        if pos2 > self.end { return false; }
+
+        let taken=&self.chars[self.start..pos2];
+
+        let mut loc2=self.start_loc;
+        loc2.calc(taken);
+
+        self.start=pos2;
+        self.chars=&self.chars[pos2 ..];
+        self.start_loc=loc2;
+
+        true
+    }
+
+    fn take3(&mut self,size:usize,) -> Option<Self> {
+        let pos2 = self.start+size;
+        if pos2 > self.end { return None; }
+
+        let taken=&self.chars[self.start..pos2];
+
+        let mut loc2=self.start_loc;
+        loc2.calc(taken);
+
+        let input2=Input {
+            chars: taken,
+            start: self.start,
+            end: pos2,
+            start_loc: self.start_loc,
+            end_loc: loc2,
+        };
+
+        self.start=pos2;
+        self.chars=&self.chars[pos2 ..];
+        self.start_loc=loc2;
+
+        Some(input2)
+    }
+
+    pub fn has_char_range(&self, r:RangeInclusive<char>) -> usize {
+        let Some(x) = self.chars.chars().next() else {return 0;};
+
+        if r.contains(&x) {
+            x.len_utf8()
+        } else {
+            0
+        }
+    }
+
+    pub fn has_char(&self, cs:&str) -> usize {
+        let Some(x) = self.chars.chars().next() else {return 0;};
+
+        if cs.contains(x) {
+            x.len_utf8()
+        } else {
+            0
+        }
+    }
+    pub fn has_str(&self, s:&str) -> usize {
+        if self.chars.starts_with(s) {
+            s.len()
+        } else {
+            0
+        }
+    }
+}
 // impl<'t> Iterator for Input<'t> {
 //     type Item = char;
 
@@ -490,14 +565,56 @@ impl<'t,'g> TokensPrimitiveTrait<MyPrimitive<'g>> for Input<'t> {
 
 #[derive(Copy,Clone,Debug)]
 pub enum Keyword {
-    For,In, //To,
-    While,Continue,Break,
-    Goto,Label,
+    Break,
+    Continue,
+    Elif,
+    Else,
+    False,
+    Fn,
+    For,
+    Format,
+    Goto,
+    If,
+    In,
     Include,
-    True,False,Nil,Void,
-    Print,Println,Format,
-    Var,Fn,Return,
-    If,Elif,Else,
+    Label,
+    Nil,
+    Print,
+    Println,
+    Return,
+    True,
+    Var,
+    Void,
+    While,
+
+}
+
+impl Keyword {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Break => "break",
+            Self::Continue => "continue",
+            Self::Elif => "elif",
+            Self::Else => "else",
+            Self::False => "false",
+            Self::Fn => "fn",
+            Self::For => "for",
+            Self::Format => "format",
+            Self::Goto => "goto",
+            Self::If => "if",
+            Self::In => "in",
+            Self::Include => "include",
+            Self::Label => "label",
+            Self::Nil => "nil",
+            Self::Print => "print",
+            Self::Println => "println",
+            Self::Return => "return",
+            Self::True => "true",
+            Self::Var => "var",
+            Self::Void => "void",
+            Self::While => "while",
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -522,6 +639,7 @@ impl<'t> Debug for Token<'t> {
         self.token_type.fmt(f)
     }
 }
+
 pub fn tokenise<'p,'t,'g>(
     src:&'t str,
     path:Option<&'p Path>,
