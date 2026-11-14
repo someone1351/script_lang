@@ -84,18 +84,38 @@ pub enum  TokenizerErrorType2 {
 pub struct Input2<'t> {
     data:&'t str,
     start_pos:usize,
-    end_pos:usize,
-    end_pos_rewind:usize,
+    cur_pos:usize,
+    // end_pos_rewind:usize,
+    // prev_end_pos:usize,
+
+    start_loc: Loc,
+    cur_loc: Loc,
 }
 impl<'t> Input2<'t> {
     pub fn new(data:&'t str) -> Self {
-        Self { data, start_pos:0, end_pos:0,end_pos_rewind:0, }
+        Self {
+            data, start_pos:0, cur_pos:0,
+            start_loc:Loc::one(),
+            cur_loc:Loc::one(),
+            // prev_end_pos:0,
+            // end_pos_rewind:0,
+        }
+    }
+    pub fn start_loc(&self) -> Loc {
+        self.start_loc
+    }
+    pub fn cur_loc(&mut self) -> Loc {
+         if self.cur_pos != self.cur_loc.byte_pos {
+            self.cur_loc.calc(&self.data[self.cur_loc.byte_pos..self.cur_pos]);
+        }
+
+        self.cur_loc
     }
     pub fn slice(&self) -> &'t str {
-        &self.data[self.start_pos..self.end_pos]
+        &self.data[self.start_pos..self.cur_pos]
     }
     pub fn rest(&self) -> &'t str {
-        &self.data[self.end_pos..]
+        &self.data[self.cur_pos..]
     }
     pub fn peek(&self,chars_num:usize) -> Option<&'t str> {
         let rest=self.rest();
@@ -116,61 +136,55 @@ impl<'t> Input2<'t> {
         self.rest().chars().next()
     }
     pub fn pos_range(&self) -> Range<usize> {
-        self.start_pos..self.end_pos
+        self.start_pos..self.cur_pos
     }
     pub fn is_eof(&self) -> bool {
-        self.end_pos >= self.data.len()
+        self.cur_pos >= self.data.len()
     }
 
-    pub fn commit(&mut self) {
-        self.start_pos=self.end_pos;
-        self.end_pos_rewind=self.end_pos;
+    pub fn next(&mut self) {
+        let cur_loc = self.cur_loc();
+        self.start_pos = self.cur_pos;
+        self.start_loc = cur_loc;
     }
 
-    pub fn reset(&mut self) {
-        self.end_pos=self.start_pos;
-        self.end_pos_rewind=self.start_pos;
+    pub fn undo(&mut self) {
+        self.cur_pos=self.start_pos;
+        self.cur_loc = self.start_loc;
     }
 
-    pub fn mark(&mut self) {
-        self.end_pos_rewind=self.end_pos;
-    }
-
-    pub fn rewind(&mut self) {
-        self.end_pos=self.end_pos_rewind;
-    }
 
     pub fn take_range(&mut self, r:RangeInclusive<char>) -> Option<char> {
         let Some(x) = self.rest().chars().next() else {return None;};
         if !r.contains(&x) {return None;}
-        self.end_pos+=x.len_utf8();
+        self.cur_pos+=x.len_utf8();
         Some(x)
     }
 
     pub fn take_one_of(&mut self, cs:&str) -> Option<char> {
         let Some(x) = self.rest().chars().next() else {return None;};
         if !cs.contains(x) {return None;}
-        self.end_pos+=x.len_utf8();
+        self.cur_pos+=x.len_utf8();
         Some(x)
     }
 
     pub fn take_char(&mut self, c:char) -> Option<char> {
         if Some(c)!=self.rest().chars().next() {return None;};
-        self.end_pos+=c.len_utf8();
+        self.cur_pos+=c.len_utf8();
         Some(c)
     }
     pub fn take_any(&mut self,) -> Option<char> {
         let Some(x) = self.rest().chars().next() else {return None;};
-        self.end_pos+=x.len_utf8();
+        self.cur_pos+=x.len_utf8();
         Some(x)
     }
     pub fn take_str(&mut self, s:&str) -> Option<&'t str> {
-        let p=self.end_pos;
+        let p=self.cur_pos;
 
         if !self.rest().starts_with(s) {return None;}
-        self.end_pos+=s.len();
+        self.cur_pos+=s.len();
 
-        Some(&self.data[p..self.end_pos])
+        Some(&self.data[p..self.cur_pos])
     }
 
 
@@ -312,6 +326,61 @@ impl Symbol {
             Self::RBrace => "}",
         }
     }
+
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            // 3-character
+            "..." => Some(Self::Variadic),
+            "..=" => Some(Self::ForInclusiveRange),
+            "&&=" => Some(Self::SetAnd),
+            "||=" => Some(Self::SetOr),
+
+            // 2-character
+            ".." => Some(Self::ForExclusiveRange),
+            "==" => Some(Self::Equal),
+            "!=" => Some(Self::NotEqual),
+            "<=" => Some(Self::LessThanEqual),
+            ">=" => Some(Self::GreaterThanEqual),
+            "&&" => Some(Self::And),
+            "||" => Some(Self::Or),
+            "+=" => Some(Self::SetAdd),
+            "-=" => Some(Self::SetSub),
+            "*=" => Some(Self::SetMul),
+            "/=" => Some(Self::SetDiv),
+            "%=" => Some(Self::SetMod),
+            "^=" => Some(Self::SetBitXor),
+            "&=" => Some(Self::SetBitAnd),
+            "|=" => Some(Self::SetBitOr),
+
+            // 1-character
+            "&" => Some(Self::BitAnd),
+            "|" => Some(Self::BitOr),
+            "^" => Some(Self::BitXor),
+            "~" => Some(Self::BitNot),
+            "!" => Some(Self::Not),
+            "=" => Some(Self::Set),
+            "," => Some(Self::Comma),
+            "%" => Some(Self::Mod),
+            ";" => Some(Self::SemiColon),
+            "." => Some(Self::Dot),
+            ":" => Some(Self::Colon),
+            ">" => Some(Self::GreaterThan),
+            "<" => Some(Self::LessThan),
+            "+" => Some(Self::Add),
+            "-" => Some(Self::Sub),
+            "*" => Some(Self::Mul),
+            "/" => Some(Self::Div),
+            "(" => Some(Self::LParen),
+            ")" => Some(Self::RParen),
+            "[" => Some(Self::LBracket),
+            "]" => Some(Self::RBracket),
+            "{" => Some(Self::LBrace),
+            "}" => Some(Self::RBrace),
+
+            _ => None,
+        }
+    }
+
 }
 
 
@@ -400,7 +469,7 @@ impl Keyword {
 enum TokenType<'a> {
     Identifier(&'a str),
     Keyword(Keyword),
-    Symbol(char),
+    Symbol(Symbol),
     String(String), //&'a str
     Int(i64),
     Float(f64),
@@ -413,31 +482,39 @@ pub struct Token<'t> {
     pub token_type:TokenType<'t>,
 }
 
-fn tokenise_num<'t>(input:&mut Input2<'t>) -> Result<Option<(TokenType<'t>,Range<usize>)>,(CompileErrorType<'t>,usize)> {
+fn tokenise_num<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(CompileErrorType<'t>,Loc)> {
     //[0] | [0-9][1-9]*
 
     //
     if input.eat_range('1'..='9') {
         while input.eat_range('0'..='9') {}
-    } else if input.eat_one_of("0") {
+    } else if input.eat_char('0') {
     } else {
+        input.undo();
         return Ok(None);
     }
 
     //
-    input.mark(); //the int
+    // input.mark(); //the int
+    let int_input=input.clone();
 
     //
-    if !input.eat_one_of(".") || !input.eat_range('0'..='9') {
-        input.rewind(); //back to the int
+    if !input.eat_char('.') || !input.eat_range('0'..='9') {
+        *input=int_input;
+        // input.rewind(); //back to the int
 
         //int
         let val = input.slice().parse::<i64>().map_err(|e|(
             CompileErrorType::Tokeniser2(TokenizerErrorType2::Int(e)),
-            input.pos_range().start,
+            input.start_loc(),
         ))?;
 
-        return Ok(Some((TokenType::Int(val),input.pos_range())));
+        let start_loc=input.start_loc();
+        let end_loc=input.cur_loc();
+        let token_type=TokenType::Int(val);
+
+        input.next();
+        return Ok(Some(Token { start_loc, end_loc, token_type, }));
     }
 
     //
@@ -446,75 +523,44 @@ fn tokenise_num<'t>(input:&mut Input2<'t>) -> Result<Option<(TokenType<'t>,Range
     //float
     let val = input.slice().parse::<f64>().map_err(|e|(
         CompileErrorType::Tokeniser2(TokenizerErrorType2::Float(e)),
-        input.pos_range().start,
+        input.start_loc(),
     ))?;
 
-    return Ok(Some((TokenType::Float(val),input.pos_range())));
+    let start_loc=input.start_loc();
+    let end_loc=input.cur_loc();
+    let token_type=TokenType::Float(val);
+
+    input.next();
+    return Ok(Some(Token { start_loc, end_loc, token_type, }));
 }
 
-fn tokenise_symbol<'t>(input:&mut Input2<'t>) -> Option<(TokenType<'t>,Range<usize>)> {
-    //
-    if !input.eat_one_of("[&|<>+-*/()[]{}.;^%=!~") {return None;}
+fn tokenise_symbol<'t>(input: &mut Input2<'t>) -> Option<Token<'t>> {
+    for len in (1..=3).rev() {
+        if let Some(s) = input.peek(len) {
+            if let Some(sym) = Symbol::from_str(s) {
+                input.eat_str(s);
 
-    //
-    let val = input.slice().chars().next().unwrap();
-    Some((TokenType::Symbol(val),input.pos_range()))
+                let start_loc=input.start_loc();
+                let end_loc=input.cur_loc();
+                let token_type=TokenType::Symbol(sym);
+
+                input.next();
+                return Some(Token { start_loc, end_loc, token_type, });
+            }
+        }
+    }
+    None
 }
 
-// fn tokenise_keyword<'t>(input:&mut Input2<'t>) -> Option<(TokenType<'t>,Range<usize>)> {
 
-//     let keywords = [
-//         Keyword::Break, Keyword::Continue, Keyword::Elif, Keyword::Else, Keyword::False,
-//         Keyword::Fn, Keyword::For, Keyword::Format, Keyword::Goto, Keyword::If, Keyword::In,
-//         Keyword::Include, Keyword::Label, Keyword::Nil, Keyword::Print, Keyword::Println,
-//         Keyword::Return, Keyword::True, Keyword::Var, Keyword::Void, Keyword::While,
-//     ];
-
-//     for keyword in keywords {
-//         if !input.eat_str(keyword.as_str()) {
-//             continue;
-//         }
-
-//         if input.eat_range('a'..='z') || input.eat_range('A'..='Z') || input.eat_range('0'..='9') || input.eat_one_of("_") {
-//             while input.eat_range('a'..='z') || input.eat_range('A'..='Z') || input.eat_range('0'..='9') || input.eat_one_of("_") {}
-
-//             return Some((TokenType::Identifier(input.slice()),input.pos_range()));
-//         } else {
-//             return Some((TokenType::Keyword(keyword),input.pos_range()));
-//         }
-//     }
-
-//     None
-// }
-
-// fn tokenise_identifier<'t>(input:&mut Input2<'t>) -> Option<(TokenType<'t>,Range<usize>)> {
-//     //[_]*[a-zA-Z][_a-zA-Z90-9]*
-
-//     //
-//     input.mark();
-
-//     //
-//     while input.eat_one_of("_") {}
-
-//     //
-//     if !input.eat_range('a'..='z') && !input.eat_range('A'..='Z') && !input.eat_one_of("_") {
-//         input.rewind();
-//         return None;
-//     }
-
-//     //
-//     while input.eat_range('a'..='z') || input.eat_range('A'..='Z') || input.eat_range('0'..='9') || input.eat_one_of("_") {}
-
-//     //
-//     Some((TokenType::Identifier(input.slice()),input.pos_range()))
-// }
-fn tokenise_word<'t>(input: &mut Input2<'t>) -> Option<(TokenType<'t>, Range<usize>)> {
-    input.mark();
+fn tokenise_word<'t>(input: &mut Input2<'t>) -> Option<Token<'t>> {
+    //[_]*[a-zA-Z][_a-zA-Z90-9]*
 
     while input.eat_char('_') {}
 
     if !input.eat_range('a'..='z') && !input.eat_range('A'..='Z') {
-        input.rewind();
+        // input.rewind();
+        input.undo();
         return None;
     }
 
@@ -525,32 +571,30 @@ fn tokenise_word<'t>(input: &mut Input2<'t>) -> Option<(TokenType<'t>, Range<usi
     {}
 
     let slice = input.slice();
-    let token = match Keyword::from_str(slice) {
+    let token_type = match Keyword::from_str(slice) {
         Some(kw) => TokenType::Keyword(kw),
         None => TokenType::Identifier(slice),
     };
 
-    Some((token, input.pos_range()))
+    let start_loc=input.start_loc();
+    let end_loc=input.cur_loc();
+
+    input.next();
+    Some(Token { start_loc, end_loc, token_type, })
+
+
+
 }
 
-fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<(TokenType<'t>,Range<usize>)>,(CompileErrorType<'t>,usize)> {
+fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(CompileErrorType<'t>,Loc)> {
     //["]([\\]([strn"\\\n][\r][\n])|[^"])*["]
     //
     if !input.eat_char('"') {
+        input.undo();
         return Ok(None);
     }
 
     //
-
-
-    //
-    // let quote_start=input.pos_range().end;
-    // let mut quote_end=quote_start;
-
-    //
-    // input.commit();
-
-    // let mut input2=input.clone();
 
     let mut s=String::new();
 
@@ -561,7 +605,12 @@ fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<(TokenType<'t>,Ra
 
         //
         if input.eat_char('"') {
-            return Ok(Some((TokenType::String(s),input.pos_range())));
+            let start_loc=input.start_loc();
+            let end_loc=input.cur_loc();
+            let token_type=TokenType::String(s);
+
+            input.next();
+            return Ok(Some(Token { start_loc, end_loc, token_type, }));
         }
 
         //
@@ -591,20 +640,19 @@ fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<(TokenType<'t>,Ra
         // quote_end=input.pos_range().end;
     }
 
-
-    Err((CompileErrorType::Tokeniser2(TokenizerErrorType2::ClosingQuoteExpected),input.pos_range().start))
+    Err((CompileErrorType::Tokeniser2(TokenizerErrorType2::ClosingQuoteExpected),input.start_loc()))
 
 }
 
 
-fn tokenise_ws<'t>(input:&mut Input2<'t>) -> Result<Option<(TokenType<'t>,Range<usize>)>,(CompileErrorType<'t>,usize)> {
+fn tokenise_ws<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(CompileErrorType<'t>,Loc)> {
     // smlcmnt => [/][/][^\r\n]*([\n]|[\r][\n]|eof)
     // mlcmnt => [/][*] (mlcmnt|[^*]|[*][^/])* [*][/]
     // space => [ \t]
     // eol => [\r][\n]|[\n]
 
-    let mut eol_start: Option<usize>=None;
-    let mut eol_end= 0;
+    let mut eol_start: Option<Loc>=None;
+    let mut eol_end= Loc::zero();
 
     loop {
         //space
@@ -614,11 +662,11 @@ fn tokenise_ws<'t>(input:&mut Input2<'t>) -> Result<Option<(TokenType<'t>,Range<
 
         //eol
         {
-            let new_start=eol_start.unwrap_or(input.pos_range().end);
+            let new_start=eol_start.unwrap_or(input.cur_loc());
 
             if input.eat_char('\n') || input.eat_str("\r\n") {
                 eol_start=Some(new_start);
-                eol_end=input.pos_range().end;
+                eol_end=input.cur_loc();
                 continue;
             }
         }
@@ -634,7 +682,7 @@ fn tokenise_ws<'t>(input:&mut Input2<'t>) -> Result<Option<(TokenType<'t>,Range<
         }
 
         //multi line comment
-        let comment_start = input.pos_range().end;
+        let comment_start_loc = input.cur_loc();
 
         if input.eat_str("/*") {
             let mut depth=1;
@@ -645,7 +693,7 @@ fn tokenise_ws<'t>(input:&mut Input2<'t>) -> Result<Option<(TokenType<'t>,Range<
                 } else if input.eat_str("*/") {
                     depth-=1;
                 } else if !input.eat_any() {
-                    return Err((CompileErrorType::Tokeniser2(TokenizerErrorType2::ClosingCommentExpected),comment_start));
+                    return Err((CompileErrorType::Tokeniser2(TokenizerErrorType2::ClosingCommentExpected),comment_start_loc));
                 }
             }
 
@@ -659,10 +707,16 @@ fn tokenise_ws<'t>(input:&mut Input2<'t>) -> Result<Option<(TokenType<'t>,Range<
 
     //
     if let Some(eol_start)=eol_start {
-        return Ok(Some((TokenType::Eol,eol_start..eol_end)))
+        let start_loc=eol_start;
+        let end_loc=eol_end;
+        let token_type=TokenType::Eol;
+
+        input.next();
+        return Ok(Some(Token { start_loc, end_loc, token_type, }));
     }
 
     //
+    input.next();
     Ok(None)
 }
 
@@ -674,64 +728,66 @@ pub fn tokenise2<'p,'t,'g>(
 { //(Loc,&'g str)
 
     let mut input=Input2::new(src);
-    let mut cur_loc=Loc::one();
     let mut tokens=Vec::new();
+
 
     loop {
 
-        if let Some((token_type,p))=tokenise_ws(&mut input)
-            .map_err(|(error_type,p)|{
-                CompileError{src:Some(src),path,error_type,loc:cur_loc,}
+        if let Some(token)=tokenise_ws(&mut input)
+            .map_err(|(error_type,loc)|{
+                CompileError{src:Some(src),path,error_type,loc,}
             })?
         {
-            let start_loc=Loc::one();
-            let end_loc=Loc::one();
-            tokens.push(Token{ start_loc, end_loc, token_type, });
+            tokens.push(token);
         }
 
         //
-        if let Some((token_type,p))=tokenise_num(&mut input)
-            .map_err(|(error_type,p)|{
-                CompileError{src:Some(src),path,error_type,loc:cur_loc,}
-            })?
-        {
-            let start_loc=Loc::one();
-            let end_loc=Loc::one();
-            tokens.push(Token{ start_loc, end_loc, token_type, });
-            continue;
+        if input.is_eof() {
+            break;
+        }
 
-        } else if let Some((token_type,p))=tokenise_string(&mut input)
-            .map_err(|(error_type,p)|{
-                CompileError{src:Some(src),path,error_type,loc:cur_loc,}
+        //
+
+        if let Some(token)=tokenise_num(&mut input)
+            .map_err(|(error_type,loc)|{
+                CompileError{src:Some(src),path,error_type,loc,}
             })?
         {
-            let start_loc=Loc::one();
-            let end_loc=Loc::one();
-            tokens.push(Token{ start_loc, end_loc, token_type, });
-            continue;
-        // } else if let Some((token_type,p))=tokenise_keyword(&mut input) {
-        //     let start_loc=Loc::one();
-        //     let end_loc=Loc::one();
-        //     tokens.push(Token{ start_loc, end_loc, token_type, });
-        //     continue;
-        // } else if let Some((token_type,p))=tokenise_identifier(&mut input) {
-        //     let start_loc=Loc::one();
-        //     let end_loc=Loc::one();
-        //     tokens.push(Token{ start_loc, end_loc, token_type, });
-        //     continue;
-        } else if let Some((token_type,p))=tokenise_word(&mut input) {
-            let start_loc=Loc::one();
-            let end_loc=Loc::one();
-            tokens.push(Token{ start_loc, end_loc, token_type, });
-            continue;
-        } else if let Some((token_type,p))=tokenise_symbol(&mut input) {
-            let start_loc=Loc::one();
-            let end_loc=Loc::one();
-            tokens.push(Token{ start_loc, end_loc, token_type, });
+            tokens.push(token);
             continue;
         }
 
-        break;
+        //
+
+
+        if let Some(token)=tokenise_string(&mut input)
+            .map_err(|(error_type,loc)|{
+                CompileError{src:Some(src),path,error_type,loc,}
+            })?
+        {
+            tokens.push(token);
+            continue;
+        }
+
+        //
+        if let Some(token)=tokenise_word(&mut input) {
+            tokens.push(token);
+            continue;
+        }
+
+        //
+        if let Some(token)=tokenise_symbol(&mut input) {
+            tokens.push(token);
+            continue;
+        }
+
+        //
+        return Err(CompileError {
+            src: Some(src),
+            path,
+            error_type: CompileErrorType::Tokeniser2(TokenizerErrorType2::Unexpected),
+            loc:input.start_loc(),
+        });
     }
 
 
