@@ -1,7 +1,7 @@
 use std::{fmt::Debug, path::Path};
 
 use crate::{ast, clike::compiler::tokeniser2::TokenizerErrorType2, error_msg, Loc };
-use super::super::tokenizer::TokenizerErrorType;
+// use super::super::tokenizer::TokenizerErrorType;
 
 
 use crate::{compiler::builder::BuilderError, };
@@ -35,9 +35,9 @@ pub enum  TokeniserErrorType {
 
 
 #[derive(Debug,Clone)]
-pub enum CompileErrorType<'t> {
-    Tokenizer(TokenizerErrorType),
-    Tokeniser(&'t str),
+pub enum CompileErrorType {
+    // Tokenizer(TokenizerErrorType),
+    // Tokeniser(&'t str),
     Tokeniser2(TokenizerErrorType2),
     ParserExpected(String),
     ParserUnexpected,
@@ -51,7 +51,7 @@ pub enum CompileErrorType<'t> {
 pub struct CompileError<'p,'t,> {
     pub src : Option<&'t str>,
     pub path : Option<&'p Path>,
-    pub error_type : CompileErrorType<'t>,
+    pub error_type : CompileErrorType,
     pub loc : Loc,
 }
 

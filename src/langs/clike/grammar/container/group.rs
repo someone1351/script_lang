@@ -4,7 +4,7 @@
 
 use crate::clike::grammar::TokensTrait;
 
-use super::super::super::{grammar::{container::WalkGroupIterContainer, data::{Walk, WalkGroup}}, tokenizer::{TokenContainer, TokenIterContainer}};
+use super::super::super::{grammar::{container::WalkGroupIterContainer, data::{Walk, WalkGroup}}, };
 
 #[derive(Clone, Copy)]
 

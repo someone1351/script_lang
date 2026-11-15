@@ -21,27 +21,29 @@ todo:
 // mod cmds;
 pub mod rules;
 pub mod error;
+pub mod tokens;
 
 // mod builder_error;
 
-pub mod tokeniser;
+// pub mod tokeniser;
 pub mod tokeniser2;
 
 
 use crate::builder::{Builder, BuilderError};
 // use crate::clike::compiler::builder_error::BuilderErrorType;
 use crate::clike::compiler::rules::{MyGroup, MyPrimitive};
-use crate::clike::compiler::tokeniser::tokenise;
+// use crate::clike::compiler::tokeniser::tokenise;
 use crate::clike::compiler::tokeniser2::tokenise2;
+use crate::clike::compiler::tokens::Tokens;
 use crate::clike::grammar::container::{WalkGroupContainer, WalkGroupIterContainer};
 use crate::clike::grammar::utils::groups_debug_print;
 use crate::clike::grammar::walker::GrammarWalker;
 use crate::clike::grammar::GrammarWalkError;
-use crate::clike::tokenizer::input::Input;
+// use crate::clike::tokenizer::input::Input;
 // use crate::ccexpr_compiler::grammar::grammar_run;
 // use std::path::PathBuf;
 // use super::parser::parse;
-use crate::clike::tokenizer::{tokenize, TokenIterContainer, TokenTypeContainer, TokenizerErrorType};
+// use crate::clike::tokenizer::{tokenize, TokenIterContainer, TokenTypeContainer, TokenizerErrorType};
 use crate::primitive_types::StringVal;
 
 use crate::{build::*, compiler::builder};
@@ -73,7 +75,7 @@ pub use error::*;
     //     next_anon_id:&mut usize,
     // ) -> Result<(),BuilderError<BuilderErrorType>> {
 
-type ClikeBuilder<'a,'t,'g> = Builder<'a,WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>>,BuilderErrorType>;
+// type ClikeBuilder<'a,'t,'g> = Builder<'a,WalkGroupContainer<'g,MyGroup<'g>,Tokens<'t>>,BuilderErrorType>;
 type ClikeBuilderResult=Result<(), BuilderError<BuilderErrorType>>;
 
 pub struct Compiler {
@@ -103,7 +105,7 @@ impl Compiler {
         // let pathbuf=path.map(|x|x.to_path_buf());
 
 
-        let tokens= tokenise(src,path)?;
+        // let tokens= tokenise(src,path)?;
 
         let start_time = std::time::Instant::now();
         let tokens= tokenise2(src,path)?;
@@ -112,14 +114,14 @@ impl Compiler {
         // println!("tokens1={tokens:?}");
         //
 
-    let start_time = std::time::Instant::now();
+    // let start_time = std::time::Instant::now();
 
 
 
-        let tokenized=tokenize(src, rules::is_keyword );
-    let time_elapsed=start_time.elapsed().as_secs_f64();
+    //     let tokenized=tokenize(src, rules::is_keyword );
+    // let time_elapsed=start_time.elapsed().as_secs_f64();
 
-    println!("tokenizer Time elapsed: {time_elapsed:?} " ,);
+    // println!("tokenizer Time elapsed: {time_elapsed:?} " ,);
         // println!("tokens2={:?}",tokenized.as_ref().map(|x|x.tokens()));
         return Ok(BuildT::new(Build::default()));
         //
@@ -336,12 +338,12 @@ impl Compiler {
 
     pub fn run<'a,'t,'g>(&self,
         // builder:&mut CExprBuilder<'a>,
-        builder:&mut Builder<'a,WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>>,BuilderErrorType>,
-        top_group:WalkGroupContainer<'g,MyGroup<'g>,TokenIterContainer<'t>>,
+        builder:&mut Builder<'a,WalkGroupContainer<'g,MyGroup<'g>,Tokens<'t>>,BuilderErrorType>,
+        top_group:WalkGroupContainer<'g,MyGroup<'g>,Tokens<'t>>,
         next_anon_id:&mut usize,
     ) -> Result<(),BuilderError<BuilderErrorType>> {
         // println!("{:?}:",top_group_name.0);
-
+        /*
         *next_anon_id+=1;
         builder.set_anon_scope(*next_anon_id);
 
@@ -1268,7 +1270,7 @@ impl Compiler {
         }
 
         //
-
+*/
         Ok(())
     }
 

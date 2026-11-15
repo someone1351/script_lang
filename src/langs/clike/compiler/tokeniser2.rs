@@ -212,16 +212,16 @@ impl<'t> std::fmt::Debug for Input2<'t> {
     }
 }
 
-#[derive(Copy,Clone,Debug)]
-pub enum Symbol {
+#[derive(Copy,Clone,PartialEq,Eq,Debug)]
+pub enum MySymbol {
     Variadic, // ...
     ForInclusiveRange, // ..=
     SetAnd, // &&=
     SetOr, // ||=
 
     ForExclusiveRange, // ..
-    Equal, // ==
-    NotEqual, // !=
+    EqualTo, // ==
+    NotEqualTo, // !=
     LessThanEqual, // <=
     GreaterThanEqual, // >=
     And, // &&
@@ -270,7 +270,7 @@ pub enum Symbol {
     RBrace, // }
 }
 
-impl Symbol {
+impl MySymbol {
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Variadic => "...",
@@ -279,8 +279,8 @@ impl Symbol {
             Self::SetOr => "||=",
 
             Self::ForExclusiveRange => "..",
-            Self::Equal => "==",
-            Self::NotEqual => "!=",
+            Self::EqualTo => "==",
+            Self::NotEqualTo => "!=",
             Self::LessThanEqual => "<=",
             Self::GreaterThanEqual => ">=",
             Self::And => "&&",
@@ -337,8 +337,8 @@ impl Symbol {
 
             // 2-character
             ".." => Some(Self::ForExclusiveRange),
-            "==" => Some(Self::Equal),
-            "!=" => Some(Self::NotEqual),
+            "==" => Some(Self::EqualTo),
+            "!=" => Some(Self::NotEqualTo),
             "<=" => Some(Self::LessThanEqual),
             ">=" => Some(Self::GreaterThanEqual),
             "&&" => Some(Self::And),
@@ -384,8 +384,8 @@ impl Symbol {
 }
 
 
-#[derive(Copy,Clone,Debug)]
-pub enum Keyword {
+#[derive(Copy,Clone,PartialEq,Eq,Debug)]
+pub enum MyKeyword {
     Break,
     Continue,
     Elif,
@@ -410,7 +410,7 @@ pub enum Keyword {
 
 }
 
-impl Keyword {
+impl MyKeyword {
     fn as_str(&self) -> &'static str {
         match self {
             Self::Break => "break",
@@ -466,10 +466,10 @@ impl Keyword {
 
 
 #[derive(Debug)]
-enum TokenType<'a> {
+pub enum TokenType<'a> {
     Identifier(&'a str),
-    Keyword(Keyword),
-    Symbol(Symbol),
+    Keyword(MyKeyword),
+    Symbol(MySymbol),
     String(String), //&'a str
     Int(i64),
     Float(f64),
@@ -482,7 +482,8 @@ pub struct Token<'t> {
     pub token_type:TokenType<'t>,
 }
 
-fn tokenise_num<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(CompileErrorType<'t>,Loc)> {
+
+fn tokenise_num<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(CompileErrorType,Loc)> {
     //[0] | [0-9][1-9]*
 
     //
@@ -537,7 +538,7 @@ fn tokenise_num<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(CompileE
 fn tokenise_symbol<'t>(input: &mut Input2<'t>) -> Option<Token<'t>> {
     for len in (1..=3).rev() {
         if let Some(s) = input.peek(len) {
-            if let Some(sym) = Symbol::from_str(s) {
+            if let Some(sym) = MySymbol::from_str(s) {
                 input.eat_str(s);
 
                 let start_loc=input.start_loc();
@@ -571,7 +572,7 @@ fn tokenise_word<'t>(input: &mut Input2<'t>) -> Option<Token<'t>> {
     {}
 
     let slice = input.slice();
-    let token_type = match Keyword::from_str(slice) {
+    let token_type = match MyKeyword::from_str(slice) {
         Some(kw) => TokenType::Keyword(kw),
         None => TokenType::Identifier(slice),
     };
@@ -586,7 +587,7 @@ fn tokenise_word<'t>(input: &mut Input2<'t>) -> Option<Token<'t>> {
 
 }
 
-fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(CompileErrorType<'t>,Loc)> {
+fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(CompileErrorType,Loc)> {
     //["]([\\]([strn"\\\n][\r][\n])|[^"])*["]
     //
     if !input.eat_char('"') {
@@ -645,7 +646,7 @@ fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(Compi
 }
 
 
-fn tokenise_ws<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(CompileErrorType<'t>,Loc)> {
+fn tokenise_ws<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(CompileErrorType,Loc)> {
     // smlcmnt => [/][/][^\r\n]*([\n]|[\r][\n]|eof)
     // mlcmnt => [/][*] (mlcmnt|[^*]|[*][^/])* [*][/]
     // space => [ \t]
@@ -728,8 +729,9 @@ pub fn tokenise2<'p,'t,'g>(
 { //(Loc,&'g str)
 
     let mut input=Input2::new(src);
-    let mut tokens=Vec::new();
+    // let mut tokens=Vec::new();
 
+    let mut tokens = Vec::with_capacity(src.len() / 5);
 
     loop {
 
