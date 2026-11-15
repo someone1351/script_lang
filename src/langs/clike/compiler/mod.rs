@@ -355,17 +355,17 @@ impl Compiler {
                     builder.loc(p.start_loc);
                     //println!("\t{:?}",p.token_type());
 
-                    // match &p.token_type {
-                    //     &TokenType::Float(x) => { builder.result_float(x); },
-                    //     &TokenType::Int(x) => { builder.result_int(x); },
-                    //     TokenType::String(x) => { builder.result_string(x); },
-                    //     &TokenType::Identifier(x) => { builder.get_var(x); },
-                    //     TokenType::Keyword(MyKeyword::True) => { builder.result_bool(true); },
-                    //     TokenType::Keyword(MyKeyword::False) => { builder.result_bool(false); },
-                    //     TokenType::Keyword(MyKeyword::Nil) => { builder.result_nil(); },
-                    //     TokenType::Keyword(MyKeyword::Void) => { builder.result_void(); },
-                    //     _ => {panic!("");}
-                    // }
+                    match &p.token_type {
+                        &TokenType::Float(x) => { builder.result_float(x); },
+                        &TokenType::Int(x) => { builder.result_int(x); },
+                        TokenType::String(x) => { builder.result_string(x); },
+                        &TokenType::Identifier(x) => { builder.get_var(x); },
+                        TokenType::Keyword(MyKeyword::True) => { builder.result_bool(true); },
+                        TokenType::Keyword(MyKeyword::False) => { builder.result_bool(false); },
+                        TokenType::Keyword(MyKeyword::Nil) => { builder.result_nil(); },
+                        TokenType::Keyword(MyKeyword::Void) => { builder.result_void(); },
+                        _ => {panic!("");}
+                    }
                 }
             }
             "expr" => {
