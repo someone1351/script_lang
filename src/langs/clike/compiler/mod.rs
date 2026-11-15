@@ -385,7 +385,8 @@ impl Compiler {
 
                 builder.block_end();
             }
-            "xor" => {
+            "bit_and"|"bit_xor"|"bit_or" => {
+                let func=top_group_name.0;
                 let mut cs=top_group.children();
 
                 builder.eval(cs.next().unwrap());
@@ -396,10 +397,11 @@ impl Compiler {
                         .eval(c)
                         .param_push()
                         .swap()
-                        .call_method("xor", 2)
+                        .call_method(func, 2)
                         ;
                 }
             }
+
             "lt"|"le"|"gt"|"ge"|"eq"|"ne" => {
                 let func=match top_group_name.0 {
                     "lt" => "lt",
@@ -446,10 +448,11 @@ impl Compiler {
                 }
             }
 
-            "neg"|"not" => {
+            "neg"|"not"|"bit_not" => {
                 let func=match top_group_name.0 {
                     "neg" => "neg",
                     "not" => "not",
+                    "bit_not" => "bit_not",
                     _ => panic!(""),
                 };
 
