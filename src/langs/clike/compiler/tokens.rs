@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::{clike::{compiler::{rules::MyPrimitive, tokeniser2::{Token, TokenType}}, grammar::{TokensPrimitiveTrait, TokensTrait}}, Loc};
+use crate::{clike::{compiler::{rules::MyPrimitive, tokeniser2::{MyKeyword, Token, TokenType}}, grammar::{TokensPrimitiveTrait, TokensTrait}}, Loc};
 
 #[derive(Copy,Clone)]
 pub struct Tokens<'t> {
@@ -16,6 +16,44 @@ pub struct Tokens<'t> {
 impl<'t> Tokens<'t> {
     pub fn first(&'t self) -> Option<&'t Token<'t>> {
         self.tokens.get(self.start)
+    }
+    pub fn start_loc(&self) -> Loc {
+        self.first().map(|t|t.start_loc).unwrap_or(self.last_loc)
+    }
+    pub fn identifier(&'t self) -> Option<&'t str> {
+        if let Some(TokenType::Identifier(x))=self.first().map(|t|&t.token_type) {
+            Some(*x)
+        } else {
+            None
+        }
+    }
+    pub fn string(&'t self) -> Option<&'t str> {
+        if let Some(TokenType::String(x))=self.first().map(|t|&t.token_type) {
+            Some(x.as_str())
+        } else {
+            None
+        }
+    }
+    pub fn keyword(&'t self, k:MyKeyword) -> bool {
+        if let Some(TokenType::Keyword(x))=self.first().map(|t|&t.token_type) {
+            k.eq(x)
+        } else {
+            false
+        }
+    }
+    pub fn int(&'t self) -> Option<i64> {
+        if let Some(TokenType::Int(x))=self.first().map(|t|&t.token_type) {
+            Some(*x)
+        } else {
+            None
+        }
+    }
+    pub fn float(&'t self) -> Option<f64> {
+        if let Some(TokenType::Float(x))=self.first().map(|t|&t.token_type) {
+            Some(*x)
+        } else {
+            None
+        }
     }
 }
 
