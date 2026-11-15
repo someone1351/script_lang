@@ -48,21 +48,6 @@ impl PrimitiveTrait for MyPrimitive {
 //     }
 // }
 
-pub fn is_keyword(n:& str) -> bool {
-    match n {
-        "for"|"in"| //"to"|
-        "while"|"continue"|"break"|
-        "goto"|"label"|
-        "include"|
-        "true"|"false"|"nil"|"void"|
-        "print"|"println"|"format"|
-        "var"|"fn"|"return"|
-        "if"|"elif"|"else"
-        // |"a"|"b"|"c"|"d"
-        => true,
-        _=>false,
-    }
-}
 
 #[derive(Debug,Clone,Copy,Hash,PartialEq, Eq)]
 pub enum MyNonTerm {
@@ -115,7 +100,7 @@ pub enum MyNonTerm {
     Primitive1,
     End,
     ForOp,
-    ForToOp,
+    // ForToOp,
     SetOp,
     // SetSubOp,
     FactorOp,
@@ -289,7 +274,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
             &Many(&And(&[ &Primitive(Symbol(MySymbol::Comma)), &Expect(&Group(&Primitive(Identifier),MyGroup("param")), "param"), ]),0,0),
         ]),MyGroup("params")),
 
-        MyNonTerm::FuncVariadic => &Group(&And(&[&Primitive(Symbol(MySymbol::Dot)),&Primitive(Symbol(MySymbol::Dot)),&Primitive(Symbol(MySymbol::Dot)),]),MyGroup("variadic")),
+        MyNonTerm::FuncVariadic => &Group(&Primitive(Symbol(MySymbol::Variadic)),MyGroup("variadic")),
         MyNonTerm::FuncNotVariadic => &Group(&Or(&[&Primitive(Symbol(MySymbol::Comma)),&Always]), MyGroup("not_variadic")),
 
 
@@ -371,7 +356,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
             &Group(&And(&[
                 &NonTerm(MyNonTerm::BitXor),
                 &Many(&And(&[ &Primitive(Symbol(MySymbol::BitOr)), &NonTerm(MyNonTerm::BitXor), ]),1,0),
-            ]),MyGroup("xor")),
+            ]),MyGroup("bit_or")),
             &NonTerm(MyNonTerm::BitXor),
         ]),
 
@@ -379,7 +364,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
             &Group(&And(&[
                 &NonTerm(MyNonTerm::BitAnd),
                 &Many(&And(&[ &Primitive(Symbol(MySymbol::BitXor)), &NonTerm(MyNonTerm::BitAnd), ]),1,0),
-            ]),MyGroup("xor")),
+            ]),MyGroup("bit_xor")),
             &NonTerm(MyNonTerm::BitAnd),
         ]),
 
@@ -387,7 +372,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
             &Group(&And(&[
                 &NonTerm(MyNonTerm::Factor),
                 &Many(&And(&[ &Primitive(Symbol(MySymbol::BitAnd)), &NonTerm(MyNonTerm::Factor), ]),1,0),
-            ]),MyGroup("xor")),
+            ]),MyGroup("bit_and")),
             &NonTerm(MyNonTerm::Factor),
         ]),
 
@@ -478,7 +463,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
                 ]),MyGroup("primitive")),
 
             ]),"key"),
-            &Expect(&Primitive(Symbol(MySymbol::SemiColon)),"colon"),
+            &Expect(&Primitive(Symbol(MySymbol::Colon)),"colon"),
             &Or(&[&NonTerm(MyNonTerm::Expr),&Error(""),]), //not needed unlike in val's field_index_calls, because that was optional, this is not //needed?
 
         ]),MyGroup("dict_val")),
@@ -536,11 +521,11 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
         MyNonTerm::End => &Expect(&Many(&Or(&[&Primitive(Symbol(MySymbol::SemiColon)),&Primitive(Eol)]),1,0),"semicolon"),
 
         MyNonTerm::ForOp => &Or(&[
-            &Group(&And(&[&NonTerm(MyNonTerm::ForToOp),&Primitive(Symbol(MySymbol::Set)),]),MyGroup("to_eq")),
-            &Group(&NonTerm(MyNonTerm::ForToOp),MyGroup("to")),
+            &Group(&Primitive(Symbol(MySymbol::ForInclusiveRange)),MyGroup("to_eq")),
+            &Group(&Primitive(Symbol(MySymbol::ForExclusiveRange)),MyGroup("to")),
         ]),
 
-        MyNonTerm::ForToOp => &And(&[&Primitive(Symbol(MySymbol::Dot)),&Primitive(Symbol(MySymbol::Dot)),]),
+        // MyNonTerm::ForToOp => &And(&[&Primitive(Symbol(MySymbol::Dot)),&Primitive(Symbol(MySymbol::Dot)),]),
 
         MyNonTerm::SetOp => &Or(&[
             &Group(&Primitive(Symbol(MySymbol::Set)),MyGroup("eq")),
@@ -550,6 +535,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
                 &Group(&Primitive(Symbol(MySymbol::SetSub)),MyGroup("sub")),
                 &Group(&Primitive(Symbol(MySymbol::SetMul)),MyGroup("mul")),
                 &Group(&Primitive(Symbol(MySymbol::SetDiv)),MyGroup("div")),
+                &Group(&Primitive(Symbol(MySymbol::SetMod)),MyGroup("mod")),
 
                 &Group(&Primitive(Symbol(MySymbol::SetBitAnd)),MyGroup("bit_and")),
                 &Group(&Primitive(Symbol(MySymbol::SetBitOr)),MyGroup("bit_or")),

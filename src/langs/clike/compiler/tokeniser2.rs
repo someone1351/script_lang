@@ -598,14 +598,22 @@ fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(Compi
     //
 
     let mut s=String::new();
-
+    let mut chunk_start = input.pos_range().end;
     //
     loop {
         //
         // let p=input.pos_range();
 
         //
-        if input.eat_char('"') {
+        if let Some('"')=input.peek_char() {
+            //flush non escaped
+            let base = input.pos_range().start;
+            let end = input.pos_range().end;
+            s.push_str(&input.slice()[chunk_start - base..end - base]);
+
+            //
+            input.eat_any();
+
             let start_loc=input.start_loc();
             let end_loc=input.cur_loc();
             let token_type=TokenType::String(s);
@@ -615,9 +623,24 @@ fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(Compi
         }
 
         //
-        if input.eat_char('\\') {
-            if let Some(c)=input.take_one_of("strn\n\"\\") {
-                match c {
+        if let Some('\\')=input.peek_char() {
+            //
+            let slash_pos = input.pos_range().end;
+
+            //flush non escaped
+            let base = input.pos_range().start;
+            s.push_str(&input.slice()[chunk_start - base..slash_pos - base]);
+
+            //
+            input.eat_any();
+
+            //
+            if let Some(escaped_char)=input.take_one_of("strn\n\"\\") {
+                //
+                chunk_start = input.pos_range().end;
+
+                //
+                match escaped_char {
                     's' => {s.push(' ');}
                     't' => {s.push('\t');}
                     'r' => {s.push('\r');}
@@ -627,13 +650,20 @@ fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(Compi
                     '"' => {s.push('"');}
                     _ => {panic!("");}
                 }
+
             } else if input.eat_str("\r\n") {
+                //
+                chunk_start = input.pos_range().end;
+
+                //
                 s.push(' ');
             } else {
-                s.push('\\');
+                // s.push('\\');
+
+                //
+                chunk_start = slash_pos;
             }
-        } else if let Some(c)=input.take_any() {
-            s.push(c);
+        } else if input.eat_any() {
         } else {
             break;
         }
