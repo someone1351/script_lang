@@ -109,6 +109,8 @@ impl Compiler {
 
         let start_time = std::time::Instant::now();
         let tokens= tokenise2(src,path)?;
+        let tokens=Tokens::new(&tokens);
+
         let time_elapsed=start_time.elapsed().as_secs_f64();
         println!("tokeniser2 Time elapsed: {time_elapsed:?} " ,);
         // println!("tokens1={tokens:?}");
@@ -123,7 +125,7 @@ impl Compiler {
 
     // println!("tokenizer Time elapsed: {time_elapsed:?} " ,);
         // println!("tokens2={:?}",tokenized.as_ref().map(|x|x.tokens()));
-        return Ok(BuildT::new(Build::default()));
+        // return Ok(BuildT::new(Build::default()));
         //
         // let Ok(tokenized)=tokenized else {
         //     let e=tokenized.err().unwrap();
@@ -140,47 +142,46 @@ impl Compiler {
         // };
 
         // //
-        // let mut walker=GrammarWalker::new(tokenized.tokens(), rules::get_non_term,);
+        let mut walker=GrammarWalker::new(tokens, rules::get_non_term,);
         // // walker.set_debug(true);
 
-        // let start_time = std::time::Instant::now();
-        // let result=walker.run(rules::MyNonTerm::Start) ;
+        let start_time = std::time::Instant::now();
+        let result=walker.run(rules::MyNonTerm::Start);
+        let time_elapsed=start_time.elapsed().as_secs_f64();
+
+        //
+        if let Err(e)=result {
 
 
-        // let time_elapsed=start_time.elapsed().as_secs_f64();
-        // //
-        // if let Err(e)=result {
+            println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
 
+            match e {
+                GrammarWalkError::FailedParse => {
+                    let expecteds=walker.expects_string();
 
-        //     println!("Time elapsed: {time_elapsed:?} {}" ,walker.step_count());
+                    let error_type= if expecteds.is_empty() {
+                        CompileErrorType::ParserUnexpected
+                    } else {
+                        CompileErrorType::ParserExpected(expecteds)
+                    };
+                    // let error_type=CompileErrorType::ParserExpected(expecteds);
 
-        //     match e {
-        //         GrammarWalkError::FailedParse => {
-        //             let expecteds=walker.expects_string();
+                    return Err(CompileError{path,src:Some(src),loc:
+                        // walker.last_loc()
+                        walker.remaining_tokens().start_loc()
+                        ,error_type});
 
-        //             let error_type= if expecteds.is_empty() {
-        //                 CompileErrorType::ParserUnexpected
-        //             } else {
-        //                 CompileErrorType::ParserExpected(expecteds)
-        //             };
-        //             // let error_type=CompileErrorType::ParserExpected(expecteds);
-
-        //             return Err(CompileError{path:pathbuf,src,loc:
-        //                 // walker.last_loc()
-        //                 walker.remaining_tokens().start_loc()
-        //                 ,error_type});
-
-        //             // return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expects_string())});
-        //         }
-        //         // GrammarWalkError::Unfinished => todo!(),
-        //         // GrammarWalkError::RecursiveNonTerm(_) => todo!(),
-        //         // GrammarWalkError::MissingNonTerm(_) => todo!(),
-        //         _ => {
-        //             // println!("{:?} {:?}",walker.expecteds_string(),walker.last_loc());
-        //             panic!("{e:?}");
-        //         }
-        //     }
-        // }
+                    // return Err(CompileError{path:pathbuf,src,loc:walker.last_loc(),error_type:CompileErrorType::ParserExpected(walker.expects_string())});
+                }
+                // GrammarWalkError::Unfinished => todo!(),
+                // GrammarWalkError::RecursiveNonTerm(_) => todo!(),
+                // GrammarWalkError::MissingNonTerm(_) => todo!(),
+                _ => {
+                    // println!("{:?} {:?}",walker.expecteds_string(),walker.last_loc());
+                    panic!("{e:?}");
+                }
+            }
+        }
 
         // //
         // println!("-----------------");
@@ -218,7 +219,7 @@ impl Compiler {
         // //     }
         // // }
 
-        // let walk=walker.get_walk2();
+        let walk=walker.get_walk2();
 
         // //     println!("2_____");
         // //     for (i,g) in walk.groups.iter().enumerate() {
@@ -227,7 +228,7 @@ impl Compiler {
         // // println!("===---===2a");
         // // println!("{}",walk.root());
         // println!("===---===2b");
-        // groups_debug_print(walk.root(),true);
+        groups_debug_print(walk.root(),true);
 
 
         // println!("===---===1");
@@ -274,18 +275,18 @@ impl Compiler {
 
         // return Ok(BuildT::new(Build::default()));
 
-        // let start_time = std::time::Instant::now();
+        let start_time = std::time::Instant::now();
         // //
-        // let mut builder = builder::Builder::new();
+        let mut builder = builder::Builder::new();
         // // // // // builder.eval(parsed.root_block_primitive().get_block().unwrap().primitives());
-        // for g in walk.root().children() {
-        //     // println!("={:?}",g.name());
+        for g in walk.root().children() {
+            // println!("={:?}",g.name());
 
-        //     builder.eval(g);
-        // }
+            builder.eval(g);
+        }
 
-        // //
-        // builder.end_stack_check();
+        //
+        builder.end_stack_check();
 
         // // builder
         // //     .block_start(None)
@@ -302,37 +303,37 @@ impl Compiler {
 
         // //builder needs to be passed a primitive_iter instead of primitive?
 
+        //
+        let mut ast = ast::Ast::new(false,true);
+
+        if let Err(e)=builder.generate_ast(&mut ast,|builder,group|{
+            self.run(builder, group,&mut next_anon_id)
+        }) {
+            return Err(CompileError{path,src:Some(src),loc:e.loc,error_type:CompileErrorType::Builder(e.error_type)});
+        }
+
+        if let Err(e)=ast.calc_vars(false) {
+            return Err(CompileError{path,src:Some(src),loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
+        }
+
+        if let Err(e)=ast.calc_labels_gotos() {
+            return Err(CompileError{path,src:Some(src),loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
+        }
+
         // //
-        // let mut ast = ast::Ast::new(false,true);
-
-        // if let Err(e)=builder.generate_ast(&mut ast,|builder,group|{
-        //     self.run(builder, group,&mut next_anon_id)
-        // }) {
-        //     return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::Builder(e.error_type)});
-        // }
-
-        // if let Err(e)=ast.calc_vars(false) {
-        //     return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
-        // }
-
-        // if let Err(e)=ast.calc_labels_gotos() {
-        //     return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
-        // }
-
-        // //
-        // let time_elapsed=start_time.elapsed().as_secs_f64();
-        // println!("Time elapsed2: {time_elapsed:?}" ,);
+        let time_elapsed=start_time.elapsed().as_secs_f64();
+        println!("Time elapsed2: {time_elapsed:?}" ,);
         // //
         // // if print_ast { ast.print(); }
         // // ast.print();
 
         // //
-        // let kept_src=if keep_src {Some(src.clone())} else {None};
-        // let build = ast.compile(version, path, kept_src,true,true);
-        // Ok(BuildT::new(build))
+        let kept_src=if keep_src {Some(StringVal::new(src))} else {None};
+        let build = ast.compile(version, path, kept_src,true,true);
+        Ok(BuildT::new(build))
 
         // //
-        // // Ok(BuildT::new(Build::default()))
+        // Ok(BuildT::new(Build::default()))
     }
 
 

@@ -482,6 +482,11 @@ pub struct Token<'t> {
     pub token_type:TokenType<'t>,
 }
 
+impl<'t> Debug for Token<'t> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.token_type.fmt(f)
+    }
+}
 
 fn tokenise_num<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(CompileErrorType,Loc)> {
     //[0] | [0-9][1-9]*

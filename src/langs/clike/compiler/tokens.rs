@@ -14,6 +14,13 @@ pub struct Tokens<'t> {
 }
 
 impl<'t> Tokens<'t> {
+    pub fn new(tokens:&'t Vec<Token<'t>>) -> Self {
+        Self {
+            start: 0, end: tokens.len(),
+            last_loc: tokens.first().map(|t|t.start_loc).unwrap_or(Loc::one()),
+            tokens,
+        }
+    }
     pub fn first(&self) -> Option<&'t Token<'t>> {
         self.tokens.get(self.start)
     }
