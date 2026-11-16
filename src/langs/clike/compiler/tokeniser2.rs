@@ -1,7 +1,7 @@
 use core::panic;
 use std::{fmt::Debug, num::{IntErrorKind, ParseFloatError, ParseIntError}, ops::{Range, RangeInclusive}, path::Path, str::{CharIndices, Chars}};
 
-use crate::{clike::{compiler::{error::CompileError, CompileErrorType, TokeniserErrorType}, grammar::{node::GrammarNode, utils::groups_debug_print, walker::GrammarWalker, GrammarWalkError, PrimitiveTrait, TokensPrimitiveTrait, TokensTrait }}, Loc};
+use crate::{clike::{char_input::Input2, compiler::{error::CompileError, CompileErrorType, TokeniserErrorType}, grammar::{node::GrammarNode, utils::groups_debug_print, walker::GrammarWalker, GrammarWalkError, PrimitiveTrait, TokensPrimitiveTrait, TokensTrait }}, Loc};
 
 #[derive(Debug,Clone)]
 pub enum  TokenizerErrorType2 {
@@ -79,138 +79,6 @@ pub enum  TokenizerErrorType2 {
     //     true
     // }
 
-
-#[derive(Clone,Copy,)]
-pub struct Input2<'t> {
-    data:&'t str,
-    start_pos:usize,
-    cur_pos:usize,
-    // end_pos_rewind:usize,
-    // prev_end_pos:usize,
-
-    start_loc: Loc,
-    cur_loc: Loc,
-}
-impl<'t> Input2<'t> {
-    pub fn new(data:&'t str) -> Self {
-        Self {
-            data, start_pos:0, cur_pos:0,
-            start_loc:Loc::one(),
-            cur_loc:Loc::one(),
-            // prev_end_pos:0,
-            // end_pos_rewind:0,
-        }
-    }
-    pub fn start_loc(&self) -> Loc {
-        self.start_loc
-    }
-    pub fn cur_loc(&mut self) -> Loc {
-         if self.cur_pos != self.cur_loc.byte_pos {
-            self.cur_loc.calc(&self.data[self.cur_loc.byte_pos..self.cur_pos]);
-        }
-
-        self.cur_loc
-    }
-    pub fn slice(&self) -> &'t str {
-        &self.data[self.start_pos..self.cur_pos]
-    }
-    pub fn rest(&self) -> &'t str {
-        &self.data[self.cur_pos..]
-    }
-    pub fn peek(&self,chars_num:usize) -> Option<&'t str> {
-        let rest=self.rest();
-
-        let mut cs=rest.chars();
-
-        for _ in 0..chars_num {
-            if cs.next().is_none() {
-                return None;
-            }
-        }
-
-        let dif=rest.len()-cs.as_str().len();
-
-        Some(&rest[..dif])
-    }
-    pub fn peek_char(&self,) -> Option<char> {
-        self.rest().chars().next()
-    }
-    pub fn pos_range(&self) -> Range<usize> {
-        self.start_pos..self.cur_pos
-    }
-    pub fn is_eof(&self) -> bool {
-        self.cur_pos >= self.data.len()
-    }
-
-    pub fn next(&mut self) {
-        let cur_loc = self.cur_loc();
-        self.start_pos = self.cur_pos;
-        self.start_loc = cur_loc;
-    }
-
-    pub fn undo(&mut self) {
-        self.cur_pos=self.start_pos;
-        self.cur_loc = self.start_loc;
-    }
-
-
-    pub fn take_range(&mut self, r:RangeInclusive<char>) -> Option<char> {
-        let Some(x) = self.rest().chars().next() else {return None;};
-        if !r.contains(&x) {return None;}
-        self.cur_pos+=x.len_utf8();
-        Some(x)
-    }
-
-    pub fn take_one_of(&mut self, cs:&str) -> Option<char> {
-        let Some(x) = self.rest().chars().next() else {return None;};
-        if !cs.contains(x) {return None;}
-        self.cur_pos+=x.len_utf8();
-        Some(x)
-    }
-
-    pub fn take_char(&mut self, c:char) -> Option<char> {
-        if Some(c)!=self.rest().chars().next() {return None;};
-        self.cur_pos+=c.len_utf8();
-        Some(c)
-    }
-    pub fn take_any(&mut self,) -> Option<char> {
-        let Some(x) = self.rest().chars().next() else {return None;};
-        self.cur_pos+=x.len_utf8();
-        Some(x)
-    }
-    pub fn take_str(&mut self, s:&str) -> Option<&'t str> {
-        let p=self.cur_pos;
-
-        if !self.rest().starts_with(s) {return None;}
-        self.cur_pos+=s.len();
-
-        Some(&self.data[p..self.cur_pos])
-    }
-
-
-    pub fn eat_range(&mut self, r:RangeInclusive<char>) -> bool {
-        self.take_range(r).is_some()
-    }
-    pub fn eat_one_of(&mut self, cs:&str) -> bool {
-        self.take_one_of(cs).is_some()
-    }
-    pub fn eat_char(&mut self, c:char) -> bool {
-        self.take_char(c).is_some()
-    }
-    pub fn eat_any(&mut self,) -> bool {
-        self.take_any().is_some()
-    }
-    pub fn eat_str(&mut self, s:&str) -> bool {
-        self.take_str(s).is_some()
-    }
-
-}
-
-impl<'t> std::fmt::Debug for Input2<'t> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f,"{:?}",self.data)
-    }
-}
 
 #[derive(Copy,Clone,PartialEq,Eq,Debug)]
 pub enum MySymbol {
@@ -466,11 +334,11 @@ impl MyKeyword {
 
 
 #[derive(Debug)]
-pub enum TokenType<'a> {
-    Identifier(&'a str),
+pub enum TokenType<'t> {
+    Identifier(&'t str),
     Keyword(MyKeyword),
     Symbol(MySymbol),
-    String(String), //&'a str
+    String(String,&'t str), //
     Int(i64),
     Float(f64),
     Eol,
@@ -603,7 +471,8 @@ fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(Compi
     //
 
     let mut s=String::new();
-    let mut chunk_start = input.pos_range().end;
+    let mut chunk_start = input.slice().len(); // starts at 1 (right after opening '"')
+
     //
     loop {
         //
@@ -612,16 +481,17 @@ fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(Compi
         //
         if let Some('"')=input.peek_char() {
             //flush non escaped
-            let base = input.pos_range().start;
-            let end = input.pos_range().end;
-            s.push_str(&input.slice()[chunk_start - base..end - base]);
+            let slice = input.slice();
+            s.push_str(&slice[chunk_start..]);
+
+            let ss = slice.strip_prefix('"').unwrap();
 
             //
             input.eat_any();
 
             let start_loc=input.start_loc();
             let end_loc=input.cur_loc();
-            let token_type=TokenType::String(s);
+            let token_type=TokenType::String(s,ss);
 
             input.next();
             return Ok(Some(Token { start_loc, end_loc, token_type, }));
@@ -629,12 +499,11 @@ fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(Compi
 
         //
         if let Some('\\')=input.peek_char() {
-            //
-            let slash_pos = input.pos_range().end;
+            let slice = input.slice();
+            let slash_offset = slice.len();
 
-            //flush non escaped
-            let base = input.pos_range().start;
-            s.push_str(&input.slice()[chunk_start - base..slash_pos - base]);
+            // Flush non-escaped chunk up to '\'
+            s.push_str(&slice[chunk_start..slash_offset]);
 
             //
             input.eat_any();
@@ -642,7 +511,7 @@ fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(Compi
             //
             if let Some(escaped_char)=input.take_one_of("strn\n\"\\") {
                 //
-                chunk_start = input.pos_range().end;
+                chunk_start = input.slice().len();
 
                 //
                 match escaped_char {
@@ -658,15 +527,12 @@ fn tokenise_string<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(Compi
 
             } else if input.eat_str("\r\n") {
                 //
-                chunk_start = input.pos_range().end;
+                chunk_start = input.slice().len();
 
                 //
                 s.push(' ');
             } else {
-                // s.push('\\');
-
-                //
-                chunk_start = slash_pos;
+                chunk_start = slash_offset;
             }
         } else if input.eat_any() {
         } else {
@@ -756,14 +622,14 @@ fn tokenise_ws<'t>(input:&mut Input2<'t>) -> Result<Option<Token<'t>>,(CompileEr
     Ok(None)
 }
 
-pub fn tokenise2<'p,'t,'g>(
+pub fn tokenise2<'p,'t,>(
     src:&'t str,
     path:Option<&'p Path>,
 
 ) -> Result<Vec<Token<'t>>, CompileError<'p,'t>>
 { //(Loc,&'g str)
 
-    let mut input=Input2::new(src);
+    let mut input=Input2::new(src,Loc::one());
     // let mut tokens=Vec::new();
 
     let mut tokens = Vec::with_capacity(src.len() / 5);

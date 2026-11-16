@@ -35,8 +35,15 @@ impl<'t> Tokens<'t> {
         }
     }
     pub fn string(&self) -> Option<&'t str> {
-        if let Some(TokenType::String(x))=self.first().map(|t|&t.token_type) {
+        if let Some(TokenType::String(x,_))=self.first().map(|t|&t.token_type) {
             Some(x.as_str())
+        } else {
+            None
+        }
+    }
+    pub fn string_raw(&self) -> Option<&'t str> {
+        if let Some(TokenType::String(_,x))=self.first().map(|t|&t.token_type) {
+            Some(x)
         } else {
             None
         }
@@ -178,7 +185,7 @@ impl<'t> TokensPrimitiveTrait<MyPrimitive> for Tokens<'t> {
         let Some(first)=ts.next() else {return false;};
 
         if match p {
-            MyPrimitive::String => if let TokenType::String(_)= &first.token_type {true}else{false},
+            MyPrimitive::String => if let TokenType::String(_,_)= &first.token_type {true}else{false},
             MyPrimitive::Identifier => if let TokenType::Identifier(_)= &first.token_type {true}else{false},
             MyPrimitive::Int => if let TokenType::Int(_)= &first.token_type {true}else{false},
             MyPrimitive::Float => if let TokenType::Float(_)= &first.token_type {true}else{false},

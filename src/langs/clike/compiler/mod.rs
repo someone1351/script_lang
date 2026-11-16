@@ -22,6 +22,7 @@ todo:
 pub mod rules;
 pub mod error;
 pub mod tokens;
+pub mod format;
 
 // mod builder_error;
 
@@ -30,6 +31,7 @@ pub mod tokeniser2;
 
 
 use crate::builder::{Builder, BuilderError};
+use crate::clike::char_input::Input2;
 // use crate::clike::compiler::builder_error::BuilderErrorType;
 use crate::clike::compiler::rules::{MyGroup, MyPrimitive};
 // use crate::clike::compiler::tokeniser::tokenise;
@@ -359,7 +361,7 @@ impl Compiler {
                     match &p.token_type {
                         &TokenType::Float(x) => { builder.result_float(x); },
                         &TokenType::Int(x) => { builder.result_int(x); },
-                        TokenType::String(x) => { builder.result_string(x); },
+                        TokenType::String(x,_) => { builder.result_string(x); },
                         &TokenType::Identifier(x) => { builder.get_var(x); },
                         TokenType::Keyword(MyKeyword::True) => { builder.result_bool(true); },
                         TokenType::Keyword(MyKeyword::False) => { builder.result_bool(false); },
@@ -1058,7 +1060,7 @@ impl Compiler {
             }
 
             "format" => {
-                /*
+
 
                 if top_group.child_num()==0 {
                     builder.result_string("");
@@ -1076,196 +1078,203 @@ impl Compiler {
                 //
                 let mut j=0;
 
-                //first param is string
-                if let Ok(x)=top_group.child(0).unwrap().tokens().pop_string() {
-                    let s=x.value;
-
-                    j+=1;
-
-                    //
-
-                    let mut texts= vec![0..0];
-                    let mut vars =Vec::new();
-
-
-                    let mut input = Input::new(x.value);
-
-                    // //
-                    // for (i,c) in s.char_indices() {
-
-                    // }
-
-                    //parse format string
-                    let mut cs=s.chars();
-                    let mut texts2: Vec<String> = Vec::new();
-                    let mut formats2: Vec<String> = Vec::new();
-                    enum Closing { Single, Double, }
-                    let mut closings: Vec<Closing> = Vec::new();
-
-                    while !input.is_end() {
-                        if let Some(x)=input.has(0, ["{","\\{", "}"]).or_else(||input.get(0,1)) {
-                            match x {
-                                "{" => {
-
-                                }
-                                "}" => {
-
-                                }
-                                "\\{" => {
-
-                                }
-                                _ => {
-
-                                }
-                            }
-                        }
-
-
-                    }
-
-
-                    while let Some(c)=cs.next() {
-                        if c == '{' {
-                            while let Some(c2)=cs.next() {
-                                match c2 {
-                                    '{' => {
-                                        closings.push(Closing::Single);
-
-                                    }
-                                    '}' => {
-
-                                    }
-                                    _ => {
-
-                                    }
-                                }
-                            }
-
-                        }
-                    }
-
-
-                    let mut char_ind=0;
-
-
-                    while let Some(c)=cs.next() {
-                        char_ind+=1;
-
-                        match c {
-                            '{' => {
-                                vars.push(char_ind..char_ind);
-
-                                while let Some(c)=cs.next() {
-                                    char_ind+=1;
-
-                                    match c {
-                                        '}' => {
-                                            vars.last_mut().unwrap().end=char_ind-1;
-                                            break;
-                                        }
-
-                                        _=>{
-                                        }
-                                    }
-                                }
-
-                                texts.push(char_ind..char_ind);
-                            }
-                            '\\' => {
-                                if cs.next().is_some() {
-                                    char_ind+=1;
-                                    texts.last_mut().unwrap().end=char_ind;
-                                }
-
-                                continue;
-                            }
-                            _=>{
-                                texts.last_mut().unwrap().end=char_ind;
-                            }
-                        }
-                    }
-
-                    //
-
-                    for i in 0 .. texts.len() {
-                        let text_str=&s[texts[i].clone()];
-
-                        // println!("a: {text_str:?}");
-
-                        if !text_str.is_empty() {
-                            builder
-                                .result_string(text_str)
-                                .param_push()
-                                .swap()
-                                .call_method("add", 2)
-                                .param_push()
-                                ;
-                        }
-
-                        if let Some(var) = vars.get(i).cloned() {
-                            let var_str=&s[var];
-                            // println!("v: {var_str:?}");
-
-                            if var_str.is_empty() {
-                                // println!("hmm2 {:?}",record.start_loc());
-                                // println!("hmm {:?}",record.param(j).map(|x|x.primitive()));
-
-                                if let Some(x)=top_group.child(j) {
-                                    builder.eval(x);
-                                } else {
-                                    builder.result_nil();
-                                }
-
-                                j+=1;
-                            } else {
-                                builder.get_var(var_str);
-                            }
-
-                            builder
-                                .param_push()
-                                .call_method("string", 1)
-
-                                .param_push()
-                                .swap()
-                                .call_method("add", 2)
-
-                                .param_push();
-                        }
-                    }
-
-                }
-
                 //
-                for k in j .. top_group.child_num() {
-                    if k>0 {
-                        builder
-                            .result_string(" ")
+                // //first param is string
+                // if let Some((s,loc))=top_group.child(0)
+                //     .and_then(|g|g.tokens().string().map(|t|(t,g.tokens().start_loc())))
+                // {
 
-                            .param_push()
-                            .swap()
-                            .call_method("add", 2)
-                            .param_push();
-                    }
+                // }
 
+                // if let Some(x)=top_group.child(0).unwrap().tokens().string()
+                // {
+                //     // let s=x.value;
 
-                    builder
+                //     j+=1;
 
-                        .eval(top_group.child(k).unwrap())
+                //     //
 
-                        .param_push()
-                        .call_method("string", 1)
-
-                        .param_push()
-                        .swap()
-                        .call_method("add", 2)
-
-                        .param_push();
-                }
+                //     let mut texts= vec![0..0];
+                //     let mut vars =Vec::new();
 
 
-                builder.pop();
+                //     let mut input = Input2::new(s,);
 
-                */
+                //     // //
+                //     // for (i,c) in s.char_indices() {
+
+                //     // }
+
+                //     //parse format string
+                //     let mut cs=s.chars();
+                //     let mut texts2: Vec<String> = Vec::new();
+                //     let mut formats2: Vec<String> = Vec::new();
+                //     enum Closing { Single, Double, }
+                //     let mut closings: Vec<Closing> = Vec::new();
+
+                //     while !input.is_end() {
+                //         if let Some(x)=input.has(0, ["{","\\{", "}"]).or_else(||input.get(0,1)) {
+                //             match x {
+                //                 "{" => {
+
+                //                 }
+                //                 "}" => {
+
+                //                 }
+                //                 "\\{" => {
+
+                //                 }
+                //                 _ => {
+
+                //                 }
+                //             }
+                //         }
+
+
+                //     }
+
+
+                //     while let Some(c)=cs.next() {
+                //         if c == '{' {
+                //             while let Some(c2)=cs.next() {
+                //                 match c2 {
+                //                     '{' => {
+                //                         closings.push(Closing::Single);
+
+                //                     }
+                //                     '}' => {
+
+                //                     }
+                //                     _ => {
+
+                //                     }
+                //                 }
+                //             }
+
+                //         }
+                //     }
+
+
+                //     let mut char_ind=0;
+
+
+                //     while let Some(c)=cs.next() {
+                //         char_ind+=1;
+
+                //         match c {
+                //             '{' => {
+                //                 vars.push(char_ind..char_ind);
+
+                //                 while let Some(c)=cs.next() {
+                //                     char_ind+=1;
+
+                //                     match c {
+                //                         '}' => {
+                //                             vars.last_mut().unwrap().end=char_ind-1;
+                //                             break;
+                //                         }
+
+                //                         _=>{
+                //                         }
+                //                     }
+                //                 }
+
+                //                 texts.push(char_ind..char_ind);
+                //             }
+                //             '\\' => {
+                //                 if cs.next().is_some() {
+                //                     char_ind+=1;
+                //                     texts.last_mut().unwrap().end=char_ind;
+                //                 }
+
+                //                 continue;
+                //             }
+                //             _=>{
+                //                 texts.last_mut().unwrap().end=char_ind;
+                //             }
+                //         }
+                //     }
+
+                //     //
+
+                //     for i in 0 .. texts.len() {
+                //         let text_str=&s[texts[i].clone()];
+
+                //         // println!("a: {text_str:?}");
+
+                //         if !text_str.is_empty() {
+                //             builder
+                //                 .result_string(text_str)
+                //                 .param_push()
+                //                 .swap()
+                //                 .call_method("add", 2)
+                //                 .param_push()
+                //                 ;
+                //         }
+
+                //         if let Some(var) = vars.get(i).cloned() {
+                //             let var_str=&s[var];
+                //             // println!("v: {var_str:?}");
+
+                //             if var_str.is_empty() {
+                //                 // println!("hmm2 {:?}",record.start_loc());
+                //                 // println!("hmm {:?}",record.param(j).map(|x|x.primitive()));
+
+                //                 if let Some(x)=top_group.child(j) {
+                //                     builder.eval(x);
+                //                 } else {
+                //                     builder.result_nil();
+                //                 }
+
+                //                 j+=1;
+                //             } else {
+                //                 builder.get_var(var_str);
+                //             }
+
+                //             builder
+                //                 .param_push()
+                //                 .call_method("string", 1)
+
+                //                 .param_push()
+                //                 .swap()
+                //                 .call_method("add", 2)
+
+                //                 .param_push();
+                //         }
+                //     }
+
+                // }
+
+                // //
+                // for k in j .. top_group.child_num() {
+                //     if k>0 {
+                //         builder
+                //             .result_string(" ")
+
+                //             .param_push()
+                //             .swap()
+                //             .call_method("add", 2)
+                //             .param_push();
+                //     }
+
+
+                //     builder
+
+                //         .eval(top_group.child(k).unwrap())
+
+                //         .param_push()
+                //         .call_method("string", 1)
+
+                //         .param_push()
+                //         .swap()
+                //         .call_method("add", 2)
+
+                //         .param_push();
+                // }
+
+
+                // builder.pop();
+
             }
 
             _ => {

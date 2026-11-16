@@ -1,5 +1,6 @@
 use std::{fmt::Debug, path::Path};
 
+use crate::clike::compiler::format::FormatErrorType;
 use crate::{ast, clike::compiler::tokeniser2::TokenizerErrorType2, error_msg, Loc };
 // use super::super::tokenizer::TokenizerErrorType;
 
@@ -39,6 +40,7 @@ pub enum CompileErrorType {
     // Tokenizer(TokenizerErrorType),
     // Tokeniser(&'t str),
     Tokeniser2(TokenizerErrorType2),
+    Format(FormatErrorType),
     ParserExpected(String),
     ParserUnexpected,
     Builder(BuilderErrorType),

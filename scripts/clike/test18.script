@@ -10,3 +10,5 @@ a.abs()
 "adssadsa\s\ndsfdsfd"
 
 1+2 *3
+
+format("abc")
