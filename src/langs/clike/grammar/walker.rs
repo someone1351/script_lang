@@ -3460,6 +3460,88 @@ where
 
     }
 
+    pub fn get_walk3(&self) -> Walk<GR, TS> {
+        let n = self.groups2.len();
+
+        // 1. Resolve parent index for each group (n = virtual root)
+        let mut parent_stk: Vec<(usize, usize)> = Vec::new();
+        let mut parents = vec![0usize; n];
+
+        for (i, temp_group) in self.groups2.iter().enumerate().rev() {
+            while let Some(&(_last_parent_ind, last_group_len)) = parent_stk.last() {
+                if temp_group.group_len2 >= last_group_len {
+                    break;
+                }
+                parent_stk.pop();
+            }
+
+            let (last_parent_ind, last_group_len) = parent_stk.last().copied().unwrap_or((n, 0));
+            parents[i] = last_parent_ind;
+
+            if temp_group.group_len2 == last_group_len {
+                parent_stk.pop();
+            }
+
+            parent_stk.push((i, temp_group.group_len2));
+        }
+
+        // 2. Count direct children per parent (index `n` is the root)
+        let mut child_counts = vec![0usize; n + 1];
+        for &p in &parents {
+            child_counts[p] += 1;
+        }
+
+        // 3. Reverse prefix sum to assign contiguous breadth-first ranges
+        // Note: in your original sort, `p1.cmp(&p2).reverse()` puts larger parent
+        // indices first (root `n` first, then `n-1`, ..., down to `0`).
+        let mut offsets = vec![0usize; n + 1];
+        let mut cur = 1; // index 0 in groups_out is reserved for the root
+        for p in (0..=n).rev() {
+            offsets[p] = cur;
+            cur += child_counts[p];
+        }
+
+        // 4. Pre-fill groups_out and scatter elements directly into final positions
+        let mut groups_out: Vec<WalkGroup<GR, TS>> = Vec::with_capacity(n + 1);
+        groups_out.push(WalkGroup {
+            name: None,
+            children: 1..(1 + child_counts[n]),
+            tokens: self.top_tokens.clone(),
+        });
+        // Placeholder resize (or use MaybeUninit if avoiding clone/default)
+        groups_out.resize_with(n + 1, || WalkGroup {
+            name: None,
+            children: 0..0,
+            tokens: self.top_tokens.clone(),
+        });
+
+        // Forward pass `0..n` preserves ascending `g1.cmp(&g2)` tie-breaker order
+        for (i, gg) in self.groups2.iter().enumerate() {
+            let p = parents[i];
+            let dest = offsets[p];
+            offsets[p] += 1;
+
+            let mut tokens = gg.tokens.clone();
+            if gg.trim {
+                tokens.trim2();
+            }
+
+            // Since `i` will later act as parent `p = i`, its children will sit at:
+            // initial `offsets[i]` .. initial `offsets[i] + child_counts[i]`.
+            // Because `i < p`, `offsets[i]` hasn't been incremented yet!
+            let c_start = offsets[i];
+            let c_end = c_start + child_counts[i];
+
+            groups_out[dest] = WalkGroup {
+                name: Some(gg.name.clone()),
+                children: c_start..c_end,
+                tokens,
+            };
+        }
+
+        Walk { groups: groups_out }
+    }
+
     // //
     // pub fn get_walk1(&self,
     //     // in_betweens:bool

@@ -7,16 +7,43 @@ use crate::{clike::{char_input::Input2, compiler::{CompileError, CompileErrorTyp
 pub enum  FormatErrorType {
     Unexpected,
     ClosingBracket,
+    ClosingBrace,
     NoIndex,
     NoField,
+    // NoVariable,
     Int(ParseIntError),
 }
 
 
-enum FieldType<'t> {
+#[derive(Debug, Clone)]
+pub enum FieldType<'t> {
     Index(i64),
     Name(&'t str),
 }
+
+
+#[derive(Debug, Clone)]
+pub enum Access<'t> {
+    Field(FieldType<'t>, Loc),
+    Index(i64, Loc),
+}
+
+#[derive(Debug, Clone)]
+pub enum Placeholder<'t> {
+    Positional(Loc),
+    Var {
+        name: &'t str,
+        loc: Loc,
+        chain: Vec<Access<'t>>,
+    },
+}
+
+#[derive(Debug, Clone)]
+pub enum FormatItem<'t> {
+    Text(&'t str),
+    Placeholder(Placeholder<'t>),
+}
+
 
 fn parse_field<'t>(input:&mut Input2<'t>) -> Result<Option<(FieldType<'t>,Loc)>,(CompileErrorType,Loc)> {
     // [.] (ident | uint)
@@ -70,10 +97,16 @@ fn parse_int<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,(CompileErro
     //[-]? int
 
     let start_loc=input.start_loc();
-    let neg=input.eat_char('-');
+    // let neg=
+    input.eat_char('-');
+
+    // //so parse_uint doesn't use it
+    // input.next();
+
+    //
 
     if let Some((x,_))=parse_uint(input)? {
-        Ok(Some((if neg {-x} else {x},start_loc)))
+        Ok(Some((x,start_loc))) //if neg {-x} else {x}
     } else {
         input.undo();
         Ok(None)
@@ -137,47 +170,137 @@ fn parse_identifier<'t>(input: &mut Input2<'t>) -> Option<(&'t str,Loc)> {
 
 }
 
-pub fn parse<'p,'t>(src:&'t str,
-    src_loc:Loc,
+fn parse_placeholder<'t>(input:&mut Input2<'t>) -> Result<Option<Placeholder<'t>>,(CompileErrorType,Loc)> {
+    // placeholder    => [{] (var_chain)? [}]
+    // var_chain      => ident (field_access | index_access)*
+
+    //
+
+    let start_loc=input.start_loc();
+
+    //
+    if !input.eat_char('{') {
+        return Ok(None);
+    }
+
+    //because of parse_identifier's undo
+    input.next();
+
+    //
+    let placeholder = if let Some((name,var_loc))=parse_identifier(input) {
+        let mut chain = Vec::new();
+
+        loop {
+            if let Some((x,loc))=parse_field(input)? {
+                chain.push(Access::Field(x, loc));
+                continue;
+            }
+            if let Some((x,loc))=parse_index(input)? {
+                chain.push(Access::Index(x, loc));
+                continue;
+            }
+
+            break;
+        }
+        Placeholder::Var { name, loc: var_loc, chain, }
+    } else {
+        Placeholder::Positional(start_loc)
+    };
+
+    //
+    if !input.eat_char('}') {
+        return Err((CompileErrorType::Format(FormatErrorType::ClosingBrace), input.cur_loc(),));
+    }
+
+    //
+    input.next();
+
+    //
+    Ok(Some(placeholder))
+}
+
+pub fn parse<'p,'t>(
+    decoded_src: &'t str,
+    raw_src:&'t str,
+    raw_loc:Loc,
+
     path:Option<&'p Path>,
-) ->  Result<(), CompileError<'p,'t>>
+) ->  Result<Vec<FormatItem<'t>>, CompileError<'p,'t>>
 
 {
-    let mut input=Input2::new(src,src_loc);
+    let mut input=Input2::new(raw_src,raw_loc);
+    let mut decoded_pos = 0;
+    let mut items = Vec::new();
 
     while !input.is_eof() {
 
-        //escaped lbrace/rbrace
-        if input.eat_str("{{") || input.eat_str("}}") {
-
+        //escaped lbrace/
+        if input.eat_str("{{"){
+            items.push(FormatItem::Text("{"));
+            input.next();
+            decoded_pos += "{{".len();
             continue;
         }
 
-        //
-        if input.eat_char('{') {
-            loop {
+        //escaped rbrace
+        if input.eat_str("}}") {
+            items.push(FormatItem::Text("}"));
+            input.next();
+            decoded_pos += "}}".len();
+            continue;
+        }
 
-                if input.eat_char('}') {
-                    break;
-                }
+        //placeholder => [{] (var_chain)? [}]
+        {
+            let raw_before = input.pos_range().start;
+            if let Some(p)=parse_placeholder(&mut input)
+                .map_err(|(error_type,loc)|CompileError{src:Some(raw_src),path,error_type,loc,})?
+            {
+                let consumed_len = input.pos_range().start - raw_before;
+                decoded_pos += consumed_len;
+
+                items.push(FormatItem::Placeholder(p));
+                continue;
             }
         }
 
+        //text => [^{}]+
+        if input.peek_char().is_some_and(|c| c != '{' && c != '}') //input.eat_not_of("{}")
+        {
+            let text_decoded_start = decoded_pos;
 
-        //text [^{}]+
-        if input.eat_not_of("{}") {
-            while input.eat_not_of("{}") {}
+            // while input.eat_not_of("{}") {}
+
+            while let Some(c) = input.peek_char() {
+                if c == '{' || c == '}' {break;}
+
+                if input.eat_char('\\') {
+                    if input.take_one_of("strn\n\"\\").is_some() || input.eat_str("\r\n") {
+                        // decoded_pos+=decoded_src[decoded_pos..].chars().next().unwrap().len_utf8();
+                        decoded_pos += 1;
+                    } else if let Some(cc) = input.take_any() { //other "non escaped" escaped
+                        // decoded_pos += '\\'.len_utf8() + cc.len_utf8();
+                        decoded_pos += 1 + cc.len_utf8();
+                    }
+                } else if let Some(cc) = input.take_any() {
+                    decoded_pos += cc.len_utf8();
+                }
+            }
+
+            // items.push(FormatItem::Text(input.slice()));
+            items.push(FormatItem::Text(&decoded_src[text_decoded_start..decoded_pos]));
+            input.next();
             continue;
         }
 
         //
         return Err(CompileError {
-            src: Some(src),
+            src: Some(raw_src),
             path,
             error_type: CompileErrorType::Format(FormatErrorType::Unexpected),
             loc:input.start_loc(),
         });
     }
 
-    Ok(())
+    Ok(items)
 }
