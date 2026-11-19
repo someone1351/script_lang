@@ -309,7 +309,7 @@ impl Compiler {
         let mut ast = ast::Ast::new(false,true);
 
         if let Err(e)=builder.generate_ast(&mut ast,|builder,group|{
-            self.run(builder, group,&mut next_anon_id)
+            self.run(path,builder, group,&mut next_anon_id)
         }) {
             return Err(CompileError{path,src:Some(src),loc:e.loc,error_type:CompileErrorType::Builder(e.error_type)});
         }
@@ -339,12 +339,16 @@ impl Compiler {
     }
 
 
-    pub fn run<'a,'t,'g>(&self,
+    pub fn run<'a,'p,'t,'g>(&self,
         // builder:&mut CExprBuilder<'a>,
+        path : Option<&'p Path>,
         builder:&mut Builder<'a,WalkGroupContainer<'g,MyGroup<'g>,Tokens<'t>>,BuilderErrorType>,
         top_group:WalkGroupContainer<'g,MyGroup<'g>,Tokens<'t>>,
         next_anon_id:&mut usize,
-    ) -> Result<(),BuilderError<BuilderErrorType>> {
+    ) -> Result<(),
+        // BuilderError<BuilderErrorType>
+        CompileError<'p,'t>
+        > {
         // println!("{:?}:",top_group_name.0);
 
         *next_anon_id+=1;
@@ -1038,7 +1042,8 @@ impl Compiler {
                     ;
             }
 
-            "print" => {
+
+            "println" => {
                 builder
                     .eval(top_group.child(0).unwrap())
                     .param_push()
@@ -1050,8 +1055,8 @@ impl Compiler {
                     ;
 
             }
-            "println" => {
-                // top_group.children().is_empty();
+
+            "print" => {
                 builder
                     .eval(top_group.child(0).unwrap())
                     .param_push()
@@ -1059,13 +1064,25 @@ impl Compiler {
                     ;
             }
 
+            "format" if top_group.child_num()==0 => {
+                builder.result_string("");
+
+            }
+
+            // "format" if if top_group.child(0).unwrap().tokens().string().is_some()==0 => {
+
+            //     //
+            //     builder
+            //         .result_string("")
+            //         .param_push();
+            // }
+
             "format" => {
+                use crate::clike::compiler::format;
 
-
-                if top_group.child_num()==0 {
-                    builder.result_string("");
-                    return Ok(());
-                }
+                // if top_group.child_num()==0 {
+                //     return Ok(());
+                // }
 
                 //
 
@@ -1073,207 +1090,136 @@ impl Compiler {
                 //
                 builder
                     .result_string("")
-                    .param_push();
+                    // .param_push()
+                    ;
 
                 //
                 let mut j=0;
+                //
+                let first_param=top_group.child(0).unwrap();
+                //
+                if let TokenType::String(decoded,raw)=&first_param.tokens().first().unwrap().token_type {
+                    j+=1;
+                    let mut raw_loc = first_param.tokens().start_loc();
+                    raw_loc.calc("\"");
+                    let items=format::parse(decoded,raw,raw_loc,path)?;
+
+                    for item in items {
+                        match item {
+                            format::FormatItem::Text(t) => {
+                                builder
+                                    .param_push()
+                                    .result_string(t)
+                                    .param_push()
+                                    .swap()
+                                    .call_method("add", 2);
+
+                            }
+                            format::FormatItem::Placeholder(placeholder) => {
+                                match placeholder {
+                                    format::Placeholder::Positional(loc) => {
+                                        if let Some(x)=top_group.child(j) {
+                                            builder
+                                                .param_push();
+                                            builder.eval(x);
+                                            builder
+                                                .param_push()
+                                                .call_method("string", 1)
+                                                .param_push()
+                                                .swap()
+                                                .call_method("add", 2);
+                                            j+=1;
+                                        }
+
+                                    }
+                                    format::Placeholder::Var { name, loc, chain } => {
+                                        builder
+                                            .param_push() //prev str
+                                            .loc(loc)
+                                            .get_var(name);
+
+                                        for a in chain {
+                                            builder.param_push();
+
+                                            match a {
+                                                format::Access::Field(field_type, loc) => {
+                                                    match field_type {
+                                                        format::FieldType::Index(x) => {
+                                                            builder.result_int(x);
+                                                        }
+                                                        format::FieldType::Name(x) => {
+                                                            builder.result_string(x);
+                                                        }
+                                                    }
+                                                    builder
+                                                        .loc(loc)
+                                                        .param_push()
+                                                        .swap()
+                                                        .call_method("_field", 2);
+                                                }
+                                                format::Access::Index(x, loc) => {
+                                                    builder
+                                                        .loc(loc)
+                                                        .result_int(x)
+                                                        .param_push()
+                                                        .swap()
+                                                        .call_method("_index", 2);
+                                                }
+                                            }
+                                        }
+                                        builder
+                                            .param_push()
+                                            .call_method("string", 1)
+
+                                            .param_push()
+                                            .swap()
+                                            .call_method("add", 2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //add remaining vals space separated
 
                 //
-                // //first param is string
-                // if let Some((s,loc))=top_group.child(0)
-                //     .and_then(|g|g.tokens().string().map(|t|(t,g.tokens().start_loc())))
-                // {
-
+                // if j+1 != top_group.child_num() {
+                //     builder.param_push();
                 // }
 
-                // if let Some(x)=top_group.child(0).unwrap().tokens().string()
-                // {
-                //     // let s=x.value;
+                //
+                for k in j .. top_group.child_num() {
+                    //separating spaces
+                    if k>0 {
+                        builder
+                            .param_push()
+                            .result_string(" ")
+                            .param_push()
+                            .swap()
+                            .call_method("add", 2)
+                            ;
+                    }
 
-                //     j+=1;
+                    //val
 
-                //     //
+                    builder
+                        .param_push()
 
-                //     let mut texts= vec![0..0];
-                //     let mut vars =Vec::new();
+                        .eval(top_group.child(k).unwrap())
 
+                        .param_push()
+                        .call_method("string", 1)
 
-                //     let mut input = Input2::new(s,);
+                        .param_push()
+                        .swap()
+                        .call_method("add", 2)
+                        ;
 
-                //     // //
-                //     // for (i,c) in s.char_indices() {
-
-                //     // }
-
-                //     //parse format string
-                //     let mut cs=s.chars();
-                //     let mut texts2: Vec<String> = Vec::new();
-                //     let mut formats2: Vec<String> = Vec::new();
-                //     enum Closing { Single, Double, }
-                //     let mut closings: Vec<Closing> = Vec::new();
-
-                //     while !input.is_end() {
-                //         if let Some(x)=input.has(0, ["{","\\{", "}"]).or_else(||input.get(0,1)) {
-                //             match x {
-                //                 "{" => {
-
-                //                 }
-                //                 "}" => {
-
-                //                 }
-                //                 "\\{" => {
-
-                //                 }
-                //                 _ => {
-
-                //                 }
-                //             }
-                //         }
-
-
-                //     }
-
-
-                //     while let Some(c)=cs.next() {
-                //         if c == '{' {
-                //             while let Some(c2)=cs.next() {
-                //                 match c2 {
-                //                     '{' => {
-                //                         closings.push(Closing::Single);
-
-                //                     }
-                //                     '}' => {
-
-                //                     }
-                //                     _ => {
-
-                //                     }
-                //                 }
-                //             }
-
-                //         }
-                //     }
-
-
-                //     let mut char_ind=0;
-
-
-                //     while let Some(c)=cs.next() {
-                //         char_ind+=1;
-
-                //         match c {
-                //             '{' => {
-                //                 vars.push(char_ind..char_ind);
-
-                //                 while let Some(c)=cs.next() {
-                //                     char_ind+=1;
-
-                //                     match c {
-                //                         '}' => {
-                //                             vars.last_mut().unwrap().end=char_ind-1;
-                //                             break;
-                //                         }
-
-                //                         _=>{
-                //                         }
-                //                     }
-                //                 }
-
-                //                 texts.push(char_ind..char_ind);
-                //             }
-                //             '\\' => {
-                //                 if cs.next().is_some() {
-                //                     char_ind+=1;
-                //                     texts.last_mut().unwrap().end=char_ind;
-                //                 }
-
-                //                 continue;
-                //             }
-                //             _=>{
-                //                 texts.last_mut().unwrap().end=char_ind;
-                //             }
-                //         }
-                //     }
-
-                //     //
-
-                //     for i in 0 .. texts.len() {
-                //         let text_str=&s[texts[i].clone()];
-
-                //         // println!("a: {text_str:?}");
-
-                //         if !text_str.is_empty() {
-                //             builder
-                //                 .result_string(text_str)
-                //                 .param_push()
-                //                 .swap()
-                //                 .call_method("add", 2)
-                //                 .param_push()
-                //                 ;
-                //         }
-
-                //         if let Some(var) = vars.get(i).cloned() {
-                //             let var_str=&s[var];
-                //             // println!("v: {var_str:?}");
-
-                //             if var_str.is_empty() {
-                //                 // println!("hmm2 {:?}",record.start_loc());
-                //                 // println!("hmm {:?}",record.param(j).map(|x|x.primitive()));
-
-                //                 if let Some(x)=top_group.child(j) {
-                //                     builder.eval(x);
-                //                 } else {
-                //                     builder.result_nil();
-                //                 }
-
-                //                 j+=1;
-                //             } else {
-                //                 builder.get_var(var_str);
-                //             }
-
-                //             builder
-                //                 .param_push()
-                //                 .call_method("string", 1)
-
-                //                 .param_push()
-                //                 .swap()
-                //                 .call_method("add", 2)
-
-                //                 .param_push();
-                //         }
-                //     }
-
-                // }
-
-                // //
-                // for k in j .. top_group.child_num() {
-                //     if k>0 {
-                //         builder
-                //             .result_string(" ")
-
-                //             .param_push()
-                //             .swap()
-                //             .call_method("add", 2)
-                //             .param_push();
-                //     }
-
-
-                //     builder
-
-                //         .eval(top_group.child(k).unwrap())
-
-                //         .param_push()
-                //         .call_method("string", 1)
-
-                //         .param_push()
-                //         .swap()
-                //         .call_method("add", 2)
-
-                //         .param_push();
-                // }
-
-
-                // builder.pop();
+                    // if k+1!=top_group.child_num() {
+                    //     builder.param_push();
+                    // }
+                }
 
             }
 
