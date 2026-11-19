@@ -48,9 +48,11 @@ use crate::clike::grammar::GrammarWalkError;
 // use crate::clike::tokenizer::{tokenize, TokenIterContainer, TokenTypeContainer, TokenizerErrorType};
 use crate::primitive_types::StringVal;
 
+use crate::texpr::compiler::cmds::continue_cmd;
 use crate::{build::*, compiler::builder};
 // use super::ccexpr_tokenizer::*;
 
+use core::panic;
 use std::path::Path;
 
 use crate::compiler::ast;
@@ -1096,9 +1098,15 @@ impl Compiler {
                 //
                 let mut j=0;
                 //
-                let first_param=top_group.child(0).unwrap();
+                let Some(first_param)=top_group.child(0) else {return Ok(());};
                 //
-                if let TokenType::String(decoded,raw)=&first_param.tokens().first().unwrap().token_type {
+
+                // if let TokenType::String(decoded,raw)=&first_param.tokens().first().unwrap().token_type {
+                if first_param.name2()==Some(MyGroup("string")) {
+                    let TokenType::String(decoded,raw)=&first_param.tokens().first().unwrap().token_type else {
+                        panic!("");
+                    };
+
                     j+=1;
                     let mut raw_loc = first_param.tokens().start_loc();
                     raw_loc.calc("\"");
