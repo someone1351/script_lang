@@ -1,6 +1,6 @@
 use std::{num::ParseIntError, path::Path};
 
-use crate::{clike::{char_input::Input2, compiler::{CompileError, CompileErrorType}}, Loc};
+use crate::{builder::BuilderError, clike::{char_input::Input2, compiler::{BuilderErrorType, CompileError, CompileErrorType}}, Loc};
 
 
 #[derive(Debug,Clone)]
@@ -45,7 +45,7 @@ pub enum FormatItem<'t> {
 }
 
 
-fn parse_field<'t>(input:&mut Input2<'t>) -> Result<Option<(FieldType<'t>,Loc)>,(CompileErrorType,Loc)> {
+fn parse_field<'t>(input:&mut Input2<'t>) -> Result<Option<(FieldType<'t>,Loc)>,BuilderError<BuilderErrorType>> {
     // [.] (ident | uint)
 
     let start_loc=input.start_loc();
@@ -64,11 +64,14 @@ fn parse_field<'t>(input:&mut Input2<'t>) -> Result<Option<(FieldType<'t>,Loc)>,
         return Ok(Some((FieldType::Index(x),start_loc)));
     }
 
-     Err((CompileErrorType::Format(FormatErrorType::NoField), input.start_loc(),)) //should error be at start of '.' instead of after?
+    //  Err((CompileErrorType::Format(FormatErrorType::NoField), input.start_loc(),)) //should error be at start of '.' instead of after?
+
+     Err(BuilderError{ loc: input.start_loc(), error_type: BuilderErrorType::Format(FormatErrorType::NoField) })
+
 
 }
 
-fn parse_index<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,(CompileErrorType,Loc)> {
+fn parse_index<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,BuilderError<BuilderErrorType>> {
     // [\[] int [\]]
 
     let start_loc=input.start_loc();
@@ -80,11 +83,15 @@ fn parse_index<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,(CompileEr
     input.next(); //so on parse_int fail, input.start_loc is after '['
 
     let Some((x,_))=parse_int(input)? else {
-        return Err((CompileErrorType::Format(FormatErrorType::NoIndex), input.start_loc(),));
+        // return Err((CompileErrorType::Format(FormatErrorType::NoIndex), input.start_loc(),));
+
+        return Err(BuilderError{ loc: input.start_loc(), error_type: BuilderErrorType::Format(FormatErrorType::NoIndex) });
+
     };
 
     if !input.eat_char(']') {
-        return Err((CompileErrorType::Format(FormatErrorType::ClosingBracket), input.cur_loc(),));
+        // return Err((CompileErrorType::Format(FormatErrorType::ClosingBracket), input.cur_loc(),));
+        return Err(BuilderError{ loc: input.cur_loc(), error_type: BuilderErrorType::Format(FormatErrorType::ClosingBracket) });
     }
 
     input.next();
@@ -93,7 +100,7 @@ fn parse_index<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,(CompileEr
 }
 
 
-fn parse_int<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,(CompileErrorType,Loc)> {
+fn parse_int<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,BuilderError<BuilderErrorType>> {
     //[-]? int
 
     let start_loc=input.start_loc();
@@ -113,7 +120,7 @@ fn parse_int<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,(CompileErro
     }
 }
 
-fn parse_uint<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,(CompileErrorType,Loc)> {
+fn parse_uint<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,BuilderError<BuilderErrorType>> {
     //[-]? ([0] | [0-9][1-9]*)
 
     //
@@ -126,10 +133,15 @@ fn parse_uint<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,(CompileErr
         return Ok(None);
     }
 
-    let val = input.slice().parse::<i64>().map_err(|e|(
-        CompileErrorType::Format(FormatErrorType::Int(e)),
-        input.start_loc(),
-    ))?;
+    let val = input.slice().parse::<i64>()
+        // .map_err(|e|(
+        //     CompileErrorType::Format(FormatErrorType::Int(e)),
+        //     input.start_loc(),
+        // ))
+        .map_err(|e|BuilderError{
+            loc: input.start_loc(), error_type: BuilderErrorType::Format(FormatErrorType::Int(e))
+        })
+        ?;
 
     let start_loc=input.start_loc();
     // let end_loc=input.cur_loc();
@@ -170,7 +182,7 @@ fn parse_identifier<'t>(input: &mut Input2<'t>) -> Option<(&'t str,Loc)> {
 
 }
 
-fn parse_placeholder<'t>(input:&mut Input2<'t>) -> Result<Option<Placeholder<'t>>,(CompileErrorType,Loc)> {
+fn parse_placeholder<'t>(input:&mut Input2<'t>) -> Result<Option<Placeholder<'t>>,BuilderError<BuilderErrorType>> {
     // placeholder    => [{] (var_chain)? [}]
     // var_chain      => ident (field_access | index_access)*
 
@@ -209,7 +221,8 @@ fn parse_placeholder<'t>(input:&mut Input2<'t>) -> Result<Option<Placeholder<'t>
 
     //
     if !input.eat_char('}') {
-        return Err((CompileErrorType::Format(FormatErrorType::ClosingBrace), input.cur_loc(),));
+        // return Err((CompileErrorType::Format(FormatErrorType::ClosingBrace), input.cur_loc(),));
+        return Err(BuilderError { loc: input.cur_loc(), error_type: BuilderErrorType::Format(FormatErrorType::ClosingBrace), })
     }
 
     //
@@ -225,7 +238,7 @@ pub fn parse<'p,'t>(
     raw_loc:Loc,
 
     path:Option<&'p Path>,
-) ->  Result<Vec<FormatItem<'t>>, CompileError<'p,'t>>
+) ->  Result<Vec<FormatItem<'t>>, BuilderError<BuilderErrorType>>
 
 {
     let mut input=Input2::new(raw_src,raw_loc);
@@ -253,8 +266,7 @@ pub fn parse<'p,'t>(
         //placeholder => [{] (var_chain)? [}]
         {
             let raw_before = input.pos_range().start;
-            if let Some(p)=parse_placeholder(&mut input)
-                .map_err(|(error_type,loc)|CompileError{src:Some(raw_src),path,error_type,loc,})?
+            if let Some(p)=parse_placeholder(&mut input)?
             {
                 let consumed_len = input.pos_range().start - raw_before;
                 decoded_pos += consumed_len;
@@ -294,10 +306,10 @@ pub fn parse<'p,'t>(
         }
 
         //
-        return Err(CompileError {
-            src: Some(raw_src),
-            path,
-            error_type: CompileErrorType::Format(FormatErrorType::Unexpected),
+        return Err(BuilderError {
+            // src: Some(raw_src),
+            // path,
+            error_type: BuilderErrorType::Format(FormatErrorType::Unexpected),
             loc:input.start_loc(),
         });
     }

@@ -11,4 +11,4 @@ a.abs()
 
 1+2 *3
 
-format("abc")
+format("abc {}",1)

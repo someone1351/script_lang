@@ -309,7 +309,15 @@ impl Compiler {
 
         //
         let mut ast = ast::Ast::new(false,true);
-
+// .map_err(|e|{
+//                 let ee=CompileError{
+//                 src:Option(src),
+//                 path,
+//                 error_type: CompileErrorType::Builder(e.error_type),
+//                 loc: e.loc,
+//             };
+//             e
+//             })
         if let Err(e)=builder.generate_ast(&mut ast,|builder,group|{
             self.run(path,builder, group,&mut next_anon_id)
         }) {
@@ -348,8 +356,8 @@ impl Compiler {
         top_group:WalkGroupContainer<'g,MyGroup<'g>,Tokens<'t>>,
         next_anon_id:&mut usize,
     ) -> Result<(),
-        // BuilderError<BuilderErrorType>
-        CompileError<'p,'t>
+        BuilderError<BuilderErrorType>
+        // CompileError<'p,'t>
         > {
         // println!("{:?}:",top_group_name.0);
 

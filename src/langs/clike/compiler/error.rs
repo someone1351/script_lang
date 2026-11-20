@@ -8,18 +8,20 @@ use crate::{ast, clike::compiler::tokeniser2::TokenizerErrorType2, error_msg, Lo
 use crate::{compiler::builder::BuilderError, };
 
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug,Clone,)]
 pub enum BuilderErrorType {
 
     ContinueNotInLoop,
     BreakNotInLoop,
     ReturnNotInFunc,
+    Format(FormatErrorType),
+
 
 }
 
 impl BuilderErrorType {
     pub fn loc_err<T>(&self,loc:Loc) -> Result<T,BuilderError<BuilderErrorType>> {
-        Err(BuilderError{ loc, error_type:*self })
+        Err(BuilderError{ loc, error_type:self.clone() })
     }
 }
 
