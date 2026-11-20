@@ -1689,10 +1689,10 @@ impl<'a> Ast<'a> {
                     // let params_num=self.funcs.get(func_ind).unwrap().params.len();//non_variadic_params_num;
                     let captures_num=self.funcs.get(func_ind).unwrap().captures.len();
 
-                    //pop locals
-                    if cur_node.local_decls.len()>0 {
-                        instructions.push(Instruction::StackPop(cur_node.local_decls.len()));
-                    }
+                    // //pop locals
+                    // if cur_node.local_decls.len()>0 {
+                    //     instructions.push(Instruction::StackPop(cur_node.local_decls.len()));
+                    // }
 
                     //google says so
                     let last_stack_pushed_num=cur_node.children.last().map(|&last_child_node_ind|self.get_node(last_child_node_ind).stack_pushed_num).unwrap_or(0);
