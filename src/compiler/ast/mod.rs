@@ -331,7 +331,7 @@ impl<'a> Ast<'a> {
         }
 
         //google says so
-        //otherwise problem with reuselocal_decls == true
+        //  otherwise problem with reuselocal_decls == true
         let mut seen_params = HashSet::with_capacity(in_params.len());
         for &param in &in_params {
             if !seen_params.insert(param) {
@@ -984,7 +984,9 @@ impl<'a> Ast<'a> {
                     let child_node=self.get_node(child_node_ind);
 
                     if let AstNodeType::Label { label, anon_id: anon }=child_node.node_type {
+                        //google says so (commented)
                         // before_labels.insert((label,anon), child_node_ind);
+
 
                         //google says so
                         // <-- NEW: error if duplicate label before cur_node
@@ -1003,6 +1005,7 @@ impl<'a> Ast<'a> {
                     let child_node=self.get_node(child_node_ind);
 
                     if let AstNodeType::Label { label, anon_id }=child_node.node_type {
+                        //google says so (commented)
                         // after_labels.insert((label,anon_id), child_node_ind);
 
                         //google says so
@@ -1689,6 +1692,7 @@ impl<'a> Ast<'a> {
                     // let params_num=self.funcs.get(func_ind).unwrap().params.len();//non_variadic_params_num;
                     let captures_num=self.funcs.get(func_ind).unwrap().captures.len();
 
+                    //google says so (commented)
                     // //pop locals
                     // if cur_node.local_decls.len()>0 {
                     //     instructions.push(Instruction::StackPop(cur_node.local_decls.len()));
@@ -1801,9 +1805,14 @@ impl<'a> Ast<'a> {
                 }
                 AstNodeType::ToBlockEnd{cond,block_node_ind} => {
                     let to_node=self.get_node(block_node_ind);
+
+
+                    //google says so (commented)
                     // let to_node_parent=self.get_node(to_node.parent.unwrap());
                     // let to_stack_size = to_node_parent.stack_size+to_node.stack_pushed_num;
-                    let to_stack_size = to_node.last_stack_size + to_node.stack_pushed_num; //google says so
+
+                    //google says so
+                    let to_stack_size = to_node.last_stack_size + to_node.stack_pushed_num;
 
                     //assuming cur stack size will always be larger or eq
                     let dif_stack_size=cur_node.stack_size - to_stack_size;
