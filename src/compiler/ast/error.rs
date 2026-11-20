@@ -36,6 +36,7 @@ impl std::error::Error for AstError {
 pub enum AstVarErrorType {
     GlobalNotDecl(String),
     LabelDupl(String),
+    LabelNotFound(String),
 }
 
 

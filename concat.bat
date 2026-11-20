@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0"
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-"$prefix = 'concatenated_part'; ^
+"$prefix = 'concatsrc'; ^
 $targetDirs = @('examples', 'src'); ^
 $maxBytes = 1500000; ^
 $root = (Get-Location).Path; ^

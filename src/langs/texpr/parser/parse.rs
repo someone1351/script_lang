@@ -457,7 +457,9 @@ fn generate_parsed(temp_root_block:&TempBlock,last_loc:Loc,text_map:HashMap<Stri
                             parsed.primitives.push(Primitive {
                                 primitive_type,
                                 start_loc: temp_field.primitive.start_loc, end_loc: temp_field.primitive.end_loc,
-                                param: None, field: Some(new_field_primitive_ind),
+                                param: None,
+                                // field: Some(new_field_primitive_ind),
+                                field:Some(parsed.fields.len() - 1), //google says so
                             });
                         }
                     }

@@ -974,7 +974,16 @@ impl<'a> Ast<'a> {
                     let child_node=self.get_node(child_node_ind);
 
                     if let AstNodeType::Label { label, anon_id: anon }=child_node.node_type {
-                        before_labels.insert((label,anon), child_node_ind);
+                        // before_labels.insert((label,anon), child_node_ind);
+
+                        //google says so
+                        // <-- NEW: error if duplicate label before cur_node
+                        if before_labels.insert((label, anon), child_node_ind).is_some() {
+                            return Err(AstVarError {
+                                loc: child_node.loc.unwrap_or(Loc::zero()),
+                                error_type: AstVarErrorType::LabelDupl(label.to_string()),
+                            });
+                        }
                     }
                 }
 
@@ -984,10 +993,24 @@ impl<'a> Ast<'a> {
                     let child_node=self.get_node(child_node_ind);
 
                     if let AstNodeType::Label { label, anon_id }=child_node.node_type {
-                        after_labels.insert((label,anon_id), child_node_ind);
+                        // after_labels.insert((label,anon_id), child_node_ind);
+
+                        //google says so
+                        // <-- NEW: error if duplicate label after cur_node or already seen before cur_node
+                        if before_labels.contains_key(&(label, anon_id))
+                            || after_labels.insert((label, anon_id), child_node_ind).is_some()
+                        {
+                            return Err(AstVarError {
+                                loc: child_node.loc.unwrap_or(Loc::zero()),
+                                error_type: AstVarErrorType::LabelDupl(label.to_string()),
+                            });
+                        }
                     }
                 }
             }
+
+            //google says so
+            let loc = self.get_node(cur_node_ind).loc.unwrap_or(Loc::zero());
 
             //depth>0
             let cur_node=self.get_node_mut(cur_node_ind);
@@ -1002,6 +1025,15 @@ impl<'a> Ast<'a> {
                         *label_node_ind=Some(found_label_node_ind);
                         break;
                     }
+                }
+
+                //google says so
+                // <-- NEW: return a compile error instead of panicking later in compile()
+                if label_node_ind.is_none() {
+                    return Err(AstVarError {
+                        loc,
+                        error_type: AstVarErrorType::LabelNotFound(label.to_string()),
+                    });
                 }
             }
         }
@@ -1652,6 +1684,13 @@ impl<'a> Ast<'a> {
                         instructions.push(Instruction::StackPop(cur_node.local_decls.len()));
                     }
 
+                    //google says so
+                    let last_stack_pushed_num=cur_node.children.last().map(|&last_child_node_ind|self.get_node(last_child_node_ind).stack_pushed_num).unwrap_or(0);
+
+                    if cur_node.local_decls.len()>0 || last_stack_pushed_num>0 {
+                        instructions.push(Instruction::StackPop(cur_node.local_decls.len()+last_stack_pushed_num));
+                    }
+
                     //
                     instr_stk_inds.pop().unwrap();
                     instructions=instrs_stk.get_mut(*instr_stk_inds.last().unwrap()).unwrap();
@@ -1752,8 +1791,9 @@ impl<'a> Ast<'a> {
                 }
                 AstNodeType::ToBlockEnd{cond,block_node_ind} => {
                     let to_node=self.get_node(block_node_ind);
-                    let to_node_parent=self.get_node(to_node.parent.unwrap());
-                    let to_stack_size = to_node_parent.stack_size+to_node.stack_pushed_num;
+                    // let to_node_parent=self.get_node(to_node.parent.unwrap());
+                    // let to_stack_size = to_node_parent.stack_size+to_node.stack_pushed_num;
+                    let to_stack_size = to_node.last_stack_size + to_node.stack_pushed_num; //google says so
 
                     //assuming cur stack size will always be larger or eq
                     let dif_stack_size=cur_node.stack_size - to_stack_size;
