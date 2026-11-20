@@ -17,6 +17,7 @@ pub enum AstError {
     DeclStartNotMatching,
     // VarNotDecl,
     // AnonDeclAtRoot,
+    DuplicateFuncParam(String),
 }
 
 impl std::fmt::Display for AstError {

@@ -330,6 +330,16 @@ impl<'a> Ast<'a> {
             return Err(AstError::FuncParamsZeroAndVariadic);
         }
 
+        //google says so
+        //otherwise problem with reuselocal_decls == true
+        let mut seen_params = HashSet::with_capacity(in_params.len());
+        for &param in &in_params {
+            if !seen_params.insert(param) {
+                return Err(AstError::DuplicateFuncParam(param.to_string()));
+            }
+        }
+
+
         //
         let node_ind=self.nodes.len();
 

@@ -53,6 +53,7 @@ use crate::{build::*, compiler::builder};
 // use super::ccexpr_tokenizer::*;
 
 use core::panic;
+use std::collections::HashSet;
 use std::path::Path;
 
 use crate::compiler::ast;
@@ -948,8 +949,21 @@ impl Compiler {
             "func" => {
                 let name= top_group.child(0).unwrap().tokens();
 
+                //
+                let mut seen_params = HashSet::new();
+                for g in top_group.child(1).unwrap().children() {
+                    let param=g.tokens().identifier().unwrap();
+                    let loc=g.tokens().start_loc();
+
+                    if !seen_params.insert(param) {
+                        return Err(BuilderError::new(loc, BuilderErrorType::DuplicateFuncParam(param.to_string())));
+                    }
+                }
+
+                //
                 let params= top_group.child(1).unwrap().children()
                     .map(|x|x.tokens().identifier().unwrap());
+
                 let variadic = top_group.child(2).map(|x|x.name2().unwrap().0=="variadic").unwrap_or_default();
                 let body= top_group.child(3).unwrap();
 
