@@ -863,7 +863,7 @@ impl<'a,X> Machine<'a,X> {
 
                         // self.debugger.add_func_name(data.name.as_str());
 
-                        if self.inner_call_value(params_num,var_data,false, None)? {
+                        if self.inner_call_value(params_num,var_data,false, call_name.clone())? {
                             return Ok(()); //continue;
                         }
                     } else if let Some(v)=self.constant_get(data.name.as_str())  //not needed for deref? there was the option  for globals (and constants) being captured
@@ -873,7 +873,7 @@ impl<'a,X> Machine<'a,X> {
 
                         // self.debugger.add_func_name(data.name.as_str());
 
-                        if self.inner_call_value(params_num,v,false, None)? {
+                        if self.inner_call_value(params_num,v,false, call_name.clone())? {
                             return Ok(()); //continue;
                         }
                     } else if let Some(x)=self.get_method(data.name.as_str(), params_num) {

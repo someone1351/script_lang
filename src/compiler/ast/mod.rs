@@ -1945,6 +1945,7 @@ impl<'a> Ast<'a> {
                 }
                 AstNodeType::CallVarOrMethod{name,params_num,var,
                     // anon_id
+
                     ..
                 } => {
                     if let Some((stack_offset,captured))=self.calc_var_stack_offset(var,cur_node.last_stack_size) { //why does this use last_stack_size and not stack_size?
