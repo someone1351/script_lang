@@ -86,6 +86,8 @@ pub enum Instruction {
     ResultNil,
     ResultVoid,
 
+    ResultUndefined,
+
     // ResultVararg,
     // ResultCopy,
     // StackMakeRef,
@@ -95,11 +97,11 @@ pub enum Instruction {
     ResultFunc(usize,usize),//lambda_ind,captures_num
 
     MakeStackVarRef(usize), //stack_offset,
-    SetStackVarDeref(usize,bool,bool), //stack_offset, init,allow_void
+    SetStackVarDeref(usize,bool,), //stack_offset, init,allow_void
     GetStackVarDeref(usize), //stack_offset
     CallStackVarDeref(usize,usize), //stack_offset, params_num
 
-    SetStackVar(usize,bool), //stack_offset,allow_void
+    SetStackVar(usize,), //stack_offset,allow_void
     GetStackVar(usize), //stack_offset,
     // GetStackParam(usize), //param_ind,
 

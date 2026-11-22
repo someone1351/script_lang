@@ -1948,12 +1948,16 @@ impl<'a> Ast<'a> {
                 } => { //copy result ?
 
                     if let Some((stack_offset,captured))=self.calc_var_stack_offset(var,cur_node.stack_size) {
-                        let allow_void=anon_id.is_some();
+                        // let allow_void=anon_id.is_some();
                         if captured {
                             let init = if let AstAccessVar::Local { .. } = var {true}else{false};
-                            instructions.push(Instruction::SetStackVarDeref(stack_offset,init,allow_void)); //can anon be captured?
+                            instructions.push(Instruction::SetStackVarDeref(stack_offset,init,
+                                //allow_void
+                                )); //can anon be captured?
                         } else {
-                            instructions.push(Instruction::SetStackVar(stack_offset,allow_void));
+                            instructions.push(Instruction::SetStackVar(stack_offset,
+                                // allow_void
+                            ));
                         }
                     // } else if anon_id.is_some() {
                     } else {
@@ -2013,22 +2017,73 @@ impl<'a> Ast<'a> {
                     let to_stack_size = to_node.last_stack_size;
 
                     //
-                    if cond!=JmpCond::None {
+                    let skip_jmp_ind = if cond!=JmpCond::None {
+                        let ind = instructions.len();
+
                         instructions.push(Instruction::Jmp {
                             cond: cond.not(),
-                            instr_pos: instructions.len()+3,
+
+                            //google says so (commented)
+                            // instr_pos: instructions.len()+3,
+
+                            //google says so
+                            instr_pos: 0, // patched at the end of this arm
+
+                            //
                             debug:(15,0),
                         });
-                    }
 
-                    //
+                        Some(ind)
+                    } else {
+                        None
+                    };
+
+                    //pop excess
                     if cur_node.stack_size>to_stack_size {
                         let dif_stack_size=cur_node.stack_size - to_stack_size;
 		                instructions.push(Instruction::StackPop(dif_stack_size));
                     } else { //not used due to way the code/instructions are currently organised
                         let dif_stack_size=to_stack_size-cur_node.stack_size;
-                        instructions.push(Instruction::StackLocals(dif_stack_size));
-                    };
+
+                        if dif_stack_size!=0 {
+                            instructions.push(Instruction::StackLocals(dif_stack_size));
+                        }
+                    }
+
+                    //google says so
+                    // 3. Reset any skipped local declarations to Undefined on downward jumps
+                    {
+                        let target_parent_ind = to_node.parent.unwrap();
+                        let mut goto_sibling_ind = cur_node_ind;
+
+                        while self.get_node(goto_sibling_ind).parent != Some(target_parent_ind) {
+                            goto_sibling_ind = self.get_node(goto_sibling_ind).parent.unwrap();
+                        }
+
+                        if goto_sibling_ind < label_node_ind {
+                            let target_parent = self.get_node(target_parent_ind);
+                            let start_child = self.get_node(goto_sibling_ind).child_ind + 1;
+                            let end_child = to_node.child_ind;
+
+                            for &sibling_ind in &target_parent.children[start_child..end_child] {
+                                if let AstNodeType::DeclVarStart {
+                                    decl: AstDeclVar::Local { local_ind },
+                                    ..
+                                } = self.get_node(sibling_ind).node_type
+                                {
+                                    let local_decl = &target_parent.local_decls[local_ind];
+                                    let stack_offset = to_stack_size - local_decl.stack_ind - 1;
+
+                                    instructions.push(Instruction::ResultUndefined);
+                                    if local_decl.captured {
+                                        instructions.push(Instruction::SetStackVarDeref(stack_offset, true, )); //true
+                                    } else {
+                                        instructions.push(Instruction::SetStackVar(stack_offset, )); //true
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     //
                     let jmp_instr_ind = if cur_node_ind>label_node_ind { //up
@@ -2045,11 +2100,23 @@ impl<'a> Ast<'a> {
                         0
                     };
 
+                    //
                     instructions.push(Instruction::Jmp {
                         cond,
                         instr_pos: jmp_instr_ind,
                         debug:(5,_instr_offset),
                     });
+
+                    //google says so
+                    // 5. Patch conditional skip-jump to land right after the Jmp
+                    if let Some(skip_jmp_ind) = skip_jmp_ind {
+                        let end_pos = instructions.len();
+                        let offset = (end_pos - skip_jmp_ind) as i64;
+                        if let Instruction::Jmp { instr_pos, debug, .. } = &mut instructions[skip_jmp_ind] {
+                            *instr_pos = end_pos;
+                            debug.1 = offset;
+                        }
+                    }
                 }
 
                 // AstNodeType::GotoUp { .. } => {}

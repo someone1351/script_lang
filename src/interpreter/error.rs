@@ -50,7 +50,7 @@ pub enum MachineErrorType{
     GetUndefinedVar,
     SetUndefinedVar,
 
-    VoidNotExpr, //necessary?
+    // VoidNotExpr, //necessary?
     StackLimitReached(usize),
 
     IntInto,

@@ -144,9 +144,9 @@ impl VarScope {
             return Ok(false);
         }
 
-        if value.is_void() {
-            return Err(MachineError::new(MachineErrorType::VoidNotExpr));
-        }
+        // if value.is_void() {
+        //     return Err(MachineError::new(MachineErrorType::VoidNotExpr));
+        // }
 
         if var.is_refvar {
             // let data=var.value.as_custom().data();

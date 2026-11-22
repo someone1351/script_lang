@@ -481,6 +481,9 @@ impl<'a,X> Machine<'a,X> {
         let instr=cur_build.instructions.get(self.instr_pos).unwrap();
 
         match instr {
+            Instruction::ResultUndefined => {
+                self.set_result_val(Value::Undefined);
+            }
             // &Instruction::GetField { is_field_symbol } => {
 
             //     // println!("hmm {self_val:?} {field_val:?}");
@@ -698,14 +701,14 @@ impl<'a,X> Machine<'a,X> {
             Instruction::StackRotLeft => {
                 self.stack_rot_left()?;
             }
-            Instruction::SetStackVar(stack_offset_ind,allow_void) => {
+            Instruction::SetStackVar(stack_offset_ind,) => { //allow_void
                 let result_val=self.result_val();
 
-                if !*allow_void && result_val.is_void() {
-                    // let v=self.copy_val(result_val)?.clone_root();
-                    // println!("v4 {v:?}");
-                    return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
-                }
+                // if !*allow_void && result_val.is_void() {
+                //     // let v=self.copy_val(result_val)?.clone_root();
+                //     // println!("v4 {v:?}");
+                //     return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
+                // }
 
                 let v=self.copy_val(result_val)?.clone_root(); //should be root, since on stack
 
@@ -725,13 +728,14 @@ impl<'a,X> Machine<'a,X> {
                 self.set_stack_offset_val(*stack_offset_ind, v2)?;
                 self.debugger.set_stack_val_offset_from_last(*stack_offset_ind);
             }
-            Instruction::SetStackVarDeref(stack_offset_ind, init,allow_void) => {
+            Instruction::SetStackVarDeref(stack_offset_ind, init,) => { //allow_void
                 let result_val=self.result_val();
 
-                if !*allow_void && result_val.is_void() {
-                    // println!("v0");
-                    return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
-                }
+                // if !*allow_void && result_val.is_void() {
+                //     // println!("v0");
+                //     return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
+                // }
+
                 let to_val=self.copy_val(result_val.clone_leaf())?;
                 let custom=self.get_stack_offset_value(*stack_offset_ind)?.as_custom();
 
