@@ -719,14 +719,16 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
     pub fn func_start<P:IntoIterator<Item=&'a str>>(&mut self,
         // params:Vec<&'a str>,
         params:P,
-        variadic:bool) -> &mut Self
+        variadic:bool,
+        name: Option<&'a str>,
+    ) -> &mut Self
     {
 
         let params=params.into_iter().collect::<Vec<_>>();
         // self.add_node(BuilderNodeType::FuncStart(params,variadic))
 
         self.add_node(move|ast|{
-            ast.func_start(params.clone(), variadic).unwrap();
+            ast.func_start(params.clone(), variadic,name).unwrap();
             Ok(())
         })
 

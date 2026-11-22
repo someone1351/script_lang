@@ -73,7 +73,7 @@ pub fn lambda_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Pri
 
     //
     builder
-        .func_start(params,variadic)
+        .func_start(params,variadic,None)
         // .result_void()
         ;
 

@@ -35,11 +35,11 @@ pub fn test_script<P:AsRef<Path>>(path:P) {
 
         if let Err(e)=&res {
             e.eprint(None);
-            machine.debug_print_stack_trace(true);
-            machine.debug_print_stack();
+            machine.print_stack_trace(true);
+            machine.print_stack();
             // machine.print_state();
         }
-        machine.debug_print_stack();
+        // machine.debug_print_stack();
     }
 
     //gc_scope.mark_and_sweep();

@@ -56,6 +56,7 @@ pub enum MachineErrorType{
     IntInto,
     FloatInto,
 
+    CannotCallBuildFuncFromBoundFunc(String),
 
 
 }

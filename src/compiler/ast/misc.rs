@@ -20,6 +20,7 @@ pub struct AstFunc<'a> {
     pub variadic:bool,
     pub captures : Vec<AstCapture<'a>>,
     pub node_ind:usize,
+    pub name: Option<&'a str>,
 }
 
 

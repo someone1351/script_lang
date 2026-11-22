@@ -126,7 +126,7 @@ pub fn func_cmd<'a>(
 
     //
     builder
-        .func_start(params,variadic)
+        .func_start(params,variadic,None)
             .block_start(Some("func"))
                 .eval(body)
                 .result_void()

@@ -948,6 +948,7 @@ impl Compiler {
 
             "func" => {
                 let name= top_group.child(0).unwrap().tokens();
+                let name=name.identifier().unwrap();
 
                 //
                 let mut seen_params = HashSet::new();
@@ -968,19 +969,19 @@ impl Compiler {
                 let body= top_group.child(3).unwrap();
 
                 builder
-                    .decl_var_start(name.identifier().unwrap(),false)
+                    .decl_var_start(name,false)
                     .decl_var_end();
 
                 //
                 builder
-                    .func_start(params,variadic)
+                    .func_start(params,variadic,Some(name))
                         .block_start(Some("func"))
                             .eval(body)
                             .result_void()
                         .block_end()
                     .func_end();
 
-                builder.set_var(name.identifier().unwrap());
+                builder.set_var(name);
             }
             "lambda" => {
 
@@ -991,7 +992,7 @@ impl Compiler {
 
                 //
                 builder
-                    .func_start(params,variadic)
+                    .func_start(params,variadic, None)
                         .block_start(Some("func"))
                             .eval(body)
                             .result_void()

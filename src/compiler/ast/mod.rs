@@ -324,7 +324,8 @@ impl<'a> Ast<'a> {
 
         Ok(())
     }
-    pub fn func_start(&mut self,in_params:Vec<&'a str>,variadic:bool) -> Result<(), AstError> {
+    pub fn func_start(&mut self,in_params:Vec<&'a str>,variadic:bool,
+        name: Option<&'a str>,) -> Result<(), AstError> {
         if variadic && in_params.len()==0 {
             // panic!("scriptlang, ast, funcstart, params 0 and variadic");
             return Err(AstError::FuncParamsZeroAndVariadic);
@@ -363,6 +364,7 @@ impl<'a> Ast<'a> {
             captures: Vec::new(),
             variadic,
             node_ind,
+            name,
         });
 
         if variadic {
@@ -2159,7 +2161,9 @@ impl<'a> Ast<'a> {
             let instruct_len=instrs_stk.get(func_ind+1).unwrap().len();
             let params_num = func.params.len() + func.captures.len();
 
-            build_funcs.push(BuildFunc{instruct_start_pos,instruct_len,params_num,});
+            build_funcs.push(BuildFunc{instruct_start_pos,instruct_len,params_num,
+                name: func.name.map(|x|symbol_inds.get(x)),
+            });
 
             instruct_start_pos+=instruct_len;
         }

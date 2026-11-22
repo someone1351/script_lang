@@ -47,10 +47,10 @@ pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
         let mut core_val =();
         let mut machine = Machine::new(&mut gc_scope,&lib_scope, &mut var_scope,  &mut core_val);
 
-        if debug {
-            machine.set_debug_print(true);
-            machine.set_debug_print_simple(true);
-        }
+        // if debug {
+        //     machine.set_debug_print(true);
+        //     machine.set_debug_print_simple(true);
+        // }
 
         // build.clone().unwrap().print();
 
@@ -59,9 +59,10 @@ pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
 
         if let Err(e)=&res {
             e.eprint(None);
-            machine.debug_print_stack_trace(true);
-            machine.debug_print_stack();
+            machine.print_stack_trace(true);
+            machine.print_stack();
             // machine.print_state();
+            machine.print_stack_trace(true);
         }
 
         // machine.debug_print_stack();

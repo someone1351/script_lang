@@ -530,7 +530,7 @@ pub fn decl_func_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
     builder
         .decl_var_start(idn,false)
         .decl_var_end()
-        .func_start(params,variadic)
+        .func_start(params,variadic,None)
         // .result_void()
         ;
 
@@ -579,7 +579,7 @@ pub fn lambda_func_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,
 
     //
     builder
-        .func_start(params,variadic)
+        .func_start(params,variadic,None)
         // .result_void()
         ;
 

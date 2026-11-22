@@ -1,6 +1,6 @@
 
 mod error;
-mod debug;
+// mod debug;
 mod machine;
 
 // mod gc_scope;

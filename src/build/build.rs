@@ -16,6 +16,8 @@ pub struct BuildFunc {
     pub instruct_start_pos : usize,
     pub instruct_len : usize,
     pub params_num : usize,
+
+    pub name: Option<StringVal>,
 }
 
 
