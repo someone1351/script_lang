@@ -105,7 +105,7 @@ pub struct Machine<'a,X> { //,'b
     // core_empty : (), //&'a mut
 
     stack_limit:usize,
-    pending_call_name: Option<StringVal>,
+    // pending_call_name: Option<StringVal>,
 }
 
 
@@ -185,7 +185,7 @@ impl<'a,X> Machine<'a,X> {
             // core_empty:(),
             stack_limit:1024,
 
-            pending_call_name:None,
+            // pending_call_name:None,
         }
     }
 
@@ -980,7 +980,7 @@ impl<'a,X> Machine<'a,X> {
             //
             Instruction::GetGlobalOrConstOrCallMethod(symbol,get_global) => {
                 // self.var_scope.get(&n).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))
-                self.pending_call_name = Some(symbol.clone());
+                // self.pending_call_name = Some(symbol.clone());
 
                 if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
                     self.set_result_val(v);
@@ -997,7 +997,7 @@ impl<'a,X> Machine<'a,X> {
 
             Instruction::CallMethod(symbol, params_num) => {
                 let params_num =*params_num;
-                self.pending_call_name = Some(symbol.clone());
+                // self.pending_call_name = Some(symbol.clone());
 
                 if let Some(x)=self.get_method(symbol.as_str(), params_num) {
                     // self.debugger.add_func_name(symbol.as_str());
@@ -1010,7 +1010,7 @@ impl<'a,X> Machine<'a,X> {
 
             Instruction::TryCallMethod{ name:symbol, params_num } => {
                 let params_num =*params_num;
-                self.pending_call_name = Some(symbol.clone());
+                // self.pending_call_name = Some(symbol.clone());
 
                 if let Some(x)=self.get_method(symbol.as_str(), params_num) {
                     // self.debugger.add_func_name(symbol.as_str());
@@ -1040,7 +1040,7 @@ impl<'a,X> Machine<'a,X> {
 
             Instruction::CallGlobalOrMethod(symbol, params_num)  => {
                 let params_num =*params_num;
-                self.pending_call_name = Some(symbol.clone());
+                // self.pending_call_name = Some(symbol.clone());
 
                 if let Some(v)=self.var_scope.get(symbol.as_str()).or_else(|e: MachineError|Err(MachineError::from_machine(&self, e.error_type)))?
                 {
