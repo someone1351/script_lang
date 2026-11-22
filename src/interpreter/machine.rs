@@ -60,7 +60,9 @@ pub enum FrameInfo {
         call_name: Option<StringVal>,
         build: BuildT,
         func_ind: usize,
-        param_types: Vec<String>, // captured once on entry, or omitted if not needed
+        // param_types: Vec<String>, // captured once on entry, or omitted if not needed
+        // capture_types: Vec<String>,
+        captures_num: usize,
     },
     // BoundFunc {
     //     name: StringVal,
@@ -228,12 +230,134 @@ impl<'a,X> Machine<'a,X> {
             (None, None) => "<anonymous>".to_string(),
         }
     }
-    pub fn print_stack_trace(&self, skip_first:bool) {
-
-    }
     pub fn print_stack(&self) {
-
+        //google says so
+        eprintln!("Stack:");
+        for (i, x) in self.stack.iter().enumerate().rev() {
+            let j = self.stack.len() - i - 1;
+            eprintln!("\t{j}: {x:?}");
+        }
     }
+
+    pub fn print_stack_trace(&self, skip_first: bool) {
+        //google says so
+        eprintln!("Stack Trace:");
+
+        let mut active_build = self.cur_build.as_ref();
+        let mut active_instr_pos = self.instr_pos;
+
+        for (i, frame) in self.stack_frames.iter().rev().enumerate() {
+            let frame_build = active_build;
+            let frame_instr_pos = active_instr_pos;
+
+            active_build = frame.ret_build.as_ref();
+            active_instr_pos = frame.ret_instr_ind.saturating_sub(1);
+
+            if skip_first && i == 0 {
+                continue;
+            }
+
+            match &frame.info {
+                FrameInfo::BuildFunc {
+                    def_name,
+                    call_name,
+                    build,
+                    func_ind,
+                    captures_num,
+                } => {
+                    let func_display = Self::format_func_name(def_name.as_ref(), call_name.as_ref());
+
+                    let end = frame.stack_params_start + frame.stack_params_num;
+                    let split = end.saturating_sub(*captures_num);
+
+                    // User parameters sit in reverse push order at [stack_params_start .. split]
+                    let params = self.stack[frame.stack_params_start..split]
+                        .iter()
+                        .rev()
+                        .map(|v| v.type_string())
+                        .collect::<Vec<_>>()
+                        .join(", ");
+
+                    // Captured variables sit in reverse push order at [split .. end]
+                    let captures = if *captures_num == 0 {
+                        String::new()
+                    } else {
+                        let cap_str = self.stack[split..end]
+                            .iter()
+                            .rev()
+                            .map(|v| v.type_string())
+                            .collect::<Vec<_>>()
+                            .join(", ");
+                        format!("[{cap_str}]")
+                    };
+
+                    let path = build
+                        .path
+                        .as_ref()
+                        .map(|x| x.to_string_lossy().into_owned())
+                        .unwrap_or_else(|| "_".to_string());
+
+                    let (instr_rel_ind, instr_rel_len) = build
+                        .functions
+                        .get(*func_ind)
+                        .map(|f| (frame_instr_pos.saturating_sub(f.instruct_start_pos), f.instruct_len))
+                        .unwrap_or((frame_instr_pos, build.instructions.len()));
+
+                    let loc = build.instr_locs.get(&frame_instr_pos).copied();
+
+                    eprint!(
+                        "\tBuildFunc({path:?},{func_ind},{instr_rel_ind}/{instr_rel_len}) :: {func_display}({params}){captures}"
+                    );
+                    if let Some(loc) = loc {
+                        eprint!(", at {loc}");
+                    }
+                    eprintln!();
+
+                    if let (Some(src), Some(loc)) = (build.src.as_ref().map(|s| s.as_str()), loc) {
+                        eprintln!("{}", error_line_src(src, loc));
+                    }
+                }
+
+                FrameInfo::Include { build } => {
+                    let path = build
+                        .path
+                        .as_ref()
+                        .map(|x| x.to_string_lossy().into_owned())
+                        .unwrap_or_else(|| "_".to_string());
+                    let loc = build.instr_locs.get(&frame_instr_pos).copied();
+
+                    eprint!(
+                        "\tInclude({path:?},{}/{})",
+                        frame_instr_pos, build.main_instruct_len
+                    );
+                    if let Some(loc) = loc {
+                        eprint!(", at {loc}");
+                    }
+                    eprintln!();
+
+                    if let (Some(src), Some(loc)) = (build.src.as_ref().map(|s| s.as_str()), loc) {
+                        eprintln!("{}", error_line_src(src, loc));
+                    }
+                }
+                FrameInfo::Main { build } => {
+                    let b = frame_build.unwrap_or(build);
+                    let path = b.path.as_ref().map(|x| x.to_string_lossy().into_owned());
+                    let loc = b.instr_locs.get(&frame_instr_pos).copied();
+
+                    eprint!("\tMain({path:?},{}/{})", frame_instr_pos, b.main_instruct_len);
+                    if let Some(loc) = loc {
+                        eprint!(", at {loc}");
+                    }
+                    eprintln!();
+
+                    if let (Some(src), Some(loc)) = (b.src.as_ref().map(|s| s.as_str()), loc) {
+                        eprintln!("{}", error_line_src(src, loc));
+                    }
+                }
+            }
+        }
+    }
+
     pub fn clear(&mut self) {
         self.cur_build=None;
         self.instr_pos=0;
@@ -859,11 +983,13 @@ impl<'a,X> Machine<'a,X> {
                     let var_data=data.var.as_custom().data_clone::<Value>()
                         .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
 
+                    let name = call_name.clone().or_else(|| Some(data.name.clone()));
+
                     if !var_data.is_undefined() {
 
                         // self.debugger.add_func_name(data.name.as_str());
 
-                        if self.inner_call_value(params_num,var_data,false, call_name.clone())? {
+                        if self.inner_call_value(params_num,var_data,false, name)? {
                             return Ok(()); //continue;
                         }
                     } else if let Some(v)=self.constant_get(data.name.as_str())  //not needed for deref? there was the option  for globals (and constants) being captured
@@ -873,7 +999,7 @@ impl<'a,X> Machine<'a,X> {
 
                         // self.debugger.add_func_name(data.name.as_str());
 
-                        if self.inner_call_value(params_num,v,false, call_name.clone())? {
+                        if self.inner_call_value(params_num,v,false, name)? {
                             return Ok(()); //continue;
                         }
                     } else if let Some(x)=self.get_method(data.name.as_str(), params_num) {
@@ -1188,17 +1314,18 @@ impl<'a,X> Machine<'a,X> {
     }
 
 
-    fn inner_call_build_func(&mut self, stack_params_num:usize, build:BuildT, func_ind:usize, finish:bool,
+    fn inner_call_build_func(&mut self, params_num:usize, captures_num :usize, build:BuildT, func_ind:usize,finish:bool,
         call_name: Option<StringVal>,
     ) -> Result<(),MachineError> {
 
+        let stack_params_num=params_num+captures_num;
         let stack_params_start=self.stack.len()-stack_params_num; //todo error check?
         // self.debugger.push_frame_build_func(build.clone(), func_ind, stack_params_num, &self.stack, &self.result_val());
 
         let func = build.functions.get(func_ind).unwrap();
 
         let def_name = func.name.clone();
-        let param_types = self.get_stack_param_types(stack_params_num);
+        // let param_types = self.get_stack_param_types(stack_params_num);
 
         //copy params
         for stack_ind in stack_params_start..stack_params_start+stack_params_num {
@@ -1230,7 +1357,8 @@ impl<'a,X> Machine<'a,X> {
                 call_name,
                 build: build.clone(),
                 func_ind,
-                param_types,
+                // param_types,
+                captures_num,
             },
         });
 
@@ -1252,14 +1380,15 @@ impl<'a,X> Machine<'a,X> {
             let func_build=data.build.clone();
             let func_ind=data.func_ind;
 
-            let params_num = params_num+data.captures.len();
+            let captures_num = data.captures.len();
+            // let params_num = params_num+captures_num;
 
             for x in data.captures.iter() {
                 self.push_stack_val(x.clone_root())?;
                 // self.debugger.set_stack_from_last();
             }
 
-            self.inner_call_build_func(params_num, func_build, func_ind, finish,call_name)?;
+            self.inner_call_build_func(params_num, captures_num, func_build, func_ind, finish,call_name)?;
 
             Ok(true)
         } else {

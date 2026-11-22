@@ -1,22 +1,28 @@
+fn boom(x) {
+    error("exploded at x=" + string(x));
+}
 
-(
--
-5
-)
+fn middle(fn_arg) {
+    var local_alias = fn_arg;
+    local_alias(42);
+}
 
-var a=-5;
-a.abs()
+fn make_captured() {
+    var cap_alias = boom;
+    return fn() {
+        cap_alias(99);
+    };
+}
 
-"adssadsa\s\ndsfdsfd"
+// Case A: Direct -> Global alias -> Local alias -> Named function
+var global_alias = boom;
+fn wrapper() {
+    global_alias(10);
+}
+wrapper();
 
-1+2 *3
-
-format("abc {}",1)
-
-
-println("hello1");
-goto abc
-println("hello2");
-label abc:; println("x")
-println("hello3");
-
+// Uncomment one at a time to test the other cases:
+// middle(boom);
+// var run_cap = make_captured(); run_cap();
+// var my_lambda = fn() { error("inside named lambda"); }; my_lambda();
+// (fn() { error("inside anon lambda"); })();

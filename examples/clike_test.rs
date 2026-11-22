@@ -59,10 +59,10 @@ pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
 
         if let Err(e)=&res {
             e.eprint(None);
-            machine.print_stack_trace(true);
+            machine.print_stack_trace(false);
             machine.print_stack();
             // machine.print_state();
-            machine.print_stack_trace(true);
+            // machine.print_stack_trace(true);
         }
 
         // machine.debug_print_stack();
