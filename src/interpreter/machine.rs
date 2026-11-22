@@ -720,6 +720,11 @@ impl<'a,X> Machine<'a,X> {
             }
             Instruction::GetStackVar(stack_offset_ind) => {
                 let v = self.get_stack_offset_value(*stack_offset_ind)?;
+
+                if v.is_undefined() {
+                    return Err(MachineError::from_machine(self, MachineErrorType::GetUndefinedVar));
+                }
+
                 self.set_result_val(v.clone_root());
             }
             Instruction::MakeStackVarRef(stack_offset_ind) => {

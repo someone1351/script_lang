@@ -1252,7 +1252,18 @@ impl Compiler {
                 }
 
             }
-
+            "label" => {
+                let name = top_group.child(0).unwrap().tokens();
+                builder
+                    .loc(name.start_loc())
+                    .label(name.identifier().unwrap());
+            }
+            "goto" => {
+                let name = top_group.child(0).unwrap().tokens();
+                builder
+                    .loc(name.start_loc())
+                    .goto(JmpCond::None, name.identifier().unwrap());
+            }
             _ => {
                 panic!("{}",top_group_name.0);
                 // builder.eval(primitive)

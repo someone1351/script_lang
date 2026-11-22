@@ -12,3 +12,11 @@ a.abs()
 1+2 *3
 
 format("abc {}",1)
+
+
+println("hello1");
+goto abc
+println("hello2");
+label abc:; println("x")
+println("hello3");
+

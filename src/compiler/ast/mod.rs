@@ -951,103 +951,80 @@ impl<'a> Ast<'a> {
         //  and access labels by ind instead of name, need to store names as well for debug
 
 
-        let mut before_block_labels: Vec<HashMap<(&'a str,Option<usize>),usize>> = vec![]; //[block_depth][(label,anon)]=label_node_ind
-        let mut after_block_labels: Vec<HashMap<(&'a str,Option<usize>),usize>> = vec![]; //[block_depth][(label,anon)]=label_node_ind
+        //google says so (everything)
 
-        let mut node_stk = vec![(0,0)];
+        // 1. Check for duplicate labels within the same block/function/root
+        let mut seen_labels: HashSet<(&'a str, Option<usize>)> = HashSet::new();
 
-        while let Some((cur_node_ind,cur_depth))=node_stk.pop() {
-            node_stk.extend(self.get_node(cur_node_ind).children.iter().rev().map(|x|(*x,cur_depth+1)));
+        for node in &self.nodes {
+            match node.node_type {
+                AstNodeType::Root | AstNodeType::Block { .. } | AstNodeType::Function { .. } => {
+                    seen_labels.clear();
 
-            if cur_depth!=0 {
-                //
-                before_block_labels.resize_with(cur_depth, ||Default::default());
-                after_block_labels.resize_with(cur_depth, ||Default::default());
+                    for &child_ind in &node.children {
+                        let child_node = self.get_node(child_ind);
 
-                //
-                let before_labels=&mut before_block_labels[cur_depth-1];
-                let after_labels=&mut after_block_labels[cur_depth-1];
-
-                //since after first non root node visited, will have before/after_block_labels of len>=1
-                before_labels.clear();
-                after_labels.clear();
-
-                //
-                let cur_node=self.get_node(cur_node_ind);
-                let parent_node_ind= self.get_node(cur_node_ind).parent.unwrap();
-                let parent_node=self.get_node(parent_node_ind);
-                let child_ind=cur_node.child_ind;
-
-                //before
-                for i in (0..child_ind).rev() {
-                    let child_node_ind=parent_node.children[i];
-                    let child_node=self.get_node(child_node_ind);
-
-                    if let AstNodeType::Label { label, anon_id: anon }=child_node.node_type {
-                        //google says so (commented)
-                        // before_labels.insert((label,anon), child_node_ind);
-
-
-                        //google says so
-                        // <-- NEW: error if duplicate label before cur_node
-                        if before_labels.insert((label, anon), child_node_ind).is_some() {
-                            return Err(AstVarError {
-                                loc: child_node.loc.unwrap_or(Loc::zero()),
-                                error_type: AstVarErrorType::LabelDupl(label.to_string()),
-                            });
+                        if let AstNodeType::Label { label, anon_id } = child_node.node_type {
+                            if !seen_labels.insert((label, anon_id)) {
+                                return Err(AstVarError {
+                                    loc: child_node.loc.unwrap_or(Loc::zero()),
+                                    error_type: AstVarErrorType::LabelDupl(label.to_string()),
+                                });
+                            }
                         }
                     }
                 }
+                _ => {}
+            }
+        }
 
-                //after
-                for i in child_ind+1 .. parent_node.children.len() {
-                    let child_node_ind=parent_node.children[i];
-                    let child_node=self.get_node(child_node_ind);
+        // 2. Resolve each Goto by walking parent blocks and stopping at Function / Root
+        for cur_node_ind in 0..self.nodes.len() {
+            let AstNodeType::Goto { label, anon_id, .. } = self.get_node(cur_node_ind).node_type else {
+                continue;
+            };
 
-                    if let AstNodeType::Label { label, anon_id }=child_node.node_type {
-                        //google says so (commented)
-                        // after_labels.insert((label,anon_id), child_node_ind);
+            let mut found_label_node_ind = None;
+            let mut parent_opt = self.get_node(cur_node_ind).parent;
 
-                        //google says so
-                        // <-- NEW: error if duplicate label after cur_node or already seen before cur_node
-                        if before_labels.contains_key(&(label, anon_id))
-                            || after_labels.insert((label, anon_id), child_node_ind).is_some()
-                        {
-                            return Err(AstVarError {
-                                loc: child_node.loc.unwrap_or(Loc::zero()),
-                                error_type: AstVarErrorType::LabelDupl(label.to_string()),
-                            });
-                        }
+            while let Some(parent_ind) = parent_opt {
+                let parent_node = self.get_node(parent_ind);
+
+                if let Some(&label_ind) = parent_node.children.iter().find(|&&child_ind| {
+                    // matches!(
+                    //     self.get_node(child_ind).node_type,
+                    //     AstNodeType::Label { label: l, anon_id: a } if l == label && a == anon_id
+                    // )
+                    match self.get_node(child_ind).node_type {
+                        AstNodeType::Label { label: label2, anon_id: anon_id2 }
+                            if label2 == label && anon_id2 == anon_id
+                            => true,
+                        _ => false,
                     }
+                }) {
+                    found_label_node_ind = Some(label_ind);
+                    break;
+                }
+
+                // Stop at function or root boundary (matching to_block_start / to_block_end)
+                match parent_node.node_type {
+                    AstNodeType::Block { .. } => {
+                        parent_opt = parent_node.parent;
+                    }
+                    AstNodeType::Function { .. } | AstNodeType::Root => break,
+                    _ => break,
                 }
             }
 
-            //google says so
-            let loc = self.get_node(cur_node_ind).loc.unwrap_or(Loc::zero());
+            let Some(found_ind) = found_label_node_ind else {
+                return Err(AstVarError {
+                    loc: self.get_node(cur_node_ind).loc.unwrap_or(Loc::zero()),
+                    error_type: AstVarErrorType::LabelNotFound(label.to_string()),
+                });
+            };
 
-            //depth>0
-            let cur_node=self.get_node_mut(cur_node_ind);
-
-            if let AstNodeType::Goto { label, anon_id: anon, label_node_ind, .. } = &mut cur_node.node_type {
-
-                for i in 0..cur_depth {
-                    let before_labels=&before_block_labels[cur_depth-1-i];
-                    let after_labels=&after_block_labels[cur_depth-1-i];
-
-                    if let Some(found_label_node_ind)=before_labels.get(&(label,*anon)).or_else(||after_labels.get(&(label,*anon))).cloned() {
-                        *label_node_ind=Some(found_label_node_ind);
-                        break;
-                    }
-                }
-
-                //google says so
-                // <-- NEW: return a compile error instead of panicking later in compile()
-                if label_node_ind.is_none() {
-                    return Err(AstVarError {
-                        loc,
-                        error_type: AstVarErrorType::LabelNotFound(label.to_string()),
-                    });
-                }
+            if let AstNodeType::Goto { label_node_ind, .. } = &mut self.get_node_mut(cur_node_ind).node_type {
+                *label_node_ind = Some(found_ind);
             }
         }
 

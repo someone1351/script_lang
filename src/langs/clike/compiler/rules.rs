@@ -111,6 +111,8 @@ pub enum MyNonTerm {
     RBracket,
     LParen,
     RParen,
+    Goto,
+    Label,
 }
 
 // impl AsRef<GrammarNode<'static,MyNonTerm,GrammarPrimitive<'static>>> for MyNonTerm {
@@ -200,6 +202,9 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
             &NonTerm(MyNonTerm::Format),
             &NonTerm(MyNonTerm::Print),
             &NonTerm(MyNonTerm::Println),
+
+            &NonTerm(MyNonTerm::Label),
+            &NonTerm(MyNonTerm::Goto),
 
             &NonTerm(MyNonTerm::Set),
             &NonTerm(MyNonTerm::Expr),
@@ -568,6 +573,16 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
         MyNonTerm::LParen => &Primitive(Symbol(MySymbol::LParen)),
         MyNonTerm::RParen => &Primitive(Symbol(MySymbol::RParen)),
 
+        MyNonTerm::Label => &Group(&And(&[
+            &Primitive(Keyword(MyKeyword::Label)),
+            &Expect(&Group(&Primitive(Identifier), MyGroup("name")), "label name"),
+            &Expect(&Primitive(Symbol(MySymbol::Colon)), "colon"),
+        ]), MyGroup("label")),
+
+        MyNonTerm::Goto => &Group(&And(&[
+            &Primitive(Keyword(MyKeyword::Goto)),
+            &Expect(&Group(&Primitive(Identifier), MyGroup("name")), "label name"),
+        ]), MyGroup("goto")),
         // _ => {return None;}
     })
 }
