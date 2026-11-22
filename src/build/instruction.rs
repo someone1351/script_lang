@@ -99,7 +99,7 @@ pub enum Instruction {
     MakeStackVarRef(usize), //stack_offset,
     SetStackVarDeref(usize,bool,), //stack_offset, init,allow_void
     GetStackVarDeref(usize), //stack_offset
-    CallStackVarDeref(usize,usize), //stack_offset, params_num
+    CallStackVarDeref(usize,usize, Option<StringVal>), //stack_offset, params_num, call_name
 
     SetStackVar(usize,), //stack_offset,allow_void
     GetStackVar(usize), //stack_offset,
@@ -129,7 +129,7 @@ pub enum Instruction {
     TryCallMethod{name:StringVal,params_num:usize,}, //symbol_ind, params_num
     CallMethodOrResult(StringVal,usize), //symbol_ind, params_num
     // HasMethod(usize), //symbol_ind,
-    CallResult(usize), //params_num
+    CallResult(usize, Option<StringVal>), //params_num,call_name
 
     GetGlobalOrConstOrCallMethod(StringVal,bool), //symbol_ind, get_global
     // GetFields(usize), //params_num

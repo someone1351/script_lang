@@ -245,7 +245,7 @@ impl Compiler {
 
                     builder.loc(v0.start_loc());
                     // builder.add_node(BuildersNodeType::CallResult(sexpr.len()-1));
-                    builder.call_result(sexpr.len()-1);
+                    builder.call_result(sexpr.len()-1,None);
                     // return Err(BuilderError::new(sexpr.start_loc(), BuilderErrorType::InvalidSyntax)); //first element of list not a symbol
                 }
 

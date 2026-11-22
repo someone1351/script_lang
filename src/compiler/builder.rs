@@ -472,7 +472,7 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
 
         self.add_node(move|ast|{
             ast.get_var(name, anon_id).unwrap();
-            ast.call_result(params_num).unwrap();
+            ast.call_result(params_num, None).unwrap();
             // ast.call_var_or_method(name, params_num, anon_id).unwrap();
             Ok(())
         })
@@ -542,12 +542,12 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
         })
     }
 
-    pub fn call_result(&mut self,params_num:usize) -> &mut Self {
+    pub fn call_result(&mut self,params_num:usize,call_name:Option<&'a str>) -> &mut Self {
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::CallResult(params_num))
 
         self.add_node(move|ast|{
-            ast.call_result(params_num).unwrap();
+            ast.call_result(params_num,call_name).unwrap();
             Ok(())
         })
     }
@@ -941,7 +941,7 @@ impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
 
 
         // for _ in 0 .. fields_len-1
-        for field in fields
+        for _field in fields
         {
             self
                 // .rot_right()

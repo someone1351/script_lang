@@ -807,7 +807,7 @@ impl<'a> Ast<'a> {
 
     //     Ok(())
     // }
-    pub fn call_result(&mut self,params_num:usize) -> Result<(),AstError> {
+    pub fn call_result(&mut self,params_num:usize, call_name: Option<&'a str>) -> Result<(),AstError> {
         //uses and pops off params_num amount off stack
         // println!("---- {} < {}",self.last_node().stack_pushed_num , params_num);
 
@@ -815,7 +815,7 @@ impl<'a> Ast<'a> {
             return Err(AstError::NotEnoughParamsOnStack);
         }
 
-        self.add_next(AstNodeType::CallResult{params_num});
+        self.add_next(AstNodeType::CallResult{params_num,call_name});
 
         self.last_node_mut().stack_pushed_num-=params_num;
 
@@ -1425,7 +1425,7 @@ impl<'a> Ast<'a> {
                     }
                     AstNodeType::CallMethod { params_num, .. }
                     // | AstNodeType::CallMethodOrResult { params_num, .. }
-                    | AstNodeType::CallResult { params_num }
+                    | AstNodeType::CallResult { params_num, .. }
                     | AstNodeType::CallVarOrMethod { params_num, .. } =>
                     {
                         self.get_node_mut(cur_node_ind).stack_size-=params_num;
@@ -1886,8 +1886,8 @@ impl<'a> Ast<'a> {
                 // AstNodeType::CallMethodOrResult{name,params_num} => {
                 //     instructions.push(Instruction::CallMethodOrResult(symbol_inds.get(name),params_num));
                 // }
-                AstNodeType::CallResult{params_num} => {
-                    instructions.push(Instruction::CallResult(params_num));
+                AstNodeType::CallResult{params_num,call_name} => {
+                    instructions.push(Instruction::CallResult(params_num,call_name.map(|x|symbol_inds.get(x))));
                 }
                 AstNodeType::Include(name) => {
                     instructions.push(Instruction::Include(include_inds.get(name,cur_node.loc.unwrap_or_default())));
@@ -1952,10 +1952,10 @@ impl<'a> Ast<'a> {
                             // instructions.push(Instruction::GetStackVarDeref(stack_offset));
                             // instructions.push(Instruction::CallResult(params_num));
 
-                            instructions.push(Instruction::CallStackVarDeref(stack_offset,params_num));
+                            instructions.push(Instruction::CallStackVarDeref(stack_offset,params_num,Some(symbol_inds.get(name))));
                         } else {
                             instructions.push(Instruction::GetStackVar(stack_offset));
-                            instructions.push(Instruction::CallResult(params_num));
+                            instructions.push(Instruction::CallResult(params_num,Some(symbol_inds.get(name))));
                         }
 
                     } else {

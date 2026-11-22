@@ -718,7 +718,7 @@ impl Compiler {
 
                         //
                         .loc(top_group.tokens().start_loc())
-                        .call_result(params.child_num(),)
+                        .call_result(params.child_num(),None)
 
                     .block_end() //todo remove
                     ;
@@ -761,7 +761,7 @@ impl Compiler {
                             .loc(top_group.tokens().start_loc())
                             .call_method("_field",2)
 
-                            .call_result(params.child_num()+1)
+                            .call_result(params.child_num()+1, Some(field_name))
                             // .to_block_end(JmpCond::None, 1)
                         .block_end()
                             // .pop_params(params.child_num()+1)

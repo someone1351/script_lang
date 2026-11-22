@@ -289,7 +289,7 @@ impl Compiler {
                                 builder.loc(first_param.start_loc());
 
                                 builder.eval(first_param.as_primitive());
-                                builder.call_result(record.params_num()-1);
+                                builder.call_result(record.params_num()-1,None);
                             } else if record.params_num()==1 { //has fields, no args
                                 if self.get_var_prefix.is_none() || symbol.starts_with(self.get_var_prefix.unwrap()) || self.optional_get_var_prefix {
                                     builder.eval(first_param.as_primitive());

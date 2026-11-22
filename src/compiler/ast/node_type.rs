@@ -68,7 +68,7 @@ pub enum AstNodeType<'a> {
     // CallMethodOrResult{name:&'a str,params_num:usize},
     // CallField{params_num:usize, },
     // HasMethod{name:&'a str,},
-    CallResult{params_num:usize},
+    CallResult{params_num:usize, call_name: Option<&'a str>,},
 
     //
     Include(&'a str),

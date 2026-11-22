@@ -23,7 +23,7 @@ pub fn call_func_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,
     builder
         .loc(func.start_loc())
         .eval(func)
-        .call_result(record.params_num()-2)
+        .call_result(record.params_num()-2, None)
         ;
 
     Ok(())

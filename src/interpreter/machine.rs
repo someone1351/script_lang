@@ -848,7 +848,7 @@ impl<'a,X> Machine<'a,X> {
             }
 
 
-            Instruction::CallStackVarDeref(stack_offset_ind,params_num) => {
+            Instruction::CallStackVarDeref(stack_offset_ind,params_num,call_name) => {
                 let params_num=*params_num;
 
                 let custom=self.get_stack_offset_value(*stack_offset_ind)?.as_custom();
@@ -896,7 +896,7 @@ impl<'a,X> Machine<'a,X> {
                     //let v=self.copy_val(data.clone())?;
                     let v=data;
 
-                    if self.inner_call_value(params_num,v,false, None)? {
+                    if self.inner_call_value(params_num,v,false, call_name.clone())? {
                         return Ok(()); //continue;
                     }
                 }
@@ -1059,10 +1059,10 @@ impl<'a,X> Machine<'a,X> {
                 }
             }
 
-            Instruction::CallResult(params_num)  => {
+            Instruction::CallResult(params_num,call_name)  => {
                 let params_num=*params_num;
                 let v = self.result_val();
-                if self.inner_call_value(params_num,v,false, None)? {
+                if self.inner_call_value(params_num,v,false, call_name.clone())? {
                     return Ok(()); //continue;
                 }
             }
