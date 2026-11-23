@@ -1355,8 +1355,10 @@ impl<'a,X> Machine<'a,X> {
         call_name: StringVal,
     ) -> Result<bool, MachineError> {
         match method.method_type {
-            MethodType::BuildFunc { build, func_ind } => {
-                self.inner_call_build_func(params_num, 0, build, func_ind, false, Some(call_name))?;
+            MethodType::BuildFunc { build,
+                // func_ind
+            } => {
+                self.inner_call_build_func(params_num, 0, build, 0, false, Some(call_name))?;
                 Ok(true)
             }
             MethodType::NonMut(_) | MethodType::Mut(_) => {

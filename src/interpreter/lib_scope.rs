@@ -478,7 +478,10 @@ impl<X> std::fmt::Debug for ArgNode<X> {
 pub enum MethodType<X> {
     Mut(FuncTypeMut<X>),
     NonMut(FuncType<X>),
-    BuildFunc { build: BuildT, func_ind: usize },
+    BuildFunc {
+        build: BuildT,
+        // func_ind: usize,
+    },
 }
 
 impl<X> Clone for MethodType<X> {
@@ -486,7 +489,11 @@ impl<X> Clone for MethodType<X> {
         match self {
             Self::Mut(x) => Self::Mut(x.clone()),
             Self::NonMut(x) => Self::NonMut(x.clone()),
-            Self::BuildFunc { build, func_ind } => Self::BuildFunc { build: build.clone(), func_ind: *func_ind, },
+            Self::BuildFunc { build,
+                // func_ind
+            } => Self::BuildFunc { build: build.clone(),
+                // func_ind: *func_ind,
+            },
         }
     }
 }
@@ -918,12 +925,15 @@ impl<X> LibScope<X> {
         &'m mut self,
         names: [&'m str; N],
         build: BuildT,
-        func_ind: usize,
+        // func_ind: usize,
     ) -> MethodInput<'m, X> {
         MethodInput {
             lib_scope: self,
             names: names.to_vec(),
-            method_type: MethodType::BuildFunc { build, func_ind },
+            method_type: MethodType::BuildFunc {
+                build,
+                // func_ind
+            },
             args: Vec::new(),
             optional_start: None,
         }
@@ -934,9 +944,11 @@ impl<X> LibScope<X> {
         &'m mut self,
         name: &'m str,
         build: BuildT,
-        func_ind: usize,
+        // func_ind: usize,
     ) -> MethodInput<'m, X> {
-        self.methods_build([name], build, func_ind)
+        self.methods_build([name], build,
+            // func_ind
+        )
     }
 }
 
