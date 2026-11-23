@@ -244,7 +244,7 @@ impl<'m,X> MethodInput<'m,X> {
         self
     }
     pub fn func(mut self) -> Self {
-        self.args.push(vec![Arg::custom::<Closure>()]);
+        self.args.push(vec![Arg::custom_ref::<Closure>()]);
         self
     }
     pub fn custom<T:'static>(mut self) -> Self {
@@ -307,7 +307,7 @@ impl<'m,X> MethodInput<'m,X> {
         self
     }
     pub fn or_func(mut self) -> Self {
-        self.args.last_mut().unwrap().push(Arg::custom::<Closure>());
+        self.args.last_mut().unwrap().push(Arg::custom_ref::<Closure>());
         self
     }
     pub fn or_custom<T:'static>(mut self) -> Self {

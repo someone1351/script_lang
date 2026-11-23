@@ -361,6 +361,16 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //     .func()
     //     .end();
 
+// build_array_map().unwrap().print();
+    lib_scope.method_build("map", build_array_map().unwrap())
+        .custom_ref::<Array>()
+        .func()
+        .end();
 
-    lib_scope.method_build("map", build_array_map().unwrap()).custom_ref::<Array>().func().end();
+    // lib_scope.method("map", |context|{
+    //     Ok(Value::int(3))
+    // })
+    //     .custom_ref::<Array>()
+    //     .func()
+    //     .end();
 }

@@ -85,6 +85,7 @@ pub struct StackFrame {
 
     // pub ret_stack_size : usize,
     pub info: FrameInfo,
+    pub pop_params: bool, //google says so
 }
 
 
@@ -424,9 +425,24 @@ impl<'a,X> Machine<'a,X> {
             // self.debugger.move_instr_pos(self.instr_pos);
             self.instr_end_pos=stack_frame.ret_instr_end;
 
-            if stack_frame.stack_params_num>0 { //what is stack_params_num?
-                self.stack_pop_amount(stack_frame.stack_params_num)?; //+captures_num
+            //google says so
+            let pop_amount = if stack_frame.pop_params {
+                stack_frame.stack_params_num
+            } else if let FrameInfo::BuildFunc { captures_num, .. } = &stack_frame.info {
+                *captures_num
+            } else {
+                0
+            };
+
+            //google says so
+            if pop_amount > 0 {
+                self.stack_pop_amount(pop_amount)?;
             }
+
+            //google says so (commented)
+            // if stack_frame.stack_params_num>0 { //what is stack_params_num?
+            //     self.stack_pop_amount(stack_frame.stack_params_num)?; //+captures_num
+            // }
 
             //google says so
             if let FrameInfo::BuildFunc {def_name,call_name,..} = &stack_frame.info {
@@ -1112,6 +1128,8 @@ impl<'a,X> Machine<'a,X> {
                     stack_params_start:self.stack.len(),
                     func_params_num :0,
                     info: FrameInfo::Include {build: include_build.clone(),},
+                    pop_params: true, //google says so
+
                 });
 
                 self.cur_build=Some(include_build.clone());
@@ -1244,6 +1262,7 @@ impl<'a,X> Machine<'a,X> {
             stack_params_num: 0,
             func_params_num: 0,
             info: FrameInfo::Main {build: build.clone(),},
+            pop_params: true, //google says so
         });
 
         // self.debugger.push_frame_main(build.clone());
@@ -1274,7 +1293,7 @@ impl<'a,X> Machine<'a,X> {
 
 
     fn inner_call_bound_func(&mut self, params_num : usize, bound_func : Method<X>, pop_params:bool,
-        name: &str,
+        name: &str, //google says so
     ) -> Result<(),MachineError> {
 
         // self.debugger.push_frame_bound_func(params_num, &self.stack, &self.result_val());
@@ -1347,6 +1366,8 @@ impl<'a,X> Machine<'a,X> {
 
 
     }
+
+    //google says so
     fn inner_call_vm_method(
         &mut self,
         params_num: usize,
@@ -1354,11 +1375,12 @@ impl<'a,X> Machine<'a,X> {
         pop_params: bool,
         call_name: StringVal,
     ) -> Result<bool, MachineError> {
+
         match method.method_type {
             MethodType::BuildFunc { build,
                 // func_ind
             } => {
-                self.inner_call_build_func(params_num, 0, build, 0, false, Some(call_name))?;
+                self.inner_call_build_func(params_num, 0, build, 0, false,pop_params, Some(call_name))?;
                 Ok(true)
             }
             MethodType::NonMut(_) | MethodType::Mut(_) => {
@@ -1370,7 +1392,8 @@ impl<'a,X> Machine<'a,X> {
 
 
     fn inner_call_build_func(&mut self, params_num:usize, captures_num :usize, build:BuildT, func_ind:usize,finish:bool,
-        call_name: Option<StringVal>,
+        pop_params: bool, //google says so
+        call_name: Option<StringVal>, //google says so
     ) -> Result<(),MachineError> {
 
         let stack_params_num=params_num+captures_num;
@@ -1415,6 +1438,7 @@ impl<'a,X> Machine<'a,X> {
                 // param_types,
                 captures_num,
             },
+            pop_params, //google says so
         });
 
         self.cur_build=Some(build.clone());
@@ -1425,7 +1449,7 @@ impl<'a,X> Machine<'a,X> {
     }
 
     fn inner_call_value(&mut self, params_num:usize, v:Value, finish:bool,
-        call_name: Option<StringVal>,
+        call_name: Option<StringVal>, //google says so
     ) -> Result<bool,MachineError> {
         // println!("~== {params_num} : {}",self.stack.len());
         if v.is_custom::<Closure>() {
@@ -1443,7 +1467,7 @@ impl<'a,X> Machine<'a,X> {
                 // self.debugger.set_stack_from_last();
             }
 
-            self.inner_call_build_func(params_num, captures_num, func_build, func_ind, finish,call_name)?;
+            self.inner_call_build_func(params_num, captures_num, func_build, func_ind, finish,true,call_name)?;
 
             Ok(true)
         } else {

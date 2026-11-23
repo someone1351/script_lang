@@ -1,4 +1,4 @@
-
+/*
 (
 -
 5
@@ -19,5 +19,6 @@ goto abc
 println("hello2");
 label abc:; println("x")
 println("hello3");
-
-[1,2,3].map(fn(x){return x*2+1})
+*/
+var a=[1,2,3].map(fn(x){return x*2+1})
+string(a)
