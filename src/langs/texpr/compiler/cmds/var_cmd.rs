@@ -32,18 +32,20 @@ pub fn var_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
         let is_init_nil= i+1==record.params_num() || record.param(i+1).and_then(|param|param.as_primitive().as_symbol()) == Some(",");
 
         // println!("hmm {idn} {is_init_nil}");
-        builder.decl_var_start(idn,is_init_nil);
+        builder.decl_var_start(idn,); //is_init_nil
 
         if !is_init_nil {
             let val_expr = record.param(i+1).unwrap().as_primitive();
             builder.eval(val_expr);
+        } else {
+            builder.result_nil();
         }
 
         builder.decl_var_end();
 
-        if !is_init_nil {
-            builder.set_var(idn);
-        }
+        // if !is_init_nil {
+        //     builder.set_var(idn);
+        // }
 
         if is_init_nil {
             i+=1; //just idn

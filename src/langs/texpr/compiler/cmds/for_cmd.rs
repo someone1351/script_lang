@@ -26,21 +26,23 @@ pub fn for_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primit
 
     builder
         .block_start(None)
-            .decl_var_start(idn, false)
+            .decl_var_start(idn, )
 
                 //why do these inside idn decl?
                 .eval(to)
-                .decl_anon_var("n", false)
-                .set_anon_var("n")
+                .decl_anon_var("n", )
+                // .set_anon_var("n")
 
-                .decl_anon_var("r", false)
                 .result_void() //why set to void?? oh "r" is the value of the body's return
-                .set_anon_var("r")
+                .decl_anon_var("r", )
+                // .result_void() //why set to void?? oh "r" is the value of the body's return
+                // .set_anon_var("r")
 
+                .eval(from)
             .decl_var_end()
 
-            .eval(from)
-            .set_var(idn)
+            // .eval(from)
+            // .set_var(idn)
 
             .block_start(Some("loop"))
                 .block_start(None)

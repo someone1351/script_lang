@@ -61,7 +61,7 @@ where
 }
 
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct BuilderError<E>
 where
     E:Clone+Debug,
@@ -435,12 +435,21 @@ where
     // pub fn decl_global_var(&mut self,n:&'a str, init:bool) -> &mut Self {
     //     self.add_node(BuilderNodeType::DeclGlobalVar(n,init))
     // }
+    pub fn decl_var(&mut self, name: &'a str) -> &mut Self {
+        let loc = self.get_loc();
 
-    pub fn decl_var_start(&mut self,name:&'a str,init_nil:bool) -> &mut Self {
+        self.add_node(move |ast| {
+            ast.decl_var_start(name, None); //false,
+            ast.decl_var_end().map_err(|e| BuilderError::from_ast(loc, e))
+            // ast.set_var(name, None).map_err(|e| BuilderError::from_ast(loc, e))
+        })
+    }
+
+    pub fn decl_var_start(&mut self,name:&'a str,) -> &mut Self { //init_nil:bool
         // self.add_node(BuilderNodeType::DeclVarStart{name:n,init_nil,anon_id:None,})
 
         self.add_node(move|ast|{
-            ast.decl_var_start(name,init_nil,None);
+            ast.decl_var_start(name,None); //init_nil,
             Ok(())
         })
     }
@@ -481,7 +490,7 @@ where
         })
     }
 
-    pub fn decl_anon_var(&mut self,name:&'a str,init_nil:bool) -> &mut Self {
+    pub fn decl_anon_var(&mut self,name:&'a str,) -> &mut Self { //init_nil:bool
         // let anon_id=if self.in_cmd{Some(self.next_cmd_anon_id)}else{Some(0)}; //why 0 if outside cmd? 0 for root?
         let anon_id=Some(self.cur_anon_id);
         // self.add_node(BuilderNodeType::DeclVarStart{name:n,init_nil,anon_id,});
@@ -489,7 +498,7 @@ where
         let loc=self.get_loc();
 
         self.add_node(move|ast|{
-            ast.decl_var_start(name,init_nil,anon_id);
+            ast.decl_var_start(name,anon_id); //init_nil,
             ast.decl_var_end()
                 .map_err(|e|BuilderError::from_ast(loc, e))
             // .unwrap();

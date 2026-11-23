@@ -101,7 +101,8 @@ pub fn func_cmd<'a>(
     let fields=
     if let Some(idn)=idn {
         builder
-            .decl_var_start(idn,false)
+            .decl_var_start(idn,) //false
+            .result_nil() //too lazy to do it properly
             .decl_var_end();
         None
     } else { //fields

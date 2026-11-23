@@ -707,8 +707,8 @@ impl Compiler {
                 builder
                     .block_start(None) //todo remove
 
-                        .decl_anon_var("self", false) //todo remove
-                        .set_anon_var("self") //todo remove
+                        .decl_anon_var("self", ) //todo remove
+                        // .set_anon_var("self") //todo remove
 
                         //
                         .eval(params)
@@ -731,8 +731,8 @@ impl Compiler {
                 builder
                     .block_start(None) //todo remove
 
-                        .decl_anon_var("self", false) //todo remove
-                        .set_anon_var("self") //todo remove
+                        .decl_anon_var("self", ) //todo remove
+                        // .set_anon_var("self") //todo remove
 
                         //
                         // .block_start(None)
@@ -835,21 +835,23 @@ impl Compiler {
 
                 builder
                     .block_start(None)
-                        .decl_var_start(var, false)
+                        .decl_var_start(var, )
 
                             //why do these inside idn decl?
                             .eval(to)
-                            .decl_anon_var("n", false)
-                            .set_anon_var("n")
+                            .decl_anon_var("n", )
+                            // .set_anon_var("n")
 
-                            .decl_anon_var("r", false)
                             .result_void() //why set to void?? oh "r" is the value of the body's return
-                            .set_anon_var("r")
+                            .decl_anon_var("r", )
+                            // .result_void() //why set to void?? oh "r" is the value of the body's return
+                            // .set_anon_var("r")
 
+                            .eval(from)
                         .decl_var_end()
 
-                        .eval(from)
-                        .set_var(var)
+                        // .eval(from)
+                        // .set_var(var)
 
                         .block_start(Some("loop"))
                             .block_start(None)
@@ -933,11 +935,17 @@ impl Compiler {
                 let name= top_group.child(0).unwrap().tokens();
                 let val= top_group.child(1);
 
-                builder.decl_var_start(name.identifier().unwrap(),val.is_none());
-
                 if let Some(val)=val {
                     builder.eval(val);
+                } else {
+                    builder.result_nil();
                 }
+
+                builder.decl_var_start(name.identifier().unwrap(),); //val.is_none()
+
+                // if let Some(val)=val {
+                //     builder.eval(val);
+                // }
 
                 builder.decl_var_end();
 
@@ -968,9 +976,10 @@ impl Compiler {
                 let variadic = top_group.child(2).map(|x|x.name2().unwrap().0=="variadic").unwrap_or_default();
                 let body= top_group.child(3).unwrap();
 
-                builder
-                    .decl_var_start(name,false)
-                    .decl_var_end();
+                // builder
+                //     .decl_var_start(name,)
+                //     .decl_var_end();
+
 
                 //
                 builder
@@ -979,9 +988,12 @@ impl Compiler {
                             .eval(body)
                             .result_void()
                         .block_end()
-                    .func_end();
+                    .func_end()
+                .decl_var_start(name,)
+                .decl_var_end()
+                ;
 
-                builder.set_var(name);
+                // builder.set_var(name);
             }
             "lambda" => {
 
@@ -1008,8 +1020,8 @@ impl Compiler {
                 builder
                     .block_start(None)
                     .call_method("array", 0)
-                    .decl_anon_var("d", false)
-                    .set_anon_var("d")
+                    .decl_anon_var("d", )
+                    // .set_anon_var("d")
                     ;
 
                 for e in elements {
@@ -1034,8 +1046,8 @@ impl Compiler {
                 builder
                     .block_start(None)
                     .call_method("dict", 0)
-                    .decl_anon_var("d", false)
-                    .set_anon_var("d")
+                    .decl_anon_var("d", )
+                    // .set_anon_var("d")
                     ;
 
                 for e in elements {

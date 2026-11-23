@@ -11,8 +11,8 @@ pub fn dict_cmd<'a>(record : RecordContainer<'a>, builder :&mut Builder<'a,Primi
     builder
         .block_start(None)
         .call_method("dict", 0)
-        .decl_anon_var("d", false)
-        .set_anon_var("d")
+        .decl_anon_var("d", )
+        // .set_anon_var("d")
         // .param_push()
         ;
 

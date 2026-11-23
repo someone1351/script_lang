@@ -176,7 +176,7 @@ pub struct Ast<'a> {
     pub reuse_local_decls:bool,
     pub must_decl_globals:bool,
 
-    pub decls_starts : Vec<(VarName<'a>,AstDeclVar,bool)>,
+    pub decls_starts : Vec<(VarName<'a>,AstDeclVar,)>, //bool
 
     // pub anon_var_decls : Vec<HashSet<VarName<'a>>>,
 }
@@ -369,10 +369,11 @@ impl<'a> Ast<'a> {
 
         if variadic {
             if let Some(&name)=in_params.last() {
-                self.decl_var_start(name,false,None);
-                self.decl_var_end().unwrap();
+                self.decl_var_start(name,None); //false,
                 self.add_next(AstNodeType::ResultVararg);
-                self.set_var(name,None).unwrap();
+                self.decl_var_end()?; //.unwrap();
+                // self.add_next(AstNodeType::ResultVararg);
+                // self.set_var(name,None).unwrap();
             }
         }
 
@@ -591,7 +592,7 @@ impl<'a> Ast<'a> {
     //why start and end for decls?
     // ir was so you could declare a func eg var f = fn(){} where f can't be seen inside the func
     // eg decl_var_start, lambda, decl_var_end, set_var
-    pub fn decl_var_start(&mut self,name:&'a str, init_nil:bool, anon_id:Option<usize>) {
+    pub fn decl_var_start(&mut self,name:&'a str, anon_id:Option<usize>) {
         if self.body_node().depth==0 && anon_id.is_none() { //global
             let decl=AstDeclVar::Global;
 
@@ -599,7 +600,7 @@ impl<'a> Ast<'a> {
 
             {
                 let name=VarName{name,anon_id:None,};
-                self.decls_starts.push((name,decl,false));
+                self.decls_starts.push((name,decl,)); //false
             }
         } else {
             let func_and_param_ind=if self.reuse_local_decls { //reuse vars, so they take up param with same name
@@ -617,7 +618,13 @@ impl<'a> Ast<'a> {
             if let Some((func_ind,param_ind))=func_and_param_ind { //reuse vars, so they take up param with same name
                 let decl=AstDeclVar::Param { func_ind, param_ind, };
                 self.add_next(AstNodeType::DeclVarStart { name, decl, anon_id, });
-                self.add_next(AstNodeType::DeclVarEnd { name, decl, anon_id, });
+
+                //google says so (commented)
+                // self.add_next(AstNodeType::DeclVarEnd { name, decl, anon_id, });
+
+                //google says so
+                let name=VarName{name,anon_id,};
+                self.decls_starts.push((name,decl,)); //false
             } else {
                 let existing_local_ind= if self.reuse_local_decls { //reuse vars
                     self.body_node().local_decls.iter().position(|local_decl|{local_decl.name==VarName{name,anon_id}})
@@ -648,8 +655,8 @@ impl<'a> Ast<'a> {
                 {
                     let name=VarName{name,anon_id,};
                     let decl=AstDeclVar::Local { local_ind, };
-                    let init_nil = init_nil && is_first_decl;
-                    self.decls_starts.push((name,decl,init_nil));
+                    // let init_nil = init_nil && is_first_decl;
+                    self.decls_starts.push((name,decl,)); //init_nil
                 }
 
                 // if init_nil && is_first_decl {
@@ -663,13 +670,14 @@ impl<'a> Ast<'a> {
     }
 
     pub fn decl_var_end(&mut self) -> Result<(),AstError> {
-        if let Some((name,decl,init_nil))=self.decls_starts.pop() {
+        if let Some((name,decl,))=self.decls_starts.pop() { //init_nil
             self.add_next(AstNodeType::DeclVarEnd { name:name.name,decl,anon_id:name.anon_id, });
 
-            if init_nil {
-                self.result_nil();
-                self.set_var(name.name,name.anon_id).unwrap();
-            }
+            // if init_nil {
+            //     self.result_nil();
+            //     self.set_var(name.name,name.anon_id).unwrap();
+            // }
+            self.set_var(name.name, name.anon_id).unwrap();
 
             Ok(())
         } else {

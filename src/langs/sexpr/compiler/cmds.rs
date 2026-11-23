@@ -92,18 +92,21 @@ pub fn for_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SExprCon
 
     builder
         .block_start(None)
-            .decl_var_start(idn, false)
+            .decl_var_start(idn, )
 
                 .eval(header.get(2).unwrap())
-                .decl_anon_var("n", false)
-                .set_anon_var("n")
-                .decl_anon_var("r", false)
+                .decl_anon_var("n", )
+                // .set_anon_var("n")
                 .result_void()
-                .set_anon_var("r")
+                .decl_anon_var("r", )
+                // .result_void()
+                // .set_anon_var("r")
+
+                .eval(header.get(1).unwrap())
             .decl_var_end()
 
-            .eval(header.get(1).unwrap())
-            .set_var(idn)
+            // .eval(header.get(1).unwrap())
+            // .set_var(idn)
 
             .block_start(Some("loop"))
                 .block_start(None)
@@ -207,18 +210,20 @@ pub fn decl_var_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SEx
     let is_init_nil=sexpr.len()==2;
     // let is_global=sexpr.depth()==0 ;
 
-    builder.decl_var_start(idn,is_init_nil);
+    builder.decl_var_start(idn,); //is_init_nil
 
     if !is_init_nil {
         let val_expr = sexpr.get(2).unwrap();
         builder.eval(val_expr);
+    } else {
+        builder.result_nil();
     }
 
     builder.decl_var_end();
 
-    if !is_init_nil {
-        builder.set_var(idn);
-    }
+    // if !is_init_nil {
+    //     builder.set_var(idn);
+    // }
 
     // else if !is_global {
     //     builder.result_nil();
@@ -528,8 +533,8 @@ pub fn decl_func_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
 
     //
     builder
-        .decl_var_start(idn,false)
-        .decl_var_end()
+        // .decl_var_start(idn,false)
+        // .decl_var_end()
         .func_start(params,variadic,None)
         // .result_void()
         ;
@@ -551,11 +556,13 @@ pub fn decl_func_cmd<'a>(sexpr : SExprContainer<'a>, builder :&mut Builder<'a,SE
 
     builder
         .func_end()
-        // .decl_global_var(idn)
-        // // .decl_local_var(idn) //should make this a global... since inner_globals no longer used
-        // .set_var(idn, idn_loc)
-        // .decl_global_var(idn, true)
-        .set_var(idn)
+        // // .decl_global_var(idn)
+        // // // .decl_local_var(idn) //should make this a global... since inner_globals no longer used
+        // // .set_var(idn, idn_loc)
+        // // .decl_global_var(idn, true)
+        // .set_var(idn)
+        .decl_var_start(idn,)
+        .decl_var_end()
         ;
 
 

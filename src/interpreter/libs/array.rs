@@ -3,6 +3,10 @@
 // use crate::Custom;
 // use crate::GcTraversable;
 
+use crate::func_builder::compile_func;
+use crate::func_builder::FuncCompileError;
+use crate::BuildT;
+
 // pub use crate::custom_type::*;
 // use super::super::data::*;
 // use super::super::func_context::*;
@@ -115,6 +119,71 @@ impl GcTraversable for Array {
 
 //     Ok(Value::Void)
 // }
+
+pub fn build_array_map() -> Result<BuildT, FuncCompileError<()>> {
+    use crate::build::*;
+    compile_func(["arr", "f"], false, |b| {
+        b.block_start(None)
+            // var out = array();
+            .call_method("array", 0)
+            .decl_var("out")
+
+            // var i = 0;
+            .result_int(0)
+            .decl_var("i")
+
+            // var n = arr.len();
+            .get_var("arr")
+            .param_push()
+            .call_method("len", 1)
+            .decl_var("n")
+
+            // while i < n
+            .block_start(Some("loop"))
+                .get_var("n")
+                .param_push()
+                .get_var("i")
+                .param_push()
+                .call_method("lt", 2)
+                .to_block_end(JmpCond::False, 0)
+
+                // f(arr[i], i)  (push args in reverse: i, then arr[i])
+                .get_var("i")
+                .param_push()
+
+                .get_var("i")
+                .param_push()
+                .get_var("arr")
+                .param_push()
+                .call_method("_index", 2)
+                .param_push()
+
+                .get_var("f")
+                .call_result(2, None)
+
+                // out.push(res)  (push args in reverse: res, then out)
+                .param_push()
+                .get_var("out")
+                .param_push()
+                .call_method("push", 2)
+
+                // i = i + 1
+                .result_int(1)
+                .param_push()
+                .get_var("i")
+                .param_push()
+                .call_method("add", 2)
+                .set_var("i")
+
+                .to_block_start(JmpCond::None, 0)
+            .block_end()
+
+            // return out
+            .get_var("out")
+        .block_end();
+    })
+}
+
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //array(?any ...)
     lib_scope.method("array",|mut context|{
@@ -292,4 +361,6 @@ pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //     .func()
     //     .end();
 
+
+    lib_scope.method_build("map", build_array_map().unwrap()).custom_ref::<Array>().func().end();
 }
