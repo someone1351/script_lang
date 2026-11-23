@@ -85,7 +85,8 @@ pub struct StackFrame {
 
     // pub ret_stack_size : usize,
     pub info: FrameInfo,
-    pub pop_params: bool, //google says so
+    // pub pop_params: bool, //google says so
+    pub pop_params_num: usize,
 }
 
 
@@ -425,19 +426,26 @@ impl<'a,X> Machine<'a,X> {
             // self.debugger.move_instr_pos(self.instr_pos);
             self.instr_end_pos=stack_frame.ret_instr_end;
 
-            //google says so
-            let pop_amount = if stack_frame.pop_params {
-                stack_frame.stack_params_num
-            } else if let FrameInfo::BuildFunc { captures_num, .. } = &stack_frame.info {
-                *captures_num
-            } else {
-                0
-            };
+            // //google says so
+            // let pop_amount = if stack_frame.pop_params {
+            //     stack_frame.stack_params_num
+            // } else if let FrameInfo::BuildFunc { captures_num, .. } = &stack_frame.info {
+            //     // *captures_num
+            //     *captures_num + stack_frame.func_params_num.saturating_sub(stack_frame.stack_params_num)
+            // } else {
+            //     0
+            // };
+
+            // //google says so
+            // if pop_amount > 0 {
+            //     self.stack_pop_amount(pop_amount)?;
+            // }
 
             //google says so
-            if pop_amount > 0 {
-                self.stack_pop_amount(pop_amount)?;
+            if stack_frame.pop_params_num > 0 {
+                self.stack_pop_amount(stack_frame.pop_params_num)?;
             }
+
 
             //google says so (commented)
             // if stack_frame.stack_params_num>0 { //what is stack_params_num?
@@ -1128,7 +1136,8 @@ impl<'a,X> Machine<'a,X> {
                     stack_params_start:self.stack.len(),
                     func_params_num :0,
                     info: FrameInfo::Include {build: include_build.clone(),},
-                    pop_params: true, //google says so
+                    // pop_params: true, //google says so
+                    pop_params_num:0, //google says so
 
                 });
 
@@ -1262,7 +1271,8 @@ impl<'a,X> Machine<'a,X> {
             stack_params_num: 0,
             func_params_num: 0,
             info: FrameInfo::Main {build: build.clone(),},
-            pop_params: true, //google says so
+            // pop_params: true, //google says so
+            pop_params_num:0, //google says so
         });
 
         // self.debugger.push_frame_main(build.clone());
@@ -1414,13 +1424,32 @@ impl<'a,X> Machine<'a,X> {
             self.set_stack_val(stack_ind, v)?;
         }
 
-        //fill missing params with nil
-        if stack_params_num < func.params_num {
-            let dif = func.params_num - stack_params_num;
-            self.stack.splice(stack_params_start .. stack_params_start,std::iter::repeat(Value::Nil).take(dif));
-            // self.debugger.stack_insert_none(stack_params_start, dif);
+        //google says so (commented)
+        // //fill missing params with nil
+        // if stack_params_num < func.params_num {
+        //     let dif = func.params_num - stack_params_num;
+        //     self.stack.splice(stack_params_start .. stack_params_start,std::iter::repeat(Value::Nil).take(dif));
+        //     // self.debugger.stack_insert_none(stack_params_start, dif);
+        // }
+
+        //google says so
+        // fill missing params with nil
+        let dif = func.params_num.saturating_sub(stack_params_num);
+        if dif > 0 {
+            self.stack.splice(
+                stack_params_start..stack_params_start,
+                std::iter::repeat(Value::Nil).take(dif),
+            );
         }
 
+        //google says so
+        let pop_params_num = if pop_params {
+            stack_params_num + dif
+        } else {
+            captures_num + dif
+        };
+
+        //
         self.stack_frames.push(StackFrame {
             ret_build:self.cur_build.clone(),
             ret_instr_ind: self.instr_pos+ (if finish {0}else{1}),
@@ -1438,7 +1467,8 @@ impl<'a,X> Machine<'a,X> {
                 // param_types,
                 captures_num,
             },
-            pop_params, //google says so
+            // pop_params, //google says so
+            pop_params_num, //google says so
         });
 
         self.cur_build=Some(build.clone());
