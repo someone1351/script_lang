@@ -421,9 +421,13 @@ where
         // self.param_loc_rot();
         // self.add_node(BuilderNodeType::StackPop)
 
-        self.add_node(|ast|{
-            ast.stack_pop(1).unwrap();
-            Ok(())
+        let loc=self.get_loc();
+
+        self.add_node(move|ast|{
+            ast.stack_pop(1)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
@@ -443,28 +447,37 @@ where
 
     pub fn decl_var_end(&mut self) -> &mut Self {
         // self.add_node(BuilderNodeType::DeclVarEnd)
+        let loc=self.get_loc();
 
-        self.add_node(|ast|{
-            ast.decl_var_end().unwrap();
-            Ok(())
+        self.add_node(move|ast|{
+            ast.decl_var_end()
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
     pub fn set_var(&mut self,name:&'a str) -> &mut Self {
         // self.add_node(BuilderNodeType::SetVar{name:n,anon_id:None,})
+        let loc=self.get_loc();
 
-        self.add_node(|ast|{
-            ast.set_var(name,None).unwrap();
-            Ok(())
+        self.add_node(move|ast|{
+            ast.set_var(name,None)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
     pub fn get_var(&mut self,name:&'a str) -> &mut Self {
         // self.add_node(BuilderNodeType::GetVar{name:n,anon_id:None,})
+        let loc=self.get_loc();
 
-        self.add_node(|ast|{
-            ast.get_var(name,None).unwrap();
-            Ok(())
+        self.add_node(move|ast|{
+            ast.get_var(name,None)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
@@ -473,11 +486,14 @@ where
         let anon_id=Some(self.cur_anon_id);
         // self.add_node(BuilderNodeType::DeclVarStart{name:n,init_nil,anon_id,});
         // self.add_node(BuilderNodeType::DeclVarEnd)
+        let loc=self.get_loc();
 
         self.add_node(move|ast|{
             ast.decl_var_start(name,init_nil,anon_id);
-            ast.decl_var_end().unwrap();
-            Ok(())
+            ast.decl_var_end()
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
@@ -485,10 +501,13 @@ where
         // let anon_id=if self.in_cmd{Some(self.next_cmd_anon_id)}else{Some(0)};
         let anon_id=Some(self.cur_anon_id);
         // self.add_node(BuilderNodeType::SetVar{name:n,anon_id,})
+        let loc=self.get_loc();
 
         self.add_node(move|ast|{
-            ast.set_var(name,anon_id).unwrap();
-            Ok(())
+            ast.set_var(name,anon_id)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
@@ -496,10 +515,13 @@ where
         // let anon_id=if self.in_cmd{Some(self.next_cmd_anon_id)}else{Some(0)};
         let anon_id=Some(self.cur_anon_id);
         // self.add_node(BuilderNodeType::GetVar{name:n,anon_id,})
+        let loc=self.get_loc();
 
         self.add_node(move|ast|{
-            ast.get_var(name,anon_id).unwrap();
-            Ok(())
+            ast.get_var(name,anon_id)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
     pub fn call_anon(&mut self,name:&'a str,params_num:usize) -> &mut Self {
@@ -507,11 +529,16 @@ where
         let anon_id=Some(self.cur_anon_id);
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::Call{name:n,params_num,anon_id})
+        let loc=self.get_loc();
 
 
         self.add_node(move|ast|{
-            ast.get_var(name, anon_id).unwrap();
-            ast.call_result(params_num, None).unwrap();
+            ast.get_var(name, anon_id)
+                .map_err(|e|BuilderError::from_ast(loc, e))?;
+            // .unwrap();
+            ast.call_result(params_num, None)
+                .map_err(|e|BuilderError::from_ast(loc, e))?;
+                // .unwrap();
             // ast.call_var_or_method(name, params_num, anon_id).unwrap();
             Ok(())
         })
@@ -543,20 +570,26 @@ where
     pub fn call_method(&mut self,name:&'a str,params_num:usize) -> &mut Self {
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::CallMethod(n,params_num))
+        let loc=self.get_loc();
 
         self.add_node(move|ast|{
-            ast.call_method(name, params_num).unwrap();
-            Ok(())
+            ast.call_method(name, params_num)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+                // .unwrap();
+            // Ok(())
         })
     }
 
     pub fn try_call_method(&mut self,name:&'a str,params_num:usize) -> &mut Self {
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::CallMethod(n,params_num))
+        let loc=self.get_loc();
 
         self.add_node(move|ast|{
-            ast.try_call_method(name, params_num).unwrap();
-            Ok(())
+            ast.try_call_method(name, params_num)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
@@ -574,30 +607,39 @@ where
     pub fn call(&mut self,name:&'a str,params_num:usize) -> &mut Self {
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::Call{name:n,params_num,anon_id:None})
+        let loc=self.get_loc();
 
         self.add_node(move|ast|{
-            ast.call_var_or_method(name, params_num, None).unwrap();
-            Ok(())
+            ast.call_var_or_method(name, params_num, None)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
     pub fn call_result(&mut self,params_num:usize,call_name:Option<&'a str>) -> &mut Self {
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::CallResult(params_num))
+        let loc=self.get_loc();
 
         self.add_node(move|ast|{
-            ast.call_result(params_num,call_name).unwrap();
-            Ok(())
+            ast.call_result(params_num,call_name)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
     pub fn get_var_or_call_method(&mut self,name:&'a str) -> &mut Self {
         // self.commit_param_locs();
         // self.add_node(BuilderNodeType::CallMethodOrGetVar{name},)
+        let loc=self.get_loc();
 
-        self.add_node(|ast|{
-            ast.get_var_or_call_method(name).unwrap();
-            Ok(())
+        self.add_node(move|ast|{
+            ast.get_var_or_call_method(name)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
@@ -633,19 +675,25 @@ where
 
     pub fn to_block_start(&mut self,cond:JmpCond,block_offset:usize) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToStart(cond,block_offset))
+        let loc=self.get_loc();
 
         self.add_node(move|ast|{
-            ast.to_block_start(cond, block_offset).unwrap();
-            Ok(())
+            ast.to_block_start(cond, block_offset)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
     pub fn to_block_end(&mut self,cond:JmpCond,block_offset:usize) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToEnd(cond,block_offset))
+        let loc=self.get_loc();
 
         self.add_node(move|ast|{
-            ast.to_block_end(cond, block_offset).unwrap();
-            Ok(())
+            ast.to_block_end(cond, block_offset)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
@@ -671,6 +719,8 @@ where
     pub fn to_block_start_label(&mut self,cond:JmpCond,label:&'a str, skip:usize, err : Option<BuilderError<E>>) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToStartLabel(cond,label,err))
 
+        let loc=self.get_loc();
+
         self.add_node(move|ast|{
             match ast.to_label_block_start(cond, label,skip) {
                 Ok(x) => {
@@ -681,16 +731,20 @@ where
                     }
                     Ok(())
                 }
-                Err(e) => {Err(e)}
-            }.unwrap();
+                Err(e) => {
+                    Err(BuilderError::from_ast(loc, e))
+                }
+            }
+            // .unwrap();
 
-            Ok(())
+            // Ok(())
         })
     }
 
     pub fn to_block_end_label(&mut self,cond:JmpCond,label:&'a str, skip:usize, err : Option<BuilderError<E>>) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockToEndLabel(cond,label,err))
 
+        let loc=self.get_loc();
 
         self.add_node(move|ast|{
             match ast.to_label_block_end(cond, label,skip) {
@@ -704,11 +758,12 @@ where
                     Ok(())
                 }
                 Err(e) => {
-                    Err(e)
+                    Err(BuilderError::from_ast(loc, e))
                 }
-            }.unwrap();
+            }
+            // .unwrap();
 
-            Ok(())
+            // Ok(())
         })
     }
 
@@ -728,16 +783,23 @@ where
     pub fn block_end(&mut self) -> &mut Self {
         // self.add_node(BuilderNodeType::BlockEnd)
 
-        self.add_node(|ast|{
-            ast.block_end().unwrap();
-            Ok(())
+        let loc=self.get_loc();
+
+        self.add_node(move|ast|{
+            ast.block_end().map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
     pub fn end_stack_check(&mut self) -> &mut Self {
-        self.add_node(|ast|{
-            ast.check_stack_params_zero().unwrap();
-            Ok(())
+        let loc=self.get_loc();
+
+        self.add_node(move|ast|{
+            ast.check_stack_params_zero()
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
@@ -749,9 +811,13 @@ where
     }
 
     pub fn pop_params(&mut self, params_num:usize) -> &mut Self {
+        let loc=self.get_loc();
+
         self.add_node(move|ast|{
-            ast.pop_params(params_num).unwrap();
-            Ok(())
+            ast.pop_params(params_num)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 
@@ -765,20 +831,26 @@ where
 
         let params=params.into_iter().collect::<Vec<_>>();
         // self.add_node(BuilderNodeType::FuncStart(params,variadic))
+        let loc=self.get_loc();
 
         self.add_node(move|ast|{
-            ast.func_start(params.clone(), variadic,name).unwrap();
-            Ok(())
+            ast.func_start(params.clone(), variadic,name)
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
 
     }
 
     pub fn func_end(&mut self) -> &mut Self {
         // self.add_node(BuilderNodeType::FuncEnd)
+        let loc=self.get_loc();
 
-        self.add_node(|ast|{
-            ast.func_end().unwrap();
-            Ok(())
+        self.add_node(move|ast|{
+            ast.func_end()
+                .map_err(|e|BuilderError::from_ast(loc, e))
+            // .unwrap();
+            // Ok(())
         })
     }
 

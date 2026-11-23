@@ -16,7 +16,7 @@ pub enum BuilderErrorType {
     BreakNotInLoop,
     ReturnNotInFunc,
     Format(FormatErrorType),
-    DuplicateFuncParam(String),
+    // DuplicateFuncParam(String),
 
 }
 

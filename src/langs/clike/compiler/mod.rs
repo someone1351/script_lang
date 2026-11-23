@@ -951,15 +951,15 @@ impl Compiler {
                 let name=name.identifier().unwrap();
 
                 //
-                let mut seen_params = HashSet::new();
-                for g in top_group.child(1).unwrap().children() {
-                    let param=g.tokens().identifier().unwrap();
-                    let loc=g.tokens().start_loc();
+                // let mut seen_params = HashSet::new();
+                // for g in top_group.child(1).unwrap().children() {
+                //     let param=g.tokens().identifier().unwrap();
+                //     let loc=g.tokens().start_loc();
 
-                    if !seen_params.insert(param) {
-                        return Err(BuilderError::new(loc, BuilderErrorType::DuplicateFuncParam(param.to_string())));
-                    }
-                }
+                //     if !seen_params.insert(param) {
+                //         return Err(BuilderError::new(loc, BuilderErrorType::DuplicateFuncParam(param.to_string())));
+                //     }
+                // }
 
                 //
                 let params= top_group.child(1).unwrap().children()
