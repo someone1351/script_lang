@@ -57,6 +57,7 @@ pub enum MachineErrorType{
     FloatInto,
 
     CannotCallBuildFuncFromBoundFunc(String),
+    FuncReturnedUndefined(Option<String>),
 
 
 }

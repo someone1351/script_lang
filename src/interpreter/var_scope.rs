@@ -50,7 +50,7 @@ impl VarScope {
     }
 
     pub fn get(&self,n : &str) -> Result<Option<Value>,MachineError> {
-        let Some(var)=self.vars.get(&n.to_string()) else {
+        let Some(var)=self.vars.get(n) else {
             return Ok(None);
         };
 
@@ -59,7 +59,15 @@ impl VarScope {
         }
 
         if var.is_refvar {
-            return Ok(Some(var.value.as_custom().data_clone::<Value>()?));
+            // return Ok(Some(var.value.as_custom().data_clone::<Value>()?));
+
+            //google says so
+            let val = var.value.as_custom().data_clone::<Value>()?;
+            // Guard against `Value::Undefined` if the inner refbox was mutated directly
+            if val.is_undefined() {
+                return Ok(None);
+            }
+            return Ok(Some(val));
         }
 
         Ok(Some(var.value.clone_root()))
@@ -86,7 +94,7 @@ impl VarScope {
         var.value.clone_root()
     }
 
-    pub fn contains(&mut self,n : &str) -> bool {
+    pub fn contains(&self,n : &str) -> bool {
         self.vars.contains_key(n)
     }
 
@@ -115,7 +123,9 @@ impl VarScope {
             init:true,
         });
 
-        if value.is_none() && var.is_refvar && !var.init {
+        if //value.is_none() && //google says so (commented out)
+            var.is_refvar && !var.init
+        {
             var.init=true;
             self.set(n, value.unwrap_or(Value::Nil))?;
         } else if let Some(value)=value {
@@ -136,7 +146,7 @@ impl VarScope {
     }
 
     pub fn set(&mut self,n : &str,value:Value) -> Result<bool,MachineError> {
-        let Some(var)=self.vars.get_mut(&n.to_string()) else {
+        let Some(var)=self.vars.get_mut(n) else {
             return Ok(false);
         };
 

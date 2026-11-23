@@ -11,6 +11,8 @@ use std::sync::Mutex;
 
 // use parking_lot::Mutex;
 
+use crate::BuildT;
+
 // use super::super::common::*;
 use super::libs;
 // use super::var_scope::*;
@@ -476,6 +478,7 @@ impl<X> std::fmt::Debug for ArgNode<X> {
 pub enum MethodType<X> {
     Mut(FuncTypeMut<X>),
     NonMut(FuncType<X>),
+    BuildFunc { build: BuildT, func_ind: usize },
 }
 
 impl<X> Clone for MethodType<X> {
@@ -483,6 +486,7 @@ impl<X> Clone for MethodType<X> {
         match self {
             Self::Mut(x) => Self::Mut(x.clone()),
             Self::NonMut(x) => Self::NonMut(x.clone()),
+            Self::BuildFunc { build, func_ind } => Self::BuildFunc { build: build.clone(), func_ind: *func_ind, },
         }
     }
 }
@@ -529,7 +533,7 @@ impl<X> LibScope<X> {
     }
 
     pub fn get_constant(&self,n : &str) -> Option<Value> {
-        self.constants.get(&n.to_string()).map(|x|x.clone_root())
+        self.constants.get(n).map(|x|x.clone_root())
     }
 
     fn get_insert_root_node_ind(&mut self,
@@ -907,6 +911,32 @@ impl<X> LibScope<X> {
         func: impl Fn(FuncContext<X>)->Result<Value,MachineError>+'static+Send+Sync
     ) -> MethodInput<'m,X> {
         self.methods([name], func)
+    }
+
+    //google says so
+    pub fn methods_build<'m, const N: usize>(
+        &'m mut self,
+        names: [&'m str; N],
+        build: BuildT,
+        func_ind: usize,
+    ) -> MethodInput<'m, X> {
+        MethodInput {
+            lib_scope: self,
+            names: names.to_vec(),
+            method_type: MethodType::BuildFunc { build, func_ind },
+            args: Vec::new(),
+            optional_start: None,
+        }
+    }
+
+    //google says so
+    pub fn method_build<'m>(
+        &'m mut self,
+        name: &'m str,
+        build: BuildT,
+        func_ind: usize,
+    ) -> MethodInput<'m, X> {
+        self.methods_build([name], build, func_ind)
     }
 }
 

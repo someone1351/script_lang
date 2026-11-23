@@ -35,7 +35,7 @@ pub fn test_script<P:AsRef<Path>>(path:P) {
 
         if let Err(e)=&res {
             e.eprint(None);
-            machine.print_stack_trace(true);
+            machine.print_stack_trace();
             machine.print_stack();
             // machine.print_state();
         }
