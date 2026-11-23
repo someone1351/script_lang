@@ -203,10 +203,12 @@ impl Compiler {
                                 if record.params_num()==1 {
                                     builder.eval(first_param.as_primitive());
                                 } else {
-                                    return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
+                                    // return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
+                                    return Err(BuilderError::new(record.start_loc(), BuilderErrorType::NoParamsAllowed ));
                                 }
                             } else if [","].contains(&symbol) {
-                                return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
+                                // return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
+                                return Err(BuilderError::new(record.start_loc(), BuilderErrorType::InvalidSymbol ));
                             } else if first_param.fields_num()==0 { //no fields
                                 if let Some(cmds)=self.get_cmds(symbol) {  //command
                                     let mut errors=Vec::<BuilderError<BuilderErrorType>>::new();
@@ -257,7 +259,8 @@ impl Compiler {
                                         builder.get_var_or_call_method(symbol);
                                     }
                                 } else if self.get_var_prefix.is_some() && symbol.starts_with(self.get_var_prefix.unwrap()) { //has args, no fields, using var prefix, has prefix
-                                    return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
+                                    // return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
+                                    return Err(BuilderError::new(record.start_loc(), BuilderErrorType::NoParamsAllowed ));
                                 } else { //has args, no fields
                                     for i in (1 .. record.params_num()).rev() {
                                         let x=record.param(i).unwrap();
@@ -294,7 +297,8 @@ impl Compiler {
                                 if self.get_var_prefix.is_none() || symbol.starts_with(self.get_var_prefix.unwrap()) || self.optional_get_var_prefix {
                                     builder.eval(first_param.as_primitive());
                                 } else {
-                                    return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::CannotCallGetVar });
+                                    // return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::CannotCallGetVar });
+                                    return Err(BuilderError::new(record.start_loc(), BuilderErrorType::CannotCallGetVar ));
                                 }
                                 // println!("dffsd {:?}",first_param.primitive());
                             } else { //args and fields
@@ -304,7 +308,8 @@ impl Compiler {
                                 // println!("hmm {:?}",field_iter.collect::<Vec<_>>());
 
                                 let Some(last_field_symbol)=last_field.as_primitive().as_symbol() else {
-                                    return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
+                                    // return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
+                                    return Err(BuilderError::new(record.start_loc(), BuilderErrorType::NoParamsAllowed ));
                                 };
 
                                 //
@@ -352,7 +357,8 @@ impl Compiler {
                             //
 
                             let Some(last_field_symbol)=last_field.as_primitive().as_symbol() else {
-                                return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
+                                // return Err(BuilderError { loc: record.start_loc(), error_type: BuilderErrorType::NoParamsAllowed });
+                                return Err(BuilderError::new(record.start_loc(), BuilderErrorType::NoParamsAllowed ));
                             };
 
                             //
@@ -395,28 +401,32 @@ impl Compiler {
                         if hasnt_fields {
                             builder.result_bool(true);
                         } else {
-                            return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
+                            // return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
+                            return Err(BuilderError::new(top_primitive.start_loc(), BuilderErrorType::NoFieldsAllowed ));
                         }
                     }
                     "false" =>{
                         if hasnt_fields {
                             builder.result_bool(false);
                         } else {
-                            return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
+                            // return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
+                            return Err(BuilderError::new(top_primitive.start_loc(), BuilderErrorType::NoFieldsAllowed ));
                         }
                     }
                     "nil" =>{
                         if hasnt_fields {
                             builder.result_nil();
                         } else {
-                            return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
+                            // return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
+                            return Err(BuilderError::new(top_primitive.start_loc(), BuilderErrorType::NoFieldsAllowed ));
                         }
                     }
                     "void" =>{
                         if hasnt_fields {
                             builder.result_void();
                         } else {
-                            return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
+                            // return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
+                            return Err(BuilderError::new(top_primitive.start_loc(), BuilderErrorType::NoFieldsAllowed ));
                         }
                     }
                     // "," => {
@@ -426,25 +436,29 @@ impl Compiler {
                         if let Some(symbol)=symbol.strip_prefix(":") {
                             if hasnt_fields {
                                 if symbol.is_empty() {
-                                    return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::InvalidStringSymbol });
+                                    // return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::InvalidStringSymbol });
+                                    return Err(BuilderError::new(top_primitive.start_loc(), BuilderErrorType::InvalidStringSymbol ));
                                 }
 
                                 builder.result_string(symbol);
                             } else {
-                                return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
+                                // return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::NoFieldsAllowed });
+                                return Err(BuilderError::new(top_primitive.start_loc(), BuilderErrorType::NoFieldsAllowed ));
                             }
                         } else {
                             let symbol=if let Some(get_var_prefix)=self.get_var_prefix {
                                 if let Some(symbol)=symbol.strip_prefix(get_var_prefix) {
                                     if symbol.is_empty() {
-                                        return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
+                                        // return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
+                                        return Err(BuilderError::new(top_primitive.start_loc(), BuilderErrorType::InvalidSymbol ));
                                     }
 
                                     symbol
                                 } else if self.optional_get_var_prefix { //var prefix optional for everything except returns
                                     symbol
                                 } else {
-                                    return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
+                                    // return Err(BuilderError { loc: top_primitive.start_loc(), error_type: BuilderErrorType::InvalidSymbol });
+                                    return Err(BuilderError::new(top_primitive.start_loc(), BuilderErrorType::InvalidSymbol ));
                                 }
                             } else {
                                 symbol
@@ -570,6 +584,7 @@ impl Compiler {
             self.run(builder, primitive,&mut next_anon_id)
         }) {
             return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::TexprBuilder(e.error_type)});
+
         }
 
         if let Err(e)=ast.calc_vars(false) {

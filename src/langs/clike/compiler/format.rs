@@ -66,7 +66,8 @@ fn parse_field<'t>(input:&mut Input2<'t>) -> Result<Option<(FieldType<'t>,Loc)>,
 
     //  Err((CompileErrorType::Format(FormatErrorType::NoField), input.start_loc(),)) //should error be at start of '.' instead of after?
 
-     Err(BuilderError{ loc: input.start_loc(), error_type: BuilderErrorType::Format(FormatErrorType::NoField) })
+    //  Err(BuilderError{ loc: input.start_loc(), error_type: BuilderErrorType::Format(FormatErrorType::NoField) })
+    Err(BuilderError::new(input.start_loc(), BuilderErrorType::Format(FormatErrorType::NoField)))
 
 
 }
@@ -85,13 +86,15 @@ fn parse_index<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,BuilderErr
     let Some((x,_))=parse_int(input)? else {
         // return Err((CompileErrorType::Format(FormatErrorType::NoIndex), input.start_loc(),));
 
-        return Err(BuilderError{ loc: input.start_loc(), error_type: BuilderErrorType::Format(FormatErrorType::NoIndex) });
+        // return Err(BuilderError{ loc: input.start_loc(), error_type: BuilderErrorType::Format(FormatErrorType::NoIndex) });
+        return Err(BuilderError::new(input.start_loc(), BuilderErrorType::Format(FormatErrorType::NoIndex)));
 
     };
 
     if !input.eat_char(']') {
         // return Err((CompileErrorType::Format(FormatErrorType::ClosingBracket), input.cur_loc(),));
-        return Err(BuilderError{ loc: input.cur_loc(), error_type: BuilderErrorType::Format(FormatErrorType::ClosingBracket) });
+        // return Err(BuilderError{ loc: input.cur_loc(), error_type: BuilderErrorType::Format(FormatErrorType::ClosingBracket) });
+        return Err(BuilderError::new(input.cur_loc(), BuilderErrorType::Format(FormatErrorType::ClosingBracket)));
     }
 
     input.next();
@@ -138,9 +141,11 @@ fn parse_uint<'t>(input:&mut Input2<'t>) -> Result<Option<(i64,Loc)>,BuilderErro
         //     CompileErrorType::Format(FormatErrorType::Int(e)),
         //     input.start_loc(),
         // ))
-        .map_err(|e|BuilderError{
-            loc: input.start_loc(), error_type: BuilderErrorType::Format(FormatErrorType::Int(e))
-        })
+        // .map_err(|e|BuilderError{
+        //     loc: input.start_loc(), error_type: BuilderErrorType::Format(FormatErrorType::Int(e))
+        // })
+        .map_err(|e|BuilderError::new(input.start_loc(), BuilderErrorType::Format(FormatErrorType::Int(e))))
+
         ?;
 
     let start_loc=input.start_loc();
@@ -222,7 +227,8 @@ fn parse_placeholder<'t>(input:&mut Input2<'t>) -> Result<Option<Placeholder<'t>
     //
     if !input.eat_char('}') {
         // return Err((CompileErrorType::Format(FormatErrorType::ClosingBrace), input.cur_loc(),));
-        return Err(BuilderError { loc: input.cur_loc(), error_type: BuilderErrorType::Format(FormatErrorType::ClosingBrace), })
+        // return Err(BuilderError { loc: input.cur_loc(), error_type: BuilderErrorType::Format(FormatErrorType::ClosingBrace), })
+        return Err(BuilderError::new(input.cur_loc(), BuilderErrorType::Format(FormatErrorType::ClosingBrace)));
     }
 
     //
@@ -306,12 +312,13 @@ pub fn parse<'p,'t>(
         }
 
         //
-        return Err(BuilderError {
-            // src: Some(raw_src),
-            // path,
-            error_type: BuilderErrorType::Format(FormatErrorType::Unexpected),
-            loc:input.start_loc(),
-        });
+        return Err(BuilderError::new(input.start_loc(), BuilderErrorType::Format(FormatErrorType::Unexpected)));
+        // return Err(BuilderError {
+        //     // src: Some(raw_src),
+        //     // path,
+        //     error_type: BuilderErrorType::Format(FormatErrorType::Unexpected),
+        //     loc:input.start_loc(),
+        // });
     }
 
     Ok(items)

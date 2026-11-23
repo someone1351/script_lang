@@ -28,6 +28,7 @@ pub enum SexprBuilderErrorType {
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use crate::builder::BuilderErrorTypeWrapper;
 use crate::compiler::builder::{Builder, BuilderError};
 use crate::sexpr::parser;
 use cmds::*;
@@ -43,7 +44,7 @@ use crate::compiler::*;
 
 #[derive(Debug,Clone)]
 pub enum CompileErrorType {
-    SexprBuilder(SexprBuilderErrorType),
+    SexprBuilder(BuilderErrorTypeWrapper<SexprBuilderErrorType>),
     SexprParser(parser::ParserErrorType),
     AstVar(ast::error::AstVarErrorType),
 }

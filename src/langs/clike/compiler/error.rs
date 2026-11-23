@@ -1,5 +1,6 @@
 use std::{fmt::Debug, path::Path};
 
+use crate::builder::BuilderErrorTypeWrapper;
 use crate::clike::compiler::format::FormatErrorType;
 use crate::{ast, clike::compiler::tokeniser2::TokenizerErrorType2, error_msg, Loc };
 // use super::super::tokenizer::TokenizerErrorType;
@@ -19,11 +20,11 @@ pub enum BuilderErrorType {
 
 }
 
-impl BuilderErrorType {
-    pub fn loc_err<T>(&self,loc:Loc) -> Result<T,BuilderError<BuilderErrorType>> {
-        Err(BuilderError{ loc, error_type:self.clone() })
-    }
-}
+// impl BuilderErrorType {
+//     pub fn loc_err<T>(&self,loc:Loc) -> Result<T,BuilderError<BuilderErrorType>> {
+//         Err(BuilderError{ loc, error_type:self.clone() })
+//     }
+// }
 
 
 
@@ -45,7 +46,7 @@ pub enum CompileErrorType {
     Format(FormatErrorType),
     ParserExpected(String),
     ParserUnexpected,
-    Builder(BuilderErrorType),
+    Builder(BuilderErrorTypeWrapper<BuilderErrorType>),
     AstVar(ast::error::AstVarErrorType),
 }
 

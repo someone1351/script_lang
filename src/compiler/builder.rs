@@ -18,6 +18,7 @@ use std::collections::HashMap;
 
 // use error::AstError;
 
+use crate::ast::error::AstError;
 use crate::primitive_types::{IntVal,FloatVal};
 
 // use super::super::common::{*,instruction::JmpCond};
@@ -47,25 +48,39 @@ todo
 
 * instead of try method, could just return undefined on missing methods?
 */
+use std::fmt::Debug;
 
+#[derive(Debug,Clone)]
+pub enum BuilderErrorTypeWrapper<E>
+where
+    E:Clone+Debug,
 
-// #[derive(Debug,Clone)]
-// pub enum BuilderError2<E:Clone+Debug> {
-//     Builder(E),
-//     Ast(AstError),
-// }
+{
+    Builder(E),
+    Ast(AstError),
+}
 
 
 #[derive(Clone)]
-pub struct BuilderError<E:Clone> {
+pub struct BuilderError<E>
+where
+    E:Clone+Debug,
+{
     // pub path:Option<PathBuf>,
     pub loc : Loc,
-    pub error_type : E,
+    pub error_type : BuilderErrorTypeWrapper<E>,
 }
 
-impl<E:Clone> BuilderError<E> {
+impl<E> BuilderError<E>
+where
+    E:Clone+Debug,
+{
     pub fn new(loc : Loc, error_type : E) -> Self {
-        Self{loc,error_type}
+        Self{loc,error_type:BuilderErrorTypeWrapper::Builder(error_type)}
+    }
+
+    pub fn from_ast(loc: Loc, error_type: AstError) -> Self {
+        Self { loc, error_type: BuilderErrorTypeWrapper::Ast(error_type), }
     }
 }
 
@@ -74,7 +89,13 @@ impl<E:Clone> BuilderError<E> {
 // use super::super::parser::*;
 
 // #[derive(Debug,Clone)]
-pub enum BuilderNodeType<'a,T:Clone+'a,E:Clone> {
+pub enum BuilderNodeType<'a,T,E>
+where
+    T:Clone+'a,
+    E:Clone+Debug,
+
+
+{
     EvalPrimitive{
         primitive:T, // PrimitiveContainer<'a>
         data:HashMap<&'a str,usize>,
@@ -90,7 +111,11 @@ pub enum BuilderNodeType<'a,T:Clone+'a,E:Clone> {
 
 
 // #[derive(Debug)]
-pub struct BuilderNode<'a,T:Clone+'a,E:Clone> {
+pub struct BuilderNode<'a,T,E>
+where
+    T:Clone+'a,
+    E:Clone+Debug,
+{
     pub node_type:BuilderNodeType<'a,T,E>,
     pub loc : Option<Loc>,
 }
@@ -101,9 +126,18 @@ pub struct BuilderNode<'a,T:Clone+'a,E:Clone> {
 //     anon_id:usize,
 // }
 
-pub struct BuilderTaken<'a,T:Clone+'a,E:Clone>(Vec<BuilderNode<'a,T,E>>);
+pub struct BuilderTaken<'a,T,E>(Vec<BuilderNode<'a,T,E>>)
+where
+   T:Clone+'a,
+    E:Clone+Debug,
+;
 
-pub struct Builder<'a,T:Clone+'a,E:Clone> {
+pub struct Builder<'a,T,E>
+where
+    T:Clone+'a,
+    E:Clone+Debug,
+
+{
     // phantom_data:PhantomData<E>,
 
     // chunks:Vec<BuilderChunk>,
@@ -137,7 +171,12 @@ pub struct Builder<'a,T:Clone+'a,E:Clone> {
 //     Eval(T),
 // }
 
-impl<'a,T:Clone+'a,E:Clone+'a> Builder<'a,T,E> {
+impl<'a,T,E> Builder<'a,T,E>
+where
+    T:Clone+'a,
+    E:Clone+'a+Debug,
+
+{
 
     pub fn get_flag(&self,n:&str) -> Option<usize> {
         self.cur_flags.get(n).cloned()

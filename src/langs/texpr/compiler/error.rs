@@ -1,5 +1,6 @@
 
 use std::path::PathBuf;
+use crate::builder::BuilderErrorTypeWrapper;
 use crate::error_msg;
 use crate::Loc;
 use crate::StringVal;
@@ -51,7 +52,7 @@ pub enum BuilderErrorType {
 
 #[derive(Debug,Clone)]
 pub enum CompileErrorType {
-    TexprBuilder(BuilderErrorType),
+    TexprBuilder(BuilderErrorTypeWrapper<BuilderErrorType>),
     TexprParser(parser::ParserErrorType),
     AstVar(ast::error::AstVarErrorType),
 }

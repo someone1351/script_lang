@@ -59,61 +59,57 @@ impl Build {
     pub fn path(&self) -> Option<&Path> {
         self.path.as_ref().map(|p|p.as_path())
     }
+
+    //google says so
     pub fn print(&self) {
-        println!("Build");
+        println!(
+            "Build ({:?})",
+            self.path.as_deref().unwrap_or(Path::new("_"))
+        );
 
-        //
-        println!("    includes");
+        let main_end = self
+            .functions
+            .first()
+            .map(|f| f.instruct_start_pos)
+            .unwrap_or(self.instructions.len());
 
-        for (i,include) in self.includes.iter().enumerate() {
-            println!("        {i}:{include:?}");
+        println!("    main instructions ({main_end}):");
+        for (i, instruction) in self.instructions[0..main_end].iter().enumerate() {
+            let loc_str = self
+                .instr_locs
+                .get(&i)
+                .map(|l| format!(" @ {l}"))
+                .unwrap_or_default();
+            println!("        {i}: {instruction:?}{loc_str}");
         }
 
-        //
-        // println!("    symbols");
+        println!("    functions ({}):", self.functions.len());
+        for (i, func) in self.functions.iter().enumerate() {
+            let name = func
+                .name
+                .as_ref()
+                .map(|n| n.as_str())
+                .unwrap_or("<anonymous>");
+            let func_end = func.instruct_start_pos + func.instruct_len;
+            println!(
+                "        {i} ({name}): params={}, range={}..{}",
+                func.params_num, func.instruct_start_pos, func_end
+            );
 
-        // for (i,symbol) in self.symbols.iter().enumerate() {
-        //     println!("        {i}:{symbol:?}");
-        // }
-
-        //
-        println!("    functions");
-        // for i in 1 .. self.functions.len() {
-
-        // }
-
-        for (i,func) in self.functions.iter().enumerate() {
-            println!("        {i}: {}",func.params_num); //,func.variadic,func.instruct_start_pos
-            let instruct_ind2 = self.functions.get(i+1).and_then(|x|Some(x.instruct_start_pos)).unwrap_or(self.instructions.len());
-            // let instruct_ind2 = if i==0{0}else{self.functions.get(i-1).unwrap().instruct_end_ind};
-            // println!("-- {} {}",func.instruct_ind,instruct_ind2);
-            for (j, instruct) in self.instructions[func.instruct_start_pos .. instruct_ind2].iter().enumerate() {
-                println!("            {j} ({}): {instruct:?}",func.instruct_start_pos+j);
+            for (j, instruct) in self.instructions[func.instruct_start_pos..func_end]
+                .iter()
+                .enumerate()
+            {
+                let abs_pos = func.instruct_start_pos + j;
+                let loc_str = self
+                    .instr_locs
+                    .get(&abs_pos)
+                    .map(|l| format!(" @ {l}"))
+                    .unwrap_or_default();
+                println!("            {j} ({abs_pos}): {instruct:?}{loc_str}");
             }
         }
-
-        //
-        println!("    main instructions");
-        // let main_instr_start_ind = self.functions.last().and_then(|x|Some(x.instruct_end_ind)).unwrap_or(0);
-        let instruct_ind2 = self.functions.get(0).and_then(|x|Some(x.instruct_start_pos)).unwrap_or(self.instructions.len());
-
-        for (i,instruction) in self.instructions[0 .. instruct_ind2].iter().enumerate() {
-            println!("        {i}: {instruction:?}");
-        }
-
-        // println!("{:?}",self.instructions);
-
-        //
-        // println!("==");
-        // for (i,instruction) in self.instructions.iter().enumerate() {
-        //     println!("        {i}: {instruction:?}");
-
-        // }
-        // println!("==");
-        // for (i,func) in self.functions.iter().enumerate() {
-        //     println!("        {i}: {:?}",func.instruct_ind);
-        // }
-
     }
+
 }
 
