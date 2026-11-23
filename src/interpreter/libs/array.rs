@@ -147,7 +147,7 @@ pub fn build_array_map() -> Result<BuildT, FuncCompileError<()>> {
                 .call_method("lt", 2)
                 .to_block_end(JmpCond::False, 0)
 
-                // f(arr[i], i)  (push args in reverse: i, then arr[i])
+                // var res = f(arr[i], i); (push args in reverse: i, then arr[i])
                 .get_var("i")
                 .param_push()
 
@@ -160,8 +160,25 @@ pub fn build_array_map() -> Result<BuildT, FuncCompileError<()>> {
 
                 .get_var("f")
                 .call_result(2, None)
+                .decl_var("res")
 
-                // out.push(res)  (push args in reverse: res, then out)
+                // if type(res) == "void" { res = nil; }
+                .block_start(None)
+                    .result_string("void")
+                    .param_push()
+                    .get_var("res")
+                    .param_push()
+                    .call_method("type", 1)
+                    .param_push()
+                    .call_method("eq", 2)
+                    .to_block_end(JmpCond::False, 0)
+
+                    .result_nil()
+                    .set_var("res")
+                .block_end()
+
+                // out.push(res) (push args in reverse: res, then out)
+                .get_var("res")
                 .param_push()
                 .get_var("out")
                 .param_push()
@@ -183,6 +200,7 @@ pub fn build_array_map() -> Result<BuildT, FuncCompileError<()>> {
         .block_end();
     })
 }
+
 
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
     //array(?any ...)
