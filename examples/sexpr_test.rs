@@ -18,14 +18,14 @@ pub fn test_script<P:AsRef<Path>>(path:P) {
         eprintln!("In {path:?}, {}",e.msg());
     } else {
 
-        let mut var_scope=script_lang::VarScope::new();
-        var_scope.decl("self", Some(script_lang::Value::int(4))).unwrap();
+        // let mut var_scope=script_lang::VarScope::new();
+        // var_scope.decl("self", Some(script_lang::Value::int(4))).unwrap();
         // let x=5;
         let  lib_scope=script_lang::LibScope::new_full();
 
         // let mut core=&x;
         let mut core=();
-        let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope,&mut var_scope,   &mut core);
+        let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope,   &mut core);
         // machine.set_debug_print(true);
 
         // build.clone().unwrap().print();

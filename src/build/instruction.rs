@@ -115,13 +115,13 @@ pub enum Instruction {
     StackDup,
     // StackDup(usize), //stack_offset,
 
-    GetGlobalVarRef(StringVal), //symbol_ind, read,write,call //readonly
-    GetGlobalAccessRef(StringVal), //symbol_ind
-    DeclGlobalVar(StringVal), //symbol_ind ////, store
-    SetGlobalVar(StringVal), //symbol_ind
-    GetGlobalVarOrConst(StringVal,bool), //symbol_ind, get_global
-    CallGlobalOrMethod(StringVal,usize), //symbol_ind, params_num
-    GetGlobalOrConstOrCallMethod(StringVal,bool), //symbol_ind, get_global
+    // GetGlobalVarRef(StringVal), //symbol_ind, read,write,call //readonly
+    // GetGlobalAccessRef(StringVal), //symbol_ind
+    // DeclGlobalVar(StringVal), //symbol_ind ////, store
+    // SetGlobalVar(StringVal), //symbol_ind
+    GetConst(StringVal,), //symbol_ind, get_global //GetGlobalVarOrConst
+    CallConstOrMethod(StringVal,usize), //symbol_ind, params_num //CallGlobalOrMethod
+    // GetGlobalOrConstOrCallMethod(StringVal,bool), //symbol_ind, get_global
 
     CallMethod(StringVal,usize), //symbol_ind, params_num
     TryCallMethod{name:StringVal,params_num:usize,}, //symbol_ind, params_num

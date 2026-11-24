@@ -41,7 +41,7 @@ use super::value::*;
 use super::data::*;
 use super::error::*;
 use super::lib_scope::*;
-use super::var_scope::*;
+// use super::var_scope::*;
 use super::func_context::*;
 // use super::debug::*;
 
@@ -101,7 +101,7 @@ pub struct Machine<'a,X> { //,'b
     error_state:bool,
     // debugger : Debugger,
     gc_scope : &'a mut GcScope,
-    var_scope : &'a mut VarScope,
+    // var_scope : &'a mut VarScope,
     lib_scope : &'a LibScope<X>, //<'c> //<'b>
     includer : Option<Box<dyn FnMut(&Path) -> Option<BuildT> + 'a>>, //can use lifetime a for some reason?
     const_scope:HashMap<&'a str,Value>,
@@ -162,7 +162,7 @@ impl<'a,X> Machine<'a,X> {
     pub fn new (
         gc_scope : &'a mut GcScope,
         lib_scope : &'a LibScope<X>,
-        var_scope : &'a mut VarScope,
+        // var_scope : &'a mut VarScope,
         core_val :  &'a mut X,//&'a mut X,
     ) -> Self
     {
@@ -182,7 +182,7 @@ impl<'a,X> Machine<'a,X> {
             // debugger,
 
             gc_scope,
-            var_scope,
+            // var_scope,
             lib_scope,
             includer : None, //Box::new(include_resolver),
             const_scope:HashMap::new(),
@@ -393,12 +393,12 @@ impl<'a,X> Machine<'a,X> {
     pub fn cur_build(&self) -> Option<BuildT> {
         self.cur_build.clone()
     }
-    pub fn var_scope(&self) -> &VarScope {
-        self.var_scope
-    }
-    pub fn var_scope_mut(&mut self) -> &mut VarScope {
-        self.var_scope
-    }
+    // pub fn var_scope(&self) -> &VarScope {
+    //     self.var_scope
+    // }
+    // pub fn var_scope_mut(&mut self) -> &mut VarScope {
+    //     self.var_scope
+    // }
 
     pub fn instr_pos(&self) -> usize {
         self.instr_pos
@@ -591,13 +591,13 @@ impl<'a,X> Machine<'a,X> {
         self.stack[self.stack.len() - params_num .. self.stack.len()].iter().rev().map(|x|x.type_string()).collect()
     }
 
-    fn inner_global_get(&self,n:&str,enabled:bool) -> Result<Option<Value>,MachineError> {
-        if !enabled {
-            return Ok(None);
-        }
+    // fn inner_global_get(&self,n:&str,enabled:bool) -> Result<Option<Value>,MachineError> {
+    //     if !enabled {
+    //         return Ok(None);
+    //     }
 
-        self.var_scope.get(&n).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))
-    }
+    //     self.var_scope.get(&n).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))
+    // }
 
     fn stack_param_get(&self, params_num : usize, param_ind : usize) -> Value { //used by bound funcs (rust funcs)
         let params_start = self.stack.len()-params_num;
@@ -953,64 +953,65 @@ impl<'a,X> Machine<'a,X> {
                 let to_val=self.copy_val(result_val.clone_leaf())?;
                 let custom=self.get_stack_offset_value(*stack_offset_ind)?.as_custom();
 
-                if custom.is_type::<GlobalAccessRef>() {
-                    let data=custom.data_clone::<GlobalAccessRef>()
-                        .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
+                // if custom.is_type::<GlobalAccessRef>() {
+                //     let data=custom.data_clone::<GlobalAccessRef>()
+                //         .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
 
-                    data.var.as_custom().with_data_mut_ext(|v:&mut Value|{
-                        //don't care about init, since this is supposed behave like a normal global_set, not a deref_set
-                        if v.is_undefined() {
-                            return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(data.name.to_string()) ));
-                        }
+                //     data.var.as_custom().with_data_mut_ext(|v:&mut Value|{
+                //         //don't care about init, since this is supposed behave like a normal global_set, not a deref_set
+                //         if v.is_undefined() {
+                //             return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(data.name.to_string()) ));
+                //         }
 
-                        //
-                        *v=to_val.clone_leaf();
+                //         //
+                //         *v=to_val.clone_leaf();
+                //         Ok(())
+                //     }).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
+
+                //     // if !self.var_scope.set(data.name.as_str(),val)? {}
+                // } else
+                // {
+                custom.with_data_mut_ext(|data:&mut Value|{
+                    if !init && data.is_undefined() {
+                        Err(MachineError::from_machine(self, MachineErrorType::SetUndefinedVar ))
+                    } else {
+                        *data=to_val;
                         Ok(())
-                    }).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
-
-                    // if !self.var_scope.set(data.name.as_str(),val)? {}
-                } else {
-                    custom.with_data_mut_ext(|data:&mut Value|{
-                        if !init && data.is_undefined() {
-                            Err(MachineError::from_machine(self, MachineErrorType::SetUndefinedVar ))
-                        } else {
-                            *data=to_val;
-                            Ok(())
-                        }
-                    })?;
+                    }
+                })?;
 
 
-                }
+                // }
 
             }
             Instruction::GetStackVarDeref(stack_offset_ind) => { //todo
                 let custom=self.get_stack_offset_value(*stack_offset_ind)?.as_custom();
 
-                if custom.is_type::<GlobalAccessRef>() {
-                    let data=custom.data_clone::<GlobalAccessRef>()
-                        .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
-                    let var_data=data.var.as_custom().data_clone::<Value>()
-                        .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
+                // if custom.is_type::<GlobalAccessRef>() {
+                //     let data=custom.data_clone::<GlobalAccessRef>()
+                //         .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
+                //     let var_data=data.var.as_custom().data_clone::<Value>()
+                //         .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
 
-                    if !var_data.is_undefined() {
-                        self.set_result_val(var_data);
-                    } else if let Some(v)=self.constant_get(data.name.as_str()) {
-                        self.set_result_val(v);
-                    } else {
-                        return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(data.name.to_string()) ));
+                //     if !var_data.is_undefined() {
+                //         self.set_result_val(var_data);
+                //     } else if let Some(v)=self.constant_get(data.name.as_str()) {
+                //         self.set_result_val(v);
+                //     } else {
+                //         return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(data.name.to_string()) ));
+                //     }
+                // } else {
+                custom.with_data_ref_ext(|data:& Value|{
+                    if data.is_undefined() {
+                        return Err(MachineError::from_machine(self, MachineErrorType::GetUndefinedVar ));
                     }
-                } else {
-                    custom.with_data_ref_ext(|data:& Value|{
-                        if data.is_undefined() {
-                            return Err(MachineError::from_machine(self, MachineErrorType::GetUndefinedVar ));
-                        }
 
-                        let v=self.copy_val(data.clone_leaf())?; //leaf, to skip incr root count
+                    let v=self.copy_val(data.clone_leaf())?; //leaf, to skip incr root count
 
-                        self.set_result_val(v);
-                        Ok(())
-                    })?;
-                }
+                    self.set_result_val(v);
+                    Ok(())
+                })?;
+                // }
 
             }
 
@@ -1020,97 +1021,98 @@ impl<'a,X> Machine<'a,X> {
 
                 let custom=self.get_stack_offset_value(*stack_offset_ind)?.as_custom();
 
-                if custom.is_type::<GlobalAccessRef>() {
-                    let data=custom.data_clone::<GlobalAccessRef>()
-                        .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
-                    let var_data=data.var.as_custom().data_clone::<Value>()
-                        .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
+                // if custom.is_type::<GlobalAccessRef>() {
+                //     let data=custom.data_clone::<GlobalAccessRef>()
+                //         .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
+                //     let var_data=data.var.as_custom().data_clone::<Value>()
+                //         .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
 
-                    let name = call_name.clone().or_else(|| Some(data.name.clone()));
+                //     let name = call_name.clone().or_else(|| Some(data.name.clone()));
 
-                    if !var_data.is_undefined() {
+                //     if !var_data.is_undefined() {
 
-                        // self.debugger.add_func_name(data.name.as_str());
+                //         // self.debugger.add_func_name(data.name.as_str());
 
-                        if self.inner_call_value(params_num,var_data,false, name)? {
-                            return Ok(()); //continue;
-                        }
-                    } else if let Some(v)=self.constant_get(data.name.as_str())  //not needed for deref? there was the option  for globals (and constants) being captured
+                //         if self.inner_call_value(params_num,var_data,false, name)? {
+                //             return Ok(()); //continue;
+                //         }
+                //     } else if let Some(v)=self.constant_get(data.name.as_str())  //not needed for deref? there was the option  for globals (and constants) being captured
 
-                    {
-                        //call v
+                //     {
+                //         //call v
 
-                        // self.debugger.add_func_name(data.name.as_str());
+                //         // self.debugger.add_func_name(data.name.as_str());
 
-                        if self.inner_call_value(params_num,v,false, name)? {
-                            return Ok(()); //continue;
-                        }
-                    } else if let Some(x)=self.get_method(data.name.as_str(), params_num) {
-                        // self.debugger.add_func_name(data.name.as_str());
-                        if self.inner_call_vm_method(params_num, x,true,data.name.clone())? {
-                            return Ok(());
-                        }
-                        //return Ok(()); //continue;
-                    } else {
-                        let param_types=self.get_stack_param_types(params_num);
-                        return Err(MachineError::from_machine(self, MachineErrorType::GlobalFuncOrMethodNotFound(data.name.to_string(),param_types) ));
-                    }
-                } else {
-                    let data=custom.data_clone::<Value>()
-                        .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
+                //         if self.inner_call_value(params_num,v,false, name)? {
+                //             return Ok(()); //continue;
+                //         }
+                //     } else if let Some(x)=self.get_method(data.name.as_str(), params_num) {
+                //         // self.debugger.add_func_name(data.name.as_str());
+                //         if self.inner_call_vm_method(params_num, x,true,data.name.clone())? {
+                //             return Ok(());
+                //         }
+                //         //return Ok(()); //continue;
+                //     } else {
+                //         let param_types=self.get_stack_param_types(params_num);
+                //         return Err(MachineError::from_machine(self, MachineErrorType::GlobalFuncOrMethodNotFound(data.name.to_string(),param_types) ));
+                //     }
+                // } else {
+                let data=custom.data_clone::<Value>()
+                    .or_else(|e|Err(MachineError::from_machine(&self, e.into())))?;
 
-                    if data.is_undefined() {
-                        return Err(MachineError::from_machine(self, MachineErrorType::GetUndefinedVar ));
-                    }
-
-                    //
-                    //let v=self.copy_val(data.clone())?;
-                    let v=data;
-
-                    if self.inner_call_value(params_num,v,false, call_name.clone())? {
-                        return Ok(()); //continue;
-                    }
+                if data.is_undefined() {
+                    return Err(MachineError::from_machine(self, MachineErrorType::GetUndefinedVar ));
                 }
 
-            }
-            Instruction::DeclGlobalVar(symbol) => {
-                self.var_scope.decl(symbol.as_str(),None).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
-            }
+                //
+                //let v=self.copy_val(data.clone())?;
+                let v=data;
 
-            Instruction::SetGlobalVar(symbol) => {
-                // let v=self.result_val.clone_root();
-                let v=self.copy_val(self.result_val())?;
+                if self.inner_call_value(params_num,v,false, call_name.clone())? {
+                    return Ok(()); //continue;
+                }
+                // }
 
-                if !self.var_scope.set(symbol.as_str(),v).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
+            }
+            // Instruction::DeclGlobalVar(symbol) => {
+            //     self.var_scope.decl(symbol.as_str(),None).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))?;
+            // }
+
+            // Instruction::SetGlobalVar(symbol) => {
+            //     // let v=self.result_val.clone_root();
+            //     let v=self.copy_val(self.result_val())?;
+
+            //     if !self.var_scope.set(symbol.as_str(),v).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
+            //         return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol.to_string()) ));
+            //     }
+            // }
+            Instruction::GetConst(symbol, ) => { //get_global
+                // if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
+                //     self.set_result_val(v);
+                // } else
+                if let Some(v)=self.constant_get(symbol.as_str()) {
+                    self.set_result_val(v);
+                } else {
                     return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol.to_string()) ));
                 }
             }
-            Instruction::GetGlobalVarOrConst(symbol, get_global) => {
-                if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
-                    self.set_result_val(v);
-                } else if let Some(v)=self.constant_get(symbol.as_str()) {
-                    self.set_result_val(v);
-                } else {
-                    return Err(MachineError::from_machine(self, MachineErrorType::GlobalOrConstNotFound(symbol.to_string()) ));
-                }
-            }
 
-            Instruction::GetGlobalVarRef(symbol,  ) => {
-                let refvar=self.var_scope.get_ref(symbol.as_str(),self.gc_scope);
-                self.set_result_val(refvar);
-            }
+            // Instruction::GetGlobalVarRef(symbol,  ) => {
+            //     let refvar=self.var_scope.get_ref(symbol.as_str(),self.gc_scope);
+            //     self.set_result_val(refvar);
+            // }
 
-            Instruction::GetGlobalAccessRef(symbol,  ) => {
+            // Instruction::GetGlobalAccessRef(symbol,  ) => {
 
-                let refvar=self.var_scope.get_ref(symbol.as_str(),self.gc_scope);
+            //     let refvar=self.var_scope.get_ref(symbol.as_str(),self.gc_scope);
 
-                let val=Value::custom_managed_mut(GlobalAccessRef{
-                    name:symbol.clone(),
-                    var: refvar,
-                },self.gc_scope);
+            //     let val=Value::custom_managed_mut(GlobalAccessRef{
+            //         name:symbol.clone(),
+            //         var: refvar,
+            //     },self.gc_scope);
 
-                self.set_result_val(val);
-            }
+            //     self.set_result_val(val);
+            // }
             Instruction::Include(include_ind) => {
                 //todo check circular includes
                 //todo have limit option for updir eg ../../
@@ -1184,24 +1186,24 @@ impl<'a,X> Machine<'a,X> {
             }
 
             //
-            Instruction::GetGlobalOrConstOrCallMethod(symbol,get_global) => {
-                // self.var_scope.get(&n).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))
-                // self.pending_call_name = Some(symbol.clone());
+            // Instruction::GetGlobalOrConstOrCallMethod(symbol,get_global) => {
+            //     // self.var_scope.get(&n).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))
+            //     // self.pending_call_name = Some(symbol.clone());
 
-                if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
-                    self.set_result_val(v);
-                } else if let Some(v)=self.constant_get(symbol.as_str()) { //self.lib_scope.get_constant(&symbol)
-                    self.set_result_val(v);
-                } else if let Some(x)=self.get_method(symbol.as_str(), 0) {
-                    // self.debugger.add_func_name(&symbol.as_str());
-                    if self.inner_call_vm_method(0, x,true,symbol.clone())? {
-                        return Ok(());
-                    }
-                } else {
-                    return Err(MachineError::from_machine(self, MachineErrorType::MethodOrGlobalVarNotFound(symbol.to_string()) ));
-                }
+            //     if let Some(v)=self.inner_global_get(symbol.as_str(),*get_global)? {
+            //         self.set_result_val(v);
+            //     } else if let Some(v)=self.constant_get(symbol.as_str()) { //self.lib_scope.get_constant(&symbol)
+            //         self.set_result_val(v);
+            //     } else if let Some(x)=self.get_method(symbol.as_str(), 0) {
+            //         // self.debugger.add_func_name(&symbol.as_str());
+            //         if self.inner_call_vm_method(0, x,true,symbol.clone())? {
+            //             return Ok(());
+            //         }
+            //     } else {
+            //         return Err(MachineError::from_machine(self, MachineErrorType::MethodOrGlobalVarNotFound(symbol.to_string()) ));
+            //     }
 
-            }
+            // }
 
             Instruction::CallMethod(symbol, params_num) => {
                 let params_num =*params_num;
@@ -1252,16 +1254,21 @@ impl<'a,X> Machine<'a,X> {
 
             }
 
-            Instruction::CallGlobalOrMethod(symbol, params_num)  => {
+            Instruction::CallConstOrMethod(symbol, params_num)  => {
                 let params_num =*params_num;
                 // self.pending_call_name = Some(symbol.clone());
 
-                if let Some(v)=self.var_scope.get(symbol.as_str()).or_else(|e: MachineError|Err(MachineError::from_machine(&self, e.error_type)))?
-                {
-                    // self.debugger.add_func_name(symbol.as_str());
+                // if let Some(v)=self.var_scope.get(symbol.as_str()).or_else(|e: MachineError|Err(MachineError::from_machine(&self, e.error_type)))?
+                // {
+                //     // self.debugger.add_func_name(symbol.as_str());
 
-                    if self.inner_call_value(params_num,v,false,Some(symbol.clone()))? {
-                        return Ok(()); //continue;
+                //     if self.inner_call_value(params_num,v,false,Some(symbol.clone()))? {
+                //         return Ok(()); //continue;
+                //     }
+                //
+                if let Some(v) = self.constant_get(symbol.as_str()) {
+                    if self.inner_call_value(params_num, v, false, Some(symbol.clone()))? {
+                        return Ok(());
                     }
                 } else if let Some(x)=self.get_method(symbol.as_str(), params_num) {
                     // self.debugger.add_func_name(symbol.as_str());
@@ -1619,45 +1626,45 @@ impl<'a,X> Machine<'a,X> {
         Ok(self.result_val())
     }
 
-    pub fn try_call_global<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Option<Value>,MachineError> {
-        if self.error_state {
-            self.clear();
-        }
+    // pub fn try_call_global<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Option<Value>,MachineError> {
+    //     if self.error_state {
+    //         self.clear();
+    //     }
 
-        //
-        let params_num=self.stack_push_params(params)?;
+    //     //
+    //     let params_num=self.stack_push_params(params)?;
 
-        if let Some(v)=self.var_scope.get(name).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
-            if self.stack_frames.len()==0 { //?
-                //self.stack_frames.push();
-            }
+    //     if let Some(v)=self.var_scope.get(name).or_else(|e|Err(MachineError::from_machine(&self, e.error_type)))? {
+    //         if self.stack_frames.len()==0 { //?
+    //             //self.stack_frames.push();
+    //         }
 
-            // self.debugger.add_func_name(name);
-            if self.inner_call_value(params_num,v,true,Some(StringVal::new(name)))? {
-                self.run()?;
-            }
-        } else if let Some(x)=self.get_method(name, params_num) {
-            // self.debugger.add_func_name(name);
-            self.inner_call_bound_func(params_num, x,true,name)?; //
-        } else {
-            return Ok(None);
-        }
+    //         // self.debugger.add_func_name(name);
+    //         if self.inner_call_value(params_num,v,true,Some(StringVal::new(name)))? {
+    //             self.run()?;
+    //         }
+    //     } else if let Some(x)=self.get_method(name, params_num) {
+    //         // self.debugger.add_func_name(name);
+    //         self.inner_call_bound_func(params_num, x,true,name)?; //
+    //     } else {
+    //         return Ok(None);
+    //     }
 
-        Ok(Some(self.result_val()))
-    }
+    //     Ok(Some(self.result_val()))
+    // }
 
-    pub fn call_global<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Value,MachineError> {
-        // let params=params.into_iter().collect::<Vec<_>>();
-        let params=params.as_ref().to_vec();
-        let params_num=params.len();
+    // pub fn call_global<I:AsRef<[Value]>>(&mut self,name:&str,params : I) -> Result<Value,MachineError> {
+    //     // let params=params.into_iter().collect::<Vec<_>>();
+    //     let params=params.as_ref().to_vec();
+    //     let params_num=params.len();
 
-        if let Some(r)=self.try_call_global(name, params)? {
-            Ok(r)
-        } else {
-            let param_types=self.get_stack_param_types(params_num); //params pushed on stack by try_call_global?
-            Err(MachineError::from_machine(self, MachineErrorType::GlobalFuncOrMethodNotFound(name.to_string(),param_types) ))
-        }
-    }
+    //     if let Some(r)=self.try_call_global(name, params)? {
+    //         Ok(r)
+    //     } else {
+    //         let param_types=self.get_stack_param_types(params_num); //params pushed on stack by try_call_global?
+    //         Err(MachineError::from_machine(self, MachineErrorType::GlobalFuncOrMethodNotFound(name.to_string(),param_types) ))
+    //     }
+    // }
 
     // pub fn global_decl(&mut self,name:&str,to_value:Option<Value>) -> Result<(),MachineError> {
     //     if self.error_state { //why?

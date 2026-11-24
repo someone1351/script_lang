@@ -1325,13 +1325,14 @@ impl<'a> Ast<'a> {
                                     self.funcs.get_mut(func_ind).unwrap().params.get_mut(param_ind).unwrap().modified=true;
                                 }
 
-                                // if self.must_decl_globals && var==AstAccessVar::None{
-                                //     // println!("it is {name:?} {var:?} {cur_loc:?}");
+                                if //self.must_decl_globals &&
+                                    var==AstAccessVar::None{
+                                    // println!("it is {name:?} {var:?} {cur_loc:?}");
 
-                                //     let loc = cur_loc.unwrap_or(Loc::zero());//should usually be set, but if a mistake was made in the builder,
+                                    let loc = cur_loc.unwrap_or(Loc::zero());//should usually be set, but if a mistake was made in the builder,
 
-                                //     return Err(AstVarError{error_type:AstVarErrorType::GlobalNotDecl(name.to_string()),loc});
-                                // }
+                                    return Err(AstVarError{error_type:AstVarErrorType::VarNotDecl(name.to_string()),loc});
+                                }
                             }
 
                             _ => {}
@@ -1707,14 +1708,14 @@ impl<'a> Ast<'a> {
                     for (capture_ind,capture) in self.funcs.get(func_ind).unwrap().captures.iter().enumerate() {
                         let stack_size = capture_ind + cur_node.last_stack_size;
 
-                        if let AstAccessVar::None = capture.var { //an undeclared global (call/get/set)?
-                            // panic!("");
-                            instructions.push(Instruction::GetGlobalAccessRef(symbol_inds.get(capture.name)));
-
-                        } else if let Some((stack_offset,_))=self.calc_var_stack_offset(capture.var,stack_size) {
+                        // if let AstAccessVar::None = capture.var { //an undeclared global (call/get/set)?
+                        //     // panic!("");
+                        //     instructions.push(Instruction::GetGlobalAccessRef(symbol_inds.get(capture.name)));
+                        // } else
+                        if let Some((stack_offset,_))=self.calc_var_stack_offset(capture.var,stack_size) {
                             instructions.push(Instruction::GetStackVar(stack_offset));
-                        } else { //from a global decl in script, as wouldn't be in captures list otherwise
-                            instructions.push(Instruction::GetGlobalVarRef(symbol_inds.get(capture.name)));
+                        // } else { //from a global decl in script, as wouldn't be in captures list otherwise
+                        //     instructions.push(Instruction::GetGlobalVarRef(symbol_inds.get(capture.name)));
                         }
 
                         instructions.push(Instruction::StackPush);
@@ -1938,7 +1939,7 @@ impl<'a> Ast<'a> {
                     } else {
                         // let get_global=!self.must_decl_globals;
                         // instructions.push(Instruction::GetGlobalVarOrConst(symbol_inds.get(name),get_global));
-                        instructions.push(Instruction::GetGlobalVarOrConst(symbol_inds.get(name),false));
+                        instructions.push(Instruction::GetConst(symbol_inds.get(name),)); //false
                     }
                 }
                 AstNodeType::SetVar{name,var,
@@ -1959,9 +1960,10 @@ impl<'a> Ast<'a> {
                             ));
                         }
                     // } else if anon_id.is_some() {
-                    } else {
-                        instructions.push(Instruction::SetGlobalVar(symbol_inds.get(name)));
                     }
+                    // else {
+                    //     instructions.push(Instruction::SetGlobalVar(symbol_inds.get(name)));
+                    // }
                 }
                 AstNodeType::CallVarOrMethod{name,params_num,var,
                     // anon_id
@@ -1979,8 +1981,9 @@ impl<'a> Ast<'a> {
                             instructions.push(Instruction::CallResult(params_num,Some(symbol_inds.get(name))));
                         }
 
-                    } else {
-                        instructions.push(Instruction::CallGlobalOrMethod(symbol_inds.get(name),params_num));
+                    }
+                    else {
+                        instructions.push(Instruction::CallConstOrMethod(symbol_inds.get(name),params_num));
                     }
                 }
                 AstNodeType::GetVarOrCallMethod { name, var } => {
@@ -1992,11 +1995,13 @@ impl<'a> Ast<'a> {
                         }
                     // } else if let AstAccessVar::Global=var { //global declared
                     //     instructions.push(Instruction::GetGlobalVarOrConst(symbol_inds.get(name),true));
-                    } else {
+                    }
+                    else {
                         // let get_global=!self.must_decl_globals;
                         // instructions.push(Instruction::GetGlobalOrConstOrCallMethod(symbol_inds.get(name),get_global));
                         // // instructions.push(Instruction::CallMethod(symbol_inds.get(name),0));
-                        instructions.push(Instruction::GetGlobalOrConstOrCallMethod(symbol_inds.get(name),false));
+                        // instructions.push(Instruction::GetGlobalOrConstOrCallMethod(symbol_inds.get(name),false));
+                        instructions.push(Instruction::CallMethod(symbol_inds.get(name),0));
                     }
 
                 }

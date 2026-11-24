@@ -4,7 +4,7 @@ mod error;
 mod machine;
 
 // mod gc_scope;
-mod var_scope;
+// mod var_scope;
 mod lib_scope;
 
 mod value;
@@ -27,7 +27,7 @@ pub use value::Value;
 // pub use custom::Custom;
 // pub use gc_scope::GcScope;
 // pub use gc::{GcTraversable,Traverser};
-pub use var_scope::VarScope;
+// pub use var_scope::VarScope;
 pub use lib_scope::LibScope;
 
 

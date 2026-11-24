@@ -16,17 +16,17 @@ use super::value::*;
 
 pub struct Vararg;
 
-#[derive(Clone)]
-pub struct GlobalAccessRef{
-    pub name:StringVal,
-    pub var:Value,
-}
+// #[derive(Clone)]
+// pub struct GlobalAccessRef{
+//     pub name:StringVal,
+//     pub var:Value,
+// }
 
-impl GcTraversable for GlobalAccessRef {
-    fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=GcValue>+'a> {
-        Box::new([&self.var].into_iter().filter_map(|v|v.gc_value()))
-    }
-}
+// impl GcTraversable for GlobalAccessRef {
+//     fn traverser<'a>(&'a self) -> Box<dyn Iterator<Item=GcValue>+'a> {
+//         Box::new([&self.var].into_iter().filter_map(|v|v.gc_value()))
+//     }
+// }
 //??? todo make fields read only, because sometimes used as unmanaged, and dont want things being added to it??
 
 // #[derive(Clone)]

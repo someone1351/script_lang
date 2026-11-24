@@ -58,14 +58,14 @@ pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
         eprintln!("In {path:?}, {}",e.msg());
     } else {
 
-        let mut var_scope=script_lang::VarScope::new();
-        var_scope.decl("self", Some(script_lang::Value::int(4))).unwrap();
+        // let mut var_scope=script_lang::VarScope::new();
+        // var_scope.decl("self", Some(script_lang::Value::int(4))).unwrap();
 
-        let mut e= Dict(BTreeMap::new());
-        let mut e0= Dict(BTreeMap::new());
-        e0.0.insert(script_lang::libs::dict::ValueKey::String("width".into()), Value::Nil);
-        e.0.insert(script_lang::libs::dict::ValueKey::Int(77.into()), script_lang::Value::custom_unmanaged_mut(e0));
-        var_scope.decl("e", Some(script_lang::Value::custom_unmanaged_mut(e))).unwrap();
+        // let mut e= Dict(BTreeMap::new());
+        // let mut e0= Dict(BTreeMap::new());
+        // e0.0.insert(script_lang::libs::dict::ValueKey::String("width".into()), Value::Nil);
+        // e.0.insert(script_lang::libs::dict::ValueKey::Int(77.into()), script_lang::Value::custom_unmanaged_mut(e0));
+        // var_scope.decl("e", Some(script_lang::Value::custom_unmanaged_mut(e))).unwrap();
 
 
         // var_scope.decl("goa", Some(script_lang::Value::custom_callable_unmanaged(45 as i32,|context|{
@@ -76,7 +76,7 @@ pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
         //     Ok(Value::int(x))
         // }))).unwrap();
 
-        let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope, &mut var_scope,  &mut
+        let mut machine = script_lang::Machine::new(&mut gc_scope,&lib_scope,   &mut
             // core
             my_num
         );

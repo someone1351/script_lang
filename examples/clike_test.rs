@@ -40,11 +40,11 @@ pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
 
     //
     {
-        let mut var_scope=VarScope::new();
+        // let mut var_scope=VarScope::new();
         // var_scope.decl("self", Some(Value::int(5))).unwrap();
 
         let mut core_val=();
-        let mut machine = Machine::new(&mut gc_scope,&lib_scope, &mut var_scope,  &mut core_val);
+        let mut machine = Machine::new(&mut gc_scope,&lib_scope,  &mut core_val);
 
 
         let res=machine.run_build(&build.unwrap());
@@ -77,8 +77,8 @@ pub fn test_script<P:AsRef<Path>>(path:P,debug_compile:bool,debug:bool) {
 
 
 fn test_script2_run<'a>(build:BuildT,gc_scope:&mut GcScope,lib_scope:& LibScope<i32>, core_val:&'a mut i32) {
-    let mut var_scope=VarScope::new();
-    let mut machine = Machine::new(gc_scope,lib_scope, &mut var_scope,  core_val);
+    // let mut var_scope=VarScope::new();
+    let mut machine = Machine::new(gc_scope,lib_scope,   core_val);
 
     let res=machine.run_build(&build);
     println!("the result is {res:?}");
@@ -148,9 +148,9 @@ pub fn test_script3<P: AsRef<Path>>(path: P, debug_compile: bool, debug: bool) {
     }
 
     {
-        let mut var_scope = VarScope::new();
+        // let mut var_scope = VarScope::new();
         let mut core_val = ();
-        let mut machine = Machine::new(&mut gc_scope, &lib_scope, &mut var_scope, &mut core_val);
+        let mut machine = Machine::new(&mut gc_scope, &lib_scope,  &mut core_val);
 
         let mut include_cache: HashMap<PathBuf, BuildT> = HashMap::new();
         let include_compiler = Compiler::new();
