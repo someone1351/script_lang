@@ -1119,7 +1119,17 @@ where
                     // self.cur_flags=data;
                     std::mem::swap(&mut self.cur_flags, &mut last_flags);
 
+                    //google says so
+                    let saved_loc = self.cur_loc;
+                    self.cur_loc = node.loc;
+
+                    //
                     callback(self,primitive)?;
+
+                    //google says so
+                    self.cur_loc = saved_loc;
+
+                    //
                     // self.cur_flags.clear();
                     self.cur_flags=last_flags;
                 }
@@ -1127,8 +1137,15 @@ where
                     let mut last_flags=data;
                     std::mem::swap(&mut self.cur_flags, &mut last_flags);
 
+                    //google says so
+                    let saved_loc = self.cur_loc;
+                    self.cur_loc = node.loc;
+
                     //
                     func(self)?;
+
+                    //google says so
+                    self.cur_loc = saved_loc;
 
                     //
                     self.cur_flags=last_flags;
