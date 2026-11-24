@@ -309,7 +309,7 @@ impl Compiler {
         // //builder needs to be passed a primitive_iter instead of primitive?
 
         //
-        let mut ast = ast::Ast::new(false,true);
+        let mut ast = ast::Ast::new(false,); //true
 // .map_err(|e|{
 //                 let ee=CompileError{
 //                 src:Option(src),
@@ -325,7 +325,7 @@ impl Compiler {
             return Err(CompileError{path,src:Some(src),loc:e.loc,error_type:CompileErrorType::Builder(e.error_type)});
         }
 
-        if let Err(e)=ast.calc_vars(false) {
+        if let Err(e)=ast.calc_vars() { //false
             return Err(CompileError{path,src:Some(src),loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
         }
 

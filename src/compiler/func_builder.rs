@@ -33,11 +33,12 @@ where
     build_fn(&mut builder);
     builder.func_end().end_stack_check();
 
-    let mut ast = Ast::new(false, true);
+    let mut ast = Ast::new(false, ); //true
     builder
         .generate_ast(&mut ast, move|b, p| eval_cb(b, p))
         .map_err(FuncCompileError::Builder)?;
-    ast.calc_vars(false).map_err(FuncCompileError::AstVar)?;
+    ast.calc_vars() //false
+        .map_err(FuncCompileError::AstVar)?;
     ast.calc_labels_gotos().map_err(FuncCompileError::AstVar)?;
 
     let build = ast.compile(version, path, src, keep_locs, keep_locs);

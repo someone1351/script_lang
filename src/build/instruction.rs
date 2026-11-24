@@ -112,26 +112,23 @@ pub enum Instruction {
     StackSwap,
     StackRotRight, //currently rot right, but rot left would be more useful, only need single rot for set_field instead of 2
     StackRotLeft,
-    // StackDup(usize), //stack_offset,
     StackDup,
+    // StackDup(usize), //stack_offset,
 
     GetGlobalVarRef(StringVal), //symbol_ind, read,write,call //readonly
     GetGlobalAccessRef(StringVal), //symbol_ind
-
     DeclGlobalVar(StringVal), //symbol_ind ////, store
     SetGlobalVar(StringVal), //symbol_ind
-
     GetGlobalVarOrConst(StringVal,bool), //symbol_ind, get_global
-
     CallGlobalOrMethod(StringVal,usize), //symbol_ind, params_num
+    GetGlobalOrConstOrCallMethod(StringVal,bool), //symbol_ind, get_global
 
     CallMethod(StringVal,usize), //symbol_ind, params_num
     TryCallMethod{name:StringVal,params_num:usize,}, //symbol_ind, params_num
     CallMethodOrResult(StringVal,usize), //symbol_ind, params_num
-    // HasMethod(usize), //symbol_ind,
     CallResult(usize, Option<StringVal>), //params_num,call_name
 
-    GetGlobalOrConstOrCallMethod(StringVal,bool), //symbol_ind, get_global
+    // HasMethod(usize), //symbol_ind,
     // GetFields(usize), //params_num
     // SetFields(usize), //params_num
 

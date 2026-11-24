@@ -578,7 +578,7 @@ impl Compiler {
 
         builder.eval(parsed.root_block_primitive());
 
-        let mut ast = ast::Ast::new(false,true);
+        let mut ast = ast::Ast::new(false,); //true
 
         if let Err(e)=builder.generate_ast(&mut ast,|builder,primitive|{
             self.run(builder, primitive,&mut next_anon_id)
@@ -587,7 +587,7 @@ impl Compiler {
 
         }
 
-        if let Err(e)=ast.calc_vars(false) {
+        if let Err(e)=ast.calc_vars() { //false
             return Err(CompileError{path:pathbuf,src,loc:e.loc,error_type:CompileErrorType::AstVar(e.error_type)});
         }
 

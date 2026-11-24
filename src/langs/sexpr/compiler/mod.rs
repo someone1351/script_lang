@@ -307,13 +307,13 @@ impl Compiler {
 
                 // builder.eval_sexprs(sexpr_tree.sexprs());
 
-                let mut ast = ast::Ast::new(false,false);
+                let mut ast = ast::Ast::new(false,); //false
 
                 match builder.generate_ast(&mut ast,|builder,primitive|{
                     self.run(builder, primitive,&mut next_anon_id)
                 }) {
                     Ok(_)=>{
-                        if let Err(e)=ast.calc_vars(false) {
+                        if let Err(e)=ast.calc_vars() { //false
                             return Err(CompileError{
                                 path:pathbuf,
                                 src,

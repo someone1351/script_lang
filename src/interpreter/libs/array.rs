@@ -138,6 +138,10 @@ pub fn build_array_map() -> Result<BuildT, FuncCompileError<()>> {
             .call_method("len", 1)
             .decl_var("n")
 
+            // var res = nil; (declared outside `"loop"` so `to_block_start` doesn't re-allocate stack slots)
+            .result_nil()
+            .decl_var("res")
+
             // while i < n
             .block_start(Some("loop"))
                 .get_var("n")
@@ -147,7 +151,7 @@ pub fn build_array_map() -> Result<BuildT, FuncCompileError<()>> {
                 .call_method("lt", 2)
                 .to_block_end(JmpCond::False, 0)
 
-                // var res = f(arr[i], i); (push args in reverse: i, then arr[i])
+                // res = f(arr[i], i); (push args in reverse: i, then arr[i])
                 .get_var("i")
                 .param_push()
 
@@ -160,7 +164,7 @@ pub fn build_array_map() -> Result<BuildT, FuncCompileError<()>> {
 
                 .get_var("f")
                 .call_result(2, None)
-                .decl_var("res")
+                .set_var("res")
 
                 // if type(res) == "void" { res = nil; }
                 .block_start(None)
@@ -200,6 +204,7 @@ pub fn build_array_map() -> Result<BuildT, FuncCompileError<()>> {
         .block_end();
     })
 }
+
 
 
 pub fn register<X>(lib_scope : &mut LibScope<X>) {
