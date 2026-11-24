@@ -593,16 +593,17 @@ impl<'a> Ast<'a> {
     // ir was so you could declare a func eg var f = fn(){} where f can't be seen inside the func
     // eg decl_var_start, lambda, decl_var_end, set_var
     pub fn decl_var_start(&mut self,name:&'a str, anon_id:Option<usize>) {
-        if self.body_node().depth==0 && anon_id.is_none() { //global
-            let decl=AstDeclVar::Global;
+        // if self.body_node().depth==0 && anon_id.is_none() { //global
+        //     let decl=AstDeclVar::Global;
 
-            self.add_next(AstNodeType::DeclVarStart { name, decl, anon_id:None,});
+        //     self.add_next(AstNodeType::DeclVarStart { name, decl, anon_id:None,});
 
-            {
-                let name=VarName{name,anon_id:None,};
-                self.decls_starts.push((name,decl,)); //false
-            }
-        } else {
+        //     {
+        //         let name=VarName{name,anon_id:None,};
+        //         self.decls_starts.push((name,decl,)); //false
+        //     }
+        // } else
+        {
             let func_and_param_ind=if self.reuse_local_decls { //reuse vars, so they take up param with same name
                 if let AstNodeType::Function { func_ind }=self.body_node().node_type {
                     self.funcs.get(func_ind)
@@ -632,7 +633,7 @@ impl<'a> Ast<'a> {
                     None
                 };
 
-                let is_first_decl = existing_local_ind.is_none();
+                // let is_first_decl = existing_local_ind.is_none();
 
                 let local_ind=if let Some(local_ind)=existing_local_ind { //reuse vars
                     local_ind
@@ -1106,7 +1107,7 @@ impl<'a> Ast<'a> {
                 for &sibling_node_ind in &sibling_node_inds[next_sibling_start ..] {
                     if let AstNodeType::DeclVarStart { name, decl, anon_id } = self.get_node(sibling_node_ind).node_type {
                         root_after_env.entry(VarName{name,anon_id,}).or_insert(match decl {
-                            AstDeclVar::Global => AstAccessVar::Global,
+                            // AstDeclVar::Global => AstAccessVar::Global,
                             AstDeclVar::Local { local_ind } => AstAccessVar::Local {
                                 node_ind: parent_node_ind.unwrap(),
                                 local_ind,
@@ -1156,7 +1157,7 @@ impl<'a> Ast<'a> {
                             funcs_after_envs[func_ind].entry(VarName{name,anon_id})
                                 .or_insert(match decl
                             {
-                                AstDeclVar::Global => AstAccessVar::Global,
+                                // AstDeclVar::Global => AstAccessVar::Global,
                                 AstDeclVar::Local { local_ind } => AstAccessVar::Local {
                                     node_ind: parent_node_ind.unwrap(),
                                     local_ind,
@@ -1189,7 +1190,7 @@ impl<'a> Ast<'a> {
                 }
                 AstNodeType::DeclVarEnd { name, decl, anon_id } => {
                     let var=match decl {
-                        AstDeclVar::Global => AstAccessVar::Global,
+                        // AstDeclVar::Global => AstAccessVar::Global,
                         AstDeclVar::Local { local_ind } => AstAccessVar::Local {
                             node_ind: parent_node_ind.unwrap(),
                             local_ind,
@@ -1355,9 +1356,9 @@ impl<'a> Ast<'a> {
                             .local_decls.get_mut(local_ind).unwrap()
                             .captured=true; //modification here!
                     }
-                    AstAccessVar::Global => {
-						//not needed, uses get_global_var_ref
-                    }
+                    // AstAccessVar::Global => {
+					// 	//not needed, uses get_global_var_ref
+                    // }
                     // AstAccessVar::OuterGlobal => {  }
                     AstAccessVar::Capture { .. } => {
 						//already a refvar
@@ -1499,7 +1500,8 @@ impl<'a> Ast<'a> {
 
     fn calc_var_stack_offset(&self, var : AstAccessVar, stack_size:usize) -> Option<(usize,bool)> {
         match var {
-            AstAccessVar::Global | AstAccessVar::None => { //AstAccessVar::OuterGlobal |
+            // AstAccessVar::Global |
+            AstAccessVar::None => { //AstAccessVar::OuterGlobal |
                 None
             }
             AstAccessVar::Local { node_ind, local_ind, //anon_id
@@ -1900,12 +1902,12 @@ impl<'a> Ast<'a> {
                 AstNodeType::Include(name) => {
                     instructions.push(Instruction::Include(include_inds.get(name,cur_node.loc.unwrap_or_default())));
                 }
-                AstNodeType::DeclVarStart { name, decl, anon_id,} => {
-                    if anon_id.is_none() { //anon_id vars are local
-                        if let AstDeclVar::Global = decl {
-                            instructions.push(Instruction::DeclGlobalVar(symbol_inds.get(name)));
-                        }
-                    }
+                AstNodeType::DeclVarStart { .. } => { //name, decl, anon_id
+                    // if anon_id.is_none() { //anon_id vars are local
+                    //     if let AstDeclVar::Global = decl {
+                    //         instructions.push(Instruction::DeclGlobalVar(symbol_inds.get(name)));
+                    //     }
+                    // }
                 }
                 AstNodeType::DeclVarEnd {
                     // name, decl, anon_id,
@@ -1922,8 +1924,8 @@ impl<'a> Ast<'a> {
                         } else {
                             instructions.push(Instruction::GetStackVar(stack_offset));
                         }
-                    } else if let AstAccessVar::Global=var { //global declared
-                        instructions.push(Instruction::GetGlobalVarOrConst(symbol_inds.get(name),true));
+                    // } else if let AstAccessVar::Global=var { //global declared
+                    //     instructions.push(Instruction::GetGlobalVarOrConst(symbol_inds.get(name),true));
                     } else {
                         let get_global=!self.must_decl_globals;
                         instructions.push(Instruction::GetGlobalVarOrConst(symbol_inds.get(name),get_global));
@@ -1978,8 +1980,8 @@ impl<'a> Ast<'a> {
                         } else {
                             instructions.push(Instruction::GetStackVar(stack_offset));
                         }
-                    } else if let AstAccessVar::Global=var { //global declared
-                        instructions.push(Instruction::GetGlobalVarOrConst(symbol_inds.get(name),true));
+                    // } else if let AstAccessVar::Global=var { //global declared
+                    //     instructions.push(Instruction::GetGlobalVarOrConst(symbol_inds.get(name),true));
                     } else {
                         let get_global=!self.must_decl_globals;
                         instructions.push(Instruction::GetGlobalOrConstOrCallMethod(symbol_inds.get(name),get_global));

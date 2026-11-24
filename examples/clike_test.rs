@@ -190,11 +190,11 @@ pub fn test_script3<P: AsRef<Path>>(path: P, debug_compile: bool, debug: bool) {
 
 fn main() {
 
-    // let start_time = std::time::Instant::now();
-    // test_script("scripts/clike/test18.script",false,false);
-    // let time_elapsed=start_time.elapsed().as_secs_f64();
-    // println!("Time elapsed3: {time_elapsed:?}" ,);
+    let start_time = std::time::Instant::now();
+    test_script("scripts/clike/test18.script",false,false);
+    let time_elapsed=start_time.elapsed().as_secs_f64();
+    println!("Time elapsed3: {time_elapsed:?}" ,);
 
     // test_script2();
-    test_script3("scripts/clike/test19.script",false,false);
+    // test_script3("scripts/clike/test19.script",false,false);
 }

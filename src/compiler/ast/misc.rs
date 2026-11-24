@@ -29,7 +29,7 @@ pub enum AstDeclVar {
     // Uninit,
 
     //only used for global decls ie ones predefined outside cur script aren't going to be recognised at compile time
-    Global,
+    // Global,
 
     //only used for (var somedecl _) where somedecl matches cur func param name in root of the func, ie not in a block etc,
     Param{func_ind:usize,param_ind:usize,},
@@ -41,10 +41,10 @@ pub enum AstDeclVar {
 #[derive(Debug,Clone,Copy,PartialEq,Eq)]
 pub enum AstAccessVar { //<'a>
     None,
-    // OuterGlobal,
-    Global, //{name:&'a str}, //in env
-    // GlobalDecl,
-    // Global(&'a str),
+    // // OuterGlobal,
+    // Global, //{name:&'a str}, //in env
+    // // GlobalDecl,
+    // // Global(&'a str),
     Param{
         // stack_param_ind:usize, //todo remove, just calc from param_ind
         func_ind:usize,
