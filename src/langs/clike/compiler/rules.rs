@@ -84,8 +84,8 @@ pub enum MyNonTerm {
     BitOr,
     And1,
     Compare,
-    Factor,
     Term,
+    Factor,
     Prefixes,
     Postfixes,
     Val,
@@ -103,8 +103,8 @@ pub enum MyNonTerm {
     // ForToOp,
     SetOp,
     // SetSubOp,
-    FactorOp,
     TermOp,
+    FactorOp,
     LBrace,
     RBrace,
     LBracket,
@@ -378,25 +378,25 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
 
         MyNonTerm::BitAnd => &Or(&[
             &Group(&And(&[
-                &NonTerm(MyNonTerm::Factor),
-                &Many(&And(&[ &Primitive(Symbol(MySymbol::BitAnd)), &NonTerm(MyNonTerm::Factor), ]),1,0),
-            ]),MyGroup("bit_and")),
-            &NonTerm(MyNonTerm::Factor),
-        ]),
-
-        MyNonTerm::Factor => &Or(&[
-            &Group(&And(&[
                 &NonTerm(MyNonTerm::Term),
-                &Many(&And(&[ &NonTerm(MyNonTerm::FactorOp), &NonTerm(MyNonTerm::Term), ]),1,0),
-            ]),MyGroup("factor")),
+                &Many(&And(&[ &Primitive(Symbol(MySymbol::BitAnd)), &NonTerm(MyNonTerm::Term), ]),1,0),
+            ]),MyGroup("bit_and")),
             &NonTerm(MyNonTerm::Term),
         ]),
 
         MyNonTerm::Term => &Or(&[
             &Group(&And(&[
-                &NonTerm(MyNonTerm::Prefixes),
-                &Many(&And(&[&NonTerm(MyNonTerm::TermOp),&NonTerm(MyNonTerm::Prefixes),]),1,0),
+                &NonTerm(MyNonTerm::Factor),
+                &Many(&And(&[ &NonTerm(MyNonTerm::TermOp), &NonTerm(MyNonTerm::Factor), ]),1,0),
             ]),MyGroup("term")),
+            &NonTerm(MyNonTerm::Factor),
+        ]),
+
+        MyNonTerm::Factor => &Or(&[
+            &Group(&And(&[
+                &NonTerm(MyNonTerm::Prefixes),
+                &Many(&And(&[&NonTerm(MyNonTerm::FactorOp),&NonTerm(MyNonTerm::Prefixes),]),1,0),
+            ]),MyGroup("factor")),
             &NonTerm(MyNonTerm::Prefixes),
         ]),
 
@@ -559,12 +559,12 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
 
 
 
-        MyNonTerm::FactorOp => &Or(&[
+        MyNonTerm::TermOp => &Or(&[
             &Group(&Primitive(Symbol(MySymbol::Add)),MyGroup("add")),
             &Group(&Primitive(Symbol(MySymbol::Sub)),MyGroup("sub")),
         ]),
 
-        MyNonTerm::TermOp => &Or(&[
+        MyNonTerm::FactorOp => &Or(&[
             &Group(&Primitive(Symbol(MySymbol::Mul)),MyGroup("mul")),
             &Group(&Primitive(Symbol(MySymbol::Div)),MyGroup("div")),
             &Group(&Primitive(Symbol(MySymbol::Mod)),MyGroup("mod")),
