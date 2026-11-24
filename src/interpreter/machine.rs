@@ -32,6 +32,7 @@ TODO
 use std::collections::HashMap;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use super::super::build::*;
 // use super::custom::*;
@@ -544,10 +545,10 @@ impl<'a,X> Machine<'a,X> {
 
     fn push_stack_val(&mut self,v:Value) -> Result<(),MachineError> {
 
-        // if v.is_void() { //not necessary?
-        //     // println!("v1");
-        //     return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
-        // }
+        if v.is_void() { //not necessary?
+            // println!("v1");
+            return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
+        }
 
         if self.stack.len()+1>self.stack_limit{
             return Err(MachineError::from_machine(self, MachineErrorType::StackLimitReached(self.stack.len()+1)));
@@ -646,6 +647,9 @@ impl<'a,X> Machine<'a,X> {
         let params=params.as_ref().to_vec();
         let params_num=params.len();
 
+        if params.iter().any(|v| v.is_void()) {
+            return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
+        }
 
         if self.stack.len()+params_num>self.stack_limit{
             return Err(MachineError::from_machine(self, MachineErrorType::StackLimitReached(self.stack.len()+params_num)));
@@ -906,18 +910,18 @@ impl<'a,X> Machine<'a,X> {
             Instruction::StackRotLeft => {
                 self.stack_rot_left()?;
             }
-            Instruction::SetStackVar(stack_offset_ind,) => { //allow_void
+            Instruction::SetStackVar(stack_offset_ind,allow_void) => { //
                 let result_val=self.result_val();
 
-                // if !*allow_void && result_val.is_void() {
-                //     // let v=self.copy_val(result_val)?.clone_root();
-                //     // println!("v4 {v:?}");
-                //     return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
-                // }
+                if !*allow_void && result_val.is_void() {
+                    // let v=self.copy_val(result_val)?.clone_root();
+                    // println!("v4 {v:?}");
+                    return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
+                }
 
                 let v=self.copy_val(result_val)?.clone_root(); //should be root, since on stack
 
-                // if v.is_void() { return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr)); }
+                if v.is_void() { return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr)); }
 
                 self.set_stack_offset_val(*stack_offset_ind, v)?;
 
@@ -938,13 +942,13 @@ impl<'a,X> Machine<'a,X> {
                 self.set_stack_offset_val(*stack_offset_ind, v2)?;
                 // self.debugger.set_stack_val_offset_from_last(*stack_offset_ind);
             }
-            Instruction::SetStackVarDeref(stack_offset_ind, init,) => { //allow_void
+            Instruction::SetStackVarDeref(stack_offset_ind, init,allow_void) => { //
                 let result_val=self.result_val();
 
-                // if !*allow_void && result_val.is_void() {
-                //     // println!("v0");
-                //     return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
-                // }
+                if !*allow_void && result_val.is_void() {
+                    // println!("v0");
+                    return Err(MachineError::from_machine(self, MachineErrorType::VoidNotExpr));
+                }
 
                 let to_val=self.copy_val(result_val.clone_leaf())?;
                 let custom=self.get_stack_offset_value(*stack_offset_ind)?.as_custom();
@@ -1119,6 +1123,35 @@ impl<'a,X> Machine<'a,X> {
                 path.pop();
                 path.push(include_path.as_path());
 
+                //google says so
+                {
+                    let norm_target = std::fs::canonicalize(&path).unwrap_or_else(|_| path.clone());
+
+                    let is_current = self
+                        .cur_build
+                        .as_ref()
+                        .and_then(|b| b.path.as_ref())
+                        .is_some_and(|p| std::fs::canonicalize(p).unwrap_or_else(|_| p.clone()) == norm_target);
+
+                    let is_in_frames = self.stack_frames.iter().any(|frame| {
+                        let frame_build = match &frame.info {
+                            FrameInfo::Include { build } | FrameInfo::Main { build } => Some(build),
+                            FrameInfo::BuildFunc { .. } => None,
+                        };
+                        frame_build
+                            .and_then(|b| b.path.as_ref())
+                            .is_some_and(|p| std::fs::canonicalize(p).unwrap_or_else(|_| p.clone()) == norm_target)
+                    });
+
+                    if is_current || is_in_frames {
+                        return Err(MachineError::from_machine(
+                            self,
+                            MachineErrorType::CircularInclude(Arc::new(path)),
+                        ));
+                    }
+                }
+                //
+
                 let Some(include_build) = self.includer.as_mut().and_then(|x|x(path.as_path())) //(*self.includer)(path.as_path())
                 else {
                     return Err(MachineError::from_machine(self, MachineErrorType::IncludeResolveError(include_path.clone()) ));
@@ -1144,6 +1177,9 @@ impl<'a,X> Machine<'a,X> {
                 self.cur_build=Some(include_build.clone());
                 self.instr_pos=0;
                 self.instr_end_pos=include_build.main_instruct_len;//self.get_instr_end_ind();
+
+                self.set_result_val(Value::Void);
+
                 return Ok(());//continue;
             }
 

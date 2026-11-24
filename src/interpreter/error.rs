@@ -32,6 +32,8 @@ pub enum MachineErrorType{
     MethodRunError(String), //msg //Option<String>, Option<Vec<String>>,
     // InvalidFunctionParamsNum(usize), //req params num
     IncludeResolveError(Arc<PathBuf>),
+    CircularInclude(Arc<PathBuf>),
+
     // // CustomDataBorrowError,
     // CustomDataBorrowMutError,
     // // CustomInstanceEmpty,
@@ -50,7 +52,7 @@ pub enum MachineErrorType{
     GetUndefinedVar,
     SetUndefinedVar,
 
-    // VoidNotExpr, //necessary?
+    VoidNotExpr, //necessary?
     StackLimitReached(usize),
 
     IntInto,

@@ -197,7 +197,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
             &NonTerm(MyNonTerm::Continue),
             &NonTerm(MyNonTerm::Return),
 
-            &NonTerm(MyNonTerm::Include),
+            // &NonTerm(MyNonTerm::Include),
 
             &NonTerm(MyNonTerm::Format),
             &NonTerm(MyNonTerm::Print),
@@ -325,7 +325,10 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
         MyNonTerm::Break => &Group(&Primitive(Keyword(MyKeyword::Break)),MyGroup("break")),
         MyNonTerm::Return => &Group(&And(&[&Primitive(Keyword(MyKeyword::Return)), &Or(&[&NonTerm(MyNonTerm::Expr), &Always]),]),MyGroup("return")),
 
-        MyNonTerm::Include => &And(&[&Primitive(Keyword(MyKeyword::Include)),&Group(&Primitive(String),MyGroup("include")),]),
+        MyNonTerm::Include => &And(&[
+            &Primitive(Keyword(MyKeyword::Include)),
+            &Group(&Primitive(String),MyGroup("include")),
+        ]),
 
         MyNonTerm::Expr => &Expect(&Group(&NonTerm(MyNonTerm::Or1),MyGroup("expr")),"expr"),
         // MyNonTerm::Expr => &Expect(&Group(&NonTerm(MyNonTerm::Factor),MyGroup("expr")),"expr"),
@@ -429,6 +432,7 @@ pub fn get_non_term<'g>(n:MyNonTerm) -> Option<&'g GrammarNode<'g,MyNonTerm,MyPr
             &NonTerm(MyNonTerm::If),
             &NonTerm(MyNonTerm::Lambda),
             &NonTerm(MyNonTerm::Block),
+            &NonTerm(MyNonTerm::Include),
             &And(&[ &NonTerm(MyNonTerm::LParen), &NonTerm(MyNonTerm::Expr), &NonTerm(MyNonTerm::RParen), ]),
         ]),
 

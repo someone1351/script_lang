@@ -552,7 +552,9 @@ impl Compiler {
                     };
 
                 //
-                builder.eval(val);
+                builder
+                    .loc(val.tokens().start_loc())
+                    .eval(val);
 
                 //
                 if !func.is_empty() {
@@ -928,8 +930,10 @@ impl Compiler {
                 builder.to_block_end_label(JmpCond::None, "func",0,Some(e));
             }
             "include" => {
-                let v = top_group.child(0).unwrap().tokens(); //.first().unwrap().get_string().unwrap();
-                builder.include(v.string().unwrap(), v.start_loc());
+                let v = top_group.tokens(); //.first().unwrap().get_string().unwrap();
+                builder
+                    .loc(v.start_loc())
+                    .include(v.string().unwrap(), v.start_loc());
             }
             "var" => {
                 let name= top_group.child(0).unwrap().tokens();
@@ -950,7 +954,9 @@ impl Compiler {
                 builder.decl_var_end();
 
                 if val.is_some() {
-                    builder.set_var(name.identifier().unwrap());
+                    builder
+                        .loc(val.unwrap().tokens().start_loc())
+                        .set_var(name.identifier().unwrap());
                 }
             }
 

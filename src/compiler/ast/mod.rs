@@ -1935,15 +1935,15 @@ impl<'a> Ast<'a> {
                 } => { //copy result ?
 
                     if let Some((stack_offset,captured))=self.calc_var_stack_offset(var,cur_node.stack_size) {
-                        // let allow_void=anon_id.is_some();
+                        let allow_void=anon_id.is_some();
                         if captured {
                             let init = if let AstAccessVar::Local { .. } = var {true}else{false};
                             instructions.push(Instruction::SetStackVarDeref(stack_offset,init,
-                                //allow_void
+                                allow_void
                                 )); //can anon be captured?
                         } else {
                             instructions.push(Instruction::SetStackVar(stack_offset,
-                                // allow_void
+                                allow_void
                             ));
                         }
                     // } else if anon_id.is_some() {
@@ -2064,9 +2064,9 @@ impl<'a> Ast<'a> {
 
                                     instructions.push(Instruction::ResultUndefined);
                                     if local_decl.captured {
-                                        instructions.push(Instruction::SetStackVarDeref(stack_offset, true, )); //true
+                                        instructions.push(Instruction::SetStackVarDeref(stack_offset, true, false)); //true
                                     } else {
-                                        instructions.push(Instruction::SetStackVar(stack_offset, )); //true
+                                        instructions.push(Instruction::SetStackVar(stack_offset, false)); //true
                                     }
                                 }
                             }
